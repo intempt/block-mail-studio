@@ -105,12 +105,12 @@ const EmailEditor = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
   const [editorMode, setEditorMode] = useState<EditorMode>('visual');
   const [buildTool, setBuildTool] = useState<BuildTool>('blocks');
-  const [previewMode, setPreviewMode<'desktop' | 'mobile'>>('desktop');
+  const [previewMode, setPreviewMode<'desktop' | 'mobile'>('desktop');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [collaborationMode, setCollaborationMode(false);
+  const [collaborationMode, setCollaborationMode] = useState(false);
   const [documentId] = useState(`email-${Date.now()}`);
   const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
   const [userName] = useState('Email Editor User');
