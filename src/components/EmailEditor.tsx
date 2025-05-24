@@ -39,7 +39,8 @@ import {
   BarChart3,
   Palette,
   FileText,
-  Code2
+  Code2,
+  Target
 } from 'lucide-react';
 
 import { EmailAIChat } from './EmailAIChat';
@@ -56,7 +57,7 @@ import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 type EditorMode = 'design' | 'ai' | 'templates' | 'analytics' | 'team';
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
-type RightPanelTab = 'properties' | 'analytics' | 'code' | 'workspace';
+type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code' | 'workspace';
 
 interface WorkspaceSettings {
   theme: 'light' | 'dark' | 'auto';
@@ -239,11 +240,7 @@ const EmailEditor = () => {
 
     switch (leftPanelTab) {
       case 'ai':
-        return editorMode === 'ai' ? (
-          <EmailAIChat editor={editor} />
-        ) : (
-          <IntelligentAssistant editor={editor} emailHTML={emailHTML} />
-        );
+        return <EmailAIChat editor={editor} />;
       case 'design':
         return <ProfessionalToolPalette editor={editor} />;
       case 'templates':
@@ -320,8 +317,12 @@ const EmailEditor = () => {
 
   const renderRightPanel = () => {
     switch (rightPanelTab) {
+      case 'properties':
+        return <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />;
       case 'analytics':
         return <PerformanceAnalyzer editor={editor} emailHTML={emailHTML} />;
+      case 'optimization':
+        return <IntelligentAssistant editor={editor} emailHTML={emailHTML} />;
       case 'code':
         return (
           <div className="p-4">
@@ -467,7 +468,7 @@ const EmailEditor = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel */}
+        {/* Left Panel - Creation Tools */}
         <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
           leftPanelCollapsed ? 'w-12' : 'w-80'
         } flex flex-col`}>
@@ -477,7 +478,7 @@ const EmailEditor = () => {
             <>
               <div className="p-4 border-b border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-slate-900">Tools & AI</h3>
+                  <h3 className="font-semibold text-slate-900">Creation Tools</h3>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -574,7 +575,7 @@ const EmailEditor = () => {
           </div>
         </div>
         
-        {/* Right Panel */}
+        {/* Right Panel - Analytics & Tools */}
         {!rightPanelCollapsed && (
           <div className="w-80 border-l border-slate-200 bg-white">
             <div className="p-4 border-b border-slate-200">
@@ -605,6 +606,14 @@ const EmailEditor = () => {
                   className="flex-1"
                 >
                   <BarChart3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={rightPanelTab === 'optimization' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRightPanelTab('optimization')}
+                  className="flex-1"
+                >
+                  <Target className="w-4 h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'code' ? 'default' : 'outline'}
