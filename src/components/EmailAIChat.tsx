@@ -199,7 +199,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
       label: 'Templates', 
       action: 'Show me industry email templates',
       description: 'Pre-made designs',
-      accent: 'blue',
+      accent: 'slate',
       onClick: () => setShowTemplates(true)
     },
     { 
@@ -207,35 +207,35 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
       label: 'Brand Kit', 
       action: 'Help me apply my brand colors and fonts',
       description: 'Apply brand styling',
-      accent: 'purple'
+      accent: 'slate'
     },
     { 
       icon: <Image className="w-4 h-4" />, 
       label: 'AI Images', 
       action: 'Generate professional images for my email',
       description: 'Create custom visuals',
-      accent: 'green'
+      accent: 'slate'
     },
     { 
       icon: <Type className="w-4 h-4" />, 
       label: 'Smart Copy', 
       action: 'Write compelling email copy that converts',
       description: 'AI-powered copywriting',
-      accent: 'orange'
+      accent: 'slate'
     },
     { 
       icon: <Target className="w-4 h-4" />, 
       label: 'Optimize', 
       action: 'Analyze and improve my email performance',
       description: 'Enhance engagement',
-      accent: 'red'
+      accent: 'slate'
     },
     { 
       icon: <BarChart3 className="w-4 h-4" />, 
       label: 'A/B Testing', 
       action: 'Create variations for split testing',
       description: 'Test multiple versions',
-      accent: 'indigo'
+      accent: 'slate'
     }
   ];
 
@@ -245,36 +245,13 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     }
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || isLoading) return;
+  // Utility functions for accent styling
+  const getAccentClass = (accent: string) => {
+    return 'border-gray-200 hover:border-gray-300 hover:bg-gray-50';
+  };
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: newMessage,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setNewMessage('');
-    setIsLoading(true);
-
-    try {
-      const aiResponse = await generateAIResponse(newMessage);
-      setMessages(prev => [...prev, aiResponse]);
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: 'I encountered an error while processing your request. Please check your API configuration and try again.',
-        timestamp: new Date(),
-        actionType: 'general'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
-    }
+  const getAccentIconClass = (accent: string) => {
+    return 'text-gray-700';
   };
 
   const generateAIResponse = async (userInput: string): Promise<Message> => {
@@ -378,7 +355,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         return {
           id: Date.now().toString(),
           type: 'ai',
-          content: '❌ I had trouble generating that image. Please check your OpenAI API key and try again.',
+          content: '❌ I had trouble generating that image. Please check your OpenAI API key configuration and try again.',
           timestamp: new Date(),
           actionType: 'general'
         };
@@ -523,6 +500,38 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     }
   };
 
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: newMessage,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setNewMessage('');
+    setIsLoading(true);
+
+    try {
+      const aiResponse = await generateAIResponse(newMessage);
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Error generating AI response:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'I encountered an error while processing your request. Please check your API configuration and try again.',
+        timestamp: new Date(),
+        actionType: 'general'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleQuickAction = (action: any) => {
     if (action.onClick) {
       action.onClick();
@@ -604,40 +613,42 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     <div className="h-full flex flex-col bg-white">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center gap-3 mb-4">
-          <Sparkles className="w-5 h-5 text-blue-600" />
-          <h3 className="text-base font-semibold text-gray-900">AI Email Assistant</h3>
-          <Badge variant="secondary" className="ml-auto text-xs bg-blue-50 text-blue-700 border-blue-200">
+          <div className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-slate-700" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">AI Email Assistant</h3>
+            <p className="text-sm text-gray-600">Create, optimize, and enhance your emails</p>
+          </div>
+          <Badge variant="secondary" className="ml-auto text-xs bg-slate-100 text-slate-700 border-slate-200">
             Smart
           </Badge>
         </div>
         
-        {/* Elegant Quick Actions Grid */}
+        {/* Refined Quick Actions Grid */}
         <div className="grid grid-cols-2 gap-3">
           {quickActions.map((action, index) => (
-            <Card
+            <div
               key={index}
-              className={`group cursor-pointer transition-all duration-200 hover:shadow-sm ${getAccentClass(action.accent)} bg-white border-2`}
+              className={`group cursor-pointer transition-all duration-200 hover:shadow-sm ${getAccentClass(action.accent)} bg-white border border-gray-200 rounded-xl p-4`}
               onClick={() => handleQuickAction(action)}
-              disabled={isLoading}
             >
-              <div className="p-4">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-xl bg-gray-50 group-hover:bg-white transition-colors ${getAccentIconClass(action.accent)}`}>
-                    {action.icon}
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <h5 className="text-sm font-semibold text-gray-900">{action.label}</h5>
-                    <p className="text-xs text-gray-600 leading-relaxed">{action.description}</p>
-                  </div>
-                  
-                  <div className="flex items-center text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
-                    <span>Start</span>
-                    <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
+              <div className="flex flex-col items-center text-center space-y-3">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-slate-100 transition-colors ${getAccentIconClass(action.accent)}`}>
+                  {action.icon}
+                </div>
+                
+                <div className="space-y-1">
+                  <h5 className="text-sm font-medium text-gray-900">{action.label}</h5>
+                  <p className="text-xs text-gray-600 leading-relaxed">{action.description}</p>
+                </div>
+                
+                <div className="flex items-center text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
+                  <span>Start</span>
+                  <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>
@@ -647,7 +658,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         <div className="space-y-4">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-50 border border-gray-200 text-gray-900'} rounded-xl px-4 py-3`}>
+              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-slate-700 text-white' : 'bg-white border border-gray-200 text-gray-900 shadow-sm'} rounded-xl px-4 py-3`}>
                 <div className="text-sm whitespace-pre-wrap">{message.content}</div>
                 <p className="text-xs opacity-70 mt-2">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -676,7 +687,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+              <div className="bg-white border border-gray-200 shadow-sm rounded-xl px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span className="text-xs text-gray-600">AI is thinking...</span>
@@ -695,14 +706,14 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Tell me what kind of email you want to create..."
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            className="flex-1 text-sm border-gray-300 focus:border-blue-500"
+            className="flex-1 text-sm border-gray-300 focus:border-slate-500"
             disabled={isLoading}
           />
           <Button 
             onClick={handleSendMessage} 
             disabled={!newMessage.trim() || isLoading}
             size="sm"
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-slate-700 hover:bg-slate-800"
           >
             {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
           </Button>
