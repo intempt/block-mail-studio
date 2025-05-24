@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
@@ -14,12 +14,16 @@ import Underline from '@tiptap/extension-underline';
 import FontFamily from '@tiptap/extension-font-family';
 import Placeholder from '@tiptap/extension-placeholder';
 import Gapcursor from '@tiptap/extension-gapcursor';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+import * as Y from 'yjs';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
   Monitor, 
   Smartphone, 
@@ -43,23 +47,32 @@ import {
   Target,
   Sun,
   Moon,
-  Keyboard
+  Keyboard,
+  UserPlus,
+  Share2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { EmailAIChat } from './EmailAIChat';
 import { EmailEditorToolbar } from './EmailEditorToolbar';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
-import { CollaborativeEmailEditor } from './CollaborativeEmailEditor';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
 import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
+import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
 type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
+
+interface Collaborator {
+  id: string;
+  name: string;
+  color: string;
+  isOnline: boolean;
+}
 
 const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
@@ -69,12 +82,14 @@ const EmailEditor = () => {
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('ai');
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('properties');
   const [emailHTML, setEmailHTML] = useState('');
-  const [collaborationMode, setCollaborationMode] = useState(false);
   const [documentId] = useState(`email-${Date.now()}`);
   const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
   const [userName] = useState('Email Editor User');
+  const [userColor] = useState('#3B82F6');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [ydoc] = useState(() => new Y.Doc());
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email' },
@@ -90,6 +105,16 @@ const EmailEditor = () => {
     extensions: [
       StarterKit,
       CustomEmailExtension,
+      Collaboration.configure({
+        document: ydoc,
+      }),
+      CollaborationCursor.configure({
+        provider: null, // Will be configured when WebSocket provider is set up
+        user: {
+          name: userName,
+          color: userColor,
+        },
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -140,6 +165,55 @@ const EmailEditor = () => {
     },
   });
 
+  useEffect(() => {
+    const initCollaboration = async () => {
+      try {
+        await TipTapProCollabService.createDocument(documentId);
+        
+        const config: CollaborationConfig = {
+          documentId,
+          userId,
+          userName,
+          userColor
+        };
+        
+        await TipTapProCollabService.joinCollaboration(config);
+        loadCollaborators();
+      } catch (error) {
+        console.error('Failed to initialize collaboration:', error);
+      }
+    };
+
+    initCollaboration();
+  }, [documentId, userId, userName, userColor]);
+
+  const loadCollaborators = async () => {
+    try {
+      const response = await TipTapProCollabService.getCollaborators(documentId);
+      const data = await response.json();
+      const collabData = data.users || [];
+      
+      // Transform API response to our collaborator format
+      const transformedCollaborators: Collaborator[] = collabData.map((user: any) => ({
+        id: user.id || user.userId,
+        name: user.name || user.userName,
+        color: user.color || user.userColor || '#3B82F6',
+        isOnline: user.isOnline !== false
+      }));
+      
+      setCollaborators(transformedCollaborators);
+    } catch (error) {
+      console.error('Failed to load collaborators:', error);
+      // Add current user as fallback
+      setCollaborators([{
+        id: userId,
+        name: userName,
+        color: userColor,
+        isOnline: true
+      }]);
+    }
+  };
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -185,6 +259,14 @@ const EmailEditor = () => {
     ${content}
 </body>
 </html>`;
+  };
+
+  const inviteCollaborator = () => {
+    const email = window.prompt('Enter email address to invite:');
+    if (email) {
+      console.log(`Inviting ${email} to collaborate on document ${documentId}`);
+      // In a real implementation, this would send an invitation
+    }
   };
 
   const handleSaveTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
@@ -252,15 +334,39 @@ const EmailEditor = () => {
       case 'team':
         return (
           <div className="p-4">
-            <h4 className="font-medium mb-4">Team Collaboration</h4>
-            <p className="text-sm text-gray-600 mb-4">
-              Collaborate with your team in real-time on email campaigns.
-            </p>
-            <Button 
-              onClick={() => setCollaborationMode(!collaborationMode)}
-              className="w-full"
-            >
-              {collaborationMode ? 'Exit Team Mode' : 'Start Collaboration'}
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="font-medium">Team Collaboration</h4>
+              <Badge variant="secondary">
+                {collaborators.filter(c => c.isOnline).length} online
+              </Badge>
+            </div>
+            
+            <div className="space-y-3 mb-4">
+              {collaborators.map((collaborator) => (
+                <div key={collaborator.id} className="flex items-center gap-3">
+                  <div className="relative">
+                    <Avatar className="w-8 h-8">
+                      <AvatarFallback style={{ backgroundColor: collaborator.color }}>
+                        {collaborator.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {collaborator.isOnline && (
+                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{collaborator.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {collaborator.isOnline ? 'Online' : 'Offline'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <Button onClick={inviteCollaborator} className="w-full" size="sm">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Invite Collaborator
             </Button>
           </div>
         );
@@ -382,8 +488,37 @@ const EmailEditor = () => {
           </div>
         </div>
 
-        {/* Right: Actions */}
+        {/* Right: Collaborators & Actions */}
         <div className="flex items-center gap-3">
+          {/* Collaborators */}
+          {collaborators.length > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {collaborators.slice(0, 3).map((collaborator) => (
+                  <Avatar key={collaborator.id} className="w-8 h-8 border-2 border-white">
+                    <AvatarFallback 
+                      className="text-xs font-medium"
+                      style={{ backgroundColor: collaborator.color }}
+                    >
+                      {collaborator.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
+                {collaborators.length > 3 && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    +{collaborators.length - 3}
+                  </Badge>
+                )}
+              </div>
+              
+              <Button variant="outline" size="sm" onClick={inviteCollaborator} className="h-8">
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
+          <Separator orientation="vertical" className="h-6" />
+
           {/* Theme Toggle */}
           <Button
             variant="outline"
@@ -417,16 +552,6 @@ const EmailEditor = () => {
               </div>
             </PopoverContent>
           </Popover>
-          
-          <Button
-            variant={collaborationMode ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCollaborationMode(!collaborationMode)}
-            className="h-8"
-          >
-            <Users className="w-4 h-4 mr-2" />
-            {collaborationMode ? 'Team' : 'Solo'}
-          </Button>
           
           <Separator orientation="vertical" className="h-6" />
           
@@ -513,44 +638,35 @@ const EmailEditor = () => {
         {/* Center: Editor */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className="flex-1 p-8 overflow-y-auto">
-            {collaborationMode ? (
-              <Card 
-                className="mx-auto transition-all duration-300 shadow-lg"
-                style={{ maxWidth: `${previewWidth}px` }}
-              >
-                <CollaborativeEmailEditor
-                  documentId={documentId}
-                  userId={userId}
-                  userName={userName}
-                  onContentChange={setEmailHTML}
-                />
-              </Card>
-            ) : (
-              <Card 
-                className="mx-auto transition-all duration-300 shadow-lg"
-                style={{ maxWidth: `${previewWidth}px` }}
-              >
-                <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                    </div>
-                    <span className="text-xs text-slate-500 ml-2">Email Preview</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      {previewMode.charAt(0).toUpperCase() + previewMode.slice(1)} • {previewWidth}px
-                    </Badge>
+            <Card 
+              className="mx-auto transition-all duration-300 shadow-lg"
+              style={{ maxWidth: `${previewWidth}px` }}
+            >
+              <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
                   </div>
+                  <span className="text-xs text-slate-500 ml-2">Email Preview</span>
+                  <Badge variant="secondary" className="ml-auto text-xs">
+                    {previewMode.charAt(0).toUpperCase() + previewMode.slice(1)} • {previewWidth}px
+                  </Badge>
+                  {collaborators.filter(c => c.isOnline).length > 1 && (
+                    <Badge variant="outline" className="text-xs">
+                      {collaborators.filter(c => c.isOnline).length} collaborating
+                    </Badge>
+                  )}
                 </div>
-                <div className="p-6 bg-white rounded-b-lg">
-                  <EditorContent 
-                    editor={editor} 
-                    className="prose max-w-none focus:outline-none min-h-[600px]"
-                  />
-                </div>
-              </Card>
-            )}
+              </div>
+              <div className="p-6 bg-white rounded-b-lg">
+                <EditorContent 
+                  editor={editor} 
+                  className="prose max-w-none focus:outline-none min-h-[600px]"
+                />
+              </div>
+            </Card>
           </div>
         </div>
         
@@ -632,6 +748,12 @@ const EmailEditor = () => {
           <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
           <span>Est. read time: {Math.ceil(emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)} min</span>
           <span>Templates: {templates.length}</span>
+          {collaborators.length > 1 && (
+            <span className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              {collaborators.filter(c => c.isOnline).length} collaborating
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-2">
