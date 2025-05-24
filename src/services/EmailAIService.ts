@@ -69,13 +69,18 @@ export class EmailAIService {
       throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
     }
 
-    const emailRequest: OpenAIEmailGenerationRequest = {
-      prompt: request.prompt,
-      emailType: request.type,
-      tone: request.tone
-    };
+    try {
+      const emailRequest: OpenAIEmailGenerationRequest = {
+        prompt: request.prompt,
+        emailType: request.type,
+        tone: request.tone
+      };
 
-    return await OpenAIEmailService.generateEmailContent(emailRequest);
+      return await OpenAIEmailService.generateEmailContent(emailRequest);
+    } catch (error) {
+      console.error('Email generation failed:', error);
+      throw error;
+    }
   }
 
   static async generateImage(request: ImageGenerationRequest): Promise<any> {
@@ -92,11 +97,16 @@ export class EmailAIService {
       throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
     }
 
-    const optimizationType = refinementPrompt.toLowerCase().includes('casual') ? 'engagement' :
-                            refinementPrompt.toLowerCase().includes('shorter') ? 'brevity' :
-                            refinementPrompt.toLowerCase().includes('clear') ? 'clarity' : 'conversion';
+    try {
+      const optimizationType = refinementPrompt.toLowerCase().includes('casual') ? 'engagement' :
+                              refinementPrompt.toLowerCase().includes('shorter') ? 'brevity' :
+                              refinementPrompt.toLowerCase().includes('clear') ? 'clarity' : 'conversion';
 
-    return await OpenAIEmailService.optimizeCopy(currentHTML, optimizationType);
+      return await OpenAIEmailService.optimizeCopy(currentHTML, optimizationType);
+    } catch (error) {
+      console.error('Email refinement failed:', error);
+      throw error;
+    }
   }
 
   static async generateContent(userInput: string, contentType: string): Promise<string> {
@@ -104,13 +114,18 @@ export class EmailAIService {
       throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
     }
 
-    const conversationalRequest: ConversationalRequest = {
-      userMessage: userInput,
-      conversationContext: [],
-      currentEmailContent: ''
-    };
+    try {
+      const conversationalRequest: ConversationalRequest = {
+        userMessage: userInput,
+        conversationContext: [],
+        currentEmailContent: ''
+      };
 
-    return await OpenAIEmailService.conversationalResponse(conversationalRequest);
+      return await OpenAIEmailService.conversationalResponse(conversationalRequest);
+    } catch (error) {
+      console.error('Content generation failed:', error);
+      throw error;
+    }
   }
 
   static async getConversationalResponse(userMessage: string, context?: string[]): Promise<string> {
@@ -118,13 +133,18 @@ export class EmailAIService {
       throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
     }
 
-    const request: ConversationalRequest = {
-      userMessage,
-      conversationContext: context,
-      currentEmailContent: ''
-    };
+    try {
+      const request: ConversationalRequest = {
+        userMessage,
+        conversationContext: context,
+        currentEmailContent: ''
+      };
 
-    return await OpenAIEmailService.conversationalResponse(request);
+      return await OpenAIEmailService.conversationalResponse(request);
+    } catch (error) {
+      console.error('Conversational response failed:', error);
+      throw error;
+    }
   }
 
   static async analyzeBrandVoice(emailHTML: string, subjectLine: string): Promise<BrandVoiceAnalysisResult> {
@@ -132,7 +152,12 @@ export class EmailAIService {
       throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
     }
 
-    return await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
+    try {
+      return await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
+    } catch (error) {
+      console.error('Brand voice analysis failed:', error);
+      throw error;
+    }
   }
 
   static async analyzeSubjectLine(subjectLine: string, emailContent: string): Promise<SubjectLineAnalysisResult> {
@@ -161,7 +186,12 @@ export class EmailAIService {
       throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
     }
 
-    return await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
+    try {
+      return await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
+    } catch (error) {
+      console.error('Email performance analysis failed:', error);
+      throw error;
+    }
   }
 
   static async analyzeImage(imageUrl: string): Promise<any> {

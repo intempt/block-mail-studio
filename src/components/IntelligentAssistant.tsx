@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -15,7 +16,10 @@ import {
   AlertCircle,
   Lightbulb,
   RefreshCw,
-  Copy
+  Copy,
+  WifiOff,
+  Key,
+  Server
 } from 'lucide-react';
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
@@ -57,6 +61,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
     conversionRate: 0
   });
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<'api-key' | 'network' | 'server' | 'unknown'>('unknown');
 
   const analyzingMessages = [
     "Analyzing content tone and voice...",
@@ -72,6 +77,42 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
       analyzeContent();
     }
   }, [emailHTML]);
+
+  const getErrorDetails = (error: any) => {
+    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+    
+    if (errorMessage.includes('API key') || errorMessage.includes('401')) {
+      return {
+        type: 'api-key' as const,
+        message: 'OpenAI API key is missing or invalid',
+        suggestion: 'Please configure your OpenAI API key in the settings'
+      };
+    } else if (errorMessage.includes('429')) {
+      return {
+        type: 'server' as const,
+        message: 'Rate limit exceeded',
+        suggestion: 'Please wait a moment and try again'
+      };
+    } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+      return {
+        type: 'network' as const,
+        message: 'Network connection issue',
+        suggestion: 'Check your internet connection and try again'
+      };
+    } else if (errorMessage.includes('500') || errorMessage.includes('502') || errorMessage.includes('503')) {
+      return {
+        type: 'server' as const,
+        message: 'OpenAI service temporarily unavailable',
+        suggestion: 'The service is experiencing issues. Please try again later'
+      };
+    } else {
+      return {
+        type: 'unknown' as const,
+        message: errorMessage,
+        suggestion: 'Please try again or contact support if the issue persists'
+      };
+    }
+  };
 
   const analyzeContent = async () => {
     setIsAnalyzing(true);
@@ -111,7 +152,9 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
       setSuggestions(newSuggestions);
     } catch (error) {
       console.error('Analysis failed:', error);
-      setAnalysisError('Analysis temporarily unavailable');
+      const errorDetails = getErrorDetails(error);
+      setAnalysisError(errorDetails.message);
+      setErrorType(errorDetails.type);
       
       // Clear scores on error
       setBrandVoiceScore(0);
@@ -173,6 +216,24 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
     }
   };
 
+  const getErrorIcon = () => {
+    switch (errorType) {
+      case 'api-key': return <Key className="w-4 h-4" />;
+      case 'network': return <WifiOff className="w-4 h-4" />;
+      case 'server': return <Server className="w-4 h-4" />;
+      default: return <AlertCircle className="w-4 h-4" />;
+    }
+  };
+
+  const getErrorColor = () => {
+    switch (errorType) {
+      case 'api-key': return 'bg-red-50 border-red-200 text-red-700';
+      case 'network': return 'bg-orange-50 border-orange-200 text-orange-700';
+      case 'server': return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+      default: return 'bg-gray-50 border-gray-200 text-gray-700';
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <div className="p-3 border-b border-gray-200">
@@ -185,17 +246,29 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
         </div>
 
         {analysisError ? (
-          <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
-            <AlertCircle className="w-3 h-3" />
-            <span>{analysisError}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={analyzeContent}
-              className="ml-auto text-xs"
-            >
-              Retry
-            </Button>
+          <div className={`flex items-start gap-2 p-3 border rounded-lg ${getErrorColor()}`}>
+            <div className="flex-shrink-0 mt-0.5">
+              {getErrorIcon()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium mb-1">{analysisError}</div>
+              <div className="text-xs opacity-90 mb-2">
+                {errorType === 'api-key' && 'Configure your OpenAI API key in settings'}
+                {errorType === 'network' && 'Check your internet connection'}
+                {errorType === 'server' && 'Service temporarily unavailable'}
+                {errorType === 'unknown' && 'Please try again later'}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={analyzeContent}
+                className="text-xs h-7"
+                disabled={!ApiKeyService.isKeyAvailable()}
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Retry Analysis
+              </Button>
+            </div>
           </div>
         ) : isAnalyzing ? (
           <div className="space-y-2">

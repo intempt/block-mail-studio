@@ -111,11 +111,11 @@ export class OpenAIEmailService {
     }
   }
 
-  private static async callOpenAI(prompt: string, retries: number = 2): Promise<any> {
+  private static async callOpenAI(prompt: string, retries: number = 2, expectJSON: boolean = true): Promise<any> {
     const apiKey = ApiKeyService.getOpenAIKey();
 
     if (!ApiKeyService.isKeyAvailable()) {
-      throw new OpenAIServiceError('OpenAI API key not available');
+      throw new OpenAIServiceError('OpenAI API key not available. Please configure your API key in the settings.');
     }
 
     let lastError: Error | null = null;
@@ -135,7 +135,9 @@ export class OpenAIEmailService {
             messages: [
               {
                 role: 'system',
-                content: `You are an expert email marketing specialist. Always return valid JSON without markdown formatting or code blocks. Be concise and practical.`
+                content: expectJSON 
+                  ? `You are an expert email marketing specialist. Always return valid JSON without markdown formatting or code blocks. Be concise and practical.`
+                  : `You are a helpful email marketing expert. Respond directly and helpfully.`
               },
               {
                 role: 'user',
@@ -143,24 +145,46 @@ export class OpenAIEmailService {
               }
             ],
             temperature: 0.3,
-            max_tokens: 1500
+            max_tokens: expectJSON ? 1500 : 500
           })
         });
 
         if (!response.ok) {
           const errorText = await response.text();
-          throw new OpenAIServiceError(`API error: ${response.status} ${response.statusText} - ${errorText}`);
+          let errorMessage = `API error: ${response.status} ${response.statusText}`;
+          
+          if (response.status === 401) {
+            errorMessage = 'Invalid OpenAI API key. Please check your API key configuration.';
+          } else if (response.status === 429) {
+            errorMessage = 'OpenAI API rate limit exceeded. Please try again in a moment.';
+          } else if (response.status >= 500) {
+            errorMessage = 'OpenAI service is temporarily unavailable. Please try again later.';
+          }
+          
+          throw new OpenAIServiceError(`${errorMessage} - ${errorText}`);
         }
 
         const data = await response.json();
         this.validateAPIResponse(data);
         
         const content = data.choices[0].message.content;
-        return this.extractJSONFromResponse(content);
+        
+        if (expectJSON) {
+          return this.extractJSONFromResponse(content);
+        } else {
+          return content;
+        }
 
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
         console.error(`OpenAI API attempt ${attempt + 1} failed:`, lastError);
+        
+        // Don't retry on authentication or client errors
+        if (error instanceof OpenAIServiceError && 
+            (error.message.includes('Invalid OpenAI API key') || 
+             error.message.includes('API error: 4'))) {
+          throw error;
+        }
         
         if (attempt < retries) {
           await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
@@ -187,7 +211,7 @@ Requirements:
 - Use div with class="email-block" for sections
 - Include inline styles for email compatibility`;
 
-    return await this.callOpenAI(prompt);
+    return await this.callOpenAI(prompt, 2, true);
   }
 
   static async generateSubjectLines(emailContent: string, count: number = 5): Promise<string[]> {
@@ -198,18 +222,21 @@ Requirements:
 
 Email content: ${emailContent.slice(0, 500)}...`;
 
-    const response = await this.callOpenAI(prompt);
+    const response = await this.callOpenAI(prompt, 2, true);
     return response.subjectLines || [];
   }
 
   static async optimizeCopy(currentContent: string, optimizationType: 'engagement' | 'conversion' | 'clarity' | 'brevity'): Promise<string> {
-    const prompt = `Optimize this email content for ${optimizationType}. Return the improved HTML:
+    const prompt = `Optimize this email content for ${optimizationType}. Return JSON:
+{
+  "optimizedHTML": "improved HTML content here"
+}
 
 Current content: ${currentContent}
 
 Focus on ${optimizationType} while maintaining email-safe HTML structure.`;
 
-    const response = await this.callOpenAI(prompt);
+    const response = await this.callOpenAI(prompt, 2, true);
     return response.optimizedHTML || response.html || currentContent;
   }
 
@@ -219,40 +246,10 @@ Focus on ${optimizationType} while maintaining email-safe HTML structure.`;
 Context: ${request.conversationContext?.join(' ') || 'None'}
 Current email: ${request.currentEmailContent?.slice(0, 200) || 'None'}
 
-Return a simple string response (no JSON needed) about email marketing. Be helpful and direct.`;
+Provide a helpful and direct response about email marketing. Be concise and actionable.`;
 
     try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${ApiKeyService.getOpenAIKey()}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helpful email marketing expert. Respond directly without JSON formatting.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 500
-        })
-      });
-
-      if (!response.ok) {
-        throw new OpenAIServiceError(`API error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      this.validateAPIResponse(data);
-      
-      return data.choices[0].message.content;
+      return await this.callOpenAI(prompt, 2, false);
     } catch (error) {
       console.error('Conversational response failed:', error);
       throw error;
@@ -287,7 +284,7 @@ Return a simple string response (no JSON needed) about email marketing. Be helpf
 Subject: ${request.subjectLine}
 Content: ${request.emailHTML.slice(0, 1000)}...`;
 
-    return await this.callOpenAI(prompt);
+    return await this.callOpenAI(prompt, 2, true);
   }
 
   static async analyzePerformance(request: OpenAIEmailAnalysisRequest): Promise<PerformanceAnalysis> {
@@ -310,6 +307,6 @@ Content: ${request.emailHTML.slice(0, 1000)}...`;
 Subject: ${request.subjectLine}
 Content: ${request.emailHTML.slice(0, 1000)}...`;
 
-    return await this.callOpenAI(prompt);
+    return await this.callOpenAI(prompt, 2, true);
   }
 }
