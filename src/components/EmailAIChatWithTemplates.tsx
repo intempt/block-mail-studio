@@ -16,7 +16,14 @@ import {
   Search,
   Star,
   Eye,
-  Zap
+  Zap,
+  FileText,
+  Palette,
+  Image,
+  Type,
+  Target,
+  BarChart3,
+  ChevronRight
 } from 'lucide-react';
 import { EmailPromptLibrary, EmailPrompt } from './EmailPromptLibrary';
 import { EmailTemplate } from './TemplateManager';
@@ -26,6 +33,7 @@ interface Message {
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
+  suggestions?: string[];
 }
 
 interface EmailAIChatWithTemplatesProps {
@@ -45,14 +53,67 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     {
       id: '1',
       type: 'ai',
-      content: 'Hi! I\'m your AI email assistant. I can help you create amazing emails, suggest templates, or optimize your content. What would you like to work on today?',
-      timestamp: new Date()
+      content: 'Welcome to your AI Email Assistant! 🎯 I\'m here to help you create professional emails that convert. Choose a quick action below to get started, or tell me what you\'d like to create.',
+      timestamp: new Date(),
+      suggestions: [
+        'Create a welcome email series',
+        'Generate a product announcement', 
+        'Build a newsletter template',
+        'Optimize my current email'
+      ]
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'prompts' | 'templates'>('chat');
   const [templateSearch, setTemplateSearch] = useState('');
+
+  // Enhanced Quick Actions with better descriptions and colors
+  const quickActions = [
+    {
+      icon: <FileText className="w-8 h-8" />,
+      label: 'Industry Templates',
+      description: 'Browse pre-made templates for different industries',
+      action: 'Show me industry email templates',
+      color: 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
+      onClick: () => setActiveTab('templates')
+    },
+    {
+      icon: <Palette className="w-8 h-8" />,
+      label: 'Brand Kit',
+      description: 'Apply your brand colors and fonts',
+      action: 'Help me apply my brand colors and fonts to this email',
+      color: 'bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+    },
+    {
+      icon: <Image className="w-8 h-8" />,
+      label: 'AI Images',
+      description: 'Generate custom visuals for your email',
+      action: 'Generate professional images for my email campaign',
+      color: 'bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+    },
+    {
+      icon: <Type className="w-8 h-8" />,
+      label: 'Smart Copy',
+      description: 'AI-powered copywriting that converts',
+      action: 'Write compelling email copy that converts readers into customers',
+      color: 'bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+    },
+    {
+      icon: <Target className="w-8 h-8" />,
+      label: 'Optimize',
+      description: 'Enhance engagement and performance',
+      action: 'Analyze and improve my current email for better performance',
+      color: 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+    },
+    {
+      icon: <BarChart3 className="w-8 h-8" />,
+      label: 'A/B Testing',
+      description: 'Create multiple variations to test',
+      action: 'Create multiple variations of this email for split testing',
+      color: 'bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
+    }
+  ];
 
   const filteredTemplates = templates.filter(template =>
     template.name.toLowerCase().includes(templateSearch.toLowerCase()) ||
@@ -80,7 +141,8 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
         id: (Date.now() + 1).toString(),
         type: 'ai',
         content: generateAIResponse(inputMessage),
-        timestamp: new Date()
+        timestamp: new Date(),
+        suggestions: generateContextualSuggestions(inputMessage)
       };
       setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
@@ -105,6 +167,53 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     return "I understand you want to improve your email. I can help with content creation, design suggestions, template selection, and optimization tips. What specific aspect would you like to focus on?";
   };
 
+  const generateContextualSuggestions = (userInput: string): string[] => {
+    const input = userInput.toLowerCase();
+    
+    if (input.includes('template')) {
+      return [
+        'Show newsletter templates',
+        'Browse promotional designs',
+        'Find welcome email templates',
+        'Create custom template'
+      ];
+    }
+    
+    if (input.includes('write') || input.includes('create')) {
+      return [
+        'Generate subject lines',
+        'Write call-to-action text',
+        'Create email outline',
+        'Add personalization'
+      ];
+    }
+    
+    if (input.includes('optimize')) {
+      return [
+        'Improve subject line',
+        'Enhance call-to-actions',
+        'Optimize for mobile',
+        'Test different versions'
+      ];
+    }
+    
+    return [
+      'Generate email content',
+      'Choose a template',
+      'Create images',
+      'Optimize performance'
+    ];
+  };
+
+  const handleQuickAction = (action: any) => {
+    if (action.onClick) {
+      action.onClick();
+    } else {
+      setInputMessage(action.action);
+      setTimeout(() => sendMessage(), 100);
+    }
+  };
+
   const handlePromptSelect = (prompt: EmailPrompt) => {
     setInputMessage(prompt.prompt);
     setActiveTab('chat');
@@ -117,40 +226,141 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
         id: Date.now().toString(),
         type: 'ai',
         content: `I've loaded the "${template.name}" template for you! The template has been applied to your editor. Would you like me to help you customize it or suggest improvements?`,
-        timestamp: new Date()
+        timestamp: new Date(),
+        suggestions: [
+          'Customize colors',
+          'Update copy',
+          'Add more sections',
+          'Generate images'
+        ]
       };
       setMessages(prev => [...prev, aiMessage]);
     }
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputMessage(suggestion);
+    setTimeout(() => sendMessage(), 100);
+  };
+
   const renderChatTab = () => (
     <div className="flex flex-col h-full">
+      {/* Enhanced Quick Actions Section */}
+      <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 border-b border-gray-200">
+        <div className="mb-6">
+          <h4 className="text-xl font-bold text-gray-900 mb-2">Quick Actions</h4>
+          <p className="text-sm text-gray-600">Choose an action to get started with your email creation</p>
+        </div>
+        
+        {/* Redesigned Quick Actions Grid */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          {quickActions.map((action, index) => (
+            <Card
+              key={index}
+              className={`group cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 border-0 overflow-hidden ${action.color} text-white`}
+              onClick={() => handleQuickAction(action)}
+            >
+              <div className="p-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl group-hover:bg-white/30 transition-colors">
+                    {action.icon}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h5 className="text-lg font-bold">{action.label}</h5>
+                    <p className="text-sm opacity-90 leading-relaxed">{action.description}</p>
+                  </div>
+                  
+                  <div className="flex items-center text-sm font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+                    <span>Get started</span>
+                    <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Navigation Pills */}
+        <div className="flex gap-3 justify-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveTab('prompts')}
+            className="bg-white/50 border-white/20 text-gray-700 hover:bg-white/70"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Prompt Library
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setActiveTab('templates')}
+            className="bg-white/50 border-white/20 text-gray-700 hover:bg-white/70"
+          >
+            <Wand2 className="w-4 h-4 mr-2" />
+            All Templates
+          </Button>
+        </div>
+      </div>
+
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              {message.type === 'ai' && (
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-blue-600" />
-                </div>
-              )}
-              
+            <div key={message.id}>
               <div
-                className={`max-w-[80%] p-3 rounded-lg text-sm ${
-                  message.type === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
+                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                {message.content}
+                {message.type === 'ai' && (
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                
+                <div
+                  className={`max-w-[80%] p-4 rounded-2xl text-sm ${
+                    message.type === 'user'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                      : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
+                  }`}
+                >
+                  {message.content}
+                  <p className="text-xs opacity-70 mt-2">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                
+                {message.type === 'user' && (
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-gray-600" />
+                  </div>
+                )}
               </div>
-              
-              {message.type === 'user' && (
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-gray-600" />
+
+              {/* Enhanced Contextual Suggestions */}
+              {message.suggestions && message.suggestions.length > 0 && message.type === 'ai' && (
+                <div className="mt-4 ml-11">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                    <p className="text-xs font-semibold text-blue-800 mb-3 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" />
+                      Quick Follow-ups
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {message.suggestions.map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="justify-start h-auto p-3 bg-white text-gray-700 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                          disabled={isLoading}
+                        >
+                          <Zap className="w-3 h-3 mr-2 text-blue-500" />
+                          <span className="text-xs">{suggestion}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -158,10 +368,10 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
           
           {isLoading && (
             <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <Bot className="w-4 h-4 text-blue-600" />
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="bg-gray-100 p-3 rounded-lg">
+              <div className="bg-white border border-gray-200 shadow-sm p-4 rounded-2xl">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -173,42 +383,22 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
         </div>
       </ScrollArea>
       
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 bg-white">
         <div className="flex gap-2">
           <Input
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             placeholder="Ask me anything about your email..."
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            className="flex-1"
+            className="flex-1 border-gray-300 focus:border-blue-500"
           />
           <Button 
             onClick={sendMessage} 
             disabled={!inputMessage.trim() || isLoading}
             size="sm"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
           >
             <Send className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        <div className="flex gap-2 mt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('prompts')}
-            className="flex items-center gap-1 text-xs"
-          >
-            <Sparkles className="w-3 h-3" />
-            Prompts
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('templates')}
-            className="flex items-center gap-1 text-xs"
-          >
-            <Wand2 className="w-3 h-3" />
-            Templates
           </Button>
         </div>
       </div>
@@ -303,11 +493,13 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
         <div className="flex items-center gap-2 mb-3">
-          <Bot className="w-5 h-5 text-blue-600" />
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+            <Bot className="w-4 h-4 text-white" />
+          </div>
           <h3 className="text-lg font-semibold text-gray-900">AI Assistant</h3>
-          <Badge variant="secondary" className="ml-auto text-xs">
+          <Badge variant="secondary" className="ml-auto text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
             Smart
           </Badge>
         </div>
