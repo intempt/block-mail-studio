@@ -59,14 +59,16 @@ import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EmailSubjectLine } from './EmailSubjectLine';
 import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
+import { PropertyEditorPanel } from './PropertyEditorPanel';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useToast } from '@/hooks/use-toast';
 import { directAIService } from '@/services/directAIService';
 import { EmailSnippet } from '@/types/snippets';
+import { EmailBlock } from '@/types/emailBlocks';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
-type RightPanelTab = 'analytics' | 'optimization';
+type RightPanelTab = 'properties' | 'analytics' | 'optimization';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
 const EmailEditor = () => {
@@ -75,12 +77,13 @@ const EmailEditor = () => {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('blocks');
-  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('analytics');
+  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('properties');
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
   const [compactMode, setCompactMode] = useState(false);
+  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const canvasRef = useRef<EmailBlockCanvasRef>(null);
   const [fullscreenMode, setFullscreenMode] = useState(false);
   const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
@@ -330,6 +333,17 @@ const EmailEditor = () => {
 
   const renderRightPanel = () => {
     switch (rightPanelTab) {
+      case 'properties':
+        return (
+          <PropertyEditorPanel
+            selectedBlock={selectedBlock}
+            onBlockUpdate={(block) => {
+              setSelectedBlock(block);
+              // Update the block in the canvas
+              console.log('Block updated:', block);
+            }}
+          />
+        );
       case 'analytics':
         return (
           <EnhancedPerformanceAnalyzer 
@@ -353,15 +367,11 @@ const EmailEditor = () => {
         );
       default:
         return (
-          <EnhancedPerformanceAnalyzer 
-            emailHTML={emailHTML}
-            subjectLine={subjectLine}
-            onOptimize={(suggestion) => {
-              console.log('Applying optimization:', suggestion);
-              toast({
-                title: "Optimization Applied",
-                description: suggestion
-              });
+          <PropertyEditorPanel
+            selectedBlock={selectedBlock}
+            onBlockUpdate={(block) => {
+              setSelectedBlock(block);
+              console.log('Block updated:', block);
             }}
           />
         );
@@ -540,7 +550,7 @@ const EmailEditor = () => {
           <div className={`border-l border-slate-200 bg-white ${getRightPanelWidth()}`}>
             <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
               <div className="flex items-center justify-between mb-2 lg:mb-3">
-                <h3 className="font-semibold text-slate-900 text-sm lg:text-base">Analytics & Tools</h3>
+                <h3 className="font-semibold text-slate-900 text-sm lg:text-base">Properties & Tools</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -552,6 +562,14 @@ const EmailEditor = () => {
               </div>
               
               <div className="flex gap-1">
+                <Button
+                  variant={rightPanelTab === 'properties' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRightPanelTab('properties')}
+                  className="flex-1 h-6 lg:h-8"
+                >
+                  <Edit3 className="w-3 h-3 lg:w-4 lg:h-4" />
+                </Button>
                 <Button
                   variant={rightPanelTab === 'analytics' ? 'default' : 'outline'}
                   size="sm"

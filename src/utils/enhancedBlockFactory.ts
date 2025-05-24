@@ -1,4 +1,3 @@
-
 import { EmailBlock, BlockStyling, ResponsiveSettings, DisplayOptions } from '@/types/emailBlocks';
 
 const createDefaultStyling = (): ResponsiveSettings => ({
@@ -118,134 +117,26 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         },
       };
 
-    case 'split':
+    case 'spacer':
       return {
         ...baseBlock,
-        type: 'split',
+        type: 'spacer',
         content: {
-          leftContent: 'text',
-          rightContent: 'text',
-          leftData: { html: '<p>Left column content</p>' },
-          rightData: { html: '<p>Right column content</p>' },
-          ratio: '50-50',
+          height: '40px',
+          mobileHeight: '20px',
         },
       };
 
-    case 'product':
+    case 'divider':
       return {
         ...baseBlock,
-        type: 'product',
+        type: 'divider',
         content: {
-          mode: 'static',
-          products: [
-            {
-              id: 'sample-1',
-              name: 'Sample Product',
-              price: '$29.99',
-              image: 'https://via.placeholder.com/300x300?text=Product',
-              description: 'This is a sample product description.',
-              ctaText: 'Shop Now',
-              ctaLink: '#',
-            },
-          ],
-          layout: 'grid',
-          showImages: true,
-          showNames: true,
-          showPrices: true,
-          showDescriptions: true,
-          columns: 2,
-        },
-      };
-
-    case 'table':
-      return {
-        ...baseBlock,
-        type: 'table',
-        content: {
-          rows: 3,
-          columns: 2,
-          cells: [
-            [
-              { type: 'text', content: 'Header 1' },
-              { type: 'text', content: 'Header 2' },
-            ],
-            [
-              { type: 'text', content: 'Row 1, Col 1' },
-              { type: 'text', content: 'Row 1, Col 2' },
-            ],
-            [
-              { type: 'text', content: 'Row 2, Col 1' },
-              { type: 'text', content: 'Row 2, Col 2' },
-            ],
-          ],
-          headerRow: true,
-          borderStyle: 'solid',
-          borderColor: '#e0e0e0',
-          borderWidth: '1px',
-        },
-      };
-
-    case 'header-link-bar':
-      return {
-        ...baseBlock,
-        type: 'header-link-bar',
-        content: {
-          logo: {
-            src: 'https://via.placeholder.com/150x50?text=Logo',
-            alt: 'Company Logo',
-            link: '#',
-            width: '150px',
-          },
-          links: [
-            { text: 'Home', url: '#', showOnDesktop: true, showOnMobile: true },
-            { text: 'About', url: '#', showOnDesktop: true, showOnMobile: false },
-            { text: 'Contact', url: '#', showOnDesktop: true, showOnMobile: true },
-          ],
-          layout: 'left-logo',
-          mobileLayout: 'stacked',
-        },
-      };
-
-    case 'drop-shadow':
-      return {
-        ...baseBlock,
-        type: 'drop-shadow',
-        content: {
-          shadowType: 'light',
-          shadowColor: 'rgba(0,0,0,0.1)',
-          shadowBlur: '10px',
-          shadowSpread: '0px',
-          shadowOffsetX: '0px',
-          shadowOffsetY: '4px',
-          children: [],
-        },
-      };
-
-    case 'review-quote':
-      return {
-        ...baseBlock,
-        type: 'review-quote',
-        content: {
-          reviewText: 'This product exceeded my expectations! Highly recommend.',
-          reviewerName: 'Sarah Johnson',
-          rating: 5,
-          showRating: true,
-          quoteStyle: 'card',
-        },
-      };
-
-    case 'columns':
-      return {
-        ...baseBlock,
-        type: 'columns',
-        content: {
-          columnCount: 2,
-          columnRatio: '50-50',
-          columns: [
-            { id: generateUniqueId(), blocks: [], width: '50%' },
-            { id: generateUniqueId(), blocks: [], width: '50%' },
-          ],
-          gap: '16px',
+          style: 'solid',
+          thickness: '1px',
+          color: '#e0e0e0',
+          width: '100%',
+          alignment: 'center',
         },
       };
 
@@ -278,29 +169,6 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         },
       };
 
-    case 'spacer':
-      return {
-        ...baseBlock,
-        type: 'spacer',
-        content: {
-          height: '40px',
-          mobileHeight: '20px',
-        },
-      };
-
-    case 'divider':
-      return {
-        ...baseBlock,
-        type: 'divider',
-        content: {
-          style: 'solid',
-          thickness: '1px',
-          color: '#e0e0e0',
-          width: '100%',
-          alignment: 'center',
-        },
-      };
-
     case 'html':
       return {
         ...baseBlock,
@@ -308,6 +176,34 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         content: {
           html: '<div style="padding: 20px; background-color: #f8f9fa; border: 1px dashed #ccc; text-align: center;">Custom HTML Block</div>',
           customCSS: '',
+        },
+      };
+
+    case 'table':
+      return {
+        ...baseBlock,
+        type: 'table',
+        content: {
+          rows: 3,
+          columns: 2,
+          cells: [
+            [
+              { type: 'text', content: 'Header 1' },
+              { type: 'text', content: 'Header 2' },
+            ],
+            [
+              { type: 'text', content: 'Row 1, Col 1' },
+              { type: 'text', content: 'Row 1, Col 2' },
+            ],
+            [
+              { type: 'text', content: 'Row 2, Col 1' },
+              { type: 'text', content: 'Row 2, Col 2' },
+            ],
+          ],
+          headerRow: true,
+          borderStyle: 'solid',
+          borderColor: '#e0e0e0',
+          borderWidth: '1px',
         },
       };
 

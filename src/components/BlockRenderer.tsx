@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -15,6 +14,7 @@ import { MenuBlockRenderer } from './blocks/MenuBlockRenderer';
 import { HtmlBlockRenderer } from './blocks/HtmlBlockRenderer';
 import { CodeBlockRenderer } from './blocks/CodeBlockRenderer';
 import { ColumnsBlockRenderer } from './blocks/ColumnsBlockRenderer';
+import { TableBlockRenderer } from './blocks/TableBlockRenderer';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -59,6 +59,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
         return <CodeBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'product':
       case 'table':
+        return <TableBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'header-link-bar':
       case 'drop-shadow':
       case 'review-quote':
