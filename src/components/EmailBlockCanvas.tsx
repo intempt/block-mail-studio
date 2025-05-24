@@ -29,7 +29,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        paragraph: false,
+        // Keep paragraph but disable heading to avoid conflicts
         heading: false,
       }),
       EmailBlockNode,
