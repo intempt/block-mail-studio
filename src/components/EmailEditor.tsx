@@ -44,6 +44,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 
+import { WelcomeScreen } from './WelcomeScreen';
+import { CompactAIChat } from './CompactAIChat';
 import { EmailAIChat } from './EmailAIChat';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
@@ -76,6 +78,7 @@ type RightPanelTab = 'properties' | 'analytics' | 'optimization';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
 const EmailEditor = () => {
+  const [showWelcome, setShowWelcome] = useState(true);
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [previewWidth, setPreviewWidth] = useState(1200);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
@@ -308,6 +311,31 @@ const EmailEditor = () => {
     canvasRef.current?.insertSnippet(snippet);
   };
 
+  const handleQuickStart = (type: string) => {
+    setShowWelcome(false);
+    setLeftPanelTab('ai');
+    setLeftPanelCollapsed(false);
+    
+    // Set different starting states based on quick start type
+    switch (type) {
+      case 'template':
+        setLeftPanelTab('design');
+        break;
+      case 'ai':
+        setLeftPanelTab('ai');
+        break;
+      case 'import':
+        // Trigger file upload
+        break;
+      default:
+        setLeftPanelTab('blocks');
+    }
+  };
+
+  const handleEnterEditor = () => {
+    setShowWelcome(false);
+  };
+
   const renderLeftPanel = () => {
     if (leftPanelCollapsed) {
       return (
@@ -330,19 +358,7 @@ const EmailEditor = () => {
 
     switch (leftPanelTab) {
       case 'ai':
-        return (
-          <EnhancedAIAssistant
-            editor={null}
-            emailHTML={emailHTML}
-            canvasRef={canvasRef}
-            subjectLine={subjectLine}
-            onSubjectLineChange={setSubjectLine}
-            onLoadToEditor={(blocks, layoutConfig) => {
-              console.log('Loading blocks to editor:', blocks, layoutConfig);
-            }}
-            currentEmailBlocks={[]}
-          />
-        );
+        return <CompactAIChat onMessage={(message) => console.log('AI message:', message)} />;
       case 'design':
         return <ProfessionalToolPalette editor={null} />;
       case 'blocks':
@@ -471,6 +487,15 @@ const EmailEditor = () => {
       </Button>
     </div>
   );
+
+  if (showWelcome) {
+    return (
+      <WelcomeScreen 
+        onEnterEditor={handleEnterEditor}
+        onQuickStart={handleQuickStart}
+      />
+    );
+  }
 
   return (
     <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''} ${fullscreenMode ? 'fullscreen-mode' : ''}`}>
