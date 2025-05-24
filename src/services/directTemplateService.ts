@@ -21,6 +21,42 @@ export class DirectTemplateService {
     return newTemplate;
   }
 
+  // Quick save template from publish action
+  static savePublishedTemplate(
+    emailHTML: string, 
+    subjectLine: string, 
+    existingTemplateNames: string[]
+  ): EmailTemplate {
+    console.log('Quick save published template:', subjectLine);
+    
+    // Generate template name from subject line
+    const baseName = subjectLine.trim() || 'Untitled Email Template';
+    
+    // Handle duplicate names
+    let finalName = baseName;
+    let counter = 2;
+    while (existingTemplateNames.includes(finalName)) {
+      finalName = `${baseName} (${counter})`;
+      counter++;
+    }
+    
+    const newTemplate: EmailTemplate = {
+      id: `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: finalName,
+      description: `Saved from canvas on ${new Date().toLocaleDateString()}`,
+      html: emailHTML,
+      subject: subjectLine,
+      category: 'Published',
+      tags: ['canvas-created', 'published'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isFavorite: false,
+      usageCount: 0
+    };
+    
+    return newTemplate;
+  }
+
   // No-op - no persistent storage
   static updateTemplate(id: string, updates: Partial<EmailTemplate>): void {
     console.log('Update template called (no-op):', id);

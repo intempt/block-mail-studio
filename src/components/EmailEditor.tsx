@@ -66,6 +66,7 @@ import { directAIService } from '@/services/directAIService';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 import { SimplePropertyEditor } from './SimplePropertyEditor';
+import { DirectTemplateService } from '@/services/directTemplateService';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -95,6 +96,57 @@ const EmailEditor = () => {
     setEmailHTML(newContent);
   };
 
+  const handleExport = () => {
+    const htmlContent = generateEmailHTML(emailHTML);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `email-template-${Date.now()}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePublish = () => {
+    // Quick save as template using subject line as name
+    const templateName = subjectLine.trim() || 'Untitled Email Template';
+    
+    // Check for duplicate names and append number if needed
+    const existingNames = templates.map(t => t.name);
+    let finalName = templateName;
+    let counter = 2;
+    while (existingNames.includes(finalName)) {
+      finalName = `${templateName} (${counter})`;
+      counter++;
+    }
+    
+    const newTemplate: EmailTemplate = {
+      id: `template-${Date.now()}`,
+      name: finalName,
+      description: `Saved from canvas on ${new Date().toLocaleDateString()}`,
+      html: emailHTML,
+      subject: subjectLine,
+      category: 'Published',
+      tags: ['canvas-created', 'published'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isFavorite: false,
+      usageCount: 0
+    };
+    
+    // Save template to state
+    setTemplates(prev => [...prev, newTemplate]);
+    
+    // Show success toast
+    toast({
+      title: "Template Saved & Exported",
+      description: `"${finalName}" has been saved to your templates and exported as HTML.`,
+    });
+    
+    // Export HTML file
+    handleExport();
+  };
+
   const handleSave = () => {
     const templateName = prompt('Enter template name:');
     if (!templateName) return;
@@ -120,14 +172,7 @@ const EmailEditor = () => {
       description: `"${templateName}" has been saved to your templates.`,
     });
     
-    const htmlContent = generateEmailHTML(emailHTML);
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `email-template-${Date.now()}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    handleExport();
   };
 
   const handleToggleFullscreen = () => {
@@ -140,7 +185,7 @@ const EmailEditor = () => {
     onToggleLeftPanel: () => setLeftPanelCollapsed(prev => !prev),
     onToggleRightPanel: () => setRightPanelCollapsed(prev => !prev),
     onToggleFullscreen: handleToggleFullscreen,
-    onSave: handleSave
+    onSave: handlePublish
   });
 
   const keyboardShortcuts = [
@@ -388,12 +433,12 @@ const EmailEditor = () => {
 
   const renderHeaderActions = () => (
     <div className="flex items-center gap-2 lg:gap-3">
-      <Button variant="outline" size="sm" onClick={exportHTML} className="h-6 lg:h-8 hidden sm:flex">
+      <Button variant="outline" size="sm" onClick={handleExport} className="h-6 lg:h-8 hidden sm:flex">
         <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
         <span className="hidden lg:inline">Export</span>
       </Button>
       
-      <Button size="sm" onClick={handleSave} className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
+      <Button size="sm" onClick={handlePublish} className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
         <Zap className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
         <span className="hidden lg:inline">Publish</span>
       </Button>
