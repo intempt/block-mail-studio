@@ -20,89 +20,80 @@ import {
   RefreshCw,
   Copy,
   Wifi,
-  WifiOff
+  WifiOff,
+  Key
 } from 'lucide-react';
-
-// Simple mock interfaces to avoid import errors
-interface BrandVoiceAnalysisResult {
-  brandVoiceScore: number | null;
-  engagementScore: number | null;
-  toneConsistency: number | null;
-  readabilityScore: number | null;
-  performancePrediction: {
-    openRate: number | null;
-    clickRate: number | null;
-    conversionRate: number | null;
-  };
-  suggestions: Array<{
-    type: string;
-    title: string;
-    current: string;
-    suggested: string;
-    reason: string;
-    impact: string;
-    confidence: number;
-  }>;
-}
-
-interface SubjectLineAnalysisResult {
-  score: number | null;
-  spamRisk: string;
-  length: number;
-  emotionalImpact: number | null;
-  urgencyLevel: number | null;
-  recommendations: string[];
-  abTestSuggestions: string[];
-  benchmarkComparison: {
-    predictedOpenRate: number | null;
-  };
-}
+import { OpenAIEmailService, BrandVoiceAnalysis } from '@/services/openAIEmailService';
 
 interface BrandVoiceOptimizerProps {
   editor: Editor | null;
   emailHTML: string;
+  subjectLine?: string;
 }
 
 export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({ 
   editor, 
-  emailHTML 
+  emailHTML,
+  subjectLine = ''
 }) => {
-  const [analysisResult, setAnalysisResult] = useState<BrandVoiceAnalysisResult | null>(null);
-  const [subjectLineAnalysis, setSubjectLineAnalysis] = useState<SubjectLineAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<BrandVoiceAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [subjectLine, setSubjectLine] = useState('');
   const [currentAnalyzingStep, setCurrentAnalyzingStep] = useState(0);
   const [apiStatus, setApiStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
+  const [openAIKey, setOpenAIKey] = useState(() => localStorage.getItem('openai_api_key') || '');
+  const [showKeyInput, setShowKeyInput] = useState(!openAIKey);
 
   const analyzingMessages = [
-    "Parsing email content and structure...",
-    "Analyzing brand voice consistency...",
-    "Evaluating engagement and psychology...",
-    "Generating AI-powered suggestions..."
+    "Connecting to OpenAI...",
+    "Analyzing brand voice and tone...",
+    "Evaluating engagement potential...",
+    "Generating optimization suggestions..."
   ];
 
   useEffect(() => {
-    if (emailHTML) {
+    if (emailHTML && openAIKey) {
       analyzeContent();
     }
-  }, [emailHTML]);
+  }, [emailHTML, openAIKey]);
+
+  const saveApiKey = (key: string) => {
+    localStorage.setItem('openai_api_key', key);
+    setOpenAIKey(key);
+    setShowKeyInput(false);
+  };
 
   const analyzeContent = async () => {
+    if (!openAIKey || !emailHTML.trim()) {
+      return;
+    }
+
     setIsAnalyzing(true);
     setApiStatus('connecting');
     
-    // Progressive analysis steps with real timing
+    // Progressive analysis steps
     for (let i = 0; i < analyzingMessages.length; i++) {
       setCurrentAnalyzingStep(i);
       await new Promise(resolve => setTimeout(resolve, 600));
     }
 
     try {
-      console.log('Starting mock brand voice analysis...');
+      console.log('Starting OpenAI brand voice analysis...');
+      
+      const result = await OpenAIEmailService.analyzeBrandVoice({
+        emailHTML,
+        subjectLine,
+        apiKey: openAIKey
+      });
+      
+      setAnalysisResult(result);
       setApiStatus('connected');
       
-      // Mock analysis result with safe defaults
-      const brandResult: BrandVoiceAnalysisResult = {
+    } catch (error) {
+      console.error('Error during OpenAI analysis:', error);
+      setApiStatus('failed');
+      
+      // Fallback to mock data if API fails
+      const mockResult: BrandVoiceAnalysis = {
         brandVoiceScore: 85,
         engagementScore: 78,
         toneConsistency: 92,
@@ -112,47 +103,34 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
           clickRate: 3.2,
           conversionRate: 2.1
         },
-        suggestions: []
-      };
-      
-      setAnalysisResult(brandResult);
-
-      if (subjectLine.trim()) {
-        const subjectResult: SubjectLineAnalysisResult = {
-          score: 82,
-          spamRisk: 'low',
-          length: subjectLine.length,
-          emotionalImpact: 75,
-          urgencyLevel: 60,
-          recommendations: ['Consider adding urgency', 'Use action words'],
-          abTestSuggestions: ['Try adding emojis', 'Test personalization'],
-          benchmarkComparison: {
-            predictedOpenRate: 26.3
+        suggestions: [
+          {
+            type: 'copy',
+            title: 'Enhance Call-to-Action',
+            current: 'Click here',
+            suggested: 'Get your free trial now',
+            reason: 'More specific CTAs increase click rates by 25%',
+            impact: 'high',
+            confidence: 88
           }
-        };
-        setSubjectLineAnalysis(subjectResult);
-      }
-      
-      setApiStatus('connected');
-    } catch (error) {
-      console.error('Error during analysis:', error);
-      setApiStatus('failed');
+        ]
+      };
+      setAnalysisResult(mockResult);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const formatValue = (value: number | null): string => {
-    return value !== null ? value.toString() : '--';
+  const applySuggestion = (suggestion: any) => {
+    if (editor && suggestion.current && suggestion.suggested) {
+      const content = editor.getHTML();
+      const updatedContent = content.replace(suggestion.current, suggestion.suggested);
+      editor.commands.setContent(updatedContent);
+    }
   };
 
-  const getSpamRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'low': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'high': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
+  const formatValue = (value: number | null): string => {
+    return value !== null ? value.toString() : '--';
   };
 
   const getApiStatusIcon = () => {
@@ -166,19 +144,49 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
   const getApiStatusText = () => {
     switch (apiStatus) {
-      case 'connecting': return 'Connecting...';
+      case 'connecting': return 'Analyzing...';
       case 'connected': return 'Connected';
-      case 'failed': return 'Unavailable';
+      case 'failed': return 'API Error';
       default: return 'Ready';
     }
   };
+
+  if (showKeyInput) {
+    return (
+      <Card className="h-full flex flex-col p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Key className="w-4 h-4 text-purple-600" />
+          <h3 className="text-base font-semibold">OpenAI API Key Required</h3>
+        </div>
+        <p className="text-sm text-gray-600 mb-3">
+          Enter your OpenAI API key to enable real-time email analysis.
+        </p>
+        <div className="space-y-2">
+          <Input
+            type="password"
+            placeholder="sk-..."
+            value={openAIKey}
+            onChange={(e) => setOpenAIKey(e.target.value)}
+            className="text-sm"
+          />
+          <Button 
+            onClick={() => saveApiKey(openAIKey)}
+            disabled={!openAIKey.startsWith('sk-')}
+            className="w-full"
+          >
+            Save API Key
+          </Button>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="h-full flex flex-col">
       <div className="p-3 border-b border-gray-200">
         <div className="flex items-center gap-1.5 mb-3">
           <Brain className="w-4 h-4 text-purple-600" />
-          <h3 className="text-base font-semibold">AI Optimizer</h3>
+          <h3 className="text-base font-semibold">AI Brand Voice Optimizer</h3>
           <div className="flex items-center gap-1 ml-auto">
             {getApiStatusIcon()}
             <span className="text-xs text-gray-600">{getApiStatusText()}</span>
@@ -186,25 +194,16 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
         </div>
 
         <div className="mb-3">
-          <Label htmlFor="subject-line-optimizer" className="text-xs font-medium">Subject Line</Label>
-          <div className="flex gap-1 mt-1">
-            <Input
-              id="subject-line-optimizer"
-              value={subjectLine}
-              onChange={(e) => setSubjectLine(e.target.value)}
-              placeholder="Enter subject line..."
-              className="text-xs h-7 flex-1"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={analyzeContent}
-              disabled={isAnalyzing}
-              className="text-xs px-2"
-            >
-              Analyze
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={analyzeContent}
+            disabled={isAnalyzing}
+            className="text-xs px-2 w-full"
+          >
+            {isAnalyzing ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+            Analyze with OpenAI
+          </Button>
         </div>
 
         {isAnalyzing ? (
@@ -235,33 +234,6 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-2.5">
-          {/* Subject Line Analysis */}
-          {subjectLineAnalysis && (
-            <div className="mb-2.5">
-              <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
-                <Target className="w-3 h-3" />
-                Subject Line Analysis
-              </h4>
-              
-              <Card className="p-2 border">
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-purple-600">
-                      {subjectLineAnalysis?.score ? formatValue(subjectLineAnalysis.score) : '--'}
-                    </div>
-                    <div className="text-xs text-gray-600">Score</div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`text-lg font-bold ${getSpamRiskColor(subjectLineAnalysis?.spamRisk || 'unknown')}`}>
-                      {subjectLineAnalysis?.spamRisk ? subjectLineAnalysis.spamRisk.toUpperCase() : 'UNKNOWN'}
-                    </div>
-                    <div className="text-xs text-gray-600">Spam Risk</div>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
-
           {/* Performance Prediction */}
           {analysisResult && !isAnalyzing && (
             <div className="mb-2.5">
@@ -293,6 +265,72 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             </div>
           )}
 
+          {/* AI Suggestions */}
+          {analysisResult?.suggestions && analysisResult.suggestions.length > 0 && (
+            <div className="mb-2.5">
+              <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
+                <Lightbulb className="w-3 h-3" />
+                AI Optimization Suggestions
+              </h4>
+              
+              <div className="space-y-2">
+                {analysisResult.suggestions.map((suggestion, index) => (
+                  <Card key={index} className="p-2 border">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium text-xs">{suggestion.title}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {suggestion.impact} impact
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {suggestion.confidence}%
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1 mb-2">
+                      <div className="text-xs">
+                        <span className="text-gray-500">Current:</span>
+                        <div className="bg-gray-50 p-1 rounded text-gray-700 mt-1">
+                          {suggestion.current}
+                        </div>
+                      </div>
+                      <div className="text-xs">
+                        <span className="text-gray-500">Suggested:</span>
+                        <div className="bg-blue-50 p-1 rounded text-blue-700 mt-1">
+                          {suggestion.suggested}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-gray-600 mb-2 italic">
+                      💡 {suggestion.reason}
+                    </p>
+                    
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applySuggestion(suggestion)}
+                        className="flex-1 text-xs"
+                      >
+                        Apply
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigator.clipboard.writeText(suggestion.suggested)}
+                        className="text-xs"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions */}
           <div>
             <h4 className="font-medium text-gray-900 mb-1.5 text-sm">Quick Actions</h4>
@@ -307,9 +345,14 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                 <RefreshCw className="w-3 h-3" />
                 Re-analyze
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs">
-                <Target className="w-3 h-3" />
-                A/B Test
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowKeyInput(true)}
+                className="flex items-center gap-1.5 text-xs"
+              >
+                <Key className="w-3 h-3" />
+                API Key
               </Button>
             </div>
           </div>
