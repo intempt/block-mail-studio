@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Slider } from '@/components/ui/slider';
 import { 
   Monitor, 
   Smartphone, 
@@ -37,7 +38,8 @@ import {
   Users,
   BarChart3,
   Palette,
-  FileText
+  FileText,
+  Code2
 } from 'lucide-react';
 
 import { EmailAIChat } from './EmailAIChat';
@@ -48,14 +50,13 @@ import { IntelligentAssistant } from './IntelligentAssistant';
 import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
-import { ResponsiveLayoutControls } from './ResponsiveLayoutControls';
 import { WorkspaceManager } from './WorkspaceManager';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 
 type EditorMode = 'design' | 'ai' | 'templates' | 'analytics' | 'team';
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
-type RightPanelTab = 'properties' | 'analytics' | 'responsive' | 'workspace';
+type RightPanelTab = 'properties' | 'analytics' | 'code' | 'workspace';
 
 interface WorkspaceSettings {
   theme: 'light' | 'dark' | 'auto';
@@ -71,6 +72,7 @@ interface WorkspaceSettings {
 const EmailEditor = () => {
   const [editorMode, setEditorMode] = useState<EditorMode>('design');
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
+  const [previewWidth, setPreviewWidth] = useState(1200);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('ai');
@@ -275,17 +277,59 @@ const EmailEditor = () => {
     }
   };
 
+  const handlePreviewModeChange = (mode: PreviewMode) => {
+    setPreviewMode(mode);
+    // Set default widths for each device type
+    switch (mode) {
+      case 'desktop':
+        setPreviewWidth(1200);
+        break;
+      case 'tablet':
+        setPreviewWidth(768);
+        break;
+      case 'mobile':
+        setPreviewWidth(375);
+        break;
+    }
+  };
+
+  const handleWidthChange = (value: number[]) => {
+    setPreviewWidth(value[0]);
+    // Auto-update preview mode based on width
+    if (value[0] <= 480) {
+      setPreviewMode('mobile');
+    } else if (value[0] <= 1024) {
+      setPreviewMode('tablet');
+    } else {
+      setPreviewMode('desktop');
+    }
+  };
+
+  const getPreviewMaxWidth = () => {
+    switch (previewMode) {
+      case 'desktop':
+        return 'max-w-4xl';
+      case 'tablet':
+        return 'max-w-2xl';
+      case 'mobile':
+        return 'max-w-sm';
+      default:
+        return 'max-w-4xl';
+    }
+  };
+
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'analytics':
         return <PerformanceAnalyzer editor={editor} emailHTML={emailHTML} />;
-      case 'responsive':
+      case 'code':
         return (
-          <ResponsiveLayoutControls
-            currentDevice={previewMode}
-            onDeviceChange={(device) => setPreviewMode(device as PreviewMode)}
-            onWidthChange={() => {}}
-          />
+          <div className="p-4">
+            <h4 className="font-medium mb-4">HTML Preview</h4>
+            <div className="bg-slate-100 rounded-lg p-4 text-xs font-mono overflow-auto max-h-96">
+              <pre>{emailHTML}</pre>
+            </div>
+          </div>
         );
       case 'workspace':
         return <WorkspaceManager onSettingsChange={setWorkspaceSettings} />;
@@ -344,13 +388,13 @@ const EmailEditor = () => {
           </div>
         </div>
 
-        {/* Center: Preview Controls */}
-        <div className="flex items-center gap-2">
+        {/* Center: Enhanced Preview Controls */}
+        <div className="flex items-center gap-4">
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
             <Button
               variant={previewMode === 'desktop' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setPreviewMode('desktop')}
+              onClick={() => handlePreviewModeChange('desktop')}
               className="h-8 px-3 rounded-md"
             >
               <Monitor className="w-4 h-4" />
@@ -358,7 +402,7 @@ const EmailEditor = () => {
             <Button
               variant={previewMode === 'tablet' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setPreviewMode('tablet')}
+              onClick={() => handlePreviewModeChange('tablet')}
               className="h-8 px-3 rounded-md"
             >
               <Layout className="w-4 h-4" />
@@ -366,11 +410,29 @@ const EmailEditor = () => {
             <Button
               variant={previewMode === 'mobile' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setPreviewMode('mobile')}
+              onClick={() => handlePreviewModeChange('mobile')}
               className="h-8 px-3 rounded-md"
             >
               <Smartphone className="w-4 h-4" />
             </Button>
+          </div>
+          
+          {/* Width Slider */}
+          <div className="flex items-center gap-3 min-w-[200px]">
+            <span className="text-xs text-slate-500 font-mono">Width:</span>
+            <div className="flex-1">
+              <Slider
+                value={[previewWidth]}
+                onValueChange={handleWidthChange}
+                max={1440}
+                min={320}
+                step={10}
+                className="w-full"
+              />
+            </div>
+            <Badge variant="secondary" className="text-xs font-mono min-w-[60px] justify-center">
+              {previewWidth}px
+            </Badge>
           </div>
         </div>
 
@@ -472,10 +534,10 @@ const EmailEditor = () => {
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className="flex-1 p-8 overflow-y-auto">
             {collaborationMode ? (
-              <Card className={`mx-auto transition-all duration-300 shadow-lg ${
-                previewMode === 'desktop' ? 'max-w-4xl' : 
-                previewMode === 'tablet' ? 'max-w-2xl' : 'max-w-sm'
-              }`}>
+              <Card 
+                className="mx-auto transition-all duration-300 shadow-lg"
+                style={{ maxWidth: `${previewWidth}px` }}
+              >
                 <CollaborativeEmailEditor
                   documentId={documentId}
                   userId={userId}
@@ -484,10 +546,10 @@ const EmailEditor = () => {
                 />
               </Card>
             ) : (
-              <Card className={`mx-auto transition-all duration-300 shadow-lg ${
-                previewMode === 'desktop' ? 'max-w-4xl' : 
-                previewMode === 'tablet' ? 'max-w-2xl' : 'max-w-sm'
-              }`}>
+              <Card 
+                className="mx-auto transition-all duration-300 shadow-lg"
+                style={{ maxWidth: `${previewWidth}px` }}
+              >
                 <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
@@ -497,7 +559,7 @@ const EmailEditor = () => {
                     </div>
                     <span className="text-xs text-slate-500 ml-2">Email Preview</span>
                     <Badge variant="secondary" className="ml-auto text-xs">
-                      {previewMode.charAt(0).toUpperCase() + previewMode.slice(1)}
+                      {previewMode.charAt(0).toUpperCase() + previewMode.slice(1)} • {previewWidth}px
                     </Badge>
                   </div>
                 </div>
@@ -545,12 +607,12 @@ const EmailEditor = () => {
                   <BarChart3 className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={rightPanelTab === 'responsive' ? 'default' : 'outline'}
+                  variant={rightPanelTab === 'code' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setRightPanelTab('responsive')}
+                  onClick={() => setRightPanelTab('code')}
                   className="flex-1"
                 >
-                  <Monitor className="w-4 h-4" />
+                  <Code2 className="w-4 h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'workspace' ? 'default' : 'outline'}
