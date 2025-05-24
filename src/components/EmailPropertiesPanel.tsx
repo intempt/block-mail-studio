@@ -36,7 +36,11 @@ export const EmailPropertiesPanel: React.FC<EmailPropertiesPanelProps> = ({ edit
   };
 
   const updateFontSize = (size: number) => {
-    editor.chain().focus().setFontSize(`${size}px`).run();
+    // Use HTML styling approach since setFontSize doesn't exist
+    const selection = editor.state.selection;
+    if (!selection.empty) {
+      editor.chain().focus().setMark('textStyle', { fontSize: `${size}px` }).run();
+    }
   };
 
   const updatePadding = (padding: number) => {
