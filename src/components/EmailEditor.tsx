@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -66,6 +67,7 @@ import { useToast } from '@/hooks/use-toast';
 import { enhancedAIService } from '@/services/EnhancedAIService';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlockEditor } from './EmailBlockEditor';
+import { UnifiedAIAnalyzer } from './UnifiedAIAnalyzer';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks' | 'editor';
@@ -394,9 +396,10 @@ const EmailEditor = () => {
     switch (rightPanelTab) {
       case 'analytics':
         return (
-          <EnhancedPerformanceAnalyzer 
+          <UnifiedAIAnalyzer 
             emailHTML={emailHTML}
             subjectLine={subjectLine}
+            canvasRef={canvasRef}
             onOptimize={(suggestion) => {
               console.log('Applying optimization:', suggestion);
               toast({
@@ -415,9 +418,10 @@ const EmailEditor = () => {
         );
       default:
         return (
-          <EnhancedPerformanceAnalyzer 
+          <UnifiedAIAnalyzer 
             emailHTML={emailHTML}
             subjectLine={subjectLine}
+            canvasRef={canvasRef}
             onOptimize={(suggestion) => {
               console.log('Applying optimization:', suggestion);
               toast({
@@ -573,7 +577,7 @@ const EmailEditor = () => {
                     <Button
                       variant={leftPanelTab === 'design' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={()={() => setLeftPanelTab('design')}
+                      onClick={() => setLeftPanelTab('design')}
                       className="flex-1 h-6 lg:h-8"
                     >
                       <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
