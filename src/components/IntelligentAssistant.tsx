@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -177,7 +176,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <div className="p-3 border-b border-gray-200 max-h-[140px] overflow-y-auto">
+      <div className="p-3 border-b border-gray-200">
         <div className="flex items-center gap-2 mb-3">
           <Brain className="w-4 h-4 text-purple-600" />
           <h3 className="text-base font-semibold">Intelligent Assistant</h3>

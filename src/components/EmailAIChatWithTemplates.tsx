@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -72,45 +71,33 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     {
       icon: <FileText className="w-4 h-4" />,
       label: 'Templates',
-      description: 'Pre-made designs',
       action: 'Show me industry email templates',
-      accent: 'blue',
       onClick: () => setActiveTab('templates')
     },
     {
       icon: <Palette className="w-4 h-4" />,
       label: 'Brand Kit',
-      description: 'Apply styling',
-      action: 'Help me apply my brand colors and fonts to this email',
-      accent: 'purple'
+      action: 'Help me apply my brand colors and fonts to this email'
     },
     {
       icon: <Image className="w-4 h-4" />,
       label: 'AI Images',
-      description: 'Generate visuals',
-      action: 'Generate professional images for my email campaign',
-      accent: 'green'
+      action: 'Generate professional images for my email campaign'
     },
     {
       icon: <Type className="w-4 h-4" />,
       label: 'Smart Copy',
-      description: 'AI copywriting',
-      action: 'Write compelling email copy that converts readers into customers',
-      accent: 'orange'
+      action: 'Write compelling email copy that converts readers into customers'
     },
     {
       icon: <Target className="w-4 h-4" />,
       label: 'Optimize',
-      description: 'Enhance performance',
-      action: 'Analyze and improve my current email for better performance',
-      accent: 'red'
+      action: 'Analyze and improve my current email for better performance'
     },
     {
       icon: <BarChart3 className="w-4 h-4" />,
       label: 'A/B Testing',
-      description: 'Create variations',
-      action: 'Create multiple variations of this email for split testing',
-      accent: 'indigo'
+      action: 'Create multiple variations of this email for split testing'
     }
   ];
 
@@ -268,137 +255,130 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
 
   const renderChatTab = () => (
     <div className="flex flex-col h-full">
-      <div className="p-4 bg-white border-b border-gray-100">
-        <div className="mb-4">
-          <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
-          <p className="text-sm text-gray-600">Choose an action to get started</p>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          {quickActions.map((action, index) => (
-            <Card
-              key={index}
-              className={`group cursor-pointer transition-all duration-200 hover:shadow-sm ${getAccentClass(action.accent)} bg-white border-2`}
-              onClick={() => handleQuickAction(action)}
-            >
-              <div className="p-4">
-                <div className="flex flex-col items-center text-center space-y-3">
-                  <div className={`flex items-center justify-center w-10 h-10 rounded-xl bg-gray-50 group-hover:bg-white transition-colors ${getAccentIconClass(action.accent)}`}>
-                    {action.icon}
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <h5 className="text-sm font-semibold text-gray-900">{action.label}</h5>
-                    <p className="text-xs text-gray-600 leading-relaxed">{action.description}</p>
-                  </div>
-                  
-                  <div className="flex items-center text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
-                    <span>Start</span>
-                    <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        <div className="flex gap-2 justify-center">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('prompts')}
-            className="border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-4 py-2"
-          >
-            <Sparkles className="w-3 h-3 mr-2" />
-            Prompts
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setActiveTab('templates')}
-            className="border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-4 py-2"
-          >
-            <Wand2 className="w-3 h-3 mr-2" />
-            Templates
-          </Button>
-        </div>
-      </div>
-
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id}>
-              <div
-                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+      <ScrollArea className="flex-1">
+        <div className="p-4 bg-white border-b border-gray-100">
+          <div className="mb-3">
+            <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
+            <p className="text-sm text-gray-600">Choose an action to get started</p>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {quickActions.map((action, index) => (
+              <Card
+                key={index}
+                className="group cursor-pointer transition-all duration-200 hover:shadow-sm border-gray-200 hover:border-gray-300 hover:bg-gray-50 bg-white border"
+                onClick={() => handleQuickAction(action)}
               >
-                {message.type === 'ai' && (
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-white" />
+                <div className="p-2">
+                  <div className="flex flex-col items-center text-center space-y-1">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-gray-50 group-hover:bg-white transition-colors text-gray-700">
+                      {action.icon}
+                    </div>
+                    <h5 className="text-xs font-medium text-gray-900">{action.label}</h5>
                   </div>
-                )}
-                
-                <div
-                  className={`max-w-[80%] rounded-xl text-sm ${
-                    message.type === 'user'
-                      ? 'bg-blue-600 text-white px-4 py-3'
-                      : 'bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                  <p className="text-xs opacity-70 mt-2">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
                 </div>
-                
-                {message.type === 'user' && (
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-gray-600" />
-                  </div>
-                )}
-              </div>
+              </Card>
+            ))}
+          </div>
 
-              {message.suggestions && message.suggestions.length > 0 && message.type === 'ai' && (
-                <div className="mt-3 ml-11">
-                  <div className="bg-white rounded-lg p-3 border border-gray-200">
-                    <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" />
-                      Quick Follow-ups
+          <div className="flex gap-2 justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveTab('prompts')}
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-4 py-2"
+            >
+              <Sparkles className="w-3 h-3 mr-2" />
+              Prompts
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveTab('templates')}
+              className="border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-4 py-2"
+            >
+              <Wand2 className="w-3 h-3 mr-2" />
+              Templates
+            </Button>
+          </div>
+        </div>
+
+        <div className="p-4">
+          <div className="space-y-4">
+            {messages.map((message) => (
+              <div key={message.id}>
+                <div
+                  className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {message.type === 'ai' && (
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  
+                  <div
+                    className={`max-w-[80%] rounded-xl text-sm ${
+                      message.type === 'user'
+                        ? 'bg-blue-600 text-white px-4 py-3'
+                        : 'bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3'
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <p className="text-xs opacity-70 mt-2">
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {message.suggestions.map((suggestion, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="justify-start h-auto p-2 bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all text-xs"
-                          disabled={isLoading}
-                        >
-                          <Zap className="w-3 h-3 mr-2 text-blue-500" />
-                          <span className="text-xs">{suggestion}</span>
-                        </Button>
-                      ))}
+                  </div>
+                  
+                  {message.type === 'user' && (
+                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-gray-600" />
+                    </div>
+                  )}
+                </div>
+
+                {message.suggestions && message.suggestions.length > 0 && message.type === 'ai' && (
+                  <div className="mt-3 ml-11">
+                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                      <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Quick Follow-ups
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {message.suggestions.map((suggestion, index) => (
+                          <Button
+                            key={index}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="justify-start h-auto p-2 bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all text-xs"
+                            disabled={isLoading}
+                          >
+                            <Zap className="w-3 h-3 mr-2 text-blue-500" />
+                            <span className="text-xs">{suggestion}</span>
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
+                )}
               </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            ))}
+            
+            {isLoading && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </ScrollArea>
       
