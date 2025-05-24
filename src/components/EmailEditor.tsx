@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -40,8 +41,12 @@ import {
   Palette,
   FileText,
   Code2,
-  Target
+  Target,
+  Sun,
+  Moon,
+  Keyboard
 } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { EmailAIChat } from './EmailAIChat';
 import { EmailEditorToolbar } from './EmailEditorToolbar';
@@ -51,24 +56,12 @@ import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
 import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
-import { WorkspaceManager } from './WorkspaceManager';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 
 type EditorMode = 'design' | 'ai' | 'templates' | 'analytics' | 'team';
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
-type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code' | 'workspace';
-
-interface WorkspaceSettings {
-  theme: 'light' | 'dark' | 'auto';
-  sidebarPosition: 'left' | 'right';
-  panelLayout: 'default' | 'minimal' | 'expanded';
-  showToolbar: boolean;
-  showStatusBar: boolean;
-  autoSave: boolean;
-  keyboardShortcuts: boolean;
-  compactMode: boolean;
-}
+type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
 
 const EmailEditor = () => {
   const [editorMode, setEditorMode] = useState<EditorMode>('design');
@@ -84,16 +77,17 @@ const EmailEditor = () => {
   const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
   const [userName] = useState('Email Editor User');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [workspaceSettings, setWorkspaceSettings] = useState<WorkspaceSettings>({
-    theme: 'light' as const,
-    sidebarPosition: 'left' as const,
-    panelLayout: 'default' as const,
-    showToolbar: true,
-    showStatusBar: true,
-    autoSave: true,
-    keyboardShortcuts: true,
-    compactMode: false
-  });
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const keyboardShortcuts = [
+    { key: 'Ctrl + S', action: 'Save email' },
+    { key: 'Ctrl + Z', action: 'Undo' },
+    { key: 'Ctrl + Y', action: 'Redo' },
+    { key: 'Ctrl + B', action: 'Bold text' },
+    { key: 'Ctrl + I', action: 'Italic text' },
+    { key: 'Ctrl + K', action: 'Insert link' },
+    { key: 'F11', action: 'Toggle fullscreen' }
+  ];
 
   const editor = useEditor({
     extensions: [
@@ -148,6 +142,10 @@ const EmailEditor = () => {
       setEmailHTML(html);
     },
   });
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const exportHTML = () => {
     if (editor) {
@@ -302,19 +300,6 @@ const EmailEditor = () => {
     }
   };
 
-  const getPreviewMaxWidth = () => {
-    switch (previewMode) {
-      case 'desktop':
-        return 'max-w-4xl';
-      case 'tablet':
-        return 'max-w-2xl';
-      case 'mobile':
-        return 'max-w-sm';
-      default:
-        return 'max-w-4xl';
-    }
-  };
-
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'properties':
@@ -332,15 +317,13 @@ const EmailEditor = () => {
             </div>
           </div>
         );
-      case 'workspace':
-        return <WorkspaceManager onSettingsChange={setWorkspaceSettings} />;
       default:
         return <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />;
     }
   };
 
   return (
-    <div className={`h-screen bg-slate-50 flex flex-col ${workspaceSettings.theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
       {/* Professional Header */}
       <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6">
         {/* Left: Branding & Project */}
@@ -439,6 +422,40 @@ const EmailEditor = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleTheme}
+            className="h-8"
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </Button>
+
+          {/* Keyboard Shortcuts */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8">
+                <Keyboard className="w-4 h-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Keyboard Shortcuts</h4>
+                <div className="space-y-2">
+                  {keyboardShortcuts.map((shortcut, index) => (
+                    <div key={index} className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600">{shortcut.action}</span>
+                      <Badge variant="outline" className="text-xs font-mono">
+                        {shortcut.key}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          
           <Button
             variant={collaborationMode ? 'default' : 'outline'}
             size="sm"
@@ -464,7 +481,7 @@ const EmailEditor = () => {
       </header>
 
       {/* Professional Toolbar */}
-      {workspaceSettings.showToolbar && <EmailEditorToolbar editor={editor} />}
+      <EmailEditorToolbar editor={editor} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
@@ -623,14 +640,6 @@ const EmailEditor = () => {
                 >
                   <Code2 className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant={rightPanelTab === 'workspace' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRightPanelTab('workspace')}
-                  className="flex-1"
-                >
-                  <Settings className="w-4 h-4" />
-                </Button>
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
@@ -655,25 +664,21 @@ const EmailEditor = () => {
       </div>
 
       {/* Status Bar */}
-      {workspaceSettings.showStatusBar && (
-        <div className="bg-white border-t border-slate-200 px-6 py-2 text-xs text-slate-600 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <span>Words: {emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length}</span>
-            <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
-            <span>Est. read time: {Math.ceil(emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)} min</span>
-            <span>Templates: {templates.length}</span>
-          </div>
-          <div className="flex items-center gap-4">
-            {workspaceSettings.autoSave && (
-              <span className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Auto-saved just now
-              </span>
-            )}
-            <span className="text-slate-400">Email Builder Pro v2.0 - Professional Edition</span>
-          </div>
+      <div className="bg-white border-t border-slate-200 px-6 py-2 text-xs text-slate-600 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <span>Words: {emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length}</span>
+          <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
+          <span>Est. read time: {Math.ceil(emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)} min</span>
+          <span>Templates: {templates.length}</span>
         </div>
-      )}
+        <div className="flex items-center gap-4">
+          <span className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Auto-saved just now
+          </span>
+          <span className="text-slate-400">Email Builder Pro v2.0 - Professional Edition</span>
+        </div>
+      </div>
     </div>
   );
 };
