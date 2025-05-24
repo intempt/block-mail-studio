@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -58,13 +57,11 @@ import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 
-type EditorMode = 'design' | 'ai' | 'templates' | 'analytics' | 'team';
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
 type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
 
 const EmailEditor = () => {
-  const [editorMode, setEditorMode] = useState<EditorMode>('design');
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [previewWidth, setPreviewWidth] = useState(1200);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
@@ -327,48 +324,13 @@ const EmailEditor = () => {
       {/* Professional Header */}
       <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6">
         {/* Left: Branding & Project */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Mail className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold text-slate-900">Email Builder Pro</h1>
-              <p className="text-xs text-slate-500">Professional Campaign</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <Mail className="w-4 h-4 text-white" />
           </div>
-          
-          <Separator orientation="vertical" className="h-8" />
-          
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-slate-100 rounded-lg p-1">
-            <Button
-              variant={editorMode === 'design' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setEditorMode('design')}
-              className="h-8 px-4 rounded-md"
-            >
-              <Edit3 className="w-4 h-4 mr-2" />
-              Design
-            </Button>
-            <Button
-              variant={editorMode === 'ai' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setEditorMode('ai')}
-              className="h-8 px-4 rounded-md"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI
-            </Button>
-            <Button
-              variant={editorMode === 'analytics' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setEditorMode('analytics')}
-              className="h-8 px-4 rounded-md"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Analytics
-            </Button>
+          <div>
+            <h1 className="text-sm font-semibold text-slate-900">Email Builder Pro</h1>
+            <p className="text-xs text-slate-500">Professional Campaign</p>
           </div>
         </div>
 
