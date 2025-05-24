@@ -279,6 +279,36 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       getHTML: () => generateHTML()
     }));
 
+    const updateBlock = (blockId: string, updates: Partial<SimpleBlock>) => {
+      setBlocks(prev => prev.map(block => 
+        block.id === blockId ? { ...block, ...updates } : block
+      ));
+    };
+
+    const handleTipTapChange = (blockId: string, html: string) => {
+      const block = blocks.find(b => b.id === blockId);
+      if (!block) return;
+
+      // Handle different content types
+      let updatedContent = { ...block.content };
+      
+      // For most blocks, update the main text content
+      if (block.type === 'text' || block.type === 'button') {
+        updatedContent.text = html;
+      } else if (block.type === 'image') {
+        // Could be updating src or alt
+        updatedContent.src = html;
+      } else if (block.type === 'html') {
+        updatedContent.html = html;
+      }
+
+      updateBlock(blockId, { content: updatedContent });
+    };
+
+    const handleTipTapBlur = () => {
+      // Editor will handle its own cleanup
+    };
+
     const handleBlockClick = (blockId: string) => {
       const newSelectedId = blockId === selectedBlockId ? null : blockId;
       setSelectedBlockId(newSelectedId);
@@ -286,10 +316,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       onBlockSelect?.(selectedBlock);
     };
 
-    const handleBlockDoubleClick = (blockId: string, blockType: string) => {
-      if (blockType === 'text') {
-        setEditingBlockId(blockId);
-      }
+    // Remove the double-click handler since we now have universal click-to-edit
+    const handleBlockDoubleClick = () => {
+      // No longer needed - all editing is handled by single clicks
     };
 
     const deleteBlock = (blockId: string) => {
@@ -314,20 +343,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           return newBlocks;
         });
       }
-    };
-
-    const updateBlock = (blockId: string, updates: Partial<SimpleBlock>) => {
-      setBlocks(prev => prev.map(block => 
-        block.id === blockId ? { ...block, ...updates } : block
-      ));
-    };
-
-    const handleTipTapChange = (blockId: string, html: string) => {
-      updateBlock(blockId, { content: { ...blocks.find(b => b.id === blockId)?.content, text: html } });
-    };
-
-    const handleTipTapBlur = () => {
-      setEditingBlockId(null);
     };
 
     const getCanvasWidth = () => {

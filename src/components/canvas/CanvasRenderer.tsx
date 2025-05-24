@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { SimpleTipTapEditor } from '../SimpleTipTapEditor';
+import React, { useState } from 'react';
+import { UniversalTipTapEditor } from '../UniversalTipTapEditor';
 import { BlockControls } from './BlockControls';
 import { ColumnRenderer } from './ColumnRenderer';
 
@@ -44,6 +44,64 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onTipTapBlur,
   onColumnDrop
 }) => {
+  const [editingContent, setEditingContent] = useState<{
+    blockId: string;
+    contentType: 'text' | 'button' | 'image' | 'link' | 'html';
+    property: string;
+    position?: { x: number; y: number };
+  } | null>(null);
+
+  const handleContentClick = (
+    e: React.MouseEvent,
+    blockId: string,
+    contentType: 'text' | 'button' | 'image' | 'link' | 'html',
+    property: string
+  ) => {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setEditingContent({
+      blockId,
+      contentType,
+      property,
+      position: { x: rect.left, y: rect.top - 80 }
+    });
+  };
+
+  const handleUniversalEditorChange = (html: string) => {
+    if (editingContent) {
+      onTipTapChange(editingContent.blockId, html);
+    }
+  };
+
+  const handleUniversalEditorBlur = () => {
+    setEditingContent(null);
+    onTipTapBlur();
+  };
+
+  const renderEditableContent = (block: SimpleBlock, content: string, contentType: 'text' | 'button' | 'image' | 'link' | 'html', property: string) => {
+    const isEditing = editingContent?.blockId === block.id && editingContent?.property === property;
+    
+    if (isEditing) {
+      return (
+        <UniversalTipTapEditor
+          content={content}
+          contentType={contentType}
+          onChange={handleUniversalEditorChange}
+          onBlur={handleUniversalEditorBlur}
+          position={editingContent.position}
+        />
+      );
+    }
+
+    return (
+      <div
+        onClick={(e) => handleContentClick(e, block.id, contentType, property)}
+        className="cursor-text hover:bg-blue-50 hover:ring-2 hover:ring-blue-200 transition-all rounded p-1 -m-1"
+        dangerouslySetInnerHTML={{ __html: content || `<span style="color: #999; font-style: italic;">Click to edit...</span>` }}
+      />
+    );
+  };
+
   const renderBlock = (block: SimpleBlock): React.ReactNode => {
     if (block.type === 'columns') {
       return (
@@ -57,17 +115,10 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
 
     switch (block.type) {
       case 'text':
-        return editingBlockId === block.id ? (
-          <SimpleTipTapEditor
-            content={block.content.text}
-            onChange={(html) => onTipTapChange(block.id, html)}
-            onBlur={onTipTapBlur}
-          />
-        ) : (
-          <div 
-            dangerouslySetInnerHTML={{ __html: block.content.text }} 
-            className="min-h-[20px]"
-          />
+        return (
+          <div className="min-h-[20px]">
+            {renderEditableContent(block, block.content.text, 'text', 'text')}
+          </div>
         );
       
       case 'button':
@@ -82,18 +133,37 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               }}
               onClick={(e) => e.preventDefault()}
             >
-              {block.content.text}
+              {renderEditableContent(block, block.content.text, 'button', 'text')}
             </a>
           </div>
         );
       
       case 'image':
+        const isEditingImage = editingContent?.blockId === block.id && editingContent?.property === 'src';
         return (
-          <img
-            src={block.content.src}
-            alt={block.content.alt}
-            style={block.styles}
-          />
+          <div className="relative">
+            {isEditingImage ? (
+              <UniversalTipTapEditor
+                content={block.content.src}
+                contentType="image"
+                onChange={handleUniversalEditorChange}
+                onBlur={handleUniversalEditorBlur}
+                placeholder="Enter image URL..."
+                position={editingContent.position}
+              />
+            ) : (
+              <img
+                src={block.content.src}
+                alt={block.content.alt}
+                style={block.styles}
+                onClick={(e) => handleContentClick(e, block.id, 'image', 'src')}
+                className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+              />
+            )}
+            <div className="mt-2">
+              {renderEditableContent(block, block.content.alt, 'text', 'alt')}
+            </div>
+          </div>
         );
 
       case 'spacer':
@@ -113,13 +183,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       case 'video':
         return (
           <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <img 
-              src={block.content.thumbnail} 
-              alt="Video thumbnail" 
-              style={{ maxWidth: '100%', height: 'auto', cursor: 'pointer' }} 
-            />
+            <div className="relative inline-block">
+              {renderEditableContent(block, block.content.thumbnail, 'image', 'thumbnail')}
+            </div>
             <p style={{ marginTop: '10px' }}>
-              <a href={block.content.videoUrl} style={{ color: '#3B82F6' }}>Watch Video</a>
+              <a href={block.content.videoUrl} style={{ color: '#3B82F6' }}>
+                {renderEditableContent(block, 'Watch Video', 'link', 'videoUrl')}
+              </a>
             </p>
           </div>
         );
@@ -133,14 +203,14 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                 href={platform.url} 
                 style={{ margin: '0 5px', textDecoration: 'none' }}
               >
-                {platform.name}
+                {renderEditableContent(block, platform.name, 'link', `platform-${index}`)}
               </a>
             ))}
           </div>
         );
 
       case 'html':
-        return <div dangerouslySetInnerHTML={{ __html: block.content.html }} />;
+        return renderEditableContent(block, block.content.html, 'html', 'html');
 
       case 'table':
         const tableRows = block.content.rows || 2;
@@ -155,7 +225,12 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                       key={j}
                       style={{ border: '1px solid #ddd', padding: '8px' }}
                     >
-                      {block.content.cells?.[i]?.[j]?.content || `Cell ${i + 1},${j + 1}`}
+                      {renderEditableContent(
+                        block, 
+                        block.content.cells?.[i]?.[j]?.content || `Cell ${i + 1},${j + 1}`,
+                        'text',
+                        `cell-${i}-${j}`
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -183,7 +258,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             }`}
             draggable
             onClick={() => onBlockClick(block.id)}
-            onDoubleClick={() => onBlockDoubleClick(block.id, block.type)}
             onDragStart={(e) => onBlockDragStart(e, block.id)}
             onDrop={(e) => onBlockDrop(e, index)}
             onDragOver={(e) => e.preventDefault()}
