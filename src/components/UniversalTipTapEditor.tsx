@@ -19,12 +19,14 @@ import {
   AlignCenter,
   AlignRight,
   Type,
-  Palette
+  Palette,
+  ExternalLink,
+  Play
 } from 'lucide-react';
 
 interface UniversalTipTapEditorProps {
   content: string;
-  contentType: 'text' | 'button' | 'image' | 'link' | 'html';
+  contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video';
   onChange: (html: string) => void;
   onBlur?: () => void;
   placeholder?: string;
@@ -41,8 +43,11 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 }) => {
   const [linkUrl, setLinkUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [urlValue, setUrlValue] = useState(content);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
+
+  const isUrlMode = contentType === 'url' || contentType === 'video';
 
   const editor = useEditor({
     extensions: [
@@ -66,9 +71,11 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         types: ['textStyle'],
       }),
     ],
-    content,
+    content: isUrlMode ? '' : content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      if (!isUrlMode) {
+        onChange(editor.getHTML());
+      }
     },
     onBlur: () => {
       onBlur?.();
@@ -77,16 +84,19 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (editor && !isUrlMode && content !== editor.getHTML()) {
       editor.commands.setContent(content);
     }
-  }, [content, editor]);
+    if (isUrlMode) {
+      setUrlValue(content);
+    }
+  }, [content, editor, isUrlMode]);
 
-  if (!editor) return null;
+  if (!editor && !isUrlMode) return null;
 
   const addLink = () => {
     if (linkUrl) {
-      editor.chain().focus().setLink({ href: linkUrl }).run();
+      editor?.chain().focus().setLink({ href: linkUrl }).run();
       setLinkUrl('');
       setShowLinkDialog(false);
     }
@@ -94,13 +104,30 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 
   const addImage = () => {
     if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
+      editor?.chain().focus().setImage({ src: imageUrl }).run();
       setImageUrl('');
       setShowImageDialog(false);
     }
   };
 
+  const handleUrlChange = (value: string) => {
+    setUrlValue(value);
+    onChange(value);
+  };
+
   const getToolbarForContentType = () => {
+    if (isUrlMode) {
+      return (
+        <div className="flex items-center gap-2">
+          <ExternalLink className="w-4 h-4 text-gray-500" />
+          {contentType === 'video' && <Play className="w-4 h-4 text-gray-500" />}
+          <span className="text-sm text-gray-600">
+            {contentType === 'video' ? 'Video URL' : 'URL'}
+          </span>
+        </div>
+      );
+    }
+
     const baseTools = (
       <>
         <Button
@@ -229,11 +256,23 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           {getToolbarForContentType()}
         </div>
         
-        <EditorContent 
-          editor={editor} 
-          className="prose prose-sm max-w-none p-3 focus:outline-none min-h-[60px]"
-          placeholder={placeholder}
-        />
+        {isUrlMode ? (
+          <div className="p-3">
+            <Input
+              value={urlValue}
+              onChange={(e) => handleUrlChange(e.target.value)}
+              placeholder={placeholder || (contentType === 'video' ? 'Enter video URL...' : 'Enter URL...')}
+              className="w-full"
+              autoFocus
+            />
+          </div>
+        ) : (
+          <EditorContent 
+            editor={editor} 
+            className="prose prose-sm max-w-none p-3 focus:outline-none min-h-[60px]"
+            placeholder={placeholder}
+          />
+        )}
 
         {showLinkDialog && (
           <div className="p-3 border-t bg-gray-50">

@@ -289,15 +289,40 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       const block = blocks.find(b => b.id === blockId);
       if (!block) return;
 
-      // Handle different content types
+      // Handle different content types and properties
       let updatedContent = { ...block.content };
       
-      // For most blocks, update the main text content
-      if (block.type === 'text' || block.type === 'button') {
+      // Determine which property is being edited based on current editing context
+      if (block.type === 'text') {
         updatedContent.text = html;
+      } else if (block.type === 'button') {
+        if (html.startsWith('http') || html.startsWith('#')) {
+          updatedContent.link = html;
+        } else {
+          updatedContent.text = html;
+        }
       } else if (block.type === 'image') {
-        // Could be updating src or alt
-        updatedContent.src = html;
+        if (html.startsWith('http') || html.startsWith('/')) {
+          updatedContent.src = html;
+        } else {
+          updatedContent.alt = html;
+        }
+      } else if (block.type === 'video') {
+        if (html.startsWith('http')) {
+          if (html.includes('youtube') || html.includes('vimeo') || html.includes('mp4')) {
+            updatedContent.videoUrl = html;
+          } else {
+            updatedContent.thumbnail = html;
+          }
+        }
+      } else if (block.type === 'social') {
+        // Handle social platform updates
+        const platforms = [...(block.content.platforms || [])];
+        // This would need more context about which platform is being edited
+        updatedContent.platforms = platforms;
+      } else if (block.type === 'table') {
+        // Handle table cell updates
+        // This would need more context about which cell is being edited
       } else if (block.type === 'html') {
         updatedContent.html = html;
       }
