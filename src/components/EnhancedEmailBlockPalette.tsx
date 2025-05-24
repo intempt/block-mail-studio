@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Type, 
@@ -47,9 +46,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   universalContent = [],
   onUniversalContentAdd
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-
   const blockTemplates: BlockTemplate[] = [
     // Basic Content Blocks
     {
@@ -190,23 +186,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     },
   ];
 
-  const categories = [
-    { id: 'all', name: 'All Blocks', icon: <Palette className="w-4 h-4" />, count: blockTemplates.length },
-    { id: 'basic', name: 'Basic', icon: <Type className="w-4 h-4" />, count: blockTemplates.filter(b => b.category === 'basic').length },
-    { id: 'layout', name: 'Layout', icon: <Columns className="w-4 h-4" />, count: blockTemplates.filter(b => b.category === 'layout').length },
-    { id: 'media', name: 'Media', icon: <Image className="w-4 h-4" />, count: blockTemplates.filter(b => b.category === 'media').length },
-    { id: 'navigation', name: 'Navigation', icon: <Menu className="w-4 h-4" />, count: blockTemplates.filter(b => b.category === 'navigation').length },
-    { id: 'commerce', name: 'Commerce', icon: <ShoppingCart className="w-4 h-4" />, count: blockTemplates.filter(b => b.category === 'commerce').length },
-    { id: 'advanced', name: 'Advanced', icon: <Code className="w-4 h-4" />, count: blockTemplates.filter(b => b.category === 'advanced').length },
-  ];
-
-  const filteredBlocks = blockTemplates.filter(block => {
-    const matchesSearch = block.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         block.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || block.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
   const handleBlockDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
     e.dataTransfer.effectAllowed = 'copy';
@@ -216,17 +195,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     <div className="h-full flex flex-col bg-white">
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-3">Block Library</h3>
-        
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search blocks..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
       </div>
 
       <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
@@ -239,27 +207,9 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
         </TabsList>
 
         <TabsContent value="blocks" className="flex-1 mt-0">
-          {/* Category Filter */}
-          <div className="px-4 mb-4">
-            <div className="flex flex-wrap gap-1">
-              {categories.map((category) => (
-                <Badge
-                  key={category.id}
-                  variant={selectedCategory === category.id ? 'default' : 'outline'}
-                  className="cursor-pointer text-xs hover:bg-blue-50"
-                  onClick={() => setSelectedCategory(category.id)}
-                >
-                  {category.icon}
-                  <span className="ml-1">{category.name}</span>
-                  <span className="ml-1 text-xs opacity-70">({category.count})</span>
-                </Badge>
-              ))}
-            </div>
-          </div>
-
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-2">
-              {filteredBlocks.map((template) => (
+              {blockTemplates.map((template) => (
                 <Card
                   key={template.type}
                   className="p-3 cursor-grab hover:shadow-md transition-all duration-200 group border-l-4 border-l-transparent hover:border-l-blue-500"
@@ -294,16 +244,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                   </div>
                 </Card>
               ))}
-
-              {filteredBlocks.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Search className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-gray-500 text-sm">No blocks found</p>
-                  <p className="text-gray-400 text-xs mt-1">Try adjusting your search or category filter</p>
-                </div>
-              )}
             </div>
           </ScrollArea>
         </TabsContent>
