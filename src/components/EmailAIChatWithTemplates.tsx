@@ -64,7 +64,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab<'chat' | 'prompts' | 'templates'>( 'chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'prompts' | 'templates'>('chat');
   const [templateSearch, setTemplateSearch] = useState('');
 
   const quickActions = [
