@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -35,13 +34,118 @@ interface Message {
   timestamp: Date;
   suggestions?: string[];
   isLoading?: boolean;
-  actionType?: 'email_generated' | 'image_generated' | 'content_refined' | 'general';
+  actionType?: 'email_generated' | 'image_generated' | 'content_refined' | 'template_loaded' | 'general';
 }
 
 interface EmailAIChatProps {
   editor: Editor | null;
   onEmailGenerated?: (html: string) => void;
 }
+
+// Industry templates data
+const industryTemplates = {
+  'E-commerce Product Launch': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <div class="email-block header-block">
+      <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
+        🚀 New Product Launch!
+      </h1>
+    </div>
+    <div class="email-block paragraph-block">
+      <p style="color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+        Get ready for something amazing! We're thrilled to introduce our latest product that will revolutionize your experience.
+      </p>
+    </div>
+    <div class="email-block button-block" style="text-align: center; padding: 20px;">
+      <a href="#" style="display: inline-block; padding: 16px 32px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+        Shop Now - 25% Off!
+      </a>
+    </div>
+  </div>`,
+  
+  'SaaS Welcome Series': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <div class="email-block header-block">
+      <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white;">
+        Welcome to {{product_name}}!
+      </h1>
+    </div>
+    <div class="email-block paragraph-block">
+      <p style="color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+        Hi {{first_name}}, welcome aboard! Let's get you set up for success with our powerful platform.
+      </p>
+      <h3 style="color: #1F2937; margin: 0; padding: 0 24px; font-size: 18px;">Your next steps:</h3>
+      <ul style="color: #374151; margin: 0; padding: 8px 24px 24px 48px;">
+        <li>Complete your profile setup</li>
+        <li>Connect your first integration</li>
+        <li>Invite your team members</li>
+      </ul>
+    </div>
+  </div>`,
+  
+  'Restaurant Newsletter': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <div class="email-block header-block">
+      <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white;">
+        🍽️ This Month's Specials
+      </h1>
+    </div>
+    <div class="email-block paragraph-block">
+      <p style="color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+        Dear food lovers, discover our chef's seasonal selections and exciting new menu items this month!
+      </p>
+    </div>
+    <div class="email-block paragraph-block">
+      <h3 style="color: #1F2937; margin: 0; padding: 0 24px; font-size: 18px;">Featured This Month:</h3>
+      <ul style="color: #374151; margin: 0; padding: 8px 24px 24px 48px;">
+        <li>🥩 Prime Ribeye with Truffle Butter</li>
+        <li>🦞 Fresh Maine Lobster Thermidor</li>
+        <li>🍰 Seasonal Berry Tart</li>
+      </ul>
+    </div>
+  </div>`,
+  
+  'Real Estate Listing': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <div class="email-block header-block">
+      <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white;">
+        🏡 New Property Alert
+      </h1>
+    </div>
+    <div class="email-block paragraph-block">
+      <p style="color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+        We found a property that matches your criteria! This stunning home won't last long in today's market.
+      </p>
+    </div>
+    <div class="email-block paragraph-block">
+      <h3 style="color: #1F2937; margin: 0; padding: 0 24px; font-size: 18px;">Property Highlights:</h3>
+      <ul style="color: #374151; margin: 0; padding: 8px 24px 24px 48px;">
+        <li>3 bedrooms, 2.5 bathrooms</li>
+        <li>Modern kitchen with granite countertops</li>
+        <li>Spacious backyard with patio</li>
+        <li>Prime location near schools and shopping</li>
+      </ul>
+    </div>
+  </div>`,
+  
+  'Event Invitation': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <div class="email-block header-block">
+      <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white;">
+        🎉 You're Invited!
+      </h1>
+    </div>
+    <div class="email-block paragraph-block">
+      <p style="color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+        Join us for an exclusive evening of networking, entertainment, and celebration!
+      </p>
+    </div>
+    <div class="email-block paragraph-block">
+      <h3 style="color: #1F2937; margin: 0; padding: 0 24px; font-size: 18px;">Event Details:</h3>
+      <ul style="color: #374151; margin: 0; padding: 8px 24px 24px 48px;">
+        <li>📅 Date: [Event Date]</li>
+        <li>🕐 Time: [Event Time]</li>
+        <li>📍 Location: [Event Venue]</li>
+        <li>👔 Dress Code: Business Casual</li>
+      </ul>
+    </div>
+  </div>`
+};
 
 export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerated }) => {
   const [messages, setMessages] = useState<Message[]>([
@@ -101,17 +205,6 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     }
   ];
 
-  const industryTemplates = [
-    'E-commerce Product Launch',
-    'SaaS Welcome Series',
-    'Restaurant Newsletter',
-    'Real Estate Listing',
-    'Event Invitation',
-    'Educational Course',
-    'Healthcare Updates',
-    'Financial Services'
-  ];
-
   useEffect(() => {
     if (scrollAreaRef.current) {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
@@ -153,8 +246,22 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
   const generateAIResponse = async (userInput: string): Promise<Message> => {
     const input = userInput.toLowerCase();
     
+    // Handle template requests first
+    if (input.includes('template') || input.includes('industry') || input.includes('show me')) {
+      const templateList = Object.keys(industryTemplates);
+      
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `Here are the available industry email templates I can load directly into your editor. Click on any template to load it instantly:\n\n${templateList.map((template, index) => `${index + 1}. ${template}`).join('\n')}`,
+        timestamp: new Date(),
+        actionType: 'general',
+        suggestions: templateList
+      };
+    }
+
     // Handle email generation requests
-    if (input.includes('create email') || input.includes('generate email') || input.includes('write email') || input.includes('email template')) {
+    if (input.includes('create email') || input.includes('generate email') || input.includes('write email')) {
       try {
         const emailResponse = await emailAIService.generateEmail({
           prompt: userInput,
@@ -168,7 +275,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         });
 
         // Insert generated email into editor
-        if (editor) {
+        if (editor && emailResponse.html) {
           editor.commands.setContent(emailResponse.html);
           onEmailGenerated?.(emailResponse.html);
         }
@@ -349,29 +456,6 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
       }
     }
 
-    // Handle template requests
-    if (input.includes('template') || input.includes('industry')) {
-      const industryTemplates = [
-        'E-commerce Product Launch',
-        'SaaS Welcome Series',
-        'Restaurant Newsletter',
-        'Real Estate Listing',
-        'Event Invitation',
-        'Educational Course',
-        'Healthcare Updates',
-        'Financial Services'
-      ];
-
-      return {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: 'I can create professional email templates for any industry. Which type would you like me to generate? Just tell me the industry and I\'ll create a complete template in your editor.',
-        timestamp: new Date(),
-        actionType: 'general',
-        suggestions: industryTemplates
-      };
-    }
-
     // Default helpful response
     try {
       const response = await emailAIService.generateContent(userInput, 'general');
@@ -416,6 +500,24 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
 
   const applyAISuggestion = async (suggestion: string) => {
     if (!editor) return;
+    
+    // Handle industry template suggestions
+    if (Object.keys(industryTemplates).includes(suggestion)) {
+      const templateHtml = industryTemplates[suggestion as keyof typeof industryTemplates];
+      editor.commands.setContent(templateHtml);
+      onEmailGenerated?.(templateHtml);
+      
+      // Add confirmation message
+      const confirmMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `✅ ${suggestion} template loaded into your editor!\n\nThe template is now ready for editing. You can modify it manually or ask me to customize it further.`,
+        timestamp: new Date(),
+        actionType: 'template_loaded'
+      };
+      setMessages(prev => [...prev, confirmMessage]);
+      return;
+    }
     
     // Handle quick template application
     if (suggestion.includes('Template') || suggestion.includes('template')) {
@@ -492,6 +594,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
                       {message.actionType === 'email_generated' && <Check className="w-4 h-4 text-green-600" />}
                       {message.actionType === 'image_generated' && <Image className="w-4 h-4 text-blue-600" />}
                       {message.actionType === 'content_refined' && <Wand2 className="w-4 h-4 text-purple-600" />}
+                      {message.actionType === 'template_loaded' && <FileText className="w-4 h-4 text-orange-600" />}
                       {message.actionType === 'general' && <Sparkles className="w-4 h-4 text-gray-600" />}
                     </div>
                   )}
