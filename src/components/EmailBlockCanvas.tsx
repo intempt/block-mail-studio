@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { EmailSnippet } from '@/types/snippets';
+import { SimpleTipTapEditor } from './SimpleTipTapEditor';
 import './EmailBlockCanvas.css';
 
 export interface EmailBlockCanvasRef {
@@ -20,12 +18,13 @@ export interface EmailBlockCanvasRef {
 
 interface EmailBlockCanvasProps {
   onContentChange?: (content: string) => void;
+  onBlockSelect?: (block: SimpleBlock | null) => void;
   previewWidth?: number;
   previewMode?: 'desktop' | 'mobile' | 'tablet';
   compactMode?: boolean;
 }
 
-interface EmailBlock {
+interface SimpleBlock {
   id: string;
   type: string;
   content: any;
@@ -33,29 +32,30 @@ interface EmailBlock {
 }
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
-  ({ onContentChange, previewWidth = 600, previewMode = 'desktop', compactMode = false }, ref) => {
-    const [blocks, setBlocks] = useState<EmailBlock[]>([
+  ({ onContentChange, onBlockSelect, previewWidth = 600, previewMode = 'desktop', compactMode = false }, ref) => {
+    const [blocks, setBlocks] = useState<SimpleBlock[]>([
       {
         id: 'header-1',
         type: 'text',
-        content: { text: 'Welcome to our Newsletter!', tag: 'h1' },
+        content: { text: 'Welcome to our Newsletter!' },
         styles: { fontSize: '24px', fontWeight: 'bold', textAlign: 'center', marginBottom: '20px' }
       },
       {
         id: 'content-1',
         type: 'text',
-        content: { text: 'This is a sample email content. Click the AI optimization suggestions to see them work!', tag: 'p' },
+        content: { text: 'This is a sample email content. Click to edit with rich text editor!' },
         styles: { fontSize: '16px', lineHeight: '1.5', marginBottom: '20px' }
       },
       {
         id: 'cta-1',
         type: 'button',
         content: { text: 'Get Started', link: '#' },
-        styles: { backgroundColor: '#3B82F6', color: 'white', padding: '12px 24px', borderRadius: '6px', textAlign: 'center' }
+        styles: { backgroundColor: '#3B82F6', color: 'white', padding: '12px 24px', borderRadius: '6px', textAlign: 'center', display: 'inline-block', textDecoration: 'none' }
       }
     ]);
 
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+    const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
 
     const generateHTML = () => {
       const htmlContent = blocks.map(block => {
@@ -66,8 +66,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
         switch (block.type) {
           case 'text':
-            const tag = block.content.tag || 'p';
-            return `<${tag} style="${styleString}">${block.content.text}</${tag}>`;
+            return `<p style="${styleString}">${block.content.text}</p>`;
           case 'button':
             return `<div style="text-align: center; margin: 20px 0;">
               <a href="${block.content.link}" style="${styleString}; text-decoration: none; display: inline-block;">
@@ -76,6 +75,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             </div>`;
           case 'image':
             return `<img src="${block.content.src}" alt="${block.content.alt || ''}" style="${styleString}" />`;
+          case 'spacer':
+            return `<div style="height: ${block.content.height};"></div>`;
           default:
             return `<div style="${styleString}">${block.content.text || ''}</div>`;
         }
@@ -93,7 +94,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
     useImperativeHandle(ref, () => ({
       insertBlock: (blockType: string) => {
-        const newBlock: EmailBlock = {
+        const newBlock: SimpleBlock = {
           id: `block-${Date.now()}`,
           type: blockType,
           content: getDefaultContent(blockType),
@@ -103,10 +104,10 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       },
 
       insertSnippet: (snippet: EmailSnippet) => {
-        const newBlock: EmailBlock = {
+        const newBlock: SimpleBlock = {
           id: `snippet-${Date.now()}`,
           type: 'text',
-          content: { text: snippet.blockData || snippet.description, tag: 'div' },
+          content: { text: snippet.blockData || snippet.description },
           styles: { margin: '10px 0' }
         };
         setBlocks(prev => [...prev, newBlock]);
@@ -191,9 +192,10 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
     const getDefaultContent = (blockType: string) => {
       switch (blockType) {
-        case 'text': return { text: 'New text block', tag: 'p' };
+        case 'text': return { text: 'New text block' };
         case 'button': return { text: 'Click Me', link: '#' };
         case 'image': return { src: '/placeholder.svg', alt: 'New image' };
+        case 'spacer': return { height: '40px' };
         default: return { text: 'New block' };
       }
     };
@@ -210,20 +212,36 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           display: 'inline-block'
         };
         case 'image': return { maxWidth: '100%', height: 'auto', display: 'block' };
+        case 'spacer': return { height: '40px' };
         default: return { margin: '10px 0' };
       }
     };
 
     const handleBlockClick = (blockId: string) => {
-      setSelectedBlockId(blockId === selectedBlockId ? null : blockId);
+      const newSelectedId = blockId === selectedBlockId ? null : blockId;
+      setSelectedBlockId(newSelectedId);
+      const selectedBlock = newSelectedId ? blocks.find(b => b.id === newSelectedId) || null : null;
+      onBlockSelect?.(selectedBlock);
     };
 
-    const updateBlockText = (blockId: string, newText: string) => {
+    const handleBlockDoubleClick = (blockId: string, blockType: string) => {
+      if (blockType === 'text') {
+        setEditingBlockId(blockId);
+      }
+    };
+
+    const updateBlock = (blockId: string, updates: Partial<SimpleBlock>) => {
       setBlocks(prev => prev.map(block => 
-        block.id === blockId 
-          ? { ...block, content: { ...block.content, text: newText } }
-          : block
+        block.id === blockId ? { ...block, ...updates } : block
       ));
+    };
+
+    const handleTipTapChange = (blockId: string, html: string) => {
+      updateBlock(blockId, { content: { ...blocks.find(b => b.id === blockId)?.content, text: html } });
+    };
+
+    const handleTipTapBlur = () => {
+      setEditingBlockId(null);
     };
 
     const getCanvasWidth = () => {
@@ -241,30 +259,29 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           <div className="mx-auto bg-white shadow-lg rounded-lg overflow-hidden" 
                style={{ width: getCanvasWidth(), minHeight: '600px' }}>
             
-            {/* Email Preview Area */}
             <div className="p-6">
               {blocks.map((block) => (
                 <div
                   key={block.id}
-                  className={`email-block cursor-pointer transition-all duration-200 ${
-                    selectedBlockId === block.id ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+                  className={`email-block cursor-pointer transition-all duration-200 mb-4 ${
+                    selectedBlockId === block.id ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50' : 'hover:bg-gray-50'
                   }`}
                   onClick={() => handleBlockClick(block.id)}
+                  onDoubleClick={() => handleBlockDoubleClick(block.id, block.type)}
                   style={block.styles}
                 >
                   {block.type === 'text' && (
-                    selectedBlockId === block.id ? (
-                      <input
-                        type="text"
-                        value={block.content.text}
-                        onChange={(e) => updateBlockText(block.id, e.target.value)}
-                        className="w-full bg-transparent border-none outline-none"
-                        style={{ fontSize: 'inherit', fontWeight: 'inherit', color: 'inherit' }}
-                        onBlur={() => setSelectedBlockId(null)}
-                        autoFocus
+                    editingBlockId === block.id ? (
+                      <SimpleTipTapEditor
+                        content={block.content.text}
+                        onChange={(html) => handleTipTapChange(block.id, html)}
+                        onBlur={handleTipTapBlur}
                       />
                     ) : (
-                      <div dangerouslySetInnerHTML={{ __html: block.content.text }} />
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: block.content.text }} 
+                        className="min-h-[20px]"
+                      />
                     )
                   )}
                   
@@ -279,23 +296,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
                         }}
                         onClick={(e) => e.preventDefault()}
                       >
-                        {selectedBlockId === block.id ? (
-                          <input
-                            type="text"
-                            value={block.content.text}
-                            onChange={(e) => setBlocks(prev => prev.map(b => 
-                              b.id === block.id 
-                                ? { ...b, content: { ...b.content, text: e.target.value } }
-                                : b
-                            ))}
-                            className="bg-transparent border-none outline-none text-center"
-                            style={{ color: 'inherit', width: '100%' }}
-                            onBlur={() => setSelectedBlockId(null)}
-                            autoFocus
-                          />
-                        ) : (
-                          block.content.text
-                        )}
+                        {block.content.text}
                       </a>
                     </div>
                   )}
@@ -307,6 +308,10 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
                       style={block.styles}
                     />
                   )}
+
+                  {block.type === 'spacer' && (
+                    <div style={{ height: block.content.height, backgroundColor: 'transparent' }} />
+                  )}
                 </div>
               ))}
             </div>
@@ -317,6 +322,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         <div className="bg-white border-t p-2 text-xs text-gray-600 flex items-center justify-between">
           <div>
             Blocks: {blocks.length} | Width: {getCanvasWidth()}px
+            {selectedBlockId && <span className="ml-2 text-blue-600">• Block selected</span>}
           </div>
           <Badge variant="outline" className="text-xs">
             {previewMode}

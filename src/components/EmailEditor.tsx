@@ -65,6 +65,7 @@ import { useToast } from '@/hooks/use-toast';
 import { directAIService } from '@/services/directAIService';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
+import { SimplePropertyEditor } from './SimplePropertyEditor';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -83,7 +84,7 @@ const EmailEditor = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
   const [compactMode, setCompactMode] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<any>(null);
   const canvasRef = useRef<EmailBlockCanvasRef>(null);
   const [fullscreenMode, setFullscreenMode] = useState(false);
   const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
@@ -331,18 +332,26 @@ const EmailEditor = () => {
     }
   };
 
+  const handleBlockSelect = (block: any) => {
+    setSelectedBlock(block);
+  };
+
+  const handleBlockUpdate = (updatedBlock: any) => {
+    setSelectedBlock(updatedBlock);
+    // Update the block in the canvas
+    canvasRef.current?.updateBlockContent(updatedBlock.id, updatedBlock.content);
+  };
+
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'properties':
         return (
-          <PropertyEditorPanel
-            selectedBlock={selectedBlock}
-            onBlockUpdate={(block) => {
-              setSelectedBlock(block);
-              // Update the block in the canvas
-              console.log('Block updated:', block);
-            }}
-          />
+          <div className="p-4">
+            <SimplePropertyEditor
+              block={selectedBlock}
+              onUpdate={handleBlockUpdate}
+            />
+          </div>
         );
       case 'analytics':
         return (
@@ -367,13 +376,12 @@ const EmailEditor = () => {
         );
       default:
         return (
-          <PropertyEditorPanel
-            selectedBlock={selectedBlock}
-            onBlockUpdate={(block) => {
-              setSelectedBlock(block);
-              console.log('Block updated:', block);
-            }}
-          />
+          <div className="p-4">
+            <SimplePropertyEditor
+              block={selectedBlock}
+              onUpdate={handleBlockUpdate}
+            />
+          </div>
         );
     }
   };
@@ -539,6 +547,7 @@ const EmailEditor = () => {
             <EmailBlockCanvas 
               ref={canvasRef}
               onContentChange={handleEmailContentChange}
+              onBlockSelect={handleBlockSelect}
               previewWidth={previewWidth}
               previewMode={previewMode}
               compactMode={compactMode}
