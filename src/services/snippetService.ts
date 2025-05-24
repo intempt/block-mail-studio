@@ -20,11 +20,15 @@ export class SnippetService {
       isFavorite: false
     };
 
-    const snippets = this.getAllSnippets();
-    snippets.push(snippet);
-    localStorage.setItem(this.SNIPPETS_KEY, JSON.stringify(snippets));
-    
-    return snippet;
+    try {
+      const snippets = this.getAllSnippets();
+      snippets.push(snippet);
+      localStorage.setItem(this.SNIPPETS_KEY, JSON.stringify(snippets));
+      return snippet;
+    } catch (error) {
+      console.error('Failed to save snippet:', error);
+      return snippet;
+    }
   }
 
   static getAllSnippets(): EmailSnippet[] {
@@ -38,18 +42,26 @@ export class SnippetService {
   }
 
   static deleteSnippet(id: string): void {
-    const snippets = this.getAllSnippets().filter(s => s.id !== id);
-    localStorage.setItem(this.SNIPPETS_KEY, JSON.stringify(snippets));
+    try {
+      const snippets = this.getAllSnippets().filter(s => s.id !== id);
+      localStorage.setItem(this.SNIPPETS_KEY, JSON.stringify(snippets));
+    } catch (error) {
+      console.error('Failed to delete snippet:', error);
+    }
   }
 
   static incrementUsage(id: string): void {
-    const snippets = this.getAllSnippets();
-    const snippet = snippets.find(s => s.id === id);
-    
-    if (snippet) {
-      snippet.usageCount++;
-      snippet.updatedAt = new Date();
-      localStorage.setItem(this.SNIPPETS_KEY, JSON.stringify(snippets));
+    try {
+      const snippets = this.getAllSnippets();
+      const snippet = snippets.find(s => s.id === id);
+      
+      if (snippet) {
+        snippet.usageCount++;
+        snippet.updatedAt = new Date();
+        localStorage.setItem(this.SNIPPETS_KEY, JSON.stringify(snippets));
+      }
+    } catch (error) {
+      console.error('Failed to increment usage:', error);
     }
   }
 }

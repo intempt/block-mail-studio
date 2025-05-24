@@ -2,9 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { EmailSnippet } from '@/types/snippets';
 import { SnippetService } from '@/services/snippetService';
 
@@ -20,24 +19,35 @@ export const SnippetManager: React.FC<SnippetManagerProps> = ({
   const [snippets, setSnippets] = useState<EmailSnippet[]>([]);
 
   useEffect(() => {
-    loadSnippets();
+    try {
+      const allSnippets = SnippetService.getAllSnippets();
+      setSnippets(allSnippets);
+    } catch (error) {
+      console.error('Failed to load snippets:', error);
+      setSnippets([]);
+    }
   }, []);
 
-  const loadSnippets = () => {
-    const allSnippets = SnippetService.getAllSnippets();
-    setSnippets(allSnippets);
-  };
-
   const handleSnippetUse = (snippet: EmailSnippet) => {
-    SnippetService.incrementUsage(snippet.id);
-    onSnippetSelect(snippet);
-    loadSnippets();
+    try {
+      SnippetService.incrementUsage(snippet.id);
+      onSnippetSelect(snippet);
+      const updatedSnippets = SnippetService.getAllSnippets();
+      setSnippets(updatedSnippets);
+    } catch (error) {
+      console.error('Failed to use snippet:', error);
+    }
   };
 
   const handleDeleteSnippet = (snippetId: string) => {
     if (confirm('Are you sure you want to delete this snippet?')) {
-      SnippetService.deleteSnippet(snippetId);
-      loadSnippets();
+      try {
+        SnippetService.deleteSnippet(snippetId);
+        const updatedSnippets = SnippetService.getAllSnippets();
+        setSnippets(updatedSnippets);
+      } catch (error) {
+        console.error('Failed to delete snippet:', error);
+      }
     }
   };
 
@@ -76,19 +86,6 @@ export const SnippetManager: React.FC<SnippetManagerProps> = ({
               >
                 <Trash2 className="w-3 h-3" />
               </Button>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Badge variant="secondary" className="text-xs">
-                {snippet.blockType}
-              </Badge>
-              
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  {snippet.usageCount}
-                </span>
-              </div>
             </div>
 
             <Button
