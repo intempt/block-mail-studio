@@ -13,8 +13,6 @@ import {
   Minus, 
   Video, 
   Share2, 
-  Code, 
-  Menu,
   Table,
   ChevronDown,
   ChevronRight,
@@ -31,8 +29,6 @@ interface BlockItem {
   name: string;
   description: string;
   icon: React.ReactNode;
-  category: 'basic' | 'layout' | 'media' | 'advanced';
-  isPro?: boolean;
 }
 
 interface EnhancedEmailBlockPaletteProps {
@@ -43,26 +39,16 @@ interface EnhancedEmailBlockPaletteProps {
 }
 
 const blockItems: BlockItem[] = [
-  // Basic blocks
-  { id: 'text', name: 'Text', description: 'Add paragraphs, headings, and formatted text', icon: <Type className="w-4 h-4" />, category: 'basic' },
-  { id: 'image', name: 'Image', description: 'Insert images with optional links', icon: <Image className="w-4 h-4" />, category: 'basic' },
-  { id: 'button', name: 'Button', description: 'Call-to-action buttons with custom styling', icon: <MousePointer className="w-4 h-4" />, category: 'basic' },
-  { id: 'spacer', name: 'Spacer', description: 'Add vertical spacing between blocks', icon: <Minus className="w-4 h-4" />, category: 'basic' },
-  { id: 'divider', name: 'Divider', description: 'Horizontal line separators', icon: <Minus className="w-4 h-4" />, category: 'basic' },
-  
-  // Layout blocks
-  { id: 'columns', name: 'Columns', description: 'Multi-column layouts for complex designs', icon: <Columns className="w-4 h-4" />, category: 'layout' },
-  { id: 'split', name: 'Split', description: 'Two-column content blocks', icon: <Split className="w-4 h-4" />, category: 'layout' },
-  
-  // Media blocks
-  { id: 'video', name: 'Video', description: 'Embed videos with thumbnails', icon: <Video className="w-4 h-4" />, category: 'media' },
-  { id: 'social', name: 'Social', description: 'Social media icons and links', icon: <Share2 className="w-4 h-4" />, category: 'media' },
-  
-  // Advanced blocks
-  { id: 'html', name: 'HTML', description: 'Custom HTML content', icon: <Code className="w-4 h-4" />, category: 'advanced', isPro: true },
-  { id: 'menu', name: 'Menu', description: 'Navigation menu bars', icon: <Menu className="w-4 h-4" />, category: 'advanced' },
-  { id: 'code', name: 'Code', description: 'Syntax-highlighted code blocks', icon: <Code className="w-4 h-4" />, category: 'advanced', isPro: true },
-  { id: 'table', name: 'Table', description: 'Data tables with customizable styling', icon: <Table className="w-4 h-4" />, category: 'advanced', isPro: true },
+  { id: 'text', name: 'Text', description: 'Add paragraphs, headings, and formatted text', icon: <Type className="w-4 h-4" /> },
+  { id: 'image', name: 'Image', description: 'Insert images with optional links', icon: <Image className="w-4 h-4" /> },
+  { id: 'button', name: 'Button', description: 'Call-to-action buttons with custom styling', icon: <MousePointer className="w-4 h-4" /> },
+  { id: 'spacer', name: 'Spacer', description: 'Add vertical spacing between blocks', icon: <Minus className="w-4 h-4" /> },
+  { id: 'divider', name: 'Divider', description: 'Horizontal line separators', icon: <Minus className="w-4 h-4" /> },
+  { id: 'split', name: 'Split', description: 'Two-column content blocks', icon: <Split className="w-4 h-4" /> },
+  { id: 'video', name: 'Video', description: 'Embed videos with thumbnails', icon: <Video className="w-4 h-4" /> },
+  { id: 'social', name: 'Social', description: 'Social media icons and links', icon: <Share2 className="w-4 h-4" /> },
+  { id: 'html', name: 'HTML', description: 'Custom HTML content', icon: <Table className="w-4 h-4" /> },
+  { id: 'table', name: 'Table', description: 'Data tables with customizable styling', icon: <Table className="w-4 h-4" /> },
 ];
 
 export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps> = ({
@@ -80,16 +66,11 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const getBlocksByCategory = (categories: string[]) => {
-    return blockItems.filter(block => categories.includes(block.category));
-  };
-
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
   };
 
   const handleLayoutSelect = (layout: any) => {
-    // Create a columns block with the selected layout configuration
     onBlockAdd('columns', layout);
   };
 
@@ -99,17 +80,11 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     return (
       <Card
         key={block.id}
-        className={`relative cursor-pointer transition-all duration-200 hover:shadow-md group ${gridClasses}`}
+        className={`cursor-pointer transition-all duration-200 hover:shadow-md group ${gridClasses}`}
         draggable
         onDragStart={(e) => handleDragStart(e, block.id)}
         onClick={() => onBlockAdd(block.id)}
       >
-        {block.isPro && (
-          <Badge className="absolute -top-1 -right-1 text-xs bg-gradient-to-r from-purple-500 to-pink-500">
-            Pro
-          </Badge>
-        )}
-        
         <div className="text-center space-y-2">
           <div className="flex justify-center text-slate-600 group-hover:text-blue-600 transition-colors">
             {block.icon}
@@ -165,7 +140,10 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                       />
                     </div>
                     <div className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}>
-                      {getBlocksByCategory(['layout']).map(renderBlockItem)}
+                      {[
+                        { id: 'columns', name: 'Columns', description: 'Multi-column layouts for complex designs', icon: <Columns className="w-4 h-4" /> },
+                        { id: 'split', name: 'Split', description: 'Two-column content blocks', icon: <Split className="w-4 h-4" /> }
+                      ].map(renderBlockItem)}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
@@ -194,7 +172,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}>
-                      {getBlocksByCategory(['basic', 'media', 'advanced']).map(renderBlockItem)}
+                      {blockItems.map(renderBlockItem)}
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
