@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -18,7 +19,7 @@ import Gapcursor from '@tiptap/extension-gapcursor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Monitor, Smartphone, Code, Eye, Download, Upload, Settings, Layers, Sparkles } from 'lucide-react';
+import { Monitor, Smartphone, Code, Eye, Download, Upload, Settings, Layers, Sparkles, Edit3 } from 'lucide-react';
 
 import { EmailBlockLibrary } from './EmailBlockLibrary';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
@@ -30,10 +31,13 @@ import { EmailAIChat } from './EmailAIChat';
 import { EmailPromptLibrary, EmailPrompt } from './EmailPromptLibrary';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
 import { ImageUploader } from './ImageUploader';
+import { EmailCodeEditor } from './EmailCodeEditor';
+import { EmailPromptEditor } from './EmailPromptEditor';
+import { EmailBlockEditor } from './EmailBlockEditor';
 
 const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
+  const [viewMode, setViewMode] = useState<'visual' | 'code' | 'prompt' | 'blocks'>('visual');
   const [sidebarTab, setSidebarTab] = useState<'ai' | 'prompts' | 'blocks' | 'templates' | 'manager'>('ai');
   const [showProperties, setShowProperties] = useState(true);
   const [emailHTML, setEmailHTML] = useState('');
@@ -313,7 +317,7 @@ const EmailEditor = () => {
         <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'visual' | 'code')}>
+              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)}>
                 <TabsList>
                   <TabsTrigger value="visual" className="flex items-center gap-2">
                     <Eye className="w-4 h-4" />
@@ -322,6 +326,14 @@ const EmailEditor = () => {
                   <TabsTrigger value="code" className="flex items-center gap-2">
                     <Code className="w-4 h-4" />
                     Code
+                  </TabsTrigger>
+                  <TabsTrigger value="prompt" className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Prompt
+                  </TabsTrigger>
+                  <TabsTrigger value="blocks" className="flex items-center gap-2">
+                    <Edit3 className="w-4 h-4" />
+                    Blocks
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -368,6 +380,18 @@ const EmailEditor = () => {
                     />
                   </div>
                 </Card>
+              </div>
+            ) : viewMode === 'code' ? (
+              <div className="h-full p-4">
+                <EmailCodeEditor editor={editor} />
+              </div>
+            ) : viewMode === 'prompt' ? (
+              <div className="h-full p-4">
+                <EmailPromptEditor editor={editor} />
+              </div>
+            ) : viewMode === 'blocks' ? (
+              <div className="h-full p-4">
+                <EmailBlockEditor editor={editor} />
               </div>
             ) : (
               <EmailPreview 
