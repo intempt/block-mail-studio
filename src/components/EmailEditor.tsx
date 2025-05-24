@@ -65,11 +65,9 @@ import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { useToast } from '@/hooks/use-toast';
 import { enhancedAIService } from '@/services/EnhancedAIService';
 import { EmailSnippet } from '@/types/snippets';
-import { EmailBlockEditor } from './EmailBlockEditor';
-import { UnifiedAIAnalyzer } from './UnifiedAIAnalyzer';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
-type LeftPanelTab = 'ai' | 'design' | 'blocks' | 'editor';
+type LeftPanelTab = 'ai' | 'design' | 'blocks';
 type RightPanelTab = 'analytics' | 'optimization';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
@@ -93,7 +91,7 @@ const EmailEditor = () => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
   const [compactMode, setCompactMode] = useState(false);
-  const [canvasRef] = useState(useRef<EmailBlockCanvasRef>(null));
+  const canvasRef = useRef<EmailBlockCanvasRef>(null);
   const [collaborationMode, setCollaborationMode] = useState(false);
   const [collaborationConfig, setCollaborationConfig] = useState({
     documentId: `email-${Date.now()}`,
@@ -350,8 +348,6 @@ const EmailEditor = () => {
             compactMode={compactMode}
           />
         );
-      case 'editor':
-        return <EmailBlockEditor editor={null} />;
       default:
         return (
           <EnhancedEmailBlockPalette 
@@ -395,10 +391,16 @@ const EmailEditor = () => {
     switch (rightPanelTab) {
       case 'analytics':
         return (
-          <UnifiedAIAnalyzer 
+          <EnhancedPerformanceAnalyzer 
             emailHTML={emailHTML}
             subjectLine={subjectLine}
-            canvasRef={canvasRef}
+            onOptimize={(suggestion) => {
+              console.log('Applying optimization:', suggestion);
+              toast({
+                title: "Optimization Applied",
+                description: suggestion
+              });
+            }}
           />
         );
       case 'optimization':
@@ -410,10 +412,16 @@ const EmailEditor = () => {
         );
       default:
         return (
-          <UnifiedAIAnalyzer 
+          <EnhancedPerformanceAnalyzer 
             emailHTML={emailHTML}
             subjectLine={subjectLine}
-            canvasRef={canvasRef}
+            onOptimize={(suggestion) => {
+              console.log('Applying optimization:', suggestion);
+              toast({
+                title: "Optimization Applied",
+                description: suggestion
+              });
+            }}
           />
         );
     }
@@ -574,14 +582,6 @@ const EmailEditor = () => {
                       className="flex-1 h-6 lg:h-8"
                     >
                       <Blocks className="w-3 h-3 lg:w-4 lg:h-4" />
-                    </Button>
-                    <Button
-                      variant={leftPanelTab === 'editor' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setLeftPanelTab('editor')}
-                      className="flex-1 h-6 lg:h-8"
-                    >
-                      <Edit3 className="w-3 h-3 lg:w-4 lg:h-4" />
                     </Button>
                   </div>
                 </div>
