@@ -1,8 +1,8 @@
 
-import { AIFirstEmailBuilder } from '@/components/AIFirstEmailBuilder';
+import EmailEditor from '@/components/EmailEditor';
 
 const Index = () => {
-  return <AIFirstEmailBuilder />;
+  return <EmailEditor />;
 };
 
 export default Index;
