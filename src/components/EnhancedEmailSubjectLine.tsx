@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,19 +18,7 @@ import {
   BarChart3
 } from 'lucide-react';
 import { directAIService } from '@/services/directAIService';
-
-// Simple mock interface
-interface SubjectLineAnalysisResult {
-  score: number | null;
-  spamRisk: string;
-  length: number;
-  emotionalImpact: number | null;
-  urgencyLevel: number | null;
-  recommendations: string[];
-  benchmarkComparison: {
-    predictedOpenRate: number | null;
-  };
-}
+import { SubjectLineAnalysisResult } from '@/services/EmailAIService';
 
 interface EnhancedEmailSubjectLineProps {
   value: string;
@@ -60,7 +49,6 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     try {
       console.log('Direct subject line analysis:', value);
       
-      // Direct API call - no caching
       const result = await directAIService.analyzeSubjectLine(value, emailContent);
       
       setAnalysis(result);
@@ -68,19 +56,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
       
     } catch (error) {
       console.error('Error analyzing subject line:', error);
-      // Fallback to mock data
-      const fallbackResult: SubjectLineAnalysisResult = {
-        score: 75,
-        spamRisk: 'low',
-        length: value.length,
-        emotionalImpact: 70,
-        urgencyLevel: 60,
-        recommendations: ['Consider adding urgency', 'Use action words'],
-        benchmarkComparison: {
-          predictedOpenRate: 24.5
-        }
-      };
-      setAnalysis(fallbackResult);
+      setAnalysis(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -95,18 +71,11 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     try {
       console.log('Direct variant generation:', value);
       
-      // Direct API call - no caching
       const newVariants = await directAIService.generateSubjectVariants(value, 3);
       setVariants(newVariants);
     } catch (error) {
       console.error('Error generating variants:', error);
-      // Fallback variants
-      const fallbackVariants = [
-        "🚀 " + value,
-        value + " - Limited Time!",
-        "Don't Miss: " + value
-      ].filter(v => v !== value).slice(0, 3);
-      setVariants(fallbackVariants);
+      setVariants([]);
     } finally {
       setIsGeneratingVariants(false);
     }
@@ -137,19 +106,10 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
   const isTooShort = characterCount < 10 && characterCount > 0;
 
   const getScoreColor = (score: number | null) => {
-    if (score === null) return 'text-gray-600';
+    if (score === null || score === undefined) return 'text-gray-600';
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
-  };
-
-  const getSpamRiskColor = (risk: string) => {
-    switch (risk) {
-      case 'low': return 'text-green-600 bg-green-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'high': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
   };
 
   return (
@@ -164,11 +124,6 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
             {analysis?.score !== null && analysis?.score !== undefined && (
               <Badge variant="outline" className={`text-xs ${getScoreColor(analysis.score)}`}>
                 Score: {analysis.score || '--'}
-              </Badge>
-            )}
-            {analysis?.spamRisk && analysis.spamRisk !== 'unknown' && (
-              <Badge className={`text-xs ${getSpamRiskColor(analysis.spamRisk)}`}>
-                {analysis.spamRisk.toUpperCase()} Risk
               </Badge>
             )}
             <Button
@@ -226,30 +181,30 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
             <div className="space-y-2 p-3 bg-slate-50 rounded-lg">
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center p-2 bg-white rounded">
-                  <div className="font-semibold text-purple-600">
-                    {analysis?.emotionalImpact || '--'}
-                  </div>
-                  <div className="text-gray-600">Emotion</div>
-                </div>
-                <div className="text-center p-2 bg-white rounded">
-                  <div className="font-semibold text-orange-600">
-                    {analysis?.urgencyLevel || '--'}
-                  </div>
-                  <div className="text-gray-600">Urgency</div>
-                </div>
-                <div className="text-center p-2 bg-white rounded">
                   <div className="font-semibold text-blue-600">
-                    {analysis?.benchmarkComparison?.predictedOpenRate?.toFixed(1) || '--'}%
+                    {analysis.predictions?.openRate?.toFixed(1) || '--'}%
                   </div>
                   <div className="text-gray-600">Est. Open</div>
                 </div>
+                <div className="text-center p-2 bg-white rounded">
+                  <div className="font-semibold text-purple-600">
+                    {analysis.score || '--'}
+                  </div>
+                  <div className="text-gray-600">Score</div>
+                </div>
+                <div className="text-center p-2 bg-white rounded">
+                  <div className="font-semibold text-orange-600">
+                    {analysis.predictions?.deliverabilityScore || '--'}
+                  </div>
+                  <div className="text-gray-600">Delivery</div>
+                </div>
               </div>
 
-              {analysis.recommendations && analysis.recommendations.length > 0 && (
+              {analysis.suggestions && analysis.suggestions.length > 0 && (
                 <div className="bg-blue-50 p-2 rounded">
                   <div className="text-xs font-medium text-blue-900 mb-1">💡 Recommendations:</div>
                   <div className="space-y-1">
-                    {analysis.recommendations.slice(0, 2).map((rec, index) => (
+                    {analysis.suggestions.slice(0, 2).map((rec, index) => (
                       <div key={index} className="text-xs text-blue-800">• {rec}</div>
                     ))}
                   </div>

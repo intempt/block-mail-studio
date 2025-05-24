@@ -4,7 +4,7 @@ import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult, Pe
 class DirectAIServiceManager {
   async analyzeSubjectLine(
     subjectLine: string, 
-    emailContent?: string
+    emailContent: string = ''
   ): Promise<SubjectLineAnalysisResult> {
     console.log('Direct subject line analysis for:', subjectLine);
     return emailAIService.analyzeSubjectLine(subjectLine, emailContent);
@@ -12,15 +12,18 @@ class DirectAIServiceManager {
 
   async analyzeBrandVoice(
     emailHTML: string, 
-    subjectLine?: string
+    subjectLine: string = ''
   ): Promise<BrandVoiceAnalysisResult> {
     console.log('Direct brand voice analysis');
     return emailAIService.analyzeBrandVoice(emailHTML, subjectLine);
   }
 
-  async analyzePerformance(emailHTML: string): Promise<PerformanceAnalysisResult> {
+  async analyzePerformance(
+    emailHTML: string, 
+    subjectLine: string = ''
+  ): Promise<PerformanceAnalysisResult> {
     console.log('Direct performance analysis');
-    return emailAIService.analyzeEmailPerformance(emailHTML);
+    return emailAIService.analyzeEmailPerformance(emailHTML, subjectLine);
   }
 
   async generateSubjectVariants(subjectLine: string, count: number = 3): Promise<string[]> {
