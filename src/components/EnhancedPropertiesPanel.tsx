@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Settings,
   Palette, 
@@ -25,7 +27,9 @@ import {
   Trash2,
   Copy,
   Star,
-  Save
+  Save,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock } from '@/types/emailBlocks';
 
@@ -38,6 +42,7 @@ interface EnhancedPropertiesPanelProps {
   emailHTML?: string;
   templateStyles?: any;
   onTemplateStylesChange?: (styles: any) => void;
+  compactMode?: boolean;
 }
 
 export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = ({
@@ -48,11 +53,25 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   onBlockSave,
   emailHTML = '',
   templateStyles,
-  onTemplateStylesChange
+  onTemplateStylesChange,
+  compactMode = false
 }) => {
   const [activeDevice, setActiveDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
+  
+  // Collapsible sections state
+  const [sectionsExpanded, setSectionsExpanded] = useState({
+    typography: !compactMode,
+    spacing: !compactMode,
+    border: false,
+    background: !compactMode,
+    visibility: false
+  });
+
+  const toggleSection = (section: keyof typeof sectionsExpanded) => {
+    setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const handleStyleUpdate = (property: string, value: any) => {
     if (!selectedBlock || !onBlockUpdate) return;
@@ -97,29 +116,34 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   };
 
   const renderBlockIcon = (type: string) => {
+    const iconSize = compactMode ? 'w-3 h-3' : 'w-4 h-4';
     switch (type) {
-      case 'text': return <Type className="w-4 h-4" />;
-      case 'image': return <ImageIcon className="w-4 h-4" />;
-      case 'button': return <MousePointer className="w-4 h-4" />;
-      default: return <Layers className="w-4 h-4" />;
+      case 'text': return <Type className={iconSize} />;
+      case 'image': return <ImageIcon className={iconSize} />;
+      case 'button': return <MousePointer className={iconSize} />;
+      default: return <Layers className={iconSize} />;
     }
   };
 
   const renderContentEditor = () => {
     if (!selectedBlock) return null;
 
+    const spacing = compactMode ? 'space-y-2' : 'space-y-4';
+    const inputHeight = compactMode ? 'h-7' : 'h-8';
+    const textareaHeight = compactMode ? 'min-h-16' : 'min-h-24';
+
     switch (selectedBlock.type) {
       case 'text':
         const textBlock = selectedBlock as TextBlock;
         return (
-          <div className="space-y-4">
+          <div className={spacing}>
             <div>
-              <Label htmlFor="text-style">Text Style</Label>
+              <Label htmlFor="text-style" className={compactMode ? 'text-xs' : 'text-sm'}>Text Style</Label>
               <Select 
                 value={textBlock.content.textStyle} 
                 onValueChange={(value) => handleContentUpdate('textStyle', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className={inputHeight}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,13 +156,13 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
               </Select>
             </div>
             <div>
-              <Label htmlFor="text-content">Content</Label>
+              <Label htmlFor="text-content" className={compactMode ? 'text-xs' : 'text-sm'}>Content</Label>
               <Textarea
                 id="text-content"
                 value={textBlock.content.html}
                 onChange={(e) => handleContentUpdate('html', e.target.value)}
                 placeholder="Enter your text content..."
-                className="min-h-24 mt-2"
+                className={`${textareaHeight} mt-1 ${compactMode ? 'text-xs' : 'text-sm'}`}
               />
             </div>
           </div>
@@ -147,41 +171,44 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
       case 'image':
         const imageBlock = selectedBlock as ImageBlock;
         return (
-          <div className="space-y-4">
+          <div className={spacing}>
             <div>
-              <Label htmlFor="image-src">Image URL</Label>
+              <Label htmlFor="image-src" className={compactMode ? 'text-xs' : 'text-sm'}>Image URL</Label>
               <Input
                 id="image-src"
                 value={imageBlock.content.src}
                 onChange={(e) => handleContentUpdate('src', e.target.value)}
                 placeholder="https://example.com/image.jpg"
+                className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
               />
             </div>
             <div>
-              <Label htmlFor="image-alt">Alt Text</Label>
+              <Label htmlFor="image-alt" className={compactMode ? 'text-xs' : 'text-sm'}>Alt Text</Label>
               <Input
                 id="image-alt"
                 value={imageBlock.content.alt}
                 onChange={(e) => handleContentUpdate('alt', e.target.value)}
                 placeholder="Describe the image"
+                className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
               />
             </div>
             <div>
-              <Label htmlFor="image-link">Link URL (optional)</Label>
+              <Label htmlFor="image-link" className={compactMode ? 'text-xs' : 'text-sm'}>Link URL (optional)</Label>
               <Input
                 id="image-link"
                 value={imageBlock.content.link || ''}
                 onChange={(e) => handleContentUpdate('link', e.target.value)}
                 placeholder="https://example.com"
+                className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
               />
             </div>
             <div>
-              <Label htmlFor="image-alignment">Alignment</Label>
+              <Label htmlFor="image-alignment" className={compactMode ? 'text-xs' : 'text-sm'}>Alignment</Label>
               <Select 
                 value={imageBlock.content.alignment} 
                 onValueChange={(value) => handleContentUpdate('alignment', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className={inputHeight}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -197,7 +224,7 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
                 checked={imageBlock.content.isDynamic}
                 onCheckedChange={(checked) => handleContentUpdate('isDynamic', checked)}
               />
-              <Label htmlFor="image-dynamic">Dynamic Image</Label>
+              <Label htmlFor="image-dynamic" className={compactMode ? 'text-xs' : 'text-sm'}>Dynamic Image</Label>
             </div>
           </div>
         );
@@ -205,56 +232,60 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
       case 'button':
         const buttonBlock = selectedBlock as ButtonBlock;
         return (
-          <div className="space-y-4">
+          <div className={spacing}>
             <div>
-              <Label htmlFor="button-text">Button Text</Label>
+              <Label htmlFor="button-text" className={compactMode ? 'text-xs' : 'text-sm'}>Button Text</Label>
               <Input
                 id="button-text"
                 value={buttonBlock.content.text}
                 onChange={(e) => handleContentUpdate('text', e.target.value)}
                 placeholder="Click Here"
+                className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
               />
             </div>
             <div>
-              <Label htmlFor="button-link">Button Link</Label>
+              <Label htmlFor="button-link" className={compactMode ? 'text-xs' : 'text-sm'}>Button Link</Label>
               <Input
                 id="button-link"
                 value={buttonBlock.content.link}
                 onChange={(e) => handleContentUpdate('link', e.target.value)}
                 placeholder="https://example.com"
+                className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
               />
             </div>
-            <div>
-              <Label htmlFor="button-style">Button Style</Label>
-              <Select 
-                value={buttonBlock.content.style} 
-                onValueChange={(value) => handleContentUpdate('style', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="solid">Solid</SelectItem>
-                  <SelectItem value="outline">Outline</SelectItem>
-                  <SelectItem value="text">Text Only</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="button-size">Button Size</Label>
-              <Select 
-                value={buttonBlock.content.size} 
-                onValueChange={(value) => handleContentUpdate('size', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="button-style" className={compactMode ? 'text-xs' : 'text-sm'}>Style</Label>
+                <Select 
+                  value={buttonBlock.content.style} 
+                  onValueChange={(value) => handleContentUpdate('style', value)}
+                >
+                  <SelectTrigger className={inputHeight}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="solid">Solid</SelectItem>
+                    <SelectItem value="outline">Outline</SelectItem>
+                    <SelectItem value="text">Text Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="button-size" className={compactMode ? 'text-xs' : 'text-sm'}>Size</Label>
+                <Select 
+                  value={buttonBlock.content.size} 
+                  onValueChange={(value) => handleContentUpdate('size', value)}
+                >
+                  <SelectTrigger className={inputHeight}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         );
@@ -262,7 +293,9 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
       default:
         return (
           <div className="text-center py-4 text-gray-500">
-            Content editor for {selectedBlock.type} blocks coming soon
+            <p className={compactMode ? 'text-xs' : 'text-sm'}>
+              Content editor for {selectedBlock.type} blocks coming soon
+            </p>
           </div>
         );
     }
@@ -272,173 +305,253 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
     if (!selectedBlock) return null;
 
     const currentStyling = selectedBlock.styling[activeDevice];
+    const spacing = compactMode ? 'space-y-2' : 'space-y-4';
+    const sectionSpacing = compactMode ? 'space-y-2' : 'space-y-3';
+    const inputHeight = compactMode ? 'h-7' : 'h-8';
 
     return (
-      <div className="space-y-4">
+      <div className={spacing}>
         {/* Device Selector */}
         <div className="flex items-center bg-gray-100 rounded-lg p-1">
           <Button
             variant={activeDevice === 'desktop' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveDevice('desktop')}
-            className="flex-1 h-8"
+            className={`flex-1 ${compactMode ? 'h-6' : 'h-8'}`}
           >
-            <Monitor className="w-4 h-4" />
+            <Monitor className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
           </Button>
           <Button
             variant={activeDevice === 'tablet' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveDevice('tablet')}
-            className="flex-1 h-8"
+            className={`flex-1 ${compactMode ? 'h-6' : 'h-8'}`}
           >
-            <Tablet className="w-4 h-4" />
+            <Tablet className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
           </Button>
           <Button
             variant={activeDevice === 'mobile' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setActiveDevice('mobile')}
-            className="flex-1 h-8"
+            className={`flex-1 ${compactMode ? 'h-6' : 'h-8'}`}
           >
-            <Smartphone className="w-4 h-4" />
+            <Smartphone className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
           </Button>
         </div>
 
-        {/* Background */}
-        <div>
-          <Label htmlFor="bg-color">Background Color</Label>
-          <div className="flex gap-2 mt-1">
-            <input
-              type="color"
-              value={currentStyling.backgroundColor || '#ffffff'}
-              onChange={(e) => handleStyleUpdate('backgroundColor', e.target.value)}
-              className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
-            />
-            <Input
-              value={currentStyling.backgroundColor || '#ffffff'}
-              onChange={(e) => handleStyleUpdate('backgroundColor', e.target.value)}
-              className="flex-1"
-            />
-          </div>
-        </div>
-
-        {/* Typography */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">Typography</h4>
-          <div className="grid grid-cols-2 gap-3">
+        {/* Background Section */}
+        <Collapsible 
+          open={sectionsExpanded.background} 
+          onOpenChange={() => toggleSection('background')}
+        >
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+              <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
+                <Palette className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                Background
+              </h4>
+              {sectionsExpanded.background ? 
+                <ChevronDown className="w-4 h-4" /> : 
+                <ChevronRight className="w-4 h-4" />
+              }
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
             <div>
-              <Label htmlFor="text-color">Text Color</Label>
+              <Label htmlFor="bg-color" className={compactMode ? 'text-xs' : 'text-sm'}>Background Color</Label>
               <div className="flex gap-2 mt-1">
                 <input
                   type="color"
-                  value={currentStyling.textColor || '#333333'}
-                  onChange={(e) => handleStyleUpdate('textColor', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  value={currentStyling.backgroundColor || '#ffffff'}
+                  onChange={(e) => handleStyleUpdate('backgroundColor', e.target.value)}
+                  className={`${compactMode ? 'w-8 h-7' : 'w-10 h-8'} border border-gray-300 rounded cursor-pointer`}
                 />
                 <Input
-                  value={currentStyling.textColor || '#333333'}
-                  onChange={(e) => handleStyleUpdate('textColor', e.target.value)}
-                  className="flex-1 text-xs"
+                  value={currentStyling.backgroundColor || '#ffffff'}
+                  onChange={(e) => handleStyleUpdate('backgroundColor', e.target.value)}
+                  className={`flex-1 ${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="font-size">Font Size</Label>
-              <Input
-                value={currentStyling.fontSize || '16px'}
-                onChange={(e) => handleStyleUpdate('fontSize', e.target.value)}
-                placeholder="16px"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="font-family">Font Family</Label>
-            <Select 
-              value={currentStyling.fontFamily || 'Arial, sans-serif'} 
-              onValueChange={(value) => handleStyleUpdate('fontFamily', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Arial, sans-serif">Arial</SelectItem>
-                <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
-                <SelectItem value="Georgia, serif">Georgia</SelectItem>
-                <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
-                <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-          <div>
-            <Label htmlFor="text-align">Text Alignment</Label>
-            <Select 
-              value={currentStyling.textAlign || 'left'} 
-              onValueChange={(value) => handleStyleUpdate('textAlign', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="left">Left</SelectItem>
-                <SelectItem value="center">Center</SelectItem>
-                <SelectItem value="right">Right</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        {/* Typography Section */}
+        <Collapsible 
+          open={sectionsExpanded.typography} 
+          onOpenChange={() => toggleSection('typography')}
+        >
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+              <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
+                <Type className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                Typography
+              </h4>
+              {sectionsExpanded.typography ? 
+                <ChevronDown className="w-4 h-4" /> : 
+                <ChevronRight className="w-4 h-4" />
+              }
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
+            <div className={sectionSpacing}>
+              <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                <div>
+                  <Label htmlFor="text-color" className={compactMode ? 'text-xs' : 'text-sm'}>Text Color</Label>
+                  <div className="flex gap-1 mt-1">
+                    <input
+                      type="color"
+                      value={currentStyling.textColor || '#333333'}
+                      onChange={(e) => handleStyleUpdate('textColor', e.target.value)}
+                      className={`${compactMode ? 'w-6 h-7' : 'w-8 h-8'} border border-gray-300 rounded cursor-pointer`}
+                    />
+                    <Input
+                      value={currentStyling.textColor || '#333333'}
+                      onChange={(e) => handleStyleUpdate('textColor', e.target.value)}
+                      className={`flex-1 ${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="font-size" className={compactMode ? 'text-xs' : 'text-sm'}>Font Size</Label>
+                  <Input
+                    value={currentStyling.fontSize || '16px'}
+                    onChange={(e) => handleStyleUpdate('fontSize', e.target.value)}
+                    placeholder="16px"
+                    className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="font-family" className={compactMode ? 'text-xs' : 'text-sm'}>Font Family</Label>
+                <Select 
+                  value={currentStyling.fontFamily || 'Arial, sans-serif'} 
+                  onValueChange={(value) => handleStyleUpdate('fontFamily', value)}
+                >
+                  <SelectTrigger className={inputHeight}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Arial, sans-serif">Arial</SelectItem>
+                    <SelectItem value="Helvetica, sans-serif">Helvetica</SelectItem>
+                    <SelectItem value="Georgia, serif">Georgia</SelectItem>
+                    <SelectItem value="Times New Roman, serif">Times New Roman</SelectItem>
+                    <SelectItem value="Verdana, sans-serif">Verdana</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Spacing */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">Spacing</h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="padding">Padding</Label>
-              <Input
-                value={currentStyling.padding || '16px'}
-                onChange={(e) => handleStyleUpdate('padding', e.target.value)}
-                placeholder="16px"
-              />
+              <div>
+                <Label htmlFor="text-align" className={compactMode ? 'text-xs' : 'text-sm'}>Text Alignment</Label>
+                <Select 
+                  value={currentStyling.textAlign || 'left'} 
+                  onValueChange={(value) => handleStyleUpdate('textAlign', value)}
+                >
+                  <SelectTrigger className={inputHeight}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="left">Left</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                    <SelectItem value="right">Right</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="margin">Margin</Label>
-              <Input
-                value={currentStyling.margin || '0'}
-                onChange={(e) => handleStyleUpdate('margin', e.target.value)}
-                placeholder="0"
-              />
-            </div>
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-        {/* Border & Effects */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">Border & Effects</h4>
-          <div>
-            <Label htmlFor="border-radius">Border Radius</Label>
-            <Input
-              value={currentStyling.borderRadius || '0'}
-              onChange={(e) => handleStyleUpdate('borderRadius', e.target.value)}
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <Label htmlFor="border">Border</Label>
-            <Input
-              value={currentStyling.border || 'none'}
-              onChange={(e) => handleStyleUpdate('border', e.target.value)}
-              placeholder="1px solid #ccc"
-            />
-          </div>
-          <div>
-            <Label htmlFor="box-shadow">Box Shadow</Label>
-            <Input
-              value={currentStyling.boxShadow || 'none'}
-              onChange={(e) => handleStyleUpdate('boxShadow', e.target.value)}
-              placeholder="0 2px 4px rgba(0,0,0,0.1)"
-            />
-          </div>
-        </div>
+        {/* Spacing Section */}
+        <Collapsible 
+          open={sectionsExpanded.spacing} 
+          onOpenChange={() => toggleSection('spacing')}
+        >
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+              <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
+                <Layers className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                Spacing
+              </h4>
+              {sectionsExpanded.spacing ? 
+                <ChevronDown className="w-4 h-4" /> : 
+                <ChevronRight className="w-4 h-4" />
+              }
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
+            <div className="grid grid-cols-2 gap-2 lg:gap-3">
+              <div>
+                <Label htmlFor="padding" className={compactMode ? 'text-xs' : 'text-sm'}>Padding</Label>
+                <Input
+                  value={currentStyling.padding || '16px'}
+                  onChange={(e) => handleStyleUpdate('padding', e.target.value)}
+                  placeholder="16px"
+                  className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="margin" className={compactMode ? 'text-xs' : 'text-sm'}>Margin</Label>
+                <Input
+                  value={currentStyling.margin || '0'}
+                  onChange={(e) => handleStyleUpdate('margin', e.target.value)}
+                  placeholder="0"
+                  className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Border & Effects Section */}
+        <Collapsible 
+          open={sectionsExpanded.border} 
+          onOpenChange={() => toggleSection('border')}
+        >
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+              <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
+                <Settings className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                Border & Effects
+              </h4>
+              {sectionsExpanded.border ? 
+                <ChevronDown className="w-4 h-4" /> : 
+                <ChevronRight className="w-4 h-4" />
+              }
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
+            <div className={sectionSpacing}>
+              <div>
+                <Label htmlFor="border-radius" className={compactMode ? 'text-xs' : 'text-sm'}>Border Radius</Label>
+                <Input
+                  value={currentStyling.borderRadius || '0'}
+                  onChange={(e) => handleStyleUpdate('borderRadius', e.target.value)}
+                  placeholder="0"
+                  className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="border" className={compactMode ? 'text-xs' : 'text-sm'}>Border</Label>
+                <Input
+                  value={currentStyling.border || 'none'}
+                  onChange={(e) => handleStyleUpdate('border', e.target.value)}
+                  placeholder="1px solid #ccc"
+                  className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                />
+              </div>
+              <div>
+                <Label htmlFor="box-shadow" className={compactMode ? 'text-xs' : 'text-sm'}>Box Shadow</Label>
+                <Input
+                  value={currentStyling.boxShadow || 'none'}
+                  onChange={(e) => handleStyleUpdate('boxShadow', e.target.value)}
+                  placeholder="0 2px 4px rgba(0,0,0,0.1)"
+                  className={`${inputHeight} ${compactMode ? 'text-xs' : 'text-sm'}`}
+                />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     );
   };
@@ -446,42 +559,61 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   const renderDisplayOptions = () => {
     if (!selectedBlock) return null;
 
+    const spacing = compactMode ? 'space-y-2' : 'space-y-4';
+    const sectionSpacing = compactMode ? 'space-y-2' : 'space-y-3';
+
     return (
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium">Device Visibility</h4>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Monitor className="w-4 h-4" />
-              <span className="text-sm">Desktop</span>
+      <Collapsible 
+        open={sectionsExpanded.visibility} 
+        onOpenChange={() => toggleSection('visibility')}
+      >
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+            <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
+              <Eye className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+              Device Visibility
+            </h4>
+            {sectionsExpanded.visibility ? 
+              <ChevronDown className="w-4 h-4" /> : 
+              <ChevronRight className="w-4 h-4" />
+            }
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="pt-2">
+          <div className={sectionSpacing}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Monitor className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                <span className={compactMode ? 'text-xs' : 'text-sm'}>Desktop</span>
+              </div>
+              <Switch
+                checked={selectedBlock.displayOptions.showOnDesktop}
+                onCheckedChange={(checked) => handleDisplayOptionUpdate('showOnDesktop', checked)}
+              />
             </div>
-            <Switch
-              checked={selectedBlock.displayOptions.showOnDesktop}
-              onCheckedChange={(checked) => handleDisplayOptionUpdate('showOnDesktop', checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Tablet className="w-4 h-4" />
-              <span className="text-sm">Tablet</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Tablet className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                <span className={compactMode ? 'text-xs' : 'text-sm'}>Tablet</span>
+              </div>
+              <Switch
+                checked={selectedBlock.displayOptions.showOnTablet}
+                onCheckedChange={(checked) => handleDisplayOptionUpdate('showOnTablet', checked)}
+              />
             </div>
-            <Switch
-              checked={selectedBlock.displayOptions.showOnTablet}
-              onCheckedChange={(checked) => handleDisplayOptionUpdate('showOnTablet', checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4" />
-              <span className="text-sm">Mobile</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Smartphone className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                <span className={compactMode ? 'text-xs' : 'text-sm'}>Mobile</span>
+              </div>
+              <Switch
+                checked={selectedBlock.displayOptions.showOnMobile}
+                onCheckedChange={(checked) => handleDisplayOptionUpdate('showOnMobile', checked)}
+              />
             </div>
-            <Switch
-              checked={selectedBlock.displayOptions.showOnMobile}
-              onCheckedChange={(checked) => handleDisplayOptionUpdate('showOnMobile', checked)}
-            />
           </div>
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     );
   };
 
@@ -493,14 +625,16 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
     const imageBlocks = (emailHTML.match(/<img/g) || []).length;
     const linkBlocks = (emailHTML.match(/<a/g) || []).length;
 
+    const spacing = compactMode ? 'space-y-2' : 'space-y-4';
+
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-3">
-          <BarChart3 className="w-4 h-4" />
-          <h4 className="text-sm font-medium">Email Overview</h4>
+      <div className={spacing}>
+        <div className="flex items-center gap-2 mb-2 lg:mb-3">
+          <BarChart3 className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+          <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium`}>Email Overview</h4>
         </div>
         
-        <div className="space-y-2">
+        <div className={compactMode ? 'space-y-1' : 'space-y-2'}>
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-600">Total Blocks</span>
             <Badge variant="secondary">{blockCount}</Badge>
@@ -525,13 +659,13 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   if (!selectedBlock) {
     return (
       <div className="h-full">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Settings className="w-5 h-5" />
+        <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-gray-200`}>
+          <h3 className={`${compactMode ? 'text-sm' : 'text-lg'} font-semibold text-gray-900 flex items-center gap-2`}>
+            <Settings className={compactMode ? 'w-4 h-4' : 'w-5 h-5'} />
             Properties
           </h3>
         </div>
-        <div className="p-4">
+        <div className={compactMode ? 'p-2' : 'p-4'}>
           {renderOverviewStats()}
         </div>
       </div>
@@ -541,11 +675,11 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
+      <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-gray-200`}>
+        <div className="flex items-center justify-between mb-2 lg:mb-3">
           <div className="flex items-center gap-2">
             {renderBlockIcon(selectedBlock.type)}
-            <h3 className="text-lg font-semibold text-gray-900 capitalize">
+            <h3 className={`${compactMode ? 'text-sm' : 'text-lg'} font-semibold text-gray-900 capitalize`}>
               {selectedBlock.type} Block
             </h3>
           </div>
@@ -554,25 +688,25 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
               variant="ghost"
               size="sm"
               onClick={() => onBlockSave?.(selectedBlock, `${selectedBlock.type}-${Date.now()}`)}
-              className="h-8 w-8 p-0"
+              className={`${compactMode ? 'h-6 w-6 p-0' : 'h-8 w-8 p-0'}`}
             >
-              <Star className="w-4 h-4" />
+              <Star className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onBlockDuplicate?.(selectedBlock)}
-              className="h-8 w-8 p-0"
+              className={`${compactMode ? 'h-6 w-6 p-0' : 'h-8 w-8 p-0'}`}
             >
-              <Copy className="w-4 h-4" />
+              <Copy className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onBlockDelete?.(selectedBlock.id)}
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+              className={`${compactMode ? 'h-6 w-6 p-0' : 'h-8 w-8 p-0'} text-red-600 hover:text-red-700`}
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
             </Button>
           </div>
         </div>
@@ -580,27 +714,27 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
 
       {/* Tabs */}
       <Tabs defaultValue="content" className="flex-1 flex flex-col">
-        <TabsList className="mx-4 mb-2">
-          <TabsTrigger value="content" className="flex-1">Content</TabsTrigger>
-          <TabsTrigger value="styles" className="flex-1">Styles</TabsTrigger>
-          <TabsTrigger value="display" className="flex-1">Display</TabsTrigger>
+        <TabsList className={`mx-2 lg:mx-4 ${compactMode ? 'mb-1' : 'mb-2'}`}>
+          <TabsTrigger value="content" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>Content</TabsTrigger>
+          <TabsTrigger value="styles" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>Styles</TabsTrigger>
+          <TabsTrigger value="display" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>Display</TabsTrigger>
         </TabsList>
 
         <div className="flex-1 overflow-hidden">
           <TabsContent value="content" className="h-full overflow-auto mt-0">
-            <div className="p-4">
+            <div className={compactMode ? 'p-2' : 'p-4'}>
               {renderContentEditor()}
             </div>
           </TabsContent>
 
           <TabsContent value="styles" className="h-full overflow-auto mt-0">
-            <div className="p-4">
+            <div className={compactMode ? 'p-2' : 'p-4'}>
               {renderStylingControls()}
             </div>
           </TabsContent>
 
           <TabsContent value="display" className="h-full overflow-auto mt-0">
-            <div className="p-4">
+            <div className={compactMode ? 'p-2' : 'p-4'}>
               {renderDisplayOptions()}
             </div>
           </TabsContent>

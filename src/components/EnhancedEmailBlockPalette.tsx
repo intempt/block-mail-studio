@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { 
   Type, 
   Image, 
@@ -22,7 +23,9 @@ import {
   Quote,
   Layers,
   Star,
-  Sparkles
+  Sparkles,
+  Grid3X3,
+  List
 } from 'lucide-react';
 
 interface BlockTemplate {
@@ -39,13 +42,17 @@ interface EnhancedEmailBlockPaletteProps {
   onBlockAdd: (blockType: string) => void;
   universalContent?: any[];
   onUniversalContentAdd?: (content: any) => void;
+  compactMode?: boolean;
 }
 
 export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps> = ({ 
   onBlockAdd,
   universalContent = [],
-  onUniversalContentAdd
+  onUniversalContentAdd,
+  compactMode = false
 }) => {
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
   const blockTemplates: BlockTemplate[] = [
     // Basic Content Blocks
     {
@@ -88,8 +95,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
       description: 'Horizontal dividing line with customizable styles',
       preview: '———'
     },
-
-    // Layout Blocks
     {
       type: 'split',
       name: 'Split',
@@ -125,8 +130,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
       preview: 'Row | Col',
       isNew: true
     },
-
-    // Media Blocks
     {
       type: 'video',
       name: 'Video',
@@ -135,8 +138,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
       description: 'Video thumbnail with play button for YouTube, Vimeo, TikTok',
       preview: '▶ Video'
     },
-
-    // Navigation Blocks
     {
       type: 'social',
       name: 'Social',
@@ -154,8 +155,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
       preview: 'Logo | Nav Links',
       isNew: true
     },
-
-    // Commerce Blocks
     {
       type: 'product',
       name: 'Product',
@@ -174,8 +173,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
       preview: '"Great product!"',
       isNew: true
     },
-
-    // Advanced Blocks
     {
       type: 'html',
       name: 'HTML',
@@ -191,87 +188,158 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  const renderBlockCard = (template: BlockTemplate) => {
+    const cardPadding = compactMode ? 'p-2' : 'p-3';
+    const iconSize = compactMode ? 'w-4 h-4' : 'w-6 h-6';
+    const iconPadding = compactMode ? 'p-1.5' : 'p-2';
+
+    if (viewMode === 'grid') {
+      return (
+        <Card
+          key={template.type}
+          className={`${cardPadding} cursor-grab hover:shadow-md transition-all duration-200 group border-l-4 border-l-transparent hover:border-l-blue-500`}
+          draggable
+          onDragStart={(e) => handleBlockDragStart(e, template.type)}
+          onClick={() => onBlockAdd(template.type)}
+        >
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className={`${iconPadding} bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-200`}>
+              {React.cloneElement(template.icon as React.ReactElement, { 
+                className: iconSize 
+              })}
+            </div>
+            <div className="flex items-center gap-1">
+              <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium text-gray-900`}>
+                {template.name}
+              </h4>
+              {template.isNew && (
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                  <Sparkles className="w-2 h-2" />
+                </Badge>
+              )}
+            </div>
+            {!compactMode && (
+              <p className="text-xs text-gray-600 line-clamp-2">{template.description}</p>
+            )}
+          </div>
+        </Card>
+      );
+    }
+
+    return (
+      <Card
+        key={template.type}
+        className={`${cardPadding} cursor-grab hover:shadow-md transition-all duration-200 group border-l-4 border-l-transparent hover:border-l-blue-500`}
+        draggable
+        onDragStart={(e) => handleBlockDragStart(e, template.type)}
+        onClick={() => onBlockAdd(template.type)}
+      >
+        <div className="flex items-start gap-2 lg:gap-3">
+          <div className={`${iconPadding} bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-200`}>
+            {React.cloneElement(template.icon as React.ReactElement, { 
+              className: iconSize 
+            })}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1 lg:gap-2">
+                <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium text-gray-900`}>
+                  {template.name}
+                </h4>
+                {template.isNew && (
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                    <Sparkles className="w-2 h-2 lg:w-3 lg:h-3 mr-1" />
+                    New
+                  </Badge>
+                )}
+              </div>
+              <Badge variant="outline" className="text-xs capitalize">
+                {template.category}
+              </Badge>
+            </div>
+            {!compactMode && (
+              <p className="text-xs text-gray-600 mb-2 line-clamp-2">{template.description}</p>
+            )}
+            <div className={`text-xs text-gray-400 font-mono bg-gray-50 p-1 rounded ${compactMode ? 'hidden lg:block' : ''}`}>
+              {template.preview}
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
-      <div className="p-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Block Library</h3>
+      <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-gray-200`}>
+        <div className="flex items-center justify-between mb-2 lg:mb-3">
+          <h3 className={`${compactMode ? 'text-sm' : 'text-lg'} font-semibold text-gray-900`}>
+            Block Library
+          </h3>
+          <div className="flex gap-1">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+            >
+              <List className="w-3 h-3 lg:w-4 lg:h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+            >
+              <Grid3X3 className="w-3 h-3 lg:w-4 lg:h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-        <TabsList className="mx-4 mb-2">
-          <TabsTrigger value="blocks" className="flex-1">Blocks</TabsTrigger>
-          <TabsTrigger value="universal" className="flex-1">
-            <Star className="w-4 h-4 mr-1" />
+        <TabsList className={`mx-2 lg:mx-4 ${compactMode ? 'mb-1' : 'mb-2'}`}>
+          <TabsTrigger value="blocks" className="flex-1 text-xs lg:text-sm">Blocks</TabsTrigger>
+          <TabsTrigger value="universal" className="flex-1 text-xs lg:text-sm">
+            <Star className="w-3 h-3 lg:w-4 lg:h-4 mr-1" />
             Universal
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="blocks" className="flex-1 mt-0">
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-2">
-              {blockTemplates.map((template) => (
-                <Card
-                  key={template.type}
-                  className="p-3 cursor-grab hover:shadow-md transition-all duration-200 group border-l-4 border-l-transparent hover:border-l-blue-500"
-                  draggable
-                  onDragStart={(e) => handleBlockDragStart(e, template.type)}
-                  onClick={() => onBlockAdd(template.type)}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg group-hover:from-blue-100 group-hover:to-blue-200 transition-all duration-200">
-                      {template.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-medium text-gray-900">{template.name}</h4>
-                          {template.isNew && (
-                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                              <Sparkles className="w-3 h-3 mr-1" />
-                              New
-                            </Badge>
-                          )}
-                        </div>
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {template.category}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-2">{template.description}</p>
-                      <div className="text-xs text-gray-400 font-mono bg-gray-50 p-1 rounded">
-                        {template.preview}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+            <div className={`${compactMode ? 'p-2' : 'p-4'} ${viewMode === 'grid' ? 'grid grid-cols-2 gap-2' : 'space-y-2'}`}>
+              {blockTemplates.map((template) => renderBlockCard(template))}
             </div>
           </ScrollArea>
         </TabsContent>
 
         <TabsContent value="universal" className="flex-1 mt-0">
           <ScrollArea className="flex-1">
-            <div className="p-4 space-y-2">
+            <div className={`${compactMode ? 'p-2' : 'p-4'} space-y-2`}>
               {universalContent.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Star className="w-6 h-6 text-gray-400" />
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Star className="w-4 h-4 lg:w-6 lg:h-6 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-sm">No saved content</p>
+                  <p className="text-gray-500 text-xs lg:text-sm">No saved content</p>
                   <p className="text-gray-400 text-xs mt-1">Save blocks or sections to reuse them across templates</p>
                 </div>
               ) : (
                 universalContent.map((content) => (
                   <Card
                     key={content.id}
-                    className="p-3 cursor-pointer hover:shadow-md transition-shadow group"
+                    className={`${compactMode ? 'p-2' : 'p-3'} cursor-pointer hover:shadow-md transition-shadow group`}
                     onClick={() => onUniversalContentAdd?.(content)}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors">
-                        <Star className="w-5 h-5 text-yellow-600" />
+                    <div className="flex items-start gap-2 lg:gap-3">
+                      <div className={`${compactMode ? 'p-1.5' : 'p-2'} bg-yellow-100 rounded-lg group-hover:bg-yellow-200 transition-colors`}>
+                        <Star className={`${compactMode ? 'w-4 h-4' : 'w-5 h-5'} text-yellow-600`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900">{content.name}</h4>
+                        <h4 className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium text-gray-900`}>
+                          {content.name}
+                        </h4>
                         <p className="text-xs text-gray-600 mb-1">
                           {content.type === 'block' ? 'Saved Block' : 'Saved Section'}
                         </p>

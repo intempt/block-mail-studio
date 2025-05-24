@@ -34,9 +34,13 @@ import {
   Wifi,
   WifiOff,
   Blocks,
-  Brain
+  Brain,
+  Minimize2,
+  Maximize2
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 import { EmailAIChat } from './EmailAIChat';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
@@ -54,6 +58,7 @@ import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
 type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
+type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
 interface Collaborator {
   id: string;
@@ -73,6 +78,8 @@ const EmailEditor = () => {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+  const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
+  const [compactMode, setCompactMode] = useState(false);
   const canvasRef = useRef<EmailBlockCanvasRef>(null);
 
   const keyboardShortcuts = [
@@ -82,8 +89,53 @@ const EmailEditor = () => {
     { key: 'Ctrl + B', action: 'Bold text' },
     { key: 'Ctrl + I', action: 'Italic text' },
     { key: 'Ctrl + K', action: 'Insert link' },
-    { key: 'F11', action: 'Toggle fullscreen' }
+    { key: 'F11', action: 'Toggle fullscreen' },
+    { key: 'Ctrl + [', action: 'Toggle left panel' },
+    { key: 'Ctrl + ]', action: 'Toggle right panel' }
   ];
+
+  // Responsive panel widths based on screen size and density
+  const getLeftPanelWidth = () => {
+    if (leftPanelCollapsed) return 'w-12';
+    if (compactMode) return 'w-56 lg:w-64 xl:w-72';
+    return 'w-64 lg:w-72 xl:w-80';
+  };
+
+  const getRightPanelWidth = () => {
+    if (rightPanelCollapsed) return 'w-12';
+    if (compactMode) return 'w-56 lg:w-64 xl:w-72';
+    return 'w-64 lg:w-72 xl:w-80';
+  };
+
+  const getCanvasPadding = () => {
+    if (compactMode) return 'p-2 lg:p-4';
+    return 'p-4 lg:p-6 xl:p-8';
+  };
+
+  const getHeaderHeight = () => {
+    return compactMode ? 'h-10' : 'h-12';
+  };
+
+  // Keyboard shortcuts handler
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '[':
+            e.preventDefault();
+            setLeftPanelCollapsed(prev => !prev);
+            break;
+          case ']':
+            e.preventDefault();
+            setRightPanelCollapsed(prev => !prev);
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -196,6 +248,7 @@ const EmailEditor = () => {
             onBlockAdd={handleBlockAdd}
             universalContent={[]}
             onUniversalContentAdd={(content) => console.log('Universal content:', content)}
+            compactMode={compactMode}
           />
         );
       default:
@@ -204,6 +257,7 @@ const EmailEditor = () => {
             onBlockAdd={handleBlockAdd}
             universalContent={[]}
             onUniversalContentAdd={(content) => console.log('Universal content:', content)}
+            compactMode={compactMode}
           />
         );
     }
@@ -247,6 +301,7 @@ const EmailEditor = () => {
             onBlockDelete={(blockId) => console.log('Block deleted:', blockId)}
             onBlockDuplicate={(block) => console.log('Block duplicated:', block)}
             onBlockSave={(block, name) => console.log('Block saved:', block, name)}
+            compactMode={compactMode}
           />
         );
       case 'analytics':
@@ -255,7 +310,7 @@ const EmailEditor = () => {
         return <BrandVoiceOptimizer editor={null} emailHTML={emailHTML} />;
       case 'code':
         return (
-          <div className="p-4">
+          <div className={compactMode ? "p-2" : "p-4"}>
             <h4 className="font-medium mb-4">HTML Preview</h4>
             <div className="bg-slate-100 rounded-lg p-4 text-xs font-mono overflow-auto max-h-96">
               <pre>{emailHTML}</pre>
@@ -270,6 +325,7 @@ const EmailEditor = () => {
             onBlockDelete={(blockId) => console.log('Block deleted:', blockId)}
             onBlockDuplicate={(block) => console.log('Block duplicated:', block)}
             onBlockSave={(block, name) => console.log('Block saved:', block, name)}
+            compactMode={compactMode}
           />
         );
     }
@@ -277,50 +333,50 @@ const EmailEditor = () => {
 
   return (
     <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
-      {/* Professional Header */}
-      <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6">
+      {/* Compact Professional Header */}
+      <header className={`bg-white border-b border-slate-200 ${getHeaderHeight()} flex items-center justify-between px-4 lg:px-6`}>
         {/* Left: Branding & Project */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Mail className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <Mail className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
           </div>
-          <div>
-            <h1 className="text-sm font-semibold text-slate-900">Email Builder Pro</h1>
-            <p className="text-xs text-slate-500">Canvas Edition</p>
+          <div className="hidden sm:block">
+            <h1 className="text-xs lg:text-sm font-semibold text-slate-900">Email Builder Pro</h1>
+            <p className="text-xs text-slate-500 hidden lg:block">Canvas Edition</p>
           </div>
         </div>
 
         {/* Center: Enhanced Preview Controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 lg:gap-4">
           <div className="flex items-center bg-slate-100 rounded-lg p-1">
             <Button
               variant={previewMode === 'desktop' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => handlePreviewModeChange('desktop')}
-              className="h-8 px-3 rounded-md"
+              className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
             >
-              <Monitor className="w-4 h-4" />
+              <Monitor className="w-3 h-3 lg:w-4 lg:h-4" />
             </Button>
             <Button
               variant={previewMode === 'tablet' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => handlePreviewModeChange('tablet')}
-              className="h-8 px-3 rounded-md"
+              className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
             >
-              <Layout className="w-4 h-4" />
+              <Layout className="w-3 h-3 lg:w-4 lg:h-4" />
             </Button>
             <Button
               variant={previewMode === 'mobile' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => handlePreviewModeChange('mobile')}
-              className="h-8 px-3 rounded-md"
+              className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
             >
-              <Smartphone className="w-4 h-4" />
+              <Smartphone className="w-3 h-3 lg:w-4 lg:h-4" />
             </Button>
           </div>
           
-          {/* Width Slider */}
-          <div className="flex items-center gap-3 min-w-[200px]">
+          {/* Width Slider - Hidden on small screens */}
+          <div className="hidden lg:flex items-center gap-3 min-w-[150px] xl:min-w-[200px]">
             <span className="text-xs text-slate-500 font-mono">Width:</span>
             <div className="flex-1">
               <Slider
@@ -339,22 +395,49 @@ const EmailEditor = () => {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 lg:gap-3">
+          {/* Compact Mode Toggle */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-6 lg:h-8"
+              >
+                {compactMode ? <Minimize2 className="w-3 h-3 lg:w-4 lg:h-4" /> : <Maximize2 className="w-3 h-3 lg:w-4 lg:h-4" />}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64" align="end">
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">View Settings</h4>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="compact-mode" className="text-sm">Compact Mode</Label>
+                  <Switch
+                    id="compact-mode"
+                    checked={compactMode}
+                    onCheckedChange={setCompactMode}
+                  />
+                </div>
+                <p className="text-xs text-gray-600">Reduces spacing for better laptop experience</p>
+              </div>
+            </PopoverContent>
+          </Popover>
+
           {/* Theme Toggle */}
           <Button
             variant="outline"
             size="sm"
             onClick={toggleTheme}
-            className="h-8"
+            className="h-6 lg:h-8"
           >
-            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            {theme === 'light' ? <Moon className="w-3 h-3 lg:w-4 lg:h-4" /> : <Sun className="w-3 h-3 lg:w-4 lg:h-4" />}
           </Button>
 
-          {/* Keyboard Shortcuts */}
+          {/* Keyboard Shortcuts - Hidden on small screens */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-8">
-                <Keyboard className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="h-6 lg:h-8 hidden lg:flex">
+                <Keyboard className="w-3 h-3 lg:w-4 lg:h-4" />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80" align="end">
@@ -374,16 +457,16 @@ const EmailEditor = () => {
             </PopoverContent>
           </Popover>
           
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-4 lg:h-6" />
           
-          <Button variant="outline" size="sm" onClick={exportHTML} className="h-8">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+          <Button variant="outline" size="sm" onClick={exportHTML} className="h-6 lg:h-8 hidden sm:flex">
+            <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Export</span>
           </Button>
           
-          <Button size="sm" className="h-8 bg-blue-600 hover:bg-blue-700">
-            <Zap className="w-4 h-4 mr-2" />
-            Publish
+          <Button size="sm" className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
+            <Zap className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+            <span className="hidden lg:inline">Publish</span>
           </Button>
         </div>
       </header>
@@ -391,22 +474,21 @@ const EmailEditor = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Tools */}
-        <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
-          leftPanelCollapsed ? 'w-12' : 'w-80'
-        } flex flex-col`}>
+        <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${getLeftPanelWidth()} flex flex-col`}>
           {leftPanelCollapsed ? (
             renderLeftPanel()
           ) : (
             <>
-              <div className="p-4 border-b border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-slate-900">Tools</h3>
+              <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
+                <div className="flex items-center justify-between mb-2 lg:mb-3">
+                  <h3 className="font-semibold text-slate-900 text-sm lg:text-base">Tools</h3>
                   <Button 
                     variant="ghost" 
                     size="sm"
                     onClick={() => setLeftPanelCollapsed(true)}
+                    className="h-6 w-6 p-0 lg:h-8 lg:w-8"
                   >
-                    <PanelLeftClose className="w-4 h-4" />
+                    <PanelLeftClose className="w-3 h-3 lg:w-4 lg:h-4" />
                   </Button>
                 </div>
                 
@@ -415,25 +497,25 @@ const EmailEditor = () => {
                     variant={leftPanelTab === 'ai' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setLeftPanelTab('ai')}
-                    className="flex-1"
+                    className="flex-1 h-6 lg:h-8"
                   >
-                    <Brain className="w-4 h-4" />
+                    <Brain className="w-3 h-3 lg:w-4 lg:h-4" />
                   </Button>
                   <Button
                     variant={leftPanelTab === 'design' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setLeftPanelTab('design')}
-                    className="flex-1"
+                    className="flex-1 h-6 lg:h-8"
                   >
-                    <Palette className="w-4 h-4" />
+                    <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
                   </Button>
                   <Button
                     variant={leftPanelTab === 'blocks' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setLeftPanelTab('blocks')}
-                    className="flex-1"
+                    className="flex-1 h-6 lg:h-8"
                   >
-                    <Blocks className="w-4 h-4" />
+                    <Blocks className="w-3 h-3 lg:w-4 lg:h-4" />
                   </Button>
                 </div>
               </div>
@@ -447,7 +529,7 @@ const EmailEditor = () => {
 
         {/* Center: Block Canvas */}
         <div className="flex-1 flex flex-col bg-slate-50">
-          <div className="flex-1 p-8 overflow-y-auto">
+          <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
             <EmailBlockCanvas 
               ref={canvasRef}
               onContentChange={setEmailHTML}
@@ -459,16 +541,17 @@ const EmailEditor = () => {
         
         {/* Right Panel - Analytics & Tools */}
         {!rightPanelCollapsed && (
-          <div className="w-80 border-l border-slate-200 bg-white">
-            <div className="p-4 border-b border-slate-200">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-slate-900">Analytics & Tools</h3>
+          <div className={`border-l border-slate-200 bg-white ${getRightPanelWidth()}`}>
+            <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
+              <div className="flex items-center justify-between mb-2 lg:mb-3">
+                <h3 className="font-semibold text-slate-900 text-sm lg:text-base">Analytics & Tools</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => setRightPanelCollapsed(true)}
+                  className="h-6 w-6 p-0 lg:h-8 lg:w-8"
                 >
-                  <PanelRightClose className="w-4 h-4" />
+                  <PanelRightClose className="w-3 h-3 lg:w-4 lg:h-4" />
                 </Button>
               </div>
               
@@ -477,33 +560,33 @@ const EmailEditor = () => {
                   variant={rightPanelTab === 'properties' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('properties')}
-                  className="flex-1"
+                  className="flex-1 h-6 lg:h-8"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-3 h-3 lg:w-4 lg:h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'analytics' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('analytics')}
-                  className="flex-1"
+                  className="flex-1 h-6 lg:h-8"
                 >
-                  <BarChart3 className="w-4 h-4" />
+                  <BarChart3 className="w-3 h-3 lg:w-4 lg:h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'optimization' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('optimization')}
-                  className="flex-1"
+                  className="flex-1 h-6 lg:h-8"
                 >
-                  <Target className="w-4 h-4" />
+                  <Target className="w-3 h-3 lg:w-4 lg:h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'code' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('code')}
-                  className="flex-1"
+                  className="flex-1 h-6 lg:h-8"
                 >
-                  <Code2 className="w-4 h-4" />
+                  <Code2 className="w-3 h-3 lg:w-4 lg:h-4" />
                 </Button>
               </div>
             </div>
@@ -520,30 +603,31 @@ const EmailEditor = () => {
               variant="ghost" 
               size="sm"
               onClick={() => setRightPanelCollapsed(false)}
+              className="h-6 w-6 p-0 lg:h-8 lg:w-8"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3 lg:w-4 lg:h-4" />
             </Button>
-            <Settings className="w-5 h-5 text-slate-400 mt-4" />
+            <Settings className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 mt-4" />
           </div>
         )}
       </div>
 
-      {/* Status Bar */}
-      <div className="bg-white border-t border-slate-200 px-6 py-2 text-xs text-slate-600 flex items-center justify-between">
-        <div className="flex items-center gap-6">
+      {/* Compact Status Bar */}
+      <div className={`bg-white border-t border-slate-200 px-4 lg:px-6 ${compactMode ? 'py-1' : 'py-2'} text-xs text-slate-600 flex items-center justify-between`}>
+        <div className="flex items-center gap-4 lg:gap-6">
           <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
-          <span>Templates: {templates.length}</span>
-          <span className="flex items-center gap-2">
+          <span className="hidden sm:inline">Templates: {templates.length}</span>
+          <span className="hidden lg:flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             Canvas-based editor
           </span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 lg:gap-4">
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Auto-saved just now
+            Auto-saved
           </span>
-          <span className="text-slate-400">Email Builder Pro v3.0 - Canvas Edition</span>
+          <span className="text-slate-400 hidden lg:inline">Email Builder Pro v3.0</span>
         </div>
       </div>
     </div>

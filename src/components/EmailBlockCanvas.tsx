@@ -11,6 +11,7 @@ interface EmailBlockCanvasProps {
   onContentChange?: (html: string) => void;
   previewWidth: number;
   previewMode: 'desktop' | 'mobile' | 'tablet';
+  compactMode?: boolean;
 }
 
 export interface EmailBlockCanvasRef {
@@ -20,7 +21,8 @@ export interface EmailBlockCanvasRef {
 export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
   onContentChange,
   previewWidth,
-  previewMode
+  previewMode,
+  compactMode = false
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -136,33 +138,53 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     }
   }, []);
 
+  const getCanvasStyles = () => {
+    const baseStyles = "mx-auto transition-all duration-300 shadow-lg";
+    const widthStyle = `max-width: ${previewWidth}px`;
+    return { className: baseStyles, style: { maxWidth: `${previewWidth}px` } };
+  };
+
+  const getHeaderPadding = () => {
+    return compactMode ? 'px-2 py-1' : 'px-4 py-2';
+  };
+
+  const getContentPadding = () => {
+    return compactMode ? 'p-2' : 'p-4';
+  };
+
+  const getBlockSpacing = () => {
+    return compactMode ? 'mb-2' : 'mb-4';
+  };
+
   return (
     <div className="relative h-full">
       <Card 
-        className="mx-auto transition-all duration-300 shadow-lg"
-        style={{ maxWidth: `${previewWidth}px` }}
+        className={getCanvasStyles().className}
+        style={getCanvasStyles().style}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
       >
-        <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+        <div className={`bg-slate-50 ${getHeaderPadding()} border-b border-slate-200`}>
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
-              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <div className={`${compactMode ? 'w-2 h-2' : 'w-3 h-3'} bg-red-400 rounded-full`}></div>
+              <div className={`${compactMode ? 'w-2 h-2' : 'w-3 h-3'} bg-yellow-400 rounded-full`}></div>
+              <div className={`${compactMode ? 'w-2 h-2' : 'w-3 h-3'} bg-green-400 rounded-full`}></div>
             </div>
-            <span className="text-xs text-slate-500 ml-2">Email Canvas ({blocks.length} blocks)</span>
+            <span className={`${compactMode ? 'text-xs' : 'text-xs'} text-slate-500 ml-2`}>
+              Email Canvas ({blocks.length} blocks)
+            </span>
           </div>
         </div>
         
         <div 
           ref={canvasRef}
-          className="bg-white min-h-[600px] p-4"
+          className={`bg-white ${compactMode ? 'min-h-[400px]' : 'min-h-[600px]'} ${getContentPadding()}`}
         >
           {blocks.map((block) => (
             <div
               key={block.id}
-              className={`block-wrapper mb-4 cursor-pointer transition-all duration-200 ${
+              className={`block-wrapper ${getBlockSpacing()} cursor-pointer transition-all duration-200 ${
                 selectedBlockId === block.id 
                   ? 'ring-2 ring-blue-500 ring-offset-2' 
                   : 'hover:ring-1 hover:ring-gray-300 hover:ring-offset-1'
@@ -178,8 +200,10 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
           ))}
           
           {blocks.length === 0 && (
-            <div className="text-center py-16 text-gray-400">
-              <p>Drop blocks here to start building your email</p>
+            <div className={`text-center ${compactMode ? 'py-8' : 'py-16'} text-gray-400`}>
+              <p className={compactMode ? 'text-sm' : 'text-base'}>
+                Drop blocks here to start building your email
+              </p>
             </div>
           )}
         </div>
