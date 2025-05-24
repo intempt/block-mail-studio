@@ -29,7 +29,7 @@ export const CustomEmailExtension = Extension.create({
         commands.updateAttributes('heading', { style });
         return true;
       },
-    };
+    } as any;
   },
 
   addKeyboardShortcuts() {
