@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -22,14 +23,17 @@ import {
   Type,
   Target,
   BarChart3,
-  ChevronRight
+  ChevronRight,
+  AlertCircle
 } from 'lucide-react';
 import { EmailPromptLibrary, EmailPrompt } from './EmailPromptLibrary';
 import { EmailTemplate } from './TemplateManager';
+import { emailAIService } from '@/services/EmailAIService';
+import { ApiKeyService } from '@/services/apiKeyService';
 
 interface Message {
   id: string;
-  type: 'user' | 'ai';
+  type: 'user' | 'ai' | 'error';
   content: string;
   timestamp: Date;
   suggestions?: string[];
@@ -52,7 +56,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     {
       id: '1',
       type: 'ai',
-      content: 'Welcome to your AI Email Assistant! 🎯 I\'m here to help you create professional emails that convert. Choose a quick action below to get started, or tell me what you\'d like to create.',
+      content: 'Welcome to your AI Email Assistant! 🎯 I can create professional emails that convert. Choose a quick action below to get started, or tell me what you\'d like to create.',
       timestamp: new Date(),
       suggestions: [
         'Create a welcome email series',
@@ -121,74 +125,85 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     setInputMessage('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
+    try {
+      // Check if API key is available
+      if (!ApiKeyService.isKeyAvailable()) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'error',
+          content: 'AI not available. Please configure your OpenAI API key in the service settings.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Handle email generation requests
+      if (inputMessage.toLowerCase().includes('create') || inputMessage.toLowerCase().includes('generate')) {
+        try {
+          const emailResponse = await emailAIService.generateEmail({
+            prompt: inputMessage,
+            tone: inputMessage.toLowerCase().includes('professional') ? 'professional' : 
+                  inputMessage.toLowerCase().includes('casual') ? 'casual' : 
+                  inputMessage.toLowerCase().includes('friendly') ? 'friendly' : 
+                  inputMessage.toLowerCase().includes('urgent') ? 'urgent' : 'professional',
+            type: inputMessage.toLowerCase().includes('welcome') ? 'welcome' :
+                  inputMessage.toLowerCase().includes('promotional') || inputMessage.toLowerCase().includes('sale') ? 'promotional' :
+                  inputMessage.toLowerCase().includes('newsletter') ? 'newsletter' : 'announcement'
+          });
+
+          // Insert generated email into editor
+          if (editor && emailResponse.html) {
+            editor.commands.setContent(emailResponse.html);
+          }
+
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `✅ Email created and inserted into your editor!\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nThe complete email is now in your editor - you can edit it manually or ask me to refine it further.`,
+            timestamp: new Date(),
+            suggestions: [
+              'Make it more casual',
+              'Add urgency',
+              'Shorten the content',
+              'Add call-to-action buttons'
+            ]
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        } catch (error) {
+          throw error;
+        }
+      } else {
+        // Handle general conversational requests
+        const response = await emailAIService.getConversationalResponse(inputMessage);
+        
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: response,
+          timestamp: new Date(),
+          suggestions: [
+            'Create email content',
+            'Generate images',
+            'Design templates',
+            'Write compelling copy'
+          ]
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      }
+    } catch (error) {
+      console.error('AI response error:', error);
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: generateAIResponse(inputMessage),
-        timestamp: new Date(),
-        suggestions: generateContextualSuggestions(inputMessage)
+        type: 'error',
+        content: 'AI not available',
+        timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsLoading(false);
-    }, 1000 + Math.random() * 2000);
-  };
-
-  const generateAIResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('template') || input.includes('design')) {
-      return "I can help you with email templates! I see you have access to several templates. Would you like me to suggest one based on your needs, or would you prefer to start with a specific style? I can also help customize any template to match your brand.";
     }
-    
-    if (input.includes('write') || input.includes('create')) {
-      return "I'd be happy to help you write engaging email content! What type of email are you creating? (e.g., newsletter, promotional, welcome email) I can suggest structure, tone, and compelling copy.";
-    }
-    
-    if (input.includes('subject') || input.includes('headline')) {
-      return "Great subject lines are crucial for email success! I can help you create compelling subject lines that increase open rates. What's the main goal of your email?";
-    }
-    
-    return "I understand you want to improve your email. I can help with content creation, design suggestions, template selection, and optimization tips. What specific aspect would you like to focus on?";
-  };
-
-  const generateContextualSuggestions = (userInput: string): string[] => {
-    const input = userInput.toLowerCase();
-    
-    if (input.includes('template')) {
-      return [
-        'Show newsletter templates',
-        'Browse promotional designs',
-        'Find welcome email templates',
-        'Create custom template'
-      ];
-    }
-    
-    if (input.includes('write') || input.includes('create')) {
-      return [
-        'Generate subject lines',
-        'Write call-to-action text',
-        'Create email outline',
-        'Add personalization'
-      ];
-    }
-    
-    if (input.includes('optimize')) {
-      return [
-        'Improve subject line',
-        'Enhance call-to-actions',
-        'Optimize for mobile',
-        'Test different versions'
-      ];
-    }
-    
-    return [
-      'Generate email content',
-      'Choose a template',
-      'Create images',
-      'Optimize performance'
-    ];
   };
 
   const handleQuickAction = (action: any) => {
@@ -256,6 +271,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
   const renderChatTab = () => (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
+        {/* Quick Actions Header */}
         <div className="p-4 bg-white border-b border-gray-100">
           <div className="mb-3">
             <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
@@ -303,6 +319,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
           </div>
         </div>
 
+        {/* Messages */}
         <div className="p-4">
           <div className="space-y-4">
             {messages.map((message) => (
@@ -316,10 +333,18 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
                     </div>
                   )}
                   
+                  {message.type === 'error' && (
+                    <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <AlertCircle className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                  
                   <div
                     className={`max-w-[80%] rounded-xl text-sm ${
                       message.type === 'user'
                         ? 'bg-blue-600 text-white px-4 py-3'
+                        : message.type === 'error'
+                        ? 'bg-red-50 border border-red-200 text-red-800 px-4 py-3'
                         : 'bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3'
                     }`}
                   >
@@ -500,7 +525,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
           </div>
           <h3 className="text-base font-semibold text-gray-900">AI Assistant</h3>
           <Badge variant="secondary" className="ml-auto text-xs bg-blue-50 text-blue-700 border-blue-200">
-            Smart
+            {ApiKeyService.isKeyAvailable() ? 'Connected' : 'Setup Required'}
           </Badge>
         </div>
       </div>
@@ -523,7 +548,92 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
             <EmailPromptLibrary onSelectPrompt={handlePromptSelect} />
           </div>
         )}
-        {activeTab === 'templates' && renderTemplatesTab()}
+        {activeTab === 'templates' && (
+          <div className="flex flex-col h-full">
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-gray-900 text-sm">Templates</h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setActiveTab('chat')}
+                  className="text-xs text-gray-600 hover:text-gray-900"
+                >
+                  ← Back
+                </Button>
+              </div>
+              
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
+                <Input
+                  placeholder="Search templates..."
+                  value={templateSearch}
+                  onChange={(e) => setTemplateSearch(e.target.value)}
+                  className="pl-9 text-sm h-9 border-gray-300"
+                />
+              </div>
+            </div>
+
+            <ScrollArea className="flex-1">
+              <div className="p-4 space-y-3">
+                {filteredTemplates.map((template) => (
+                  <Card key={template.id} className="p-4 border border-gray-200 hover:shadow-sm transition-shadow">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h5 className="text-sm font-semibold text-gray-900 mb-1">
+                          {template.name}
+                        </h5>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {template.description}
+                        </p>
+                        
+                        <div className="flex items-center gap-1 flex-wrap mb-2">
+                          <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                            {template.category}
+                          </Badge>
+                          {template.tags.slice(0, 2).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs border-gray-300 text-gray-600">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            {template.usageCount}
+                          </span>
+                          {template.isFavorite && (
+                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleTemplateLoad(template)}
+                      className="w-full text-xs border-gray-300 hover:bg-gray-50"
+                    >
+                      <Zap className="w-3 h-3 mr-2" />
+                      Use Template
+                    </Button>
+                  </Card>
+                ))}
+
+                {filteredTemplates.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 text-sm">No templates found</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Try adjusting your search
+                    </p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -18,6 +19,8 @@ import {
   Copy
 } from 'lucide-react';
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
+import { OpenAIEmailService } from '@/services/openAIEmailService';
+import { ApiKeyService } from '@/services/apiKeyService';
 
 interface ContentSuggestion {
   id: string;
@@ -47,13 +50,14 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
 }) => {
   const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [brandVoiceScore, setBrandVoiceScore] = useState(85);
-  const [engagementScore, setEngagementScore] = useState(78);
+  const [brandVoiceScore, setBrandVoiceScore] = useState(0);
+  const [engagementScore, setEngagementScore] = useState(0);
   const [performancePrediction, setPerformancePrediction] = useState({
-    openRate: 24.5,
-    clickRate: 3.2,
-    conversionRate: 2.1
+    openRate: 0,
+    clickRate: 0,
+    conversionRate: 0
   });
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const analyzingMessages = [
     "Analyzing content tone and voice...",
@@ -65,66 +69,67 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
   const [currentAnalyzingStep, setCurrentAnalyzingStep] = useState(0);
 
   useEffect(() => {
-    if (emailHTML) {
+    if (emailHTML && emailHTML.length > 50) {
       analyzeContent();
     }
   }, [emailHTML]);
 
   const analyzeContent = async () => {
-    setIsAnalyzing(true);
-    
-    // Simulate AI analysis with progressive steps
-    for (let i = 0; i < analyzingMessages.length; i++) {
-      setCurrentAnalyzingStep(i);
-      await new Promise(resolve => setTimeout(resolve, 800));
+    if (!ApiKeyService.isKeyAvailable()) {
+      setAnalysisError('AI not available');
+      return;
     }
 
-    // Generate intelligent suggestions based on content
-    const newSuggestions: ContentSuggestion[] = [
-      {
-        id: '1',
-        type: 'subject',
-        title: 'Subject Line Optimization',
-        current: 'Welcome to Email Builder Pro',
-        suggested: '🚀 Welcome! Start building stunning emails in minutes',
-        reason: 'Adding emojis and urgency can increase open rates by 15-20%',
-        impact: 'high',
-        confidence: 92
-      },
-      {
-        id: '2',
-        type: 'cta',
-        title: 'Call-to-Action Enhancement',
-        current: 'Get Started',
-        suggested: 'Create My First Email Now',
-        reason: 'More specific and action-oriented CTAs perform 35% better',
-        impact: 'high',
-        confidence: 88
-      },
-      {
-        id: '3',
-        type: 'copy',
-        title: 'Content Personalization',
-        current: 'Create stunning emails',
-        suggested: 'Create stunning emails that convert',
-        reason: 'Adding outcome-focused language increases engagement',
-        impact: 'medium',
-        confidence: 76
-      },
-      {
-        id: '4',
-        type: 'tone',
-        title: 'Tone Adjustment',
-        current: 'Professional tone',
-        suggested: 'Friendly-professional tone',
-        reason: 'Slightly warmer tone aligns better with your brand voice',
-        impact: 'low',
-        confidence: 65
-      }
-    ];
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    
+    // Simulate progressive analysis steps
+    for (let i = 0; i < analyzingMessages.length; i++) {
+      setCurrentAnalyzingStep(i);
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
 
-    setSuggestions(newSuggestions);
-    setIsAnalyzing(false);
+    try {
+      const analysisRequest = {
+        emailHTML,
+        subjectLine
+      };
+
+      const analysis = await OpenAIEmailService.analyzeBrandVoice(analysisRequest);
+      
+      // Update scores from real analysis
+      setBrandVoiceScore(analysis.brandVoiceScore);
+      setEngagementScore(analysis.engagementScore);
+      setPerformancePrediction(analysis.performancePrediction);
+
+      // Convert analysis suggestions to our format
+      const newSuggestions: ContentSuggestion[] = analysis.suggestions.map((suggestion, index) => ({
+        id: `suggestion_${index}`,
+        type: suggestion.type as 'subject' | 'copy' | 'cta' | 'tone',
+        title: suggestion.title,
+        current: suggestion.current,
+        suggested: suggestion.suggested,
+        reason: suggestion.reason,
+        impact: suggestion.impact as 'high' | 'medium' | 'low',
+        confidence: suggestion.confidence
+      }));
+
+      setSuggestions(newSuggestions);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      setAnalysisError('AI not available');
+      
+      // Clear scores on error
+      setBrandVoiceScore(0);
+      setEngagementScore(0);
+      setPerformancePrediction({
+        openRate: 0,
+        clickRate: 0,
+        conversionRate: 0
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const applySuggestion = (suggestion: ContentSuggestion) => {
@@ -181,11 +186,24 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
           <Brain className="w-4 h-4 text-purple-600" />
           <h3 className="text-base font-semibold">Intelligent Assistant</h3>
           <Badge variant="secondary" className="ml-auto bg-purple-50 text-purple-700 text-xs">
-            AI Powered
+            {ApiKeyService.isKeyAvailable() ? 'AI Powered' : 'Setup Required'}
           </Badge>
         </div>
 
-        {isAnalyzing ? (
+        {analysisError ? (
+          <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+            <AlertCircle className="w-3 h-3" />
+            <span>{analysisError}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={analyzeContent}
+              className="ml-auto text-xs"
+            >
+              Retry
+            </Button>
+          </div>
+        ) : isAnalyzing ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <RefreshCw className="w-3 h-3 animate-spin" />
@@ -210,7 +228,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-3">
           {/* Performance Prediction */}
-          {!isAnalyzing && (
+          {!isAnalyzing && !analysisError && (brandVoiceScore > 0 || engagementScore > 0) && (
             <div className="mb-3">
               <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1 text-sm">
                 <TrendingUp className="w-3 h-3" />
@@ -303,7 +321,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
                 </Card>
               ))}
               
-              {suggestions.length === 0 && !isAnalyzing && (
+              {suggestions.length === 0 && !isAnalyzing && !analysisError && (
                 <div className="text-center py-4">
                   <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-2" />
                   <p className="text-xs text-gray-600">All optimizations applied!</p>
@@ -321,6 +339,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
                 variant="outline" 
                 size="sm" 
                 onClick={analyzeContent}
+                disabled={isAnalyzing || !ApiKeyService.isKeyAvailable()}
                 className="flex items-center gap-1 text-xs"
               >
                 <RefreshCw className="w-3 h-3" />

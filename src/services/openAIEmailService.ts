@@ -6,6 +6,27 @@ export interface OpenAIEmailAnalysisRequest {
   subjectLine: string;
 }
 
+export interface EmailGenerationRequest {
+  prompt: string;
+  emailType: 'welcome' | 'promotional' | 'newsletter' | 'announcement' | 'followup';
+  tone: 'professional' | 'casual' | 'friendly' | 'urgent';
+  industry?: string;
+  targetAudience?: string;
+}
+
+export interface EmailGenerationResponse {
+  subject: string;
+  previewText: string;
+  html: string;
+  keyPoints: string[];
+}
+
+export interface ConversationalRequest {
+  userMessage: string;
+  conversationContext?: string[];
+  currentEmailContent?: string;
+}
+
 export interface BrandVoiceAnalysis {
   brandVoiceScore: number;
   engagementScore: number;
@@ -51,8 +72,8 @@ export class OpenAIEmailService {
   private static async callOpenAI(prompt: string): Promise<any> {
     const apiKey = ApiKeyService.getOpenAIKey();
     
-    if (!apiKey || !ApiKeyService.isKeyAvailable()) {
-      throw new Error('OpenAI API key not configured');
+    if (!ApiKeyService.isKeyAvailable()) {
+      throw new Error('OpenAI API key not configured properly');
     }
 
     try {
@@ -67,13 +88,14 @@ export class OpenAIEmailService {
           messages: [
             {
               role: 'system',
-              content: `You are an expert email marketing analyst with deep knowledge of:
+              content: `You are an expert email marketing specialist with deep knowledge of:
               - Email deliverability best practices
               - Brand voice and tone analysis
               - Conversion optimization
               - Mobile email design
               - Accessibility standards
               - Anti-spam regulations
+              - Email block-based design systems
               
               Always return valid JSON without markdown formatting or code blocks.`
             },
@@ -103,6 +125,270 @@ export class OpenAIEmailService {
       console.error('OpenAI API call failed:', error);
       throw error;
     }
+  }
+
+  static async generateEmailContent(request: EmailGenerationRequest): Promise<EmailGenerationResponse> {
+    const prompt = `
+MASTER PROMPT: GUIDED EMAIL CONTENT GENERATION
+
+Generate a complete, professional email based on these specifications:
+
+EMAIL TYPE: ${request.emailType}
+TONE: ${request.tone}
+USER PROMPT: "${request.prompt}"
+${request.industry ? `INDUSTRY: ${request.industry}` : ''}
+${request.targetAudience ? `TARGET AUDIENCE: ${request.targetAudience}` : ''}
+
+REQUIREMENTS:
+1. Create email content using HTML blocks structure compatible with email builders
+2. Generate compelling subject line optimized for open rates
+3. Create preview text that complements the subject line
+4. Use proper email-safe HTML with inline styles
+5. Include clear call-to-action elements
+6. Ensure mobile-responsive design
+7. Follow email accessibility best practices
+
+HTML STRUCTURE REQUIREMENTS:
+- Use div elements with class="email-block" for each section
+- Include specific block types: header-block, paragraph-block, button-block, image-block
+- Apply inline styles for email client compatibility
+- Use font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
+- Ensure proper spacing with padding and margins
+- Include hover states for interactive elements
+
+CONTENT GUIDELINES:
+- ${request.emailType === 'welcome' ? 'Focus on warm greeting, setting expectations, and next steps' : ''}
+- ${request.emailType === 'promotional' ? 'Emphasize value proposition, urgency, and clear benefits' : ''}
+- ${request.emailType === 'newsletter' ? 'Provide valuable content, updates, and engagement opportunities' : ''}
+- ${request.emailType === 'announcement' ? 'Communicate news clearly with context and implications' : ''}
+- ${request.tone === 'professional' ? 'Use formal language, clear structure, and authoritative tone' : ''}
+- ${request.tone === 'casual' ? 'Use conversational language, personal touches, and relaxed tone' : ''}
+- ${request.tone === 'friendly' ? 'Use warm language, empathy, and approachable tone' : ''}
+- ${request.tone === 'urgent' ? 'Use action-oriented language, time sensitivity, and direct calls-to-action' : ''}
+
+Return this exact JSON structure:
+{
+  "subject": "Compelling subject line (under 50 characters)",
+  "previewText": "Preview text that complements subject (under 90 characters)",
+  "html": "Complete HTML email content with proper block structure",
+  "keyPoints": ["Key message 1", "Key message 2", "Key message 3"]
+}
+
+Focus on conversion-optimized, professional email marketing best practices.`;
+
+    return await this.callOpenAI(prompt);
+  }
+
+  static async generateSubjectLines(emailContent: string, count: number = 5): Promise<string[]> {
+    const prompt = `
+MASTER PROMPT: SUBJECT LINE OPTIMIZATION
+
+Generate ${count} compelling subject lines for this email content:
+
+EMAIL CONTENT: ${emailContent}
+
+REQUIREMENTS:
+1. Each subject line should be under 50 characters
+2. Focus on open rate optimization
+3. Include variety: urgency, curiosity, benefit-driven, personalized
+4. Avoid spam trigger words
+5. Test different emotional approaches
+6. Consider mobile truncation at 30 characters
+
+OPTIMIZATION TECHNIQUES:
+- Use numbers and specific details
+- Create curiosity gaps
+- Include emotional triggers
+- Add urgency when appropriate
+- Personalization opportunities
+- A/B testing variations
+
+Return JSON array of subject lines:
+{
+  "subjectLines": ["Subject 1", "Subject 2", "Subject 3", "Subject 4", "Subject 5"]
+}`;
+
+    const response = await this.callOpenAI(prompt);
+    return response.subjectLines;
+  }
+
+  static async optimizeCopy(currentContent: string, optimizationType: 'engagement' | 'conversion' | 'clarity' | 'brevity'): Promise<string> {
+    const prompt = `
+MASTER PROMPT: EMAIL COPY OPTIMIZATION
+
+Optimize this email content for ${optimizationType}:
+
+CURRENT CONTENT: ${currentContent}
+
+OPTIMIZATION FOCUS: ${optimizationType}
+${optimizationType === 'engagement' ? '- Increase reader engagement and time spent reading\n- Add emotional hooks and storytelling elements\n- Improve content flow and readability' : ''}
+${optimizationType === 'conversion' ? '- Maximize conversion rates and click-through rates\n- Strengthen call-to-action elements\n- Remove friction and objections' : ''}
+${optimizationType === 'clarity' ? '- Improve message clarity and comprehension\n- Simplify complex concepts\n- Enhance information hierarchy' : ''}
+${optimizationType === 'brevity' ? '- Reduce content length while maintaining impact\n- Remove unnecessary words and phrases\n- Tighten messaging focus' : ''}
+
+REQUIREMENTS:
+1. Maintain the original HTML structure and classes
+2. Preserve all block-level elements and styling
+3. Keep the core message and value proposition
+4. Ensure email-safe HTML compatibility
+5. Maintain professional tone and brand voice
+
+Return optimized HTML content that can directly replace the original.`;
+
+    return await this.callOpenAI(prompt);
+  }
+
+  static async generateBrandGuidelines(brandDescription: string): Promise<any> {
+    const prompt = `
+MASTER PROMPT: BRAND VOICE & STYLE GUIDELINES
+
+Create comprehensive brand guidelines for email marketing based on this description:
+
+BRAND DESCRIPTION: "${brandDescription}"
+
+GENERATE:
+1. Brand voice characteristics
+2. Tone variations for different email types
+3. Language preferences and restrictions
+4. Visual style recommendations
+5. Content themes and topics
+6. Call-to-action styles
+7. Email signature guidelines
+
+Return detailed brand guidelines in JSON format:
+{
+  "voiceCharacteristics": ["characteristic1", "characteristic2"],
+  "toneVariations": {
+    "welcome": "tone description",
+    "promotional": "tone description",
+    "newsletter": "tone description"
+  },
+  "languagePreferences": {
+    "preferred": ["word1", "phrase1"],
+    "avoid": ["word2", "phrase2"]
+  },
+  "visualStyle": {
+    "colors": ["#color1", "#color2"],
+    "fonts": ["font1", "font2"],
+    "spacing": "guideline"
+  },
+  "contentThemes": ["theme1", "theme2"],
+  "ctaStyles": ["style1", "style2"]
+}`;
+
+    return await this.callOpenAI(prompt);
+  }
+
+  static async generateImagePrompts(emailContext: string, imageType: 'header' | 'product' | 'lifestyle' | 'icon'): Promise<string[]> {
+    const prompt = `
+MASTER PROMPT: EMAIL IMAGE PROMPT GENERATION
+
+Generate 3 detailed image prompts for ${imageType} images based on this email context:
+
+EMAIL CONTEXT: ${emailContext}
+IMAGE TYPE: ${imageType}
+
+REQUIREMENTS:
+- Professional, high-quality imagery suitable for email marketing
+- Consistent with email tone and message
+- Optimized for small email display sizes
+- Brand-appropriate styling
+- ${imageType === 'header' ? 'Banner-style, engaging, attention-grabbing' : ''}
+- ${imageType === 'product' ? 'Clean product photography, well-lit, detailed' : ''}
+- ${imageType === 'lifestyle' ? 'People using product, emotional connection, aspirational' : ''}
+- ${imageType === 'icon' ? 'Simple, clear, symbolic representation' : ''}
+
+Return JSON with detailed prompts:
+{
+  "imagePrompts": [
+    "Detailed prompt 1 with style, composition, and mood",
+    "Detailed prompt 2 with style, composition, and mood", 
+    "Detailed prompt 3 with style, composition, and mood"
+  ]
+}`;
+
+    const response = await this.callOpenAI(prompt);
+    return response.imagePrompts;
+  }
+
+  static async generateABTestVariants(originalEmail: string, testType: 'subject' | 'cta' | 'content' | 'layout'): Promise<any> {
+    const prompt = `
+MASTER PROMPT: A/B TEST VARIANT GENERATION
+
+Create A/B test variants for this email focusing on ${testType} optimization:
+
+ORIGINAL EMAIL: ${originalEmail}
+TEST FOCUS: ${testType}
+
+GENERATE:
+1. Control version (original)
+2. Variant A with specific hypothesis
+3. Variant B with different approach
+4. Success metrics to measure
+5. Test duration recommendations
+
+${testType === 'subject' ? 'Focus on different subject line approaches: urgency vs curiosity, long vs short, personalized vs generic' : ''}
+${testType === 'cta' ? 'Focus on call-to-action variations: button text, colors, placement, size' : ''}
+${testType === 'content' ? 'Focus on content structure: length, tone, value proposition presentation' : ''}
+${testType === 'layout' ? 'Focus on visual hierarchy: image placement, text layout, button positioning' : ''}
+
+Return comprehensive A/B test plan:
+{
+  "testHypothesis": "Clear hypothesis statement",
+  "control": "Original version description",
+  "variantA": {
+    "description": "Variant description",
+    "changes": ["change1", "change2"],
+    "content": "Modified content/HTML"
+  },
+  "variantB": {
+    "description": "Variant description", 
+    "changes": ["change1", "change2"],
+    "content": "Modified content/HTML"
+  },
+  "successMetrics": ["metric1", "metric2"],
+  "testDuration": "Recommended duration",
+  "sampleSize": "Required sample size"
+}`;
+
+    return await this.callOpenAI(prompt);
+  }
+
+  static async conversationalResponse(request: ConversationalRequest): Promise<string> {
+    const contextString = request.conversationContext?.join('\n') || '';
+    
+    const prompt = `
+MASTER PROMPT: CONVERSATIONAL EMAIL ASSISTANT
+
+Respond to this user message as an expert email marketing assistant:
+
+USER MESSAGE: "${request.userMessage}"
+
+CONVERSATION CONTEXT: ${contextString}
+
+CURRENT EMAIL CONTENT: ${request.currentEmailContent || 'No current email content'}
+
+RESPONSE GUIDELINES:
+1. Be helpful, knowledgeable, and professional
+2. Provide actionable advice specific to email marketing
+3. Reference current email content when relevant
+4. Suggest concrete next steps
+5. Ask clarifying questions when needed
+6. Focus on email best practices and optimization
+
+CAPABILITIES YOU CAN OFFER:
+- Generate complete email content
+- Optimize existing content
+- Create subject lines
+- Suggest A/B test ideas
+- Provide brand voice guidance
+- Generate image prompts
+- Analyze email performance potential
+- Create email sequences
+
+Respond naturally and conversationally while being informative and helpful.`;
+
+    return await this.callOpenAI(prompt);
   }
 
   static async analyzeBrandVoice(request: OpenAIEmailAnalysisRequest): Promise<BrandVoiceAnalysis> {
