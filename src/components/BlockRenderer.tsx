@@ -1,0 +1,57 @@
+
+import React from 'react';
+import { EmailBlock } from '@/types/emailBlocks';
+import { TextBlockRenderer } from './blocks/TextBlockRenderer';
+import { ImageBlockRenderer } from './blocks/ImageBlockRenderer';
+import { ButtonBlockRenderer } from './blocks/ButtonBlockRenderer';
+import { SplitBlockRenderer } from './blocks/SplitBlockRenderer';
+import { SpacerBlockRenderer } from './blocks/SpacerBlockRenderer';
+import { DividerBlockRenderer } from './blocks/DividerBlockRenderer';
+import { VideoBlockRenderer } from './blocks/VideoBlockRenderer';
+import { SocialBlockRenderer } from './blocks/SocialBlockRenderer';
+import { MenuBlockRenderer } from './blocks/MenuBlockRenderer';
+import { HtmlBlockRenderer } from './blocks/HtmlBlockRenderer';
+import { CodeBlockRenderer } from './blocks/CodeBlockRenderer';
+
+interface BlockRendererProps {
+  block: EmailBlock;
+  isSelected: boolean;
+  onUpdate: (block: EmailBlock) => void;
+}
+
+export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected, onUpdate }) => {
+  const getBlockComponent = () => {
+    switch (block.type) {
+      case 'text':
+        return <TextBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'image':
+        return <ImageBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'button':
+        return <ButtonBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'split':
+        return <SplitBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'spacer':
+        return <SpacerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'divider':
+        return <DividerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'video':
+        return <VideoBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'social':
+        return <SocialBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'menu':
+        return <MenuBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'html':
+        return <HtmlBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'code':
+        return <CodeBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      default:
+        return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {block.type}</div>;
+    }
+  };
+
+  return (
+    <div className={`block-renderer ${isSelected ? 'selected' : ''}`}>
+      {getBlockComponent()}
+    </div>
+  );
+};
