@@ -17,9 +17,19 @@ import {
   Zap,
   BarChart3
 } from 'lucide-react';
-import { enhancedAIService } from '@/services/EnhancedAIService';
-import { SubjectLineAnalysisResult } from '@/services/EmailAIService';
-import { useToast } from '@/hooks/use-toast';
+
+// Simple mock interface
+interface SubjectLineAnalysisResult {
+  score: number | null;
+  spamRisk: string;
+  length: number;
+  emotionalImpact: number | null;
+  urgencyLevel: number | null;
+  recommendations: string[];
+  benchmarkComparison: {
+    predictedOpenRate: number | null;
+  };
+}
 
 interface EnhancedEmailSubjectLineProps {
   value: string;
@@ -39,7 +49,6 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingVariants, setIsGeneratingVariants] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
-  const { toast } = useToast();
 
   const analyzeSubjectLine = useCallback(async () => {
     if (!value.trim()) {
@@ -49,31 +58,31 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
 
     setIsAnalyzing(true);
     try {
-      console.log('Analyzing subject line with enhanced AI:', value);
-      const result = await enhancedAIService.analyzeSubjectLineEnhanced(value, emailContent);
-      console.log('Enhanced subject line analysis completed:', result);
+      console.log('Analyzing subject line:', value);
+      
+      // Mock analysis
+      const result: SubjectLineAnalysisResult = {
+        score: 82,
+        spamRisk: 'low',
+        length: value.length,
+        emotionalImpact: 75,
+        urgencyLevel: 60,
+        recommendations: ['Consider adding urgency', 'Use action words'],
+        benchmarkComparison: {
+          predictedOpenRate: 26.3
+        }
+      };
       
       setAnalysis(result);
       onAnalysisComplete?.(result);
       
-      if (result.score !== null && result.score < 60) {
-        toast({
-          title: "Low Performance Score",
-          description: `Subject line scored ${result.score}/100. Consider optimizing for better results.`,
-          variant: "destructive"
-        });
-      }
     } catch (error) {
       console.error('Error analyzing subject line:', error);
-      toast({
-        title: "Analysis Failed",
-        description: "Unable to analyze subject line. Please try again.",
-        variant: "destructive"
-      });
+      setAnalysis(null);
     } finally {
       setIsAnalyzing(false);
     }
-  }, [value, emailContent, onAnalysisComplete, toast]);
+  }, [value, emailContent, onAnalysisComplete]);
 
   const generateVariants = async () => {
     if (!value.trim()) return;
@@ -83,21 +92,18 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     
     try {
       console.log('Generating subject line variants:', value);
-      const newVariants = await enhancedAIService.generateSubjectVariants(value, 4);
-      console.log('Generated variants:', newVariants);
-      setVariants(newVariants);
       
-      toast({
-        title: "Variants Generated",
-        description: `Created ${newVariants.length} alternative subject lines for A/B testing.`
-      });
+      // Mock variants
+      const newVariants = [
+        "🚀 " + value,
+        value + " - Limited Time!",
+        "Don't Miss: " + value,
+        value.replace(/get/gi, 'discover')
+      ].filter(v => v !== value).slice(0, 3);
+      
+      setVariants(newVariants);
     } catch (error) {
       console.error('Error generating variants:', error);
-      toast({
-        title: "Generation Failed",
-        description: "Unable to generate variants. Please try again.",
-        variant: "destructive"
-      });
     } finally {
       setIsGeneratingVariants(false);
     }
@@ -106,18 +112,10 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
   const applyVariant = (variant: string) => {
     onChange(variant);
     setShowVariants(false);
-    toast({
-      title: "Subject Line Updated",
-      description: "Applied A/B test variant successfully."
-    });
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied",
-      description: "Subject line copied to clipboard."
-    });
   };
 
   // Auto-analyze when value changes (debounced)
@@ -152,22 +150,22 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
   };
 
   return (
-    <Card className="p-4 mb-4 animate-fade-in">
+    <Card className="p-4 mb-4">
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
             <Target className="w-4 h-4" />
-            Enhanced Subject Line
+            Subject Line
           </h3>
           <div className="flex items-center gap-2">
             {analysis?.score !== null && (
               <Badge variant="outline" className={`text-xs ${getScoreColor(analysis.score)}`}>
-                AI Score: {analysis.score}
+                Score: {analysis.score || '--'}
               </Badge>
             )}
             {analysis?.spamRisk && analysis.spamRisk !== 'unknown' && (
               <Badge className={`text-xs ${getSpamRiskColor(analysis.spamRisk)}`}>
-                {analysis.spamRisk.toUpperCase()} Spam Risk
+                {analysis.spamRisk.toUpperCase()} Risk
               </Badge>
             )}
             <Button
@@ -182,7 +180,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               ) : (
                 <Sparkles className="w-3 h-3 mr-1" />
               )}
-              A/B Variants
+              Variants
             </Button>
           </div>
         </div>
@@ -220,9 +218,9 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
             </div>
           </div>
 
-          {/* Enhanced Analysis Results */}
+          {/* Analysis Results */}
           {analysis && (
-            <div className="space-y-2 p-3 bg-slate-50 rounded-lg animate-scale-in">
+            <div className="space-y-2 p-3 bg-slate-50 rounded-lg">
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center p-2 bg-white rounded">
                   <div className="font-semibold text-purple-600">
@@ -240,13 +238,13 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
                   <div className="font-semibold text-blue-600">
                     {analysis.benchmarkComparison.predictedOpenRate?.toFixed(1) || '--'}%
                   </div>
-                  <div className="text-gray-600">Est. Open Rate</div>
+                  <div className="text-gray-600">Est. Open</div>
                 </div>
               </div>
 
               {analysis.recommendations.length > 0 && (
                 <div className="bg-blue-50 p-2 rounded">
-                  <div className="text-xs font-medium text-blue-900 mb-1">💡 AI Recommendations:</div>
+                  <div className="text-xs font-medium text-blue-900 mb-1">💡 Recommendations:</div>
                   <div className="space-y-1">
                     {analysis.recommendations.slice(0, 2).map((rec, index) => (
                       <div key={index} className="text-xs text-blue-800">• {rec}</div>
@@ -259,11 +257,11 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
 
           {/* A/B Test Variants */}
           {showVariants && (
-            <div className="space-y-2 animate-slide-in-right">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-medium text-gray-700 flex items-center gap-1">
                   <BarChart3 className="w-3 h-3" />
-                  A/B Test Variants:
+                  Variants:
                 </h4>
                 <Button
                   variant="ghost"
@@ -278,7 +276,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               {isGeneratingVariants ? (
                 <div className="text-center py-4">
                   <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-blue-600" />
-                  <p className="text-xs text-gray-600">Generating A/B test variants...</p>
+                  <p className="text-xs text-gray-600">Generating variants...</p>
                 </div>
               ) : (
                 <ScrollArea className="max-h-40">
