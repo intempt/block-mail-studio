@@ -65,9 +65,10 @@ import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { useToast } from '@/hooks/use-toast';
 import { enhancedAIService } from '@/services/EnhancedAIService';
 import { EmailSnippet } from '@/types/snippets';
+import { EmailBlockEditor } from './EmailBlockEditor';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
-type LeftPanelTab = 'ai' | 'design' | 'blocks';
+type LeftPanelTab = 'ai' | 'design' | 'blocks' | 'editor';
 type RightPanelTab = 'analytics' | 'optimization';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
@@ -348,6 +349,8 @@ const EmailEditor = () => {
             compactMode={compactMode}
           />
         );
+      case 'editor':
+        return <EmailBlockEditor editor={null} />;
       default:
         return (
           <EnhancedEmailBlockPalette 
@@ -570,7 +573,7 @@ const EmailEditor = () => {
                     <Button
                       variant={leftPanelTab === 'design' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setLeftPanelTab('design')}
+                      onClick={()={() => setLeftPanelTab('design')}
                       className="flex-1 h-6 lg:h-8"
                     >
                       <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
@@ -582,6 +585,14 @@ const EmailEditor = () => {
                       className="flex-1 h-6 lg:h-8"
                     >
                       <Blocks className="w-3 h-3 lg:w-4 lg:h-4" />
+                    </Button>
+                    <Button
+                      variant={leftPanelTab === 'editor' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setLeftPanelTab('editor')}
+                      className="flex-1 h-6 lg:h-8"
+                    >
+                      <Edit3 className="w-3 h-3 lg:w-4 lg:h-4" />
                     </Button>
                   </div>
                 </div>
