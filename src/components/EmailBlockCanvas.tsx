@@ -84,10 +84,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
         const columnsBlock = createColumnsBlock({
           columns: 2,
           ratio: '50-50',
-          columns: [
-            { id: generateUniqueId(), blocks: [], width: '50%' },
-            { id: generateUniqueId(), blocks: [], width: '50%' }
-          ]
+          preview: ['50%', '50%']
         });
         return columnsBlock;
       })(),
