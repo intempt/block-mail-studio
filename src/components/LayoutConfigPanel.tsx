@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,7 +15,7 @@ interface LayoutOption {
 }
 
 interface LayoutConfigPanelProps {
-  onLayoutSelect: (layout: LayoutOption) => void;
+  onLayoutSelect: (layout: any) => void;
   compactMode?: boolean;
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
@@ -124,12 +123,12 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
       width: layout.preview[0] // This will be overridden by the column renderer
     }));
 
-    const layoutWithColumns = {
+    const layoutConfig = {
       ...layout,
       columns
     };
 
-    onLayoutSelect(layoutWithColumns);
+    onLayoutSelect(layoutConfig);
   };
 
   const renderLayoutPreview = (layout: LayoutOption) => (
