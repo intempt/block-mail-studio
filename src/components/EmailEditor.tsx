@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -61,7 +60,6 @@ import { EmailSubjectLine } from './EmailSubjectLine';
 import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
 import { useToast } from '@/hooks/use-toast';
 import { enhancedAIService } from '@/services/EnhancedAIService';
 import { EmailSnippet } from '@/types/snippets';
@@ -89,12 +87,8 @@ const EmailEditor = () => {
   const [subjectLineScore, setSubjectLineScore] = useState(75);
   const { toast } = useToast();
   
-  // Enhanced undo/redo for email content
-  const [emailContent, emailActions] = useUndoRedo('');
-  
   const handleEmailContentChange = (newContent: string) => {
     setEmailHTML(newContent);
-    emailActions.set(newContent);
   };
 
   const handleSave = () => {
@@ -132,28 +126,6 @@ const EmailEditor = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleUndo = () => {
-    if (emailActions.canUndo) {
-      emailActions.undo();
-      setEmailHTML(emailActions.getHistory().past[emailActions.getHistory().past.length - 1] || '');
-      toast({
-        title: "Undone",
-        description: "Last change has been undone."
-      });
-    }
-  };
-
-  const handleRedo = () => {
-    if (emailActions.canRedo) {
-      emailActions.redo();
-      setEmailHTML(emailActions.getHistory().future[0] || '');
-      toast({
-        title: "Redone",
-        description: "Change has been restored."
-      });
-    }
-  };
-
   const handleClearCache = () => {
     enhancedAIService.clearCache();
     toast({
@@ -172,15 +144,11 @@ const EmailEditor = () => {
     onToggleLeftPanel: () => setLeftPanelCollapsed(prev => !prev),
     onToggleRightPanel: () => setRightPanelCollapsed(prev => !prev),
     onToggleFullscreen: handleToggleFullscreen,
-    onSave: handleSave,
-    onUndo: handleUndo,
-    onRedo: handleRedo
+    onSave: handleSave
   });
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email', status: 'active' },
-    { key: 'Ctrl + Z', action: 'Undo', status: emailActions.canUndo ? 'active' : 'disabled' },
-    { key: 'Ctrl + Y', action: 'Redo', status: emailActions.canRedo ? 'active' : 'disabled' },
     { key: 'F11', action: 'Toggle fullscreen', status: 'active' },
     { key: 'Ctrl + [', action: 'Toggle left panel', status: 'active' },
     { key: 'Ctrl + ]', action: 'Toggle right panel', status: 'active' }
@@ -410,29 +378,6 @@ const EmailEditor = () => {
 
   const renderHeaderActions = () => (
     <div className="flex items-center gap-2 lg:gap-3">
-      <div className="flex items-center gap-1 hidden lg:flex">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleUndo}
-          disabled={!emailActions.canUndo}
-          className="h-6 lg:h-8 px-2"
-          title="Undo (Ctrl+Z)"
-        >
-          <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4 rotate-180" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRedo}
-          disabled={!emailActions.canRedo}
-          className="h-6 lg:h-8 px-2"
-          title="Redo (Ctrl+Y)"
-        >
-          <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4" />
-        </Button>
-      </div>
-
       <Button
         variant="outline"
         size="sm"
@@ -551,7 +496,7 @@ const EmailEditor = () => {
                     <Button
                       variant={leftPanelTab === 'design' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setLeftPanelTab('design')}
+                      onClick={()={() => setLeftPanelTab('design')}
                       className="flex-1 h-6 lg:h-8"
                     >
                       <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
@@ -673,12 +618,6 @@ const EmailEditor = () => {
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               Enhanced AI-powered editor
             </span>
-            {(emailActions.canUndo || emailActions.canRedo) && (
-              <span className="hidden lg:flex items-center gap-2 text-blue-600">
-                <RefreshCw className="w-3 h-3" />
-                {emailActions.canUndo ? 'Can undo' : ''} {emailActions.canRedo ? 'Can redo' : ''}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
             <span className="flex items-center gap-2">

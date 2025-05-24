@@ -8,8 +8,6 @@ interface KeyboardShortcutsProps {
   onToggleRightPanel: () => void;
   onToggleFullscreen: () => void;
   onSave: () => void;
-  onUndo?: () => void;
-  onRedo?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
@@ -18,9 +16,7 @@ export const useKeyboardShortcuts = ({
   onToggleLeftPanel,
   onToggleRightPanel,
   onToggleFullscreen,
-  onSave,
-  onUndo,
-  onRedo
+  onSave
 }: KeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -45,18 +41,6 @@ export const useKeyboardShortcuts = ({
       if (event.ctrlKey && event.key === 's') {
         event.preventDefault();
         onSave();
-        return;
-      }
-
-      if (event.ctrlKey && event.key === 'z' && onUndo) {
-        event.preventDefault();
-        onUndo();
-        return;
-      }
-
-      if (event.ctrlKey && event.key === 'y' && onRedo) {
-        event.preventDefault();
-        onRedo();
         return;
       }
 
@@ -121,8 +105,6 @@ export const useKeyboardShortcuts = ({
     onToggleLeftPanel,
     onToggleRightPanel,
     onToggleFullscreen,
-    onSave,
-    onUndo,
-    onRedo
+    onSave
   ]);
 };
