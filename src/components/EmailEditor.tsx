@@ -2,34 +2,89 @@
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
+import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import Color from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
+import ListItem from '@tiptap/extension-list-item';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import Underline from '@tiptap/extension-underline';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Monitor, Smartphone, Code, Eye, Download, Upload } from 'lucide-react';
+import { Monitor, Smartphone, Code, Eye, Download, Upload, Settings, Layers } from 'lucide-react';
+
 import { EmailBlockLibrary } from './EmailBlockLibrary';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EmailPreview } from './EmailPreview';
+import { EmailEditorToolbar } from './EmailEditorToolbar';
+import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 
 const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
+  const [sidebarTab, setSidebarTab] = useState<'blocks' | 'templates'>('blocks');
+  const [showProperties, setShowProperties] = useState(true);
   const [emailHTML, setEmailHTML] = useState('');
 
   const editor = useEditor({
     extensions: [
       StarterKit,
       CustomEmailExtension,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'email-link',
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'email-image',
+          style: 'max-width: 100%; height: auto;',
+        },
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Color,
+      TextStyle,
+      Underline,
+      ListItem,
+      BulletList.configure({
+        HTMLAttributes: {
+          class: 'email-bullet-list',
+        },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: {
+          class: 'email-ordered-list',
+        },
+      }),
     ],
     content: `
       <div class="email-container">
         <div class="email-block header-block">
           <h1 style="font-family: Arial, sans-serif; color: #333; margin: 0; padding: 20px; text-align: center; background-color: #f8f9fa;">
-            Welcome to Your Email
+            Professional Email Template
           </h1>
         </div>
         <div class="email-block paragraph-block">
           <p style="font-family: Arial, sans-serif; color: #666; line-height: 1.6; margin: 0; padding: 20px;">
-            Start building your professional email template here. Drag blocks from the sidebar to add content.
+            Create stunning, responsive email campaigns with our advanced editor. Drag and drop components, customize styling, and preview across devices.
           </p>
         </div>
       </div>
@@ -71,14 +126,49 @@ const EmailEditor = () => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Email Template</title>
     <style>
+        /* Reset styles */
+        body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+        
+        /* Base styles */
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; }
         .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
         .email-block { display: block; width: 100%; }
+        
+        /* Typography */
+        .email-link { color: #007bff; text-decoration: none; }
+        .email-link:hover { text-decoration: underline; }
+        
+        /* Lists */
+        .email-bullet-list { margin: 0; padding-left: 20px; }
+        .email-ordered-list { margin: 0; padding-left: 20px; }
+        
+        /* Images */
+        .email-image { max-width: 100%; height: auto; display: block; }
+        
+        /* Tables */
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        
+        /* Responsive design */
         @media only screen and (max-width: 600px) {
             .email-container { width: 100% !important; }
             .email-block { padding: 10px !important; }
+            h1 { font-size: 24px !important; }
+            h2 { font-size: 20px !important; }
+            h3 { font-size: 18px !important; }
+            p { font-size: 16px !important; }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .email-container { background-color: #1a1a1a !important; }
+            h1, h2, h3, p { color: #ffffff !important; }
         }
     </style>
 </head>
@@ -90,15 +180,34 @@ const EmailEditor = () => {
 
   return (
     <div className="h-screen flex bg-gray-50">
-      {/* Sidebar */}
+      {/* Left Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Email Editor</h2>
-          <p className="text-sm text-gray-600 mt-1">Build professional HTML emails</p>
+          <h2 className="text-lg font-semibold text-gray-900">Email Builder</h2>
+          <p className="text-sm text-gray-600 mt-1">Professional email campaign editor</p>
+        </div>
+        
+        <div className="border-b border-gray-200">
+          <Tabs value={sidebarTab} onValueChange={(value) => setSidebarTab(value as 'blocks' | 'templates')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="blocks" className="flex items-center gap-2">
+                <Layers className="w-4 h-4" />
+                Blocks
+              </TabsTrigger>
+              <TabsTrigger value="templates" className="flex items-center gap-2">
+                <Settings className="w-4 h-4" />
+                Templates
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
         
         <div className="flex-1 overflow-y-auto">
-          <EmailBlockLibrary editor={editor} />
+          {sidebarTab === 'blocks' ? (
+            <EmailBlockLibrary editor={editor} />
+          ) : (
+            <EmailTemplateLibrary editor={editor} />
+          )}
         </div>
 
         <div className="p-4 border-t border-gray-200 space-y-2">
@@ -129,7 +238,10 @@ const EmailEditor = () => {
 
       {/* Main Editor Area */}
       <div className="flex-1 flex flex-col">
-        {/* Toolbar */}
+        {/* Enhanced Toolbar */}
+        <EmailEditorToolbar editor={editor} />
+        
+        {/* View Controls */}
         <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -162,30 +274,44 @@ const EmailEditor = () => {
               >
                 <Smartphone className="w-4 h-4" />
               </Button>
+              <Button
+                variant={showProperties ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setShowProperties(!showProperties)}
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Editor Content */}
-        <div className="flex-1 overflow-hidden">
-          {viewMode === 'visual' ? (
-            <div className="h-full p-8 overflow-y-auto">
-              <Card className={`mx-auto transition-all duration-300 ${
-                previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
-              }`}>
-                <div className="p-4">
-                  <EditorContent 
-                    editor={editor} 
-                    className="prose max-w-none focus:outline-none"
-                  />
-                </div>
-              </Card>
-            </div>
-          ) : (
-            <EmailPreview 
-              html={generateEmailHTML(emailHTML)} 
-              previewMode={previewMode}
-            />
+        <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 overflow-hidden">
+            {viewMode === 'visual' ? (
+              <div className="h-full p-8 overflow-y-auto">
+                <Card className={`mx-auto transition-all duration-300 ${
+                  previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
+                }`}>
+                  <div className="p-4">
+                    <EditorContent 
+                      editor={editor} 
+                      className="prose max-w-none focus:outline-none min-h-[600px]"
+                    />
+                  </div>
+                </Card>
+              </div>
+            ) : (
+              <EmailPreview 
+                html={generateEmailHTML(emailHTML)} 
+                previewMode={previewMode}
+              />
+            )}
+          </div>
+          
+          {/* Properties Panel */}
+          {showProperties && (
+            <EmailPropertiesPanel editor={editor} />
           )}
         </div>
       </div>
