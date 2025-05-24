@@ -68,7 +68,6 @@ export const EmailBlockNode = Node.create({
       },
       
       updateEmailBlock: (blockData: EmailBlock) => ({ commands }) => {
-        const { from, to } = commands.state?.selection || { from: 0, to: 0 };
         return commands.updateAttributes(this.name, {
           blockData,
         });

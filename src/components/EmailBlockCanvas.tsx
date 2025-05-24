@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { EmailBlockNode } from '@/extensions/EmailBlockExtensions';
@@ -14,11 +14,15 @@ interface EmailBlockCanvasProps {
   previewMode: 'desktop' | 'mobile' | 'tablet';
 }
 
-export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
+export interface EmailBlockCanvasRef {
+  insertBlock: (blockType: string) => void;
+}
+
+export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
   onContentChange,
   previewWidth,
   previewMode
-}) => {
+}, ref) => {
   const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const [showContextualEditor, setShowContextualEditor] = useState(false);
 
@@ -68,13 +72,15 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
     if (!editor) return;
 
     const blockData = createBlockFromType(blockType);
-    editor.chain().focus().insertEmailBlock(blockData).run();
+    // Use the command directly from the editor
+    (editor.chain().focus() as any).insertEmailBlock(blockData).run();
   };
 
   const handleBlockUpdate = (updatedBlock: EmailBlock) => {
     if (!editor) return;
     
-    editor.chain().focus().updateEmailBlock(updatedBlock).run();
+    // Use the command directly from the editor
+    (editor.chain().focus() as any).updateEmailBlock(updatedBlock).run();
     setSelectedBlock(updatedBlock);
   };
 
@@ -95,14 +101,10 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
     e.preventDefault();
   };
 
-  // Add this method to expose the insertBlock function
-  React.useImperativeHandle(
-    React.useRef(),
-    () => ({
-      insertBlock,
-    }),
-    [insertBlock]
-  );
+  // Expose the insertBlock function through ref
+  React.useImperativeHandle(ref, () => ({
+    insertBlock,
+  }));
 
   return (
     <div className="relative h-full">
@@ -143,7 +145,9 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
       )}
     </div>
   );
-};
+});
+
+EmailBlockCanvas.displayName = 'EmailBlockCanvas';
 
 // Update the createBlockFromType function to use the new utility
 const createBlockFromType = (type: string): EmailBlock => {
