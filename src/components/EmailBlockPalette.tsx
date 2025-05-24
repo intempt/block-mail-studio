@@ -217,6 +217,6 @@ export const EmailBlockPalette: React.FC<EmailBlockPaletteProps> = ({ onBlockAdd
           )}
         </div>
       </ScrollArea>
-    </div>
+    </Card>
   );
 };
