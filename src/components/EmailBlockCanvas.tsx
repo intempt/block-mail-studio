@@ -106,7 +106,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         const newBlock: EmailBlock = {
           id: `snippet-${Date.now()}`,
           type: 'text',
-          content: { text: snippet.content, tag: 'div' },
+          content: { text: snippet.blockData || snippet.description, tag: 'div' },
           styles: { margin: '10px 0' }
         };
         setBlocks(prev => [...prev, newBlock]);

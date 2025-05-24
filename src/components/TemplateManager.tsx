@@ -23,6 +23,7 @@ export interface EmailTemplate {
   name: string;
   description: string;
   html: string;
+  subject?: string; // Add subject line support
   category: string;
   tags: string[];
   createdAt: Date;

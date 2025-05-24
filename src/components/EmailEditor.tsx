@@ -364,7 +364,6 @@ const EmailEditor = () => {
           <BrandVoiceOptimizer 
             editor={null} 
             emailHTML={emailHTML}
-            canvasRef={canvasRef}
             subjectLine={subjectLine}
           />
         );
