@@ -17,7 +17,7 @@ import {
   CheckCircle,
   Clock,
   FileText,
-  Compress,
+  Minimize2,
   Accessibility
 } from 'lucide-react';
 
@@ -265,7 +265,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                 <h4 className="font-medium text-gray-900 mb-3">Quick Optimizations</h4>
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" onClick={optimizeImages} className="flex items-center gap-2">
-                    <Compress className="w-4 h-4" />
+                    <Minimize2 className="w-4 h-4" />
                     Optimize Images
                   </Button>
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
