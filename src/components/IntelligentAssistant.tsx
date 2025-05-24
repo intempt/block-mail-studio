@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Copy
 } from 'lucide-react';
+import { EmailBlockCanvasRef } from './EmailBlockCanvas';
 
 interface ContentSuggestion {
   id: string;
@@ -33,11 +34,17 @@ interface ContentSuggestion {
 interface IntelligentAssistantProps {
   editor: Editor | null;
   emailHTML: string;
+  canvasRef?: React.RefObject<EmailBlockCanvasRef>;
+  subjectLine?: string;
+  onSubjectLineChange?: (subjectLine: string) => void;
 }
 
 export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({ 
   editor, 
-  emailHTML 
+  emailHTML,
+  canvasRef,
+  subjectLine = '',
+  onSubjectLineChange
 }) => {
   const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -122,12 +129,24 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
   };
 
   const applySuggestion = (suggestion: ContentSuggestion) => {
-    if (!editor) return;
-
-    // Apply the suggestion to the editor
-    const content = editor.getHTML();
-    const updatedContent = content.replace(suggestion.current, suggestion.suggested);
-    editor.commands.setContent(updatedContent);
+    if (suggestion.type === 'subject' && onSubjectLineChange) {
+      // Apply subject line suggestion
+      onSubjectLineChange(suggestion.suggested);
+    } else if (canvasRef?.current) {
+      // Apply content suggestions through canvas
+      switch (suggestion.type) {
+        case 'copy':
+          canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
+          break;
+        case 'cta':
+          canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
+          break;
+        case 'tone':
+          // For tone adjustments, we could modify text style or content
+          console.log('Applying tone adjustment:', suggestion.suggested);
+          break;
+      }
+    }
 
     // Remove applied suggestion
     setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));

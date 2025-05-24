@@ -56,6 +56,7 @@ import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
+import { EmailSubjectLine } from './EmailSubjectLine';
 import { EmailSnippet } from '@/types/snippets';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
@@ -93,6 +94,8 @@ const EmailEditor = () => {
     userColor: '#3B82F6'
   });
   const [fullscreenMode, setFullscreenMode] = useState(false);
+  const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
+  const [subjectLineScore, setSubjectLineScore] = useState(75);
 
   const handleSave = () => {
     // Enhanced save functionality to create templates
@@ -104,6 +107,7 @@ const EmailEditor = () => {
       name: templateName,
       description: 'Created from email canvas',
       html: emailHTML,
+      subject: subjectLine, // Include subject line in template
       category: 'Custom',
       tags: ['canvas-created'],
       createdAt: new Date(),
@@ -203,7 +207,7 @@ const EmailEditor = () => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Email Template</title>
+    <title>${subjectLine}</title>
     <style>
         /* Reset and base styles */
         body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
@@ -239,6 +243,9 @@ const EmailEditor = () => {
 
   const handleLoadTemplate = (template: EmailTemplate) => {
     setEmailHTML(template.html);
+    if (template.subject) {
+      setSubjectLine(template.subject);
+    }
     setTemplates(prev => prev.map(t => 
       t.id === template.id ? { ...t, usageCount: t.usageCount + 1 } : t
     ));
@@ -344,11 +351,32 @@ const EmailEditor = () => {
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'analytics':
-        return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
+        return (
+          <PerformanceAnalyzer 
+            editor={null} 
+            emailHTML={emailHTML} 
+            canvasRef={canvasRef}
+            subjectLine={subjectLine}
+          />
+        );
       case 'optimization':
-        return <BrandVoiceOptimizer editor={null} emailHTML={emailHTML} />;
+        return (
+          <BrandVoiceOptimizer 
+            editor={null} 
+            emailHTML={emailHTML}
+            canvasRef={canvasRef}
+            subjectLine={subjectLine}
+          />
+        );
       default:
-        return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
+        return (
+          <PerformanceAnalyzer 
+            editor={null} 
+            emailHTML={emailHTML}
+            canvasRef={canvasRef}
+            subjectLine={subjectLine}
+          />
+        );
     }
   };
 
@@ -603,6 +631,13 @@ const EmailEditor = () => {
         {/* Center: Canvas or Collaborative Editor */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
+            {/* Subject Line - always visible */}
+            <EmailSubjectLine
+              value={subjectLine}
+              onChange={setSubjectLine}
+              performanceScore={subjectLineScore}
+            />
+            
             {collaborationMode ? (
               <EnhancedCollaborativeEditor
                 documentId={collaborationConfig.documentId}
