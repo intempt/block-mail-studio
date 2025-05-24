@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -37,7 +36,7 @@ export const ProfessionalToolPalette: React.FC<ProfessionalToolPaletteProps> = (
   const renderCategoryContent = () => {
     switch (activeCategory) {
       case 'properties':
-        return <EmailPropertiesPanel editor={editor} />;
+        return <EmailPropertiesPanel />;
       
       case 'styling':
         return (
