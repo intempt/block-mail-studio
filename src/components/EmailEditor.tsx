@@ -68,6 +68,8 @@ import { TemplateManager, EmailTemplate } from './TemplateManager';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
 import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
+import { EmailBlockCanvas } from './EmailBlockCanvas';
+import { EmailBlockPalette } from './EmailBlockPalette';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -155,69 +157,8 @@ const EmailEditor = () => {
     };
   }, [documentId, userName, userColor, ydoc]);
 
-  // Only create editor when provider is ready
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      CustomEmailExtension,
-      Collaboration.configure({
-        document: ydoc,
-      }),
-      ...(provider ? [CollaborationCursor.configure({
-        provider: provider,
-        user: {
-          name: userName,
-          color: userColor,
-        },
-      })] : []),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'email-link',
-        },
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'email-image',
-          style: 'max-width: 100%; height: auto;',
-        },
-      }),
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Color,
-      TextStyle,
-      Underline,
-      FontFamily,
-      Placeholder.configure({
-        placeholder: 'Start creating your email...',
-      }),
-    ],
-    content: `
-      <div class="email-container">
-        <div class="email-block header-block">
-          <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
-            Welcome to Email Builder Pro
-          </h1>
-        </div>
-        <div class="email-block paragraph-block">
-          <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
-            Create stunning, responsive email campaigns with our AI-powered editor. Design professional emails with precision and speed.
-          </p>
-        </div>
-      </div>
-    `,
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      setEmailHTML(html);
-    },
-  }, [isProviderReady, provider]);
+  // Remove the old editor creation and replace with simpler state management
+  const [emailHTML, setEmailHTML] = useState('');
 
   useEffect(() => {
     const initCollaboration = async () => {
@@ -353,6 +294,11 @@ const EmailEditor = () => {
     ));
   };
 
+  const handleBlockAdd = (blockType: string) => {
+    // This will be handled by the EmailBlockCanvas component
+    console.log('Adding block:', blockType);
+  };
+
   const renderLeftPanel = () => {
     if (leftPanelCollapsed) {
       return (
@@ -373,29 +319,21 @@ const EmailEditor = () => {
       case 'ai':
         return (
           <EmailAIChatWithTemplates 
-            editor={editor} 
+            editor={null} 
             templates={templates}
             onLoadTemplate={handleLoadTemplate}
             onSaveTemplate={handleSaveTemplate}
           />
         );
       case 'design':
-        return <ProfessionalToolPalette editor={editor} />;
+        return <ProfessionalToolPalette editor={null} />;
       case 'blocks':
         return (
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Blocks</h3>
-            <p className="text-sm text-gray-500">Drag and drop components coming soon...</p>
-          </div>
+          <EmailBlockPalette onBlockAdd={handleBlockAdd} />
         );
       default:
         return (
-          <EmailAIChatWithTemplates 
-            editor={editor} 
-            templates={templates}
-            onLoadTemplate={handleLoadTemplate}
-            onSaveTemplate={handleSaveTemplate}
-          />
+          <EmailBlockPalette onBlockAdd={handleBlockAdd} />
         );
     }
   };
@@ -611,9 +549,6 @@ const EmailEditor = () => {
         </div>
       </header>
 
-      {/* Professional Toolbar */}
-      <EmailEditorToolbar editor={editor} />
-
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Tools */}
@@ -671,43 +606,14 @@ const EmailEditor = () => {
           )}
         </div>
 
-        {/* Center: Editor */}
+        {/* Center: Block Canvas */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className="flex-1 p-8 overflow-y-auto">
-            <Card 
-              className="mx-auto transition-all duration-300 shadow-lg"
-              style={{ maxWidth: `${previewWidth}px` }}
-            >
-              <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                  </div>
-                  <span className="text-xs text-slate-500 ml-2">Email Preview</span>
-                  <Badge variant="secondary" className="ml-auto text-xs">
-                    {previewMode.charAt(0).toUpperCase() + previewMode.slice(1)} • {previewWidth}px
-                  </Badge>
-                  {collaborators.filter(c => c.isOnline).length > 1 && (
-                    <Badge variant="outline" className="text-xs">
-                      {collaborators.filter(c => c.isOnline).length} collaborating
-                    </Badge>
-                  )}
-                  {connectionStatus === 'connected' && (
-                    <Badge variant="outline" className="text-xs text-green-600">
-                      Live
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="p-6 bg-white rounded-b-lg">
-                <EditorContent 
-                  editor={editor} 
-                  className="prose max-w-none focus:outline-none min-h-[600px]"
-                />
-              </div>
-            </Card>
+            <EmailBlockCanvas 
+              onContentChange={setEmailHTML}
+              previewWidth={previewWidth}
+              previewMode={previewMode}
+            />
           </div>
         </div>
         

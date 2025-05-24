@@ -1,0 +1,63 @@
+
+/* Email Block Canvas Styles */
+.block-canvas {
+  min-height: 600px;
+}
+
+.block-canvas .ProseMirror {
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+
+.email-block-node {
+  position: relative;
+  margin: 0;
+  display: block;
+}
+
+.email-block-node.selected .block-wrapper {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.email-block-node:hover .block-wrapper {
+  outline: 1px solid #93c5fd;
+  outline-offset: 1px;
+}
+
+.block-wrapper {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.email-container {
+  background: white;
+  min-height: 500px;
+}
+
+/* Drag and drop indicators */
+.block-canvas.drag-over {
+  background-color: #f0f9ff;
+  border: 2px dashed #3b82f6;
+}
+
+/* Block type indicators */
+.email-block-node[data-block-type="text"] .block-wrapper::before {
+  content: "Text";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 10px;
+  color: #6b7280;
+  background: white;
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.email-block-node:hover[data-block-type="text"] .block-wrapper::before,
+.email-block-node.selected[data-block-type="text"] .block-wrapper::before {
+  opacity: 1;
+}

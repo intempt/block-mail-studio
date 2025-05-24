@@ -1,176 +1,218 @@
-
-import React, { useState, useCallback } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { EmailBlock, EmailCanvas } from '@/types/emailBlocks';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Trash2, Copy, Move } from 'lucide-react';
-import { BlockRenderer } from './BlockRenderer';
+import React, { useState } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { EmailBlockNode } from '@/extensions/EmailBlockExtensions';
+import { EmailBlock } from '@/types/emailBlocks';
 import { ContextualEditor } from './ContextualEditor';
+import { Card } from '@/components/ui/card';
+import { generateUniqueId, createDefaultStyling } from '@/utils/blockUtils';
+import './EmailBlockCanvas.css';
 
 interface EmailBlockCanvasProps {
-  canvas: EmailCanvas;
-  onCanvasChange: (canvas: EmailCanvas) => void;
-  onBlockSelect: (blockId: string | null) => void;
-  selectedBlockId: string | null;
+  onContentChange?: (html: string) => void;
+  previewWidth: number;
+  previewMode: 'desktop' | 'mobile' | 'tablet';
 }
 
 export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
-  canvas,
-  onCanvasChange,
-  onBlockSelect,
-  selectedBlockId
+  onContentChange,
+  previewWidth,
+  previewMode
 }) => {
-  const [draggedBlock, setDraggedBlock] = useState<EmailBlock | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
+  const [showContextualEditor, setShowContextualEditor] = useState(false);
 
-  const handleDragEnd = useCallback((result: DropResult) => {
-    if (!result.destination) return;
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        paragraph: false,
+        heading: false,
+      }),
+      EmailBlockNode,
+    ],
+    
+    content: `
+      <div class="email-container" style="max-width: 600px; margin: 0 auto; background: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        <div data-email-block="text" class="email-block-wrapper">
+          <div class="p-6 text-center">
+            <h1 style="color: #1f2937; font-size: 32px; font-weight: 700; margin: 0 0 16px 0;">Welcome to Your Email</h1>
+            <p style="color: #6b7280; font-size: 16px; margin: 0;">Drag blocks from the left panel to start building your email.</p>
+          </div>
+        </div>
+      </div>
+    `,
+    
+    onSelectionUpdate: ({ editor }) => {
+      const { from, to } = editor.state.selection;
+      const selectedNode = editor.state.doc.nodeAt(from);
+      
+      if (selectedNode && selectedNode.type.name === 'emailBlock') {
+        const blockData = selectedNode.attrs.blockData as EmailBlock;
+        if (blockData) {
+          setSelectedBlock(blockData);
+          setShowContextualEditor(true);
+        }
+      } else {
+        setSelectedBlock(null);
+        setShowContextualEditor(false);
+      }
+    },
+    
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      onContentChange?.(html);
+    },
+  });
 
-    const newBlocks = Array.from(canvas.blocks);
-    const [reorderedBlock] = newBlocks.splice(result.source.index, 1);
-    newBlocks.splice(result.destination.index, 0, reorderedBlock);
+  const insertBlock = (blockType: string) => {
+    if (!editor) return;
 
-    onCanvasChange({
-      ...canvas,
-      blocks: newBlocks
-    });
-  }, [canvas, onCanvasChange]);
+    const blockData = createBlockFromType(blockType);
+    editor.chain().focus().insertEmailBlock(blockData).run();
+  };
 
-  const handleBlockUpdate = useCallback((blockId: string, updatedBlock: EmailBlock) => {
-    const newBlocks = canvas.blocks.map(block => 
-      block.id === blockId ? updatedBlock : block
-    );
-    onCanvasChange({
-      ...canvas,
-      blocks: newBlocks
-    });
-  }, [canvas, onCanvasChange]);
+  const handleBlockUpdate = (updatedBlock: EmailBlock) => {
+    if (!editor) return;
+    
+    editor.chain().focus().updateEmailBlock(updatedBlock).run();
+    setSelectedBlock(updatedBlock);
+  };
 
-  const handleBlockDelete = useCallback((blockId: string) => {
-    const newBlocks = canvas.blocks.filter(block => block.id !== blockId);
-    onCanvasChange({
-      ...canvas,
-      blocks: newBlocks
-    });
-    onBlockSelect(null);
-  }, [canvas, onCanvasChange, onBlockSelect]);
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.blockType) {
+        insertBlock(data.blockType);
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
+    }
+  };
 
-  const handleBlockDuplicate = useCallback((blockId: string) => {
-    const blockToDuplicate = canvas.blocks.find(block => block.id === blockId);
-    if (!blockToDuplicate) return;
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
 
-    const duplicatedBlock: EmailBlock = {
-      ...blockToDuplicate,
-      id: `${blockToDuplicate.id}-copy-${Date.now()}`,
-    };
-
-    const blockIndex = canvas.blocks.findIndex(block => block.id === blockId);
-    const newBlocks = [...canvas.blocks];
-    newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
-
-    onCanvasChange({
-      ...canvas,
-      blocks: newBlocks
-    });
-  }, [canvas, onCanvasChange]);
-
-  const handleBlockClick = useCallback((blockId: string) => {
-    onBlockSelect(blockId === selectedBlockId ? null : blockId);
-  }, [selectedBlockId, onBlockSelect]);
+  // Add this method to expose the insertBlock function
+  React.useImperativeHandle(
+    React.useRef(),
+    () => ({
+      insertBlock,
+    }),
+    [insertBlock]
+  );
 
   return (
-    <div className="flex-1 bg-gray-50 p-6 overflow-auto">
-      {/* Canvas Header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Email Canvas</h3>
-        <p className="text-sm text-gray-600">Drag blocks to reorder, click to edit</p>
-      </div>
-
-      {/* Email Canvas */}
-      <Card className="mx-auto bg-white shadow-sm" style={{ width: canvas.settings.width }}>
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="email-canvas">
-            {(provided, snapshot) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className={`min-h-96 p-4 ${snapshot.isDraggingOver ? 'bg-blue-50' : ''}`}
-                style={{ backgroundColor: canvas.settings.backgroundColor }}
-              >
-                {canvas.blocks.length === 0 ? (
-                  <div className="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg">
-                    <div className="text-center">
-                      <Move className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-500">Drag blocks here to start building your email</p>
-                    </div>
-                  </div>
-                ) : (
-                  canvas.blocks.map((block, index) => (
-                    <Draggable key={block.id} draggableId={block.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`group relative mb-2 ${
-                            selectedBlockId === block.id ? 'ring-2 ring-blue-500' : 'hover:ring-1 hover:ring-gray-300'
-                          } ${snapshot.isDragging ? 'opacity-50' : ''}`}
-                        >
-                          {/* Block Actions */}
-                          <div className="absolute -top-2 -right-2 z-10 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleBlockDuplicate(block.id)}
-                              className="h-6 w-6 p-0 bg-white shadow-sm"
-                            >
-                              <Copy className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleBlockDelete(block.id)}
-                              className="h-6 w-6 p-0 bg-white shadow-sm text-red-500 hover:text-red-700"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-
-                          {/* Drag Handle */}
-                          <div
-                            {...provided.dragHandleProps}
-                            className="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-8 bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-grab flex items-center justify-center"
-                          >
-                            <Move className="w-3 h-3 text-gray-500" />
-                          </div>
-
-                          {/* Block Content */}
-                          <div onClick={() => handleBlockClick(block.id)} className="cursor-pointer">
-                            <BlockRenderer 
-                              block={block} 
-                              isSelected={selectedBlockId === block.id}
-                              onUpdate={(updatedBlock) => handleBlockUpdate(block.id, updatedBlock)}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))
-                )}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+    <div className="relative h-full">
+      <Card 
+        className="mx-auto transition-all duration-300 shadow-lg"
+        style={{ maxWidth: `${previewWidth}px` }}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
+        <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1">
+              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+            </div>
+            <span className="text-xs text-slate-500 ml-2">Email Canvas</span>
+          </div>
+        </div>
+        
+        <div className="bg-white min-h-[600px]">
+          <EditorContent 
+            editor={editor} 
+            className="block-canvas focus:outline-none"
+          />
+        </div>
       </Card>
 
-      {/* Contextual Editor */}
-      {selectedBlockId && (
+      {showContextualEditor && selectedBlock && (
         <ContextualEditor
-          block={canvas.blocks.find(b => b.id === selectedBlockId)!}
-          onBlockUpdate={(updatedBlock) => handleBlockUpdate(selectedBlockId, updatedBlock)}
-          onClose={() => onBlockSelect(null)}
+          block={selectedBlock}
+          onBlockUpdate={handleBlockUpdate}
+          onClose={() => {
+            setShowContextualEditor(false);
+            setSelectedBlock(null);
+          }}
         />
       )}
     </div>
   );
+};
+
+// Update the createBlockFromType function to use the new utility
+const createBlockFromType = (type: string): EmailBlock => {
+  const baseBlock = {
+    id: generateUniqueId(),
+    position: { x: 0, y: 0 },
+    styling: createDefaultStyling(),
+  };
+
+  switch (type) {
+    case 'text':
+      return {
+        ...baseBlock,
+        type: 'text',
+        content: {
+          html: '<p>Your text content here...</p>',
+          placeholder: 'Click to add text...',
+        },
+      } as EmailBlock;
+      
+    case 'image':
+      return {
+        ...baseBlock,
+        type: 'image',
+        content: {
+          src: 'https://via.placeholder.com/400x200',
+          alt: 'Placeholder image',
+          link: '',
+        },
+      } as EmailBlock;
+      
+    case 'button':
+      return {
+        ...baseBlock,
+        type: 'button',
+        content: {
+          text: 'Click Here',
+          link: '#',
+          style: 'solid',
+        },
+      } as EmailBlock;
+      
+    case 'spacer':
+      return {
+        ...baseBlock,
+        type: 'spacer',
+        content: {
+          height: '40px',
+        },
+      } as EmailBlock;
+      
+    case 'divider':
+      return {
+        ...baseBlock,
+        type: 'divider',
+        content: {
+          style: 'solid',
+          thickness: '1px',
+          color: '#e0e0e0',
+        },
+      } as EmailBlock;
+      
+    default:
+      return {
+        ...baseBlock,
+        type: 'text',
+        content: {
+          html: '<p>Unknown block type</p>',
+        },
+      } as EmailBlock;
+  }
 };
