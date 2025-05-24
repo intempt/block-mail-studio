@@ -108,13 +108,7 @@ const EmailEditor = () => {
       Collaboration.configure({
         document: ydoc,
       }),
-      CollaborationCursor.configure({
-        provider: null, // Will be configured when WebSocket provider is set up
-        user: {
-          name: userName,
-          color: userColor,
-        },
-      }),
+      // Removed CollaborationCursor temporarily until we have a proper provider
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
