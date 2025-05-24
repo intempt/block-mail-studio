@@ -46,7 +46,10 @@ import { Label } from '@/components/ui/label';
 import { EmailAIChat } from './EmailAIChat';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
+import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
+import { TemplateManager, EmailTemplate } from './TemplateManager';
+import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
 import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { EmailBlockPalette } from './EmailBlockPalette';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
@@ -54,7 +57,6 @@ import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
 import { EmailSnippet } from '@/types/snippets';
-import { EmailTemplate } from './TemplateManager';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
@@ -278,43 +280,36 @@ const EmailEditor = () => {
 
     switch (leftPanelTab) {
       case 'ai':
-        return <EmailAIChat editor={null} />;
+        return (
+          <EmailAIChatWithTemplates 
+            editor={null} 
+            templates={templates}
+            onLoadTemplate={handleLoadTemplate}
+            onSaveTemplate={handleSaveTemplate}
+          />
+        );
       case 'design':
         return <ProfessionalToolPalette editor={null} />;
       case 'blocks':
         return (
-          <div className="p-4">
-            <h3 className="font-semibold text-sm mb-3">Blocks</h3>
-            <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={() => handleBlockAdd('text')}
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Text Block
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={() => handleBlockAdd('heading')}
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Heading
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full justify-start" 
-                onClick={() => handleBlockAdd('button')}
-              >
-                <Code2 className="w-4 h-4 mr-2" />
-                Button
-              </Button>
-            </div>
-          </div>
+          <EnhancedEmailBlockPalette 
+            onBlockAdd={handleBlockAdd}
+            onSnippetAdd={handleSnippetAdd}
+            universalContent={[]}
+            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
+            compactMode={compactMode}
+          />
         );
       default:
-        return <EmailAIChat editor={null} />;
+        return (
+          <EnhancedEmailBlockPalette 
+            onBlockAdd={handleBlockAdd}
+            onSnippetAdd={handleSnippetAdd}
+            universalContent={[]}
+            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
+            compactMode={compactMode}
+          />
+        );
     }
   };
 
@@ -605,16 +600,26 @@ const EmailEditor = () => {
           </div>
         )}
 
-        {/* Center: Canvas */}
+        {/* Center: Canvas or Collaborative Editor */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
-            <EmailBlockCanvas 
-              ref={canvasRef}
-              onContentChange={setEmailHTML}
-              previewWidth={previewWidth}
-              previewMode={previewMode}
-              compactMode={compactMode}
-            />
+            {collaborationMode ? (
+              <EnhancedCollaborativeEditor
+                documentId={collaborationConfig.documentId}
+                userId={collaborationConfig.userId}
+                userName={collaborationConfig.userName}
+                userColor={collaborationConfig.userColor}
+                onContentChange={setEmailHTML}
+              />
+            ) : (
+              <EmailBlockCanvas 
+                ref={canvasRef}
+                onContentChange={setEmailHTML}
+                previewWidth={previewWidth}
+                previewMode={previewMode}
+                compactMode={compactMode}
+              />
+            )}
           </div>
         </div>
         
