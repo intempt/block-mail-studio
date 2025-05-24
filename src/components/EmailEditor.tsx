@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -27,11 +26,12 @@ import { EmailPreview } from './EmailPreview';
 import { EmailEditorToolbar } from './EmailEditorToolbar';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
+import { EmailAIChat } from './EmailAIChat';
 
 const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
-  const [sidebarTab, setSidebarTab] = useState<'blocks' | 'templates'>('blocks');
+  const [sidebarTab, setSidebarTab] = useState<'blocks' | 'templates' | 'ai'>('ai');
   const [showProperties, setShowProperties] = useState(true);
   const [emailHTML, setEmailHTML] = useState('');
 
@@ -188,8 +188,12 @@ const EmailEditor = () => {
         </div>
         
         <div className="border-b border-gray-200">
-          <Tabs value={sidebarTab} onValueChange={(value) => setSidebarTab(value as 'blocks' | 'templates')}>
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={sidebarTab} onValueChange={(value) => setSidebarTab(value as 'blocks' | 'templates' | 'ai')}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="ai" className="flex items-center gap-2">
+                <Layers className="w-4 h-4" />
+                AI
+              </TabsTrigger>
               <TabsTrigger value="blocks" className="flex items-center gap-2">
                 <Layers className="w-4 h-4" />
                 Blocks
@@ -202,38 +206,42 @@ const EmailEditor = () => {
           </Tabs>
         </div>
         
-        <div className="flex-1 overflow-y-auto">
-          {sidebarTab === 'blocks' ? (
+        <div className="flex-1 overflow-hidden">
+          {sidebarTab === 'ai' ? (
+            <EmailAIChat editor={editor} />
+          ) : sidebarTab === 'blocks' ? (
             <EmailBlockLibrary editor={editor} />
           ) : (
             <EmailTemplateLibrary editor={editor} />
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200 space-y-2">
-          <div className="flex gap-2">
-            <Button 
-              onClick={exportHTML} 
-              size="sm" 
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <label className="flex-1">
-              <Button size="sm" variant="outline" className="w-full">
-                <Upload className="w-4 h-4 mr-2" />
-                Import
+        {sidebarTab !== 'ai' && (
+          <div className="p-4 border-t border-gray-200 space-y-2">
+            <div className="flex gap-2">
+              <Button 
+                onClick={exportHTML} 
+                size="sm" 
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
               </Button>
-              <input
-                type="file"
-                accept=".html,.htm"
-                onChange={importHTML}
-                className="hidden"
-              />
-            </label>
+              <label className="flex-1">
+                <Button size="sm" variant="outline" className="w-full">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import
+                </Button>
+                <input
+                  type="file"
+                  accept=".html,.htm"
+                  onChange={importHTML}
+                  className="hidden"
+                />
+              </label>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Main Editor Area */}
