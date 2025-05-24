@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -496,7 +497,7 @@ const EmailEditor = () => {
                     <Button
                       variant={leftPanelTab === 'design' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={()={() => setLeftPanelTab('design')}
+                      onClick={() => setLeftPanelTab('design')}
                       className="flex-1 h-6 lg:h-8"
                     >
                       <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
