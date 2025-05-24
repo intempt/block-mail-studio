@@ -613,21 +613,20 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           </Badge>
         </div>
         
-        {/* Compact Quick Actions Grid with Thin Scrollbar */}
-        <div className="h-32 overflow-hidden">
+        {/* Compact Quick Actions Grid with ScrollArea */}
+        <div className="h-24">
           <ScrollArea className="h-full">
             <div className="grid grid-cols-3 gap-2 pr-2">
               {quickActions.map((action, index) => (
                 <Card
                   key={index}
-                  className="group cursor-pointer transition-all duration-200 hover:shadow-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 bg-white rounded-lg p-3"
+                  className="cursor-pointer transition-all duration-200 hover:shadow-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 bg-white rounded-lg p-3"
                   onClick={() => handleQuickAction(action)}
                 >
                   <div className="flex flex-col items-center text-center space-y-2">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-slate-100 transition-colors text-slate-700">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors text-slate-700">
                       {action.icon}
                     </div>
-                    
                     <h5 className="text-xs font-medium text-gray-900">{action.label}</h5>
                   </div>
                 </Card>
