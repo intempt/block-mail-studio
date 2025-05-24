@@ -53,20 +53,6 @@ const layoutOptions: LayoutOption[] = [
     ratio: '67-33',
     preview: ['67%', '33%']
   },
-  {
-    id: '2-column-25-75',
-    name: '2 Columns (25/75)',
-    columns: 2,
-    ratio: '25-75',
-    preview: ['25%', '75%']
-  },
-  {
-    id: '2-column-75-25',
-    name: '2 Columns (75/25)',
-    columns: 2,
-    ratio: '75-25',
-    preview: ['75%', '25%']
-  },
   // 3 Column layouts
   {
     id: '3-column-equal',
@@ -74,27 +60,6 @@ const layoutOptions: LayoutOption[] = [
     columns: 3,
     ratio: '33-33-33',
     preview: ['33.33%', '33.33%', '33.33%']
-  },
-  {
-    id: '3-column-25-50-25',
-    name: '3 Columns (25/50/25)',
-    columns: 3,
-    ratio: '25-50-25',
-    preview: ['25%', '50%', '25%']
-  },
-  {
-    id: '3-column-25-25-50',
-    name: '3 Columns (25/25/50)',
-    columns: 3,
-    ratio: '25-25-50',
-    preview: ['25%', '25%', '50%']
-  },
-  {
-    id: '3-column-50-25-25',
-    name: '3 Columns (50/25/25)',
-    columns: 3,
-    ratio: '50-25-25',
-    preview: ['50%', '25%', '25%']
   },
   // 4 Column layout
   {
@@ -132,6 +97,27 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
     onLayoutSelect(layoutConfig);
   };
 
+  const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
+    console.log('Starting layout drag:', layout.name);
+    
+    const columns = Array.from({ length: layout.columns }, () => ({
+      id: generateUniqueId(),
+      blocks: [],
+      width: layout.preview[0]
+    }));
+
+    const layoutConfig = {
+      blockType: 'columns',
+      layoutData: {
+        ...layout,
+        columns
+      }
+    };
+
+    e.dataTransfer.setData('application/json', JSON.stringify(layoutConfig));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
   const renderLayoutPreview = (layout: LayoutOption) => (
     <div className={`flex gap-1 h-6 ${compactMode ? 'h-4' : 'h-6'}`}>
       {layout.preview.map((width, index) => (
@@ -149,7 +135,9 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
       {layoutOptions.map((layout) => (
         <Card
           key={layout.id}
-          className={`${padding} cursor-pointer hover:bg-slate-50 border-2 hover:border-blue-200 transition-all duration-200`}
+          className={`${padding} cursor-grab hover:bg-slate-50 border-2 hover:border-blue-200 transition-all duration-200 active:cursor-grabbing`}
+          draggable
+          onDragStart={(e) => handleLayoutDragStart(e, layout)}
           onClick={() => handleLayoutClick(layout)}
         >
           <div className="space-y-2">
@@ -157,6 +145,9 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
               {layout.name}
             </div>
             {renderLayoutPreview(layout)}
+            <div className="text-xs text-slate-500 text-center">
+              Drag or Click
+            </div>
           </div>
         </Card>
       ))}

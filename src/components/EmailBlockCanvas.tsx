@@ -30,10 +30,80 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 
   const selectedBlock = blocks.find(block => block.id === selectedBlockId);
 
-  const insertBlock = (blockType: string) => {
-    const newBlock = createBlockFromType(blockType);
-    setBlocks(prev => [...prev, newBlock]);
-    generateHTML([...blocks, newBlock]);
+  const insertBlock = (blockType: string, layoutData?: any) => {
+    console.log('Inserting block:', blockType, layoutData);
+    
+    if (blockType === 'columns' && layoutData) {
+      // Create columns block with the provided layout configuration
+      const newBlock = createColumnsBlock(layoutData);
+      setBlocks(prev => [...prev, newBlock]);
+      generateHTML([...blocks, newBlock]);
+    } else {
+      const newBlock = createBlockFromType(blockType);
+      setBlocks(prev => [...prev, newBlock]);
+      generateHTML([...blocks, newBlock]);
+    }
+  };
+
+  const createColumnsBlock = (layoutData: any): EmailBlock => {
+    return {
+      id: generateUniqueId(),
+      type: 'columns',
+      position: { x: 0, y: 0 },
+      styling: createDefaultStyling(),
+      displayOptions: {
+        showOnDesktop: true,
+        showOnTablet: true,
+        showOnMobile: true
+      },
+      content: {
+        columnCount: layoutData.columns,
+        columnRatio: layoutData.ratio,
+        columns: layoutData.columns,
+        gap: '16px'
+      }
+    } as EmailBlock;
+  };
+
+  const createEcommerceTemplate = () => {
+    console.log('Creating ecommerce template...');
+    
+    const ecommerceBlocks = [
+      // Header with logo and navigation
+      createBlockFromType('text', '<div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;"><h1 style="margin: 0; font-size: 28px; font-weight: bold;">ACME Store</h1><p style="margin: 5px 0 0 0; opacity: 0.9;">Premium Quality Products</p></div>'),
+      
+      // Hero section
+      createBlockFromType('image'),
+      createBlockFromType('text', '<div style="text-align: center; padding: 30px 20px;"><h2 style="font-size: 32px; color: #1a1a1a; margin: 0 0 15px 0;">🔥 Flash Sale - 50% Off!</h2><p style="font-size: 18px; color: #666; margin: 0 0 20px 0;">Limited time offer on our best-selling products</p></div>'),
+      
+      // Product showcase (2 columns)
+      (() => {
+        const columnsBlock = createColumnsBlock({
+          columns: 2,
+          ratio: '50-50',
+          columns: [
+            { id: generateUniqueId(), blocks: [], width: '50%' },
+            { id: generateUniqueId(), blocks: [], width: '50%' }
+          ]
+        });
+        return columnsBlock;
+      })(),
+      
+      // Call to action
+      createBlockFromType('button'),
+      
+      // Divider
+      createBlockFromType('divider'),
+      
+      // Social proof section
+      createBlockFromType('text', '<div style="text-align: center; padding: 20px; background: #f8f9fa;"><h3 style="margin: 0 0 15px 0; color: #1a1a1a;">What Our Customers Say</h3><blockquote style="font-style: italic; color: #666; margin: 0; font-size: 16px;">"Amazing quality and fast shipping! Will definitely order again." - Sarah M.</blockquote></div>'),
+      
+      // Footer
+      createBlockFromType('text', '<div style="text-align: center; padding: 20px; background: #2d3748; color: white; font-size: 14px;"><p style="margin: 0 0 10px 0;">Follow us on social media for exclusive deals!</p><p style="margin: 0; opacity: 0.8;">© 2024 ACME Store. All rights reserved.</p></div>')
+    ];
+
+    setBlocks(ecommerceBlocks);
+    generateHTML(ecommerceBlocks);
   };
 
   const insertBlockIntoColumn = (blockType: string, columnId: string) => {
@@ -165,7 +235,11 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.blockType) {
+      console.log('Canvas drop data:', data);
+      
+      if (data.blockType === 'columns' && data.layoutData) {
+        insertBlock('columns', data.layoutData);
+      } else if (data.blockType) {
         insertBlock(data.blockType);
       }
     } catch (error) {
@@ -183,13 +257,9 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
   }));
 
   React.useEffect(() => {
-    // Initialize with a welcome block
+    // Initialize with ecommerce template instead of just welcome block
     if (blocks.length === 0) {
-      const welcomeBlock = createBlockFromType('text');
-      const textBlock = welcomeBlock as TextBlock;
-      textBlock.content.html = '<h1 style="color: #1f2937; font-size: 32px; font-weight: 700; margin: 0 0 16px 0; text-align: center;">Welcome to Your Email</h1><p style="color: #6b7280; font-size: 16px; margin: 0; text-align: center;">Drag blocks from the left panel to start building your email.</p>';
-      setBlocks([welcomeBlock]);
-      generateHTML([welcomeBlock]);
+      createEcommerceTemplate();
     }
   }, []);
 
@@ -282,7 +352,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 
 EmailBlockCanvas.displayName = 'EmailBlockCanvas';
 
-const createBlockFromType = (type: string): EmailBlock => {
+const createBlockFromType = (type: string, customContent?: string): EmailBlock => {
   const baseBlock = {
     id: generateUniqueId(),
     position: { x: 0, y: 0 },
@@ -300,7 +370,7 @@ const createBlockFromType = (type: string): EmailBlock => {
         ...baseBlock,
         type: 'text',
         content: {
-          html: '<p>Your text content here...</p>',
+          html: customContent || '<p>Your text content here...</p>',
           textStyle: 'normal',
           placeholder: 'Click to add text...',
         },
@@ -311,9 +381,9 @@ const createBlockFromType = (type: string): EmailBlock => {
         ...baseBlock,
         type: 'image',
         content: {
-          src: 'https://via.placeholder.com/400x200',
-          alt: 'Placeholder image',
-          link: '',
+          src: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=600&h=300&fit=crop',
+          alt: 'Product showcase image',
+          link: '#shop-now',
           alignment: 'center',
           width: '100%',
           isDynamic: false
@@ -325,10 +395,21 @@ const createBlockFromType = (type: string): EmailBlock => {
         ...baseBlock,
         type: 'button',
         content: {
-          text: 'Click Here',
-          link: '#',
+          text: 'Shop Now - 50% Off!',
+          link: '#shop-now',
           style: 'solid',
-          size: 'medium'
+          size: 'large'
+        },
+        styling: {
+          ...baseBlock.styling,
+          desktop: {
+            ...baseBlock.styling.desktop,
+            backgroundColor: '#ff6b6b',
+            textColor: '#ffffff',
+            padding: '15px 30px',
+            borderRadius: '8px',
+            textAlign: 'center',
+          },
         },
       } as EmailBlock;
 
