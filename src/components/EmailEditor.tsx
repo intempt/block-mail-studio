@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -48,6 +47,7 @@ import { TemplateManager, EmailTemplate } from './TemplateManager';
 import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
 import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { EmailBlockPalette } from './EmailBlockPalette';
+import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -230,7 +230,7 @@ const EmailEditor = () => {
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'properties':
-        return <SmartDesignAssistant editor={null} emailHTML={emailHTML} />;
+        return <EmailPropertiesPanel emailHTML={emailHTML} />;
       case 'analytics':
         return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
       case 'optimization':
@@ -245,7 +245,7 @@ const EmailEditor = () => {
           </div>
         );
       default:
-        return <SmartDesignAssistant editor={null} emailHTML={emailHTML} />;
+        return <EmailPropertiesPanel emailHTML={emailHTML} />;
     }
   };
 
