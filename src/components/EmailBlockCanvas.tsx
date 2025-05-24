@@ -1,8 +1,10 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { EmailSnippet } from '@/types/snippets';
 import { SimpleTipTapEditor } from './SimpleTipTapEditor';
+import { Trash2, Copy, GripVertical } from 'lucide-react';
 import './EmailBlockCanvas.css';
 
 export interface EmailBlockCanvasRef {
@@ -56,6 +58,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
     const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
 
     const generateHTML = () => {
       const htmlContent = blocks.map(block => {
@@ -265,6 +269,142 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       }
     };
 
+    const handleCanvasDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingOver(false);
+      setDragOverIndex(null);
+
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        
+        if (data.blockType === 'columns' && data.layoutData) {
+          // Handle layout drop
+          const newBlock: SimpleBlock = {
+            id: `layout-${Date.now()}`,
+            type: 'columns',
+            content: {
+              columns: data.layoutData.columns,
+              columnRatio: data.layoutData.ratio,
+              gap: '16px'
+            },
+            styles: { margin: '20px 0' }
+          };
+          
+          const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
+          setBlocks(prev => {
+            const newBlocks = [...prev];
+            newBlocks.splice(insertIndex, 0, newBlock);
+            return newBlocks;
+          });
+        } else if (data.blockType) {
+          // Handle regular block drop
+          const newBlock: SimpleBlock = {
+            id: `block-${Date.now()}`,
+            type: data.blockType,
+            content: getDefaultContent(data.blockType),
+            styles: getDefaultStyles(data.blockType)
+          };
+          
+          const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
+          setBlocks(prev => {
+            const newBlocks = [...prev];
+            newBlocks.splice(insertIndex, 0, newBlock);
+            return newBlocks;
+          });
+        }
+      } catch (error) {
+        console.error('Error handling drop:', error);
+      }
+    };
+
+    const handleCanvasDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDraggingOver(true);
+      
+      // Calculate drop position
+      const rect = e.currentTarget.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      const blockElements = e.currentTarget.querySelectorAll('.email-block');
+      
+      let insertIndex = blocks.length;
+      for (let i = 0; i < blockElements.length; i++) {
+        const blockRect = blockElements[i].getBoundingClientRect();
+        const blockY = blockRect.top - rect.top + blockRect.height / 2;
+        if (y < blockY) {
+          insertIndex = i;
+          break;
+        }
+      }
+      
+      setDragOverIndex(insertIndex);
+    };
+
+    const handleCanvasDragLeave = (e: React.DragEvent) => {
+      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+        setIsDraggingOver(false);
+        setDragOverIndex(null);
+      }
+    };
+
+    const handleBlockDragStart = (e: React.DragEvent, blockId: string) => {
+      e.dataTransfer.setData('application/json', JSON.stringify({ 
+        blockId,
+        isReorder: true 
+      }));
+      e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleBlockDrop = (e: React.DragEvent, targetIndex: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        
+        if (data.isReorder && data.blockId) {
+          // Handle block reordering
+          const sourceIndex = blocks.findIndex(b => b.id === data.blockId);
+          if (sourceIndex !== -1 && sourceIndex !== targetIndex) {
+            setBlocks(prev => {
+              const newBlocks = [...prev];
+              const [movedBlock] = newBlocks.splice(sourceIndex, 1);
+              const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+              newBlocks.splice(adjustedTargetIndex, 0, movedBlock);
+              return newBlocks;
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error handling block reorder:', error);
+      }
+    };
+
+    const deleteBlock = (blockId: string) => {
+      setBlocks(prev => prev.filter(block => block.id !== blockId));
+      if (selectedBlockId === blockId) {
+        setSelectedBlockId(null);
+        onBlockSelect?.(null);
+      }
+    };
+
+    const duplicateBlock = (blockId: string) => {
+      const blockToDuplicate = blocks.find(b => b.id === blockId);
+      if (blockToDuplicate) {
+        const newBlock: SimpleBlock = {
+          ...blockToDuplicate,
+          id: `block-${Date.now()}`
+        };
+        const originalIndex = blocks.findIndex(b => b.id === blockId);
+        setBlocks(prev => {
+          const newBlocks = [...prev];
+          newBlocks.splice(originalIndex + 1, 0, newBlock);
+          return newBlocks;
+        });
+      }
+    };
+
     const handleBlockClick = (blockId: string) => {
       const newSelectedId = blockId === selectedBlockId ? null : blockId;
       setSelectedBlockId(newSelectedId);
@@ -301,7 +441,101 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       }
     };
 
+    const renderColumnsBlock = (block: SimpleBlock) => {
+      const columnWidths = getColumnWidths(block.content.columnRatio);
+      
+      return (
+        <div className="columns-block" style={block.styles}>
+          <div className="flex gap-4">
+            {block.content.columns?.map((column: any, index: number) => (
+              <div
+                key={column.id || index}
+                className="column-drop-zone border-2 border-dashed border-gray-300 rounded-lg p-4 transition-colors hover:border-blue-400"
+                style={{ width: columnWidths[index] }}
+                onDrop={(e) => handleColumnDrop(e, block.id, index)}
+                onDragOver={(e) => e.preventDefault()}
+              >
+                <div className="text-center text-gray-500 text-sm">
+                  Column {index + 1} ({columnWidths[index]})
+                  <br />
+                  <span className="text-xs">Drop blocks here</span>
+                </div>
+                {column.blocks?.map((innerBlock: SimpleBlock) => (
+                  <div key={innerBlock.id} className="mt-2">
+                    {renderBlock(innerBlock)}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const getColumnWidths = (ratio: string) => {
+      const ratioMap: Record<string, string[]> = {
+        '100': ['100%'],
+        '50-50': ['50%', '50%'],
+        '33-67': ['33%', '67%'],
+        '67-33': ['67%', '33%'],
+        '25-75': ['25%', '75%'],
+        '75-25': ['75%', '25%'],
+        '33-33-33': ['33.33%', '33.33%', '33.33%'],
+        '25-50-25': ['25%', '50%', '25%'],
+        '25-25-50': ['25%', '25%', '50%'],
+        '50-25-25': ['50%', '25%', '25%'],
+        '25-25-25-25': ['25%', '25%', '25%', '25%']
+      };
+      return ratioMap[ratio] || ['100%'];
+    };
+
+    const handleColumnDrop = (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        
+        if (data.blockType) {
+          const newBlock: SimpleBlock = {
+            id: `block-${Date.now()}`,
+            type: data.blockType,
+            content: getDefaultContent(data.blockType),
+            styles: getDefaultStyles(data.blockType)
+          };
+          
+          setBlocks(prev => prev.map(block => {
+            if (block.id === layoutBlockId && block.type === 'columns') {
+              const updatedColumns = [...(block.content.columns || [])];
+              if (!updatedColumns[columnIndex]) {
+                updatedColumns[columnIndex] = { id: `col-${columnIndex}`, blocks: [] };
+              }
+              if (!updatedColumns[columnIndex].blocks) {
+                updatedColumns[columnIndex].blocks = [];
+              }
+              updatedColumns[columnIndex].blocks.push(newBlock);
+              
+              return {
+                ...block,
+                content: {
+                  ...block.content,
+                  columns: updatedColumns
+                }
+              };
+            }
+            return block;
+          }));
+        }
+      } catch (error) {
+        console.error('Error handling column drop:', error);
+      }
+    };
+
     const renderBlock = (block: SimpleBlock) => {
+      if (block.type === 'columns') {
+        return renderColumnsBlock(block);
+      }
+
       switch (block.type) {
         case 'text':
           return editingBlockId === block.id ? (
@@ -419,23 +653,82 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     return (
       <div className="h-full flex flex-col bg-gray-50">
         <div className="flex-1 overflow-auto p-4">
-          <div className="mx-auto bg-white shadow-lg rounded-lg overflow-hidden" 
-               style={{ width: getCanvasWidth(), minHeight: '600px' }}>
-            
+          <div 
+            className={`mx-auto bg-white shadow-lg rounded-lg overflow-hidden transition-all duration-200 ${
+              isDraggingOver ? 'ring-2 ring-blue-400 ring-opacity-50' : ''
+            }`}
+            style={{ width: getCanvasWidth(), minHeight: '600px' }}
+            onDrop={handleCanvasDrop}
+            onDragOver={handleCanvasDragOver}
+            onDragLeave={handleCanvasDragLeave}
+          >
             <div className="p-6">
-              {blocks.map((block) => (
-                <div
-                  key={block.id}
-                  className={`email-block cursor-pointer transition-all duration-200 mb-4 ${
-                    selectedBlockId === block.id ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50' : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => handleBlockClick(block.id)}
-                  onDoubleClick={() => handleBlockDoubleClick(block.id, block.type)}
-                  style={block.styles}
-                >
-                  {renderBlock(block)}
+              {isDraggingOver && dragOverIndex === 0 && (
+                <div className="h-2 bg-blue-400 rounded-full mb-4 opacity-75" />
+              )}
+              
+              {blocks.map((block, index) => (
+                <div key={block.id}>
+                  <div
+                    className={`email-block group cursor-pointer transition-all duration-200 mb-4 relative ${
+                      selectedBlockId === block.id ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50' : 'hover:bg-gray-50'
+                    }`}
+                    draggable
+                    onClick={() => handleBlockClick(block.id)}
+                    onDoubleClick={() => handleBlockDoubleClick(block.id, block.type)}
+                    onDragStart={(e) => handleBlockDragStart(e, block.id)}
+                    onDrop={(e) => handleBlockDrop(e, index)}
+                    onDragOver={(e) => e.preventDefault()}
+                    style={block.styles}
+                  >
+                    {/* Block Controls */}
+                    <div className="absolute -left-8 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-6 h-6 p-0 bg-white shadow-sm cursor-grab"
+                      >
+                        <GripVertical className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-6 h-6 p-0 bg-white shadow-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          duplicateBlock(block.id);
+                        }}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="w-6 h-6 p-0 bg-white shadow-sm text-red-600 hover:text-red-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteBlock(block.id);
+                        }}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+
+                    {renderBlock(block)}
+                  </div>
+                  
+                  {isDraggingOver && dragOverIndex === index + 1 && (
+                    <div className="h-2 bg-blue-400 rounded-full mb-4 opacity-75" />
+                  )}
                 </div>
               ))}
+              
+              {blocks.length === 0 && (
+                <div className="text-center py-16">
+                  <div className="text-gray-400 text-lg mb-2">Drop blocks here to start building</div>
+                  <div className="text-gray-500 text-sm">Drag blocks from the palette to create your email</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -444,6 +737,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           <div>
             Blocks: {blocks.length} | Width: {getCanvasWidth()}px
             {selectedBlockId && <span className="ml-2 text-blue-600">• Block selected</span>}
+            {isDraggingOver && <span className="ml-2 text-green-600">• Drop zone active</span>}
           </div>
           <Badge variant="outline" className="text-xs">
             {previewMode}

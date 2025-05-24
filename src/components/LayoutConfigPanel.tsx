@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -117,11 +116,12 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   const padding = compactMode ? 'p-2' : 'p-3';
 
   const handleLayoutClick = (layout: LayoutOption) => {
+    console.log('Layout clicked:', layout.name);
     // Create the columns structure for the layout
-    const columns = Array.from({ length: layout.columns }, () => ({
+    const columns = Array.from({ length: layout.columns }, (_, index) => ({
       id: generateUniqueId(),
       blocks: [],
-      width: layout.preview[0] // This will be overridden by the column renderer
+      width: layout.preview[index] || '100%'
     }));
 
     const layoutConfig = {
@@ -135,10 +135,10 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
     console.log('Starting layout drag:', layout.name);
     
-    const columns = Array.from({ length: layout.columns }, () => ({
+    const columns = Array.from({ length: layout.columns }, (_, index) => ({
       id: generateUniqueId(),
       blocks: [],
-      width: layout.preview[0]
+      width: layout.preview[index] || '100%'
     }));
 
     const layoutConfig = {

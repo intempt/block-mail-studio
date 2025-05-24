@@ -67,10 +67,13 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
+    console.log('Dragging block:', blockType);
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
+    e.dataTransfer.effectAllowed = 'copy';
   };
 
   const handleLayoutSelect = (layout: any) => {
+    console.log('Layout selected:', layout);
     onBlockAdd('columns', layout);
   };
 
@@ -87,7 +90,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     return (
       <Card
         key={block.id}
-        className={`cursor-pointer transition-all duration-200 hover:shadow-md group ${gridClasses}`}
+        className={`cursor-grab hover:shadow-md transition-all duration-200 group ${gridClasses} active:cursor-grabbing`}
         draggable
         onDragStart={(e) => handleDragStart(e, block.id)}
         onClick={() => onBlockAdd(block.id)}
