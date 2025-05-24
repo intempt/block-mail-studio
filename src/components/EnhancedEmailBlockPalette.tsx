@@ -103,7 +103,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const handleLayoutSelect = (layout: any) => {
-    // Create a columns block with the selected layout
+    // Create a columns block with the selected layout ratio
     onBlockAdd('columns');
   };
 

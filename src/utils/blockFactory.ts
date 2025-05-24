@@ -25,7 +25,7 @@ const defaultResponsiveSettings = {
   },
 };
 
-export const createBlock = (type: string): EmailBlock => {
+export const createBlock = (type: string, layoutRatio?: string): EmailBlock => {
   const baseBlock = {
     id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     styling: defaultResponsiveSettings,
@@ -264,21 +264,140 @@ export const createBlock = (type: string): EmailBlock => {
       };
 
     case 'columns':
-      return {
-        ...baseBlock,
-        type: 'columns',
-        content: {
-          columnCount: 2,
-          columnRatio: '50-50',
-          columns: [
-            { id: 'col-1', blocks: [], width: '50%' },
-            { id: 'col-2', blocks: [], width: '50%' },
-          ],
-          gap: '16px',
-        },
-      };
+      return createColumnsBlock(layoutRatio || '50-50');
 
     default:
       throw new Error(`Unknown block type: ${type}`);
   }
+};
+
+const createColumnsBlock = (ratio: string): EmailBlock => {
+  const baseBlock = {
+    id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    styling: defaultResponsiveSettings,
+    position: { x: 0, y: 0 },
+    selected: false,
+    displayOptions: {
+      showOnDesktop: true,
+      showOnTablet: true,
+      showOnMobile: true,
+    },
+  };
+
+  const getColumnsConfig = (ratio: string) => {
+    switch (ratio) {
+      case '100%':
+        return {
+          columnCount: 1 as const,
+          columns: [{ id: 'col-1', blocks: [], width: '100%' }]
+        };
+      case '50-50':
+        return {
+          columnCount: 2 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '50%' },
+            { id: 'col-2', blocks: [], width: '50%' }
+          ]
+        };
+      case '33-67':
+        return {
+          columnCount: 2 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '33%' },
+            { id: 'col-2', blocks: [], width: '67%' }
+          ]
+        };
+      case '67-33':
+        return {
+          columnCount: 2 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '67%' },
+            { id: 'col-2', blocks: [], width: '33%' }
+          ]
+        };
+      case '25-75':
+        return {
+          columnCount: 2 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '25%' },
+            { id: 'col-2', blocks: [], width: '75%' }
+          ]
+        };
+      case '75-25':
+        return {
+          columnCount: 2 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '75%' },
+            { id: 'col-2', blocks: [], width: '25%' }
+          ]
+        };
+      case '33-33-33':
+        return {
+          columnCount: 3 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '33.33%' },
+            { id: 'col-2', blocks: [], width: '33.33%' },
+            { id: 'col-3', blocks: [], width: '33.33%' }
+          ]
+        };
+      case '25-50-25':
+        return {
+          columnCount: 3 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '25%' },
+            { id: 'col-2', blocks: [], width: '50%' },
+            { id: 'col-3', blocks: [], width: '25%' }
+          ]
+        };
+      case '25-25-50':
+        return {
+          columnCount: 3 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '25%' },
+            { id: 'col-2', blocks: [], width: '25%' },
+            { id: 'col-3', blocks: [], width: '50%' }
+          ]
+        };
+      case '50-25-25':
+        return {
+          columnCount: 3 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '50%' },
+            { id: 'col-2', blocks: [], width: '25%' },
+            { id: 'col-3', blocks: [], width: '25%' }
+          ]
+        };
+      case '25-25-25-25':
+        return {
+          columnCount: 4 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '25%' },
+            { id: 'col-2', blocks: [], width: '25%' },
+            { id: 'col-3', blocks: [], width: '25%' },
+            { id: 'col-4', blocks: [], width: '25%' }
+          ]
+        };
+      default:
+        return {
+          columnCount: 2 as const,
+          columns: [
+            { id: 'col-1', blocks: [], width: '50%' },
+            { id: 'col-2', blocks: [], width: '50%' }
+          ]
+        };
+    }
+  };
+
+  const config = getColumnsConfig(ratio);
+
+  return {
+    ...baseBlock,
+    type: 'columns',
+    content: {
+      columnCount: config.columnCount,
+      columnRatio: ratio,
+      columns: config.columns,
+      gap: '16px',
+    },
+  };
 };

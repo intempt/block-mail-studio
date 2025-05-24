@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ColumnsBlock } from '@/types/emailBlocks';
 
@@ -16,14 +15,35 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   
   const getColumnWidths = () => {
     switch (block.content.columnRatio) {
+      // 1 Column
+      case '100%':
+        return ['100%'];
+      // 2 Column layouts
       case '50-50':
         return ['50%', '50%'];
+      case '33-67':
+        return ['33%', '67%'];
+      case '67-33':
+        return ['67%', '33%'];
+      case '25-75':
+        return ['25%', '75%'];
+      case '75-25':
+        return ['75%', '25%'];
+      // Legacy 2 column (keeping for backwards compatibility)
       case '60-40':
         return ['60%', '40%'];
       case '40-60':
         return ['40%', '60%'];
+      // 3 Column layouts
       case '33-33-33':
         return ['33.33%', '33.33%', '33.33%'];
+      case '25-50-25':
+        return ['25%', '50%', '25%'];
+      case '25-25-50':
+        return ['25%', '25%', '50%'];
+      case '50-25-25':
+        return ['50%', '25%', '25%'];
+      // 4 Column layout
       case '25-25-25-25':
         return ['25%', '25%', '25%', '25%'];
       default:

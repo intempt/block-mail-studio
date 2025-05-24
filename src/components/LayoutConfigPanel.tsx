@@ -22,6 +22,7 @@ interface LayoutConfigPanelProps {
 }
 
 const layoutOptions: LayoutOption[] = [
+  // 1 Column
   {
     id: '1-column',
     name: '1 Column',
@@ -29,34 +30,72 @@ const layoutOptions: LayoutOption[] = [
     ratio: '100%',
     preview: ['100%']
   },
+  // 2 Column layouts
   {
-    id: '2-column-equal',
+    id: '2-column-50-50',
     name: '2 Columns (50/50)',
     columns: 2,
     ratio: '50-50',
     preview: ['50%', '50%']
   },
   {
-    id: '2-column-60-40',
-    name: '2 Columns (60/40)',
+    id: '2-column-33-67',
+    name: '2 Columns (33/67)',
     columns: 2,
-    ratio: '60-40',
-    preview: ['60%', '40%']
+    ratio: '33-67',
+    preview: ['33%', '67%']
   },
   {
-    id: '2-column-40-60',
-    name: '2 Columns (40/60)',
+    id: '2-column-67-33',
+    name: '2 Columns (67/33)',
     columns: 2,
-    ratio: '40-60',
-    preview: ['40%', '60%']
+    ratio: '67-33',
+    preview: ['67%', '33%']
   },
+  {
+    id: '2-column-25-75',
+    name: '2 Columns (25/75)',
+    columns: 2,
+    ratio: '25-75',
+    preview: ['25%', '75%']
+  },
+  {
+    id: '2-column-75-25',
+    name: '2 Columns (75/25)',
+    columns: 2,
+    ratio: '75-25',
+    preview: ['75%', '25%']
+  },
+  // 3 Column layouts
   {
     id: '3-column-equal',
     name: '3 Columns (33/33/33)',
     columns: 3,
     ratio: '33-33-33',
-    preview: ['33%', '33%', '33%']
+    preview: ['33.33%', '33.33%', '33.33%']
   },
+  {
+    id: '3-column-25-50-25',
+    name: '3 Columns (25/50/25)',
+    columns: 3,
+    ratio: '25-50-25',
+    preview: ['25%', '50%', '25%']
+  },
+  {
+    id: '3-column-25-25-50',
+    name: '3 Columns (25/25/50)',
+    columns: 3,
+    ratio: '25-25-50',
+    preview: ['25%', '25%', '50%']
+  },
+  {
+    id: '3-column-50-25-25',
+    name: '3 Columns (50/25/25)',
+    columns: 3,
+    ratio: '50-25-25',
+    preview: ['50%', '25%', '25%']
+  },
+  // 4 Column layout
   {
     id: '4-column-equal',
     name: '4 Columns (25/25/25/25)',
