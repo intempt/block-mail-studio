@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sparkles, RefreshCw, Save, Wand2 } from 'lucide-react';
-import { emailAIService, EmailGenerationRequest } from '@/services/EmailAIService';
+import { emailAIService } from '@/services/EmailAIService';
 
 interface EmailPromptEditorProps {
   editor: Editor | null;
@@ -38,13 +37,12 @@ export const EmailPromptEditor: React.FC<EmailPromptEditorProps> = ({
 
     setIsGenerating(true);
     try {
-      const request: EmailGenerationRequest = {
+      const response = await emailAIService.generateEmail({
         prompt,
         tone,
         type
-      };
-
-      const response = await emailAIService.generateEmail(request);
+      });
+      
       setLastGeneratedEmail(response);
       
       if (editor) {

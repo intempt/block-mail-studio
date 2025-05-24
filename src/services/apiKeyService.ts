@@ -8,14 +8,14 @@ export class ApiKeyService {
   }
   
   public static isKeyAvailable(): boolean {
-    return this.API_KEY && this.API_KEY.startsWith('sk-') && this.API_KEY !== 'YOUR_OPENAI_API_KEY_HERE';
+    return this.API_KEY && typeof this.API_KEY === 'string' && this.API_KEY.startsWith('sk-') && this.API_KEY !== 'YOUR_OPENAI_API_KEY_HERE';
   }
   
   public static getKeyStatus(): 'valid' | 'missing' | 'invalid' {
     if (!this.API_KEY || this.API_KEY === 'YOUR_OPENAI_API_KEY_HERE') {
       return 'missing';
     }
-    if (!this.API_KEY.startsWith('sk-')) {
+    if (typeof this.API_KEY !== 'string' || !this.API_KEY.startsWith('sk-')) {
       return 'invalid';
     }
     return 'valid';

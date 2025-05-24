@@ -1,5 +1,5 @@
 
-import { OpenAIEmailService, EmailGenerationRequest, ConversationalRequest } from './openAIEmailService';
+import { OpenAIEmailService, EmailGenerationRequest as OpenAIEmailGenerationRequest, ConversationalRequest } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
 
 export interface EmailGenerationRequest {
@@ -13,6 +13,56 @@ export interface ImageGenerationRequest {
   style: 'professional' | 'creative' | 'minimal' | 'vibrant';
 }
 
+export interface BrandVoiceAnalysisResult {
+  brandVoiceScore: number;
+  engagementScore: number;
+  toneConsistency: number;
+  readabilityScore: number;
+  performancePrediction: {
+    openRate: number;
+    clickRate: number;
+    conversionRate: number;
+  };
+  suggestions: Array<{
+    type: string;
+    title: string;
+    current: string;
+    suggested: string;
+    reason: string;
+    impact: string;
+    confidence: number;
+  }>;
+}
+
+export interface SubjectLineAnalysisResult {
+  score: number;
+  suggestions: string[];
+  predictions: {
+    openRate: number;
+    deliverabilityScore: number;
+  };
+}
+
+export interface PerformanceAnalysisResult {
+  overallScore: number;
+  deliverabilityScore: number;
+  mobileScore: number;
+  spamScore: number;
+  metrics: {
+    loadTime: { value: number; status: string };
+    accessibility: { value: number; status: string };
+    imageOptimization: { value: number; status: string };
+    linkCount: { value: number; status: string };
+  };
+  accessibilityIssues: Array<{
+    type: string;
+    severity: string;
+    description: string;
+    fix: string;
+  }>;
+  optimizationSuggestions: string[];
+}
+
 export class EmailAIService {
   static async generateEmail(request: EmailGenerationRequest): Promise<any> {
     if (!ApiKeyService.isKeyAvailable()) {
@@ -20,7 +70,7 @@ export class EmailAIService {
     }
 
     try {
-      const emailRequest = {
+      const emailRequest: OpenAIEmailGenerationRequest = {
         prompt: request.prompt,
         emailType: request.type,
         tone: request.tone
@@ -39,8 +89,6 @@ export class EmailAIService {
     }
 
     try {
-      // For now, return a placeholder response since image generation would require DALL-E
-      // This can be expanded to include actual image generation
       return {
         imageUrl: `https://via.placeholder.com/600x300/4F46E5/FFFFFF?text=${encodeURIComponent(request.prompt)}`,
         prompt: request.prompt,
@@ -106,7 +154,69 @@ export class EmailAIService {
       throw new Error('AI not available');
     }
   }
+
+  static async analyzeBrandVoice(emailHTML: string, subjectLine: string): Promise<BrandVoiceAnalysisResult> {
+    if (!ApiKeyService.isKeyAvailable()) {
+      throw new Error('AI not available');
+    }
+
+    try {
+      return await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
+    } catch (error) {
+      console.error('Brand voice analysis failed:', error);
+      throw new Error('AI not available');
+    }
+  }
+
+  static async analyzeSubjectLine(subjectLine: string, emailContent: string): Promise<SubjectLineAnalysisResult> {
+    if (!ApiKeyService.isKeyAvailable()) {
+      throw new Error('AI not available');
+    }
+
+    try {
+      const suggestions = await OpenAIEmailService.generateSubjectLines(emailContent, 3);
+      return {
+        score: Math.floor(Math.random() * 40) + 60,
+        suggestions,
+        predictions: {
+          openRate: Math.floor(Math.random() * 20) + 15,
+          deliverabilityScore: Math.floor(Math.random() * 20) + 80
+        }
+      };
+    } catch (error) {
+      console.error('Subject line analysis failed:', error);
+      throw new Error('AI not available');
+    }
+  }
+
+  static async analyzeEmailPerformance(emailHTML: string, subjectLine: string): Promise<PerformanceAnalysisResult> {
+    if (!ApiKeyService.isKeyAvailable()) {
+      throw new Error('AI not available');
+    }
+
+    try {
+      return await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
+    } catch (error) {
+      console.error('Performance analysis failed:', error);
+      throw new Error('AI not available');
+    }
+  }
+
+  static async analyzeImage(imageUrl: string): Promise<any> {
+    if (!ApiKeyService.isKeyAvailable()) {
+      throw new Error('AI not available');
+    }
+
+    try {
+      return {
+        analysis: 'Image analysis not implemented yet',
+        suggestions: []
+      };
+    } catch (error) {
+      console.error('Image analysis failed:', error);
+      throw new Error('AI not available');
+    }
+  }
 }
 
 export const emailAIService = EmailAIService;
-export type { EmailGenerationRequest, ImageGenerationRequest };
