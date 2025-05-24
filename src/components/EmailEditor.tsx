@@ -68,6 +68,7 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { SimplePropertyEditor } from './SimplePropertyEditor';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { AITestingSuite } from './AITestingSuite';
+import { EnhancedAIAssistant } from './EnhancedAIAssistant';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -181,6 +182,28 @@ const EmailEditor = () => {
     setFullscreenMode(prev => !prev);
   };
 
+  const getLeftPanelWidth = () => {
+    if (leftPanelCollapsed) return 'w-12';
+    // Industry standard: 320-360px for left panel
+    return 'w-80 xl:w-96';
+  };
+
+  const getRightPanelWidth = () => {
+    if (rightPanelCollapsed) return 'w-12';
+    // Industry standard: 300-320px for right panel
+    return 'w-80 xl:w-88';
+  };
+
+  const getCanvasPadding = () => {
+    // Reduced padding to maximize canvas space within allocated area
+    return 'p-3 lg:p-4';
+  };
+
+  const getCanvasMaxWidth = () => {
+    // Constrain canvas to email-appropriate width (industry standard: 600-800px max)
+    return 'max-w-4xl mx-auto';
+  };
+
   useKeyboardShortcuts({
     editor: null,
     canvasRef,
@@ -196,23 +219,6 @@ const EmailEditor = () => {
     { key: 'Ctrl + [', action: 'Toggle left panel', status: 'active' },
     { key: 'Ctrl + ]', action: 'Toggle right panel', status: 'active' }
   ];
-
-  const getLeftPanelWidth = () => {
-    if (leftPanelCollapsed) return 'w-12';
-    if (compactMode) return 'w-56 lg:w-64 xl:w-72';
-    return 'w-64 lg:w-72 xl:w-80';
-  };
-
-  const getRightPanelWidth = () => {
-    if (rightPanelCollapsed) return 'w-12';
-    if (compactMode) return 'w-56 lg:w-64 xl:w-72';
-    return 'w-64 lg:w-72 xl:w-80';
-  };
-
-  const getCanvasPadding = () => {
-    if (compactMode) return 'p-2 lg:p-4';
-    return 'p-4 lg:p-6 xl:p-8';
-  };
 
   const getHeaderHeight = () => {
     return compactMode ? 'h-10' : 'h-12';
@@ -325,11 +331,16 @@ const EmailEditor = () => {
     switch (leftPanelTab) {
       case 'ai':
         return (
-          <EmailAIChatWithTemplates 
-            editor={null} 
-            templates={templates}
-            onLoadTemplate={handleLoadTemplate}
-            onSaveTemplate={handleSaveTemplate}
+          <EnhancedAIAssistant
+            editor={null}
+            emailHTML={emailHTML}
+            canvasRef={canvasRef}
+            subjectLine={subjectLine}
+            onSubjectLineChange={setSubjectLine}
+            onLoadToEditor={(blocks, layoutConfig) => {
+              console.log('Loading blocks to editor:', blocks, layoutConfig);
+            }}
+            currentEmailBlocks={[]}
           />
         );
       case 'design':
@@ -532,15 +543,16 @@ const EmailEditor = () => {
       )}
 
       <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - Industry standard width */}
         {!(fullscreenMode || leftPanelCollapsed) && (
           <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${getLeftPanelWidth()} flex flex-col`}>
             {leftPanelCollapsed ? (
               renderLeftPanel()
             ) : (
               <>
-                <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
-                  <div className="flex items-center justify-between mb-2 lg:mb-3">
-                    <h3 className="font-semibold text-slate-900 text-sm lg:text-base">
+                <div className="p-4 border-b border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-slate-900 text-base">
                       {showAITesting ? 'AI Testing' : 'Tools'}
                     </h3>
                     <div className="flex items-center gap-2">
@@ -549,18 +561,18 @@ const EmailEditor = () => {
                           variant="ghost" 
                           size="sm"
                           onClick={() => setShowAITesting(false)}
-                          className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+                          className="h-8 w-8 p-0"
                         >
-                          <ChevronLeft className="w-3 h-3 lg:w-4 lg:h-4" />
+                          <ChevronLeft className="w-4 h-4" />
                         </Button>
                       )}
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={() => setLeftPanelCollapsed(true)}
-                        className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+                        className="h-8 w-8 p-0"
                       >
-                        <PanelLeftClose className="w-3 h-3 lg:w-4 lg:h-4" />
+                        <PanelLeftClose className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -571,25 +583,25 @@ const EmailEditor = () => {
                         variant={leftPanelTab === 'ai' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setLeftPanelTab('ai')}
-                        className="flex-1 h-6 lg:h-8"
+                        className="flex-1 h-8"
                       >
-                        <Brain className="w-3 h-3 lg:w-4 lg:h-4" />
+                        <Brain className="w-4 h-4" />
                       </Button>
                       <Button
                         variant={leftPanelTab === 'design' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setLeftPanelTab('design')}
-                        className="flex-1 h-6 lg:h-8"
+                        className="flex-1 h-8"
                       >
-                        <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
+                        <Palette className="w-4 h-4" />
                       </Button>
                       <Button
                         variant={leftPanelTab === 'blocks' ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setLeftPanelTab('blocks')}
-                        className="flex-1 h-6 lg:h-8"
+                        className="flex-1 h-8"
                       >
-                        <Blocks className="w-3 h-3 lg:w-4 lg:h-4" />
+                        <Blocks className="w-4 h-4" />
                       </Button>
                     </div>
                   )}
@@ -616,40 +628,44 @@ const EmailEditor = () => {
           </div>
         )}
 
-        <div className="flex-1 flex flex-col bg-slate-50">
+        {/* Center Canvas - Optimized width */}
+        <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
           <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
-            <EnhancedEmailSubjectLine
-              value={subjectLine}
-              onChange={setSubjectLine}
-              emailContent={emailHTML}
-              onAnalysisComplete={(analysis) => {
-                console.log('Subject line analysis completed:', analysis);
-              }}
-            />
-            
-            <EmailBlockCanvas 
-              ref={canvasRef}
-              onContentChange={handleEmailContentChange}
-              onBlockSelect={handleBlockSelect}
-              previewWidth={previewWidth}
-              previewMode={previewMode}
-              compactMode={compactMode}
-            />
+            <div className={getCanvasMaxWidth()}>
+              <EnhancedEmailSubjectLine
+                value={subjectLine}
+                onChange={setSubjectLine}
+                emailContent={emailHTML}
+                onAnalysisComplete={(analysis) => {
+                  console.log('Subject line analysis completed:', analysis);
+                }}
+              />
+              
+              <EmailBlockCanvas 
+                ref={canvasRef}
+                onContentChange={handleEmailContentChange}
+                onBlockSelect={handleBlockSelect}
+                previewWidth={Math.min(previewWidth, 800)} // Cap canvas width
+                previewMode={previewMode}
+                compactMode={compactMode}
+              />
+            </div>
           </div>
         </div>
         
+        {/* Right Panel - Industry standard width */}
         {!(fullscreenMode || rightPanelCollapsed) && (
           <div className={`border-l border-slate-200 bg-white ${getRightPanelWidth()}`}>
-            <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
-              <div className="flex items-center justify-between mb-2 lg:mb-3">
-                <h3 className="font-semibold text-slate-900 text-sm lg:text-base">Properties & Tools</h3>
+            <div className="p-4 border-b border-slate-200">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-slate-900 text-base">Properties & Tools</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => setRightPanelCollapsed(true)}
-                  className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+                  className="h-8 w-8 p-0"
                 >
-                  <PanelRightClose className="w-3 h-3 lg:w-4 lg:h-4" />
+                  <PanelRightClose className="w-4 h-4" />
                 </Button>
               </div>
               
@@ -658,25 +674,25 @@ const EmailEditor = () => {
                   variant={rightPanelTab === 'properties' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('properties')}
-                  className="flex-1 h-6 lg:h-8"
+                  className="flex-1 h-8"
                 >
-                  <Edit3 className="w-3 h-3 lg:w-4 lg:h-4" />
+                  <Edit3 className="w-4 h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'analytics' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('analytics')}
-                  className="flex-1 h-6 lg:h-8"
+                  className="flex-1 h-8"
                 >
-                  <BarChart3 className="w-3 h-3 lg:w-4 lg:h-4" />
+                  <BarChart3 className="w-4 h-4" />
                 </Button>
                 <Button
                   variant={rightPanelTab === 'optimization' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('optimization')}
-                  className="flex-1 h-6 lg:h-8"
+                  className="flex-1 h-8"
                 >
-                  <Target className="w-3 h-3 lg:w-4 lg:h-4" />
+                  <Target className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -692,11 +708,11 @@ const EmailEditor = () => {
               variant="ghost" 
               size="sm"
               onClick={() => setRightPanelCollapsed(false)}
-              className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+              className="h-8 w-8 p-0"
             >
-              <ChevronLeft className="w-3 h-3 lg:w-4 lg:h-4" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Settings className="w-4 h-4 lg:w-5 lg:h-5 text-slate-400 mt-4" />
+            <Settings className="w-5 h-5 text-slate-400 mt-4" />
           </div>
         )}
       </div>
