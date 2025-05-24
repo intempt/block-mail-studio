@@ -23,7 +23,11 @@ import {
   Wand2,
   Loader2,
   Check,
-  AlertCircle
+  AlertCircle,
+  Save,
+  Eye,
+  Grid3X3,
+  ChevronRight
 } from 'lucide-react';
 import { emailAIService } from '@/services/EmailAIService';
 
@@ -40,11 +44,13 @@ interface Message {
 interface EmailAIChatProps {
   editor: Editor | null;
   onEmailGenerated?: (html: string) => void;
+  onSaveTemplate?: (template: { name: string; description: string; html: string; category: string; tags: string[] }) => void;
 }
 
-// Industry templates data
+// Industry templates data with thumbnails
 const industryTemplates = {
-  'E-commerce Product Launch': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+  'E-commerce Product Launch': {
+    html: `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
     <div class="email-block header-block">
       <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
         🚀 New Product Launch!
@@ -61,8 +67,12 @@ const industryTemplates = {
       </a>
     </div>
   </div>`,
+    category: 'E-commerce',
+    description: 'Perfect for launching new products with compelling CTAs'
+  },
   
-  'SaaS Welcome Series': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+  'SaaS Welcome Series': {
+    html: `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
     <div class="email-block header-block">
       <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); color: white;">
         Welcome to {{product_name}}!
@@ -80,8 +90,12 @@ const industryTemplates = {
       </ul>
     </div>
   </div>`,
+    category: 'SaaS',
+    description: 'Onboard new users with structured welcome flow'
+  },
   
-  'Restaurant Newsletter': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+  'Restaurant Newsletter': {
+    html: `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
     <div class="email-block header-block">
       <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white;">
         🍽️ This Month's Specials
@@ -101,8 +115,12 @@ const industryTemplates = {
       </ul>
     </div>
   </div>`,
+    category: 'Restaurant',
+    description: 'Showcase menu items and seasonal offerings'
+  },
   
-  'Real Estate Listing': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+  'Real Estate Listing': {
+    html: `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
     <div class="email-block header-block">
       <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white;">
         🏡 New Property Alert
@@ -123,8 +141,12 @@ const industryTemplates = {
       </ul>
     </div>
   </div>`,
+    category: 'Real Estate',
+    description: 'Highlight property features and create urgency'
+  },
   
-  'Event Invitation': `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+  'Event Invitation': {
+    html: `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
     <div class="email-block header-block">
       <h1 style="margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white;">
         🎉 You're Invited!
@@ -144,15 +166,18 @@ const industryTemplates = {
         <li>👔 Dress Code: Business Casual</li>
       </ul>
     </div>
-  </div>`
+  </div>`,
+    category: 'Events',
+    description: 'Professional event invitations with clear details'
+  }
 };
 
-export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerated }) => {
+export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerated, onSaveTemplate }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       type: 'ai',
-      content: 'Hi! I\'m your AI email assistant. I can create emails, generate images, write copy, and help optimize your content. Everything I create will appear directly in your editor for seamless editing. What would you like to work on?',
+      content: 'Welcome to your AI Email Assistant! I can create professional emails, generate images, optimize content, and help you build amazing campaigns. Choose a quick action below or tell me what you\'d like to create.',
       timestamp: new Date(),
       suggestions: [
         'Create a welcome email series',
@@ -164,44 +189,53 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
   ]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const quickActions = [
     { 
-      icon: <FileText className="w-4 h-4" />, 
-      label: 'Templates', 
+      icon: <FileText className="w-6 h-6" />, 
+      label: 'Industry Templates', 
       action: 'Show me industry email templates',
-      color: 'bg-blue-50 text-blue-700 border-blue-200'
+      description: 'Browse pre-made templates',
+      color: 'bg-blue-500 hover:bg-blue-600',
+      onClick: () => setShowTemplates(true)
     },
     { 
-      icon: <Palette className="w-4 h-4" />, 
+      icon: <Palette className="w-6 h-6" />, 
       label: 'Brand Kit', 
       action: 'Help me apply my brand colors and fonts',
-      color: 'bg-purple-50 text-purple-700 border-purple-200'
+      description: 'Apply brand styling',
+      color: 'bg-purple-500 hover:bg-purple-600'
     },
     { 
-      icon: <Image className="w-4 h-4" />, 
+      icon: <Image className="w-6 h-6" />, 
       label: 'AI Images', 
       action: 'Generate professional images for my email',
-      color: 'bg-green-50 text-green-700 border-green-200'
+      description: 'Create custom visuals',
+      color: 'bg-green-500 hover:bg-green-600'
     },
     { 
-      icon: <Type className="w-4 h-4" />, 
-      label: 'Copywriting', 
+      icon: <Type className="w-6 h-6" />, 
+      label: 'Smart Copy', 
       action: 'Write compelling email copy that converts',
-      color: 'bg-orange-50 text-orange-700 border-orange-200'
+      description: 'AI-powered copywriting',
+      color: 'bg-orange-500 hover:bg-orange-600'
     },
     { 
-      icon: <Target className="w-4 h-4" />, 
+      icon: <Target className="w-6 h-6" />, 
       label: 'Optimize', 
       action: 'Analyze and improve my email performance',
-      color: 'bg-red-50 text-red-700 border-red-200'
+      description: 'Enhance engagement',
+      color: 'bg-red-500 hover:bg-red-600'
     },
     { 
-      icon: <BarChart3 className="w-4 h-4" />, 
-      label: 'A/B Test', 
+      icon: <BarChart3 className="w-6 h-6" />, 
+      label: 'A/B Testing', 
       action: 'Create variations for split testing',
-      color: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+      description: 'Test multiple versions',
+      color: 'bg-indigo-500 hover:bg-indigo-600'
     }
   ];
 
@@ -489,196 +523,160 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     }
   };
 
-  const handleQuickAction = (action: string) => {
-    setNewMessage(action);
-    setTimeout(() => handleSendMessage(), 100);
+  const handleQuickAction = (action: any) => {
+    if (action.onClick) {
+      action.onClick();
+    } else {
+      setNewMessage(action.action);
+      setTimeout(() => handleSendMessage(), 100);
+    }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setNewMessage(suggestion);
-  };
-
-  const applyAISuggestion = async (suggestion: string) => {
-    if (!editor) return;
-    
-    // Handle industry template suggestions
-    if (Object.keys(industryTemplates).includes(suggestion)) {
-      const templateHtml = industryTemplates[suggestion as keyof typeof industryTemplates];
-      editor.commands.setContent(templateHtml);
-      onEmailGenerated?.(templateHtml);
+  const handleTemplateSelect = (templateName: string) => {
+    const template = industryTemplates[templateName as keyof typeof industryTemplates];
+    if (editor && template) {
+      editor.commands.setContent(template.html);
+      onEmailGenerated?.(template.html);
       
-      // Add confirmation message
       const confirmMessage: Message = {
         id: Date.now().toString(),
         type: 'ai',
-        content: `✅ ${suggestion} template loaded into your editor!\n\nThe template is now ready for editing. You can modify it manually or ask me to customize it further.`,
+        content: `✅ ${templateName} template loaded into your editor!\n\nThe template is now ready for customization. You can edit it manually or ask me to modify specific elements.`,
         timestamp: new Date(),
-        actionType: 'template_loaded'
+        actionType: 'template_loaded',
+        suggestions: [
+          'Customize the colors',
+          'Change the copy',
+          'Add more sections',
+          'Generate images for this template'
+        ]
       };
       setMessages(prev => [...prev, confirmMessage]);
-      return;
+      setShowTemplates(false);
     }
-    
-    // Handle quick template application
-    if (suggestion.includes('Template') || suggestion.includes('template')) {
-      try {
-        const emailResponse = await emailAIService.generateEmail({
-          prompt: `Create a professional ${suggestion} email template`,
-          type: suggestion.toLowerCase().includes('welcome') ? 'welcome' : 
-                suggestion.toLowerCase().includes('promotional') ? 'promotional' :
-                suggestion.toLowerCase().includes('newsletter') ? 'newsletter' : 'announcement'
-        });
-        
-        editor.commands.setContent(emailResponse.html);
-        onEmailGenerated?.(emailResponse.html);
-        
-        // Add confirmation message
-        const confirmMessage: Message = {
-          id: Date.now().toString(),
-          type: 'ai',
-          content: `✅ ${suggestion} template created and loaded into your editor!`,
-          timestamp: new Date(),
-          actionType: 'email_generated'
-        };
-        setMessages(prev => [...prev, confirmMessage]);
-      } catch (error) {
-        console.error('Error applying template:', error);
-      }
-      return;
-    }
-    
-    // For other suggestions, treat as new message
-    setNewMessage(suggestion);
-    setTimeout(() => handleSendMessage(), 100);
   };
+
+  const handleSaveCurrentTemplate = () => {
+    if (!editor) return;
+    
+    const currentHtml = editor.getHTML();
+    if (currentHtml && currentHtml.length > 100) {
+      setShowSaveTemplate(true);
+    } else {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'Please create some content in your editor first before saving as a template.',
+        timestamp: new Date(),
+        actionType: 'general'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const confirmSaveTemplate = (templateData: { name: string; description: string; category: string; tags: string[] }) => {
+    if (editor && onSaveTemplate) {
+      const currentHtml = editor.getHTML();
+      onSaveTemplate({
+        ...templateData,
+        html: currentHtml
+      });
+      
+      const confirmMessage: Message = {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: `✅ Template "${templateData.name}" saved successfully!\n\nYour template is now available in your template library for future use.`,
+        timestamp: new Date(),
+        actionType: 'general'
+      };
+      setMessages(prev => [...prev, confirmMessage]);
+      setShowSaveTemplate(false);
+    }
+  };
+
+  if (showTemplates) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-semibold text-gray-900">Industry Templates</h3>
+              <p className="text-sm text-gray-600">Choose a template to load into your editor</p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setShowTemplates(false)}>
+              ← Back to Chat
+            </Button>
+          </div>
+        </div>
+
+        <ScrollArea className="flex-1">
+          <div className="p-4 grid gap-4">
+            {Object.entries(industryTemplates).map(([name, template]) => (
+              <Card key={name} className="p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleTemplateSelect(name)}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 mb-1">{name}</h4>
+                    <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                    <Badge variant="secondary" className="text-xs">{template.category}</Badge>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </div>
+                
+                <div className="bg-gray-50 rounded-md p-3 text-xs text-gray-700 font-mono">
+                  Preview: {template.html.substring(0, 100)}...
+                </div>
+                
+                <Button className="w-full mt-3" variant="outline">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Load Template
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  }
+
+  if (showSaveTemplate) {
+    return (
+      <SaveTemplateDialog 
+        onSave={confirmSaveTemplate}
+        onCancel={() => setShowSaveTemplate(false)}
+      />
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-900">AI Assistant</h3>
-          <Badge variant="secondary" className="ml-auto bg-blue-50 text-blue-700">
-            Editor Integration
+          <h3 className="text-lg font-semibold text-gray-900">AI Email Assistant</h3>
+          <Badge variant="secondary" className="ml-auto text-xs">
+            Smart
           </Badge>
-        </div>
-        
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          {quickActions.map((action, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickAction(action.action)}
-              className={`flex items-center gap-2 justify-start h-auto p-2 text-xs ${action.color}`}
-              disabled={isLoading}
-            >
-              {action.icon}
-              <span className="truncate">{action.label}</span>
-            </Button>
-          ))}
         </div>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg p-3`}>
-                <div className="flex items-start gap-2">
-                  {message.type === 'ai' && message.actionType && (
-                    <div className="mt-1">
-                      {message.actionType === 'email_generated' && <Check className="w-4 h-4 text-green-600" />}
-                      {message.actionType === 'image_generated' && <Image className="w-4 h-4 text-blue-600" />}
-                      {message.actionType === 'content_refined' && <Wand2 className="w-4 h-4 text-purple-600" />}
-                      {message.actionType === 'template_loaded' && <FileText className="w-4 h-4 text-orange-600" />}
-                      {message.actionType === 'general' && <Sparkles className="w-4 h-4 text-gray-600" />}
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-                
-                {message.suggestions && message.suggestions.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-xs font-medium opacity-80">Quick actions:</p>
-                    {message.suggestions.slice(0, 3).map((suggestion, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="flex-1 justify-start h-auto p-2 text-xs bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                          disabled={isLoading}
-                        >
-                          <Wand2 className="w-3 h-3 mr-2" />
-                          {suggestion}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => applyAISuggestion(suggestion)}
-                          className="p-1 h-auto"
-                          disabled={isLoading}
-                          title="Apply directly"
-                        >
-                          <Zap className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+      <div className="flex-1 overflow-hidden">
+        {activeTab === 'chat' && renderChatTab()}
+        {activeTab === 'prompts' && (
+          <div className="h-full">
+            <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+              <h4 className="font-medium text-gray-900">Prompt Library</h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTab('chat')}
+              >
+                ← Back
+              </Button>
             </div>
-          ))}
-          
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 text-gray-900 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                  <span className="text-sm">AI is working on your request...</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </ScrollArea>
-
-      {/* Input */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex gap-2">
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Ask AI to create content in your editor..."
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            className="flex-1"
-            disabled={isLoading}
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={!newMessage.trim() || isLoading}
-            size="sm"
-          >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </Button>
-        </div>
-        
-        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-          <span>Content appears directly in editor • Manual editing enabled</span>
-          <div className="flex items-center gap-2">
-            <span>Powered by OpenAI</span>
-            <Sparkles className="w-3 h-3" />
+            <EmailPromptLibrary onSelectPrompt={handlePromptSelect} />
           </div>
-        </div>
+        )}
+        {activeTab === 'templates' && renderTemplatesTab()}
       </div>
     </div>
   );
