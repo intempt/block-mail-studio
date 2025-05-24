@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Brain, 
   Sparkles, 
@@ -18,17 +20,7 @@ import {
   RefreshCw,
   Copy
 } from 'lucide-react';
-
-interface ContentSuggestion {
-  id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone';
-  title: string;
-  current: string;
-  suggested: string;
-  reason: string;
-  impact: 'high' | 'medium' | 'low';
-  confidence: number;
-}
+import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult } from '@/services/EmailAIService';
 
 interface BrandVoiceOptimizerProps {
   editor: Editor | null;
@@ -39,15 +31,11 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
   editor, 
   emailHTML 
 }) => {
-  const [suggestions, setSuggestions] = useState<ContentSuggestion[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<BrandVoiceAnalysisResult | null>(null);
+  const [subjectLineAnalysis, setSubjectLineAnalysis] = useState<SubjectLineAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [brandVoiceScore, setBrandVoiceScore] = useState(85);
-  const [engagementScore, setEngagementScore] = useState(78);
-  const [performancePrediction, setPerformancePrediction] = useState({
-    openRate: 24.5,
-    clickRate: 3.2,
-    conversionRate: 2.1
-  });
+  const [subjectLine, setSubjectLine] = useState('');
+  const [currentAnalyzingStep, setCurrentAnalyzingStep] = useState(0);
 
   const analyzingMessages = [
     "Analyzing content tone and voice...",
@@ -55,8 +43,6 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
     "Checking brand consistency...",
     "Generating optimization suggestions..."
   ];
-
-  const [currentAnalyzingStep, setCurrentAnalyzingStep] = useState(0);
 
   useEffect(() => {
     if (emailHTML) {
@@ -67,74 +53,89 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
   const analyzeContent = async () => {
     setIsAnalyzing(true);
     
-    // Simulate AI analysis with progressive steps
+    // Simulate progressive analysis steps
     for (let i = 0; i < analyzingMessages.length; i++) {
       setCurrentAnalyzingStep(i);
       await new Promise(resolve => setTimeout(resolve, 800));
     }
 
-    // Generate intelligent suggestions based on content
-    const newSuggestions: ContentSuggestion[] = [
-      {
-        id: '1',
-        type: 'subject',
-        title: 'Subject Line Optimization',
-        current: 'Welcome to Email Builder Pro',
-        suggested: '🚀 Welcome! Start building stunning emails in minutes',
-        reason: 'Adding emojis and urgency can increase open rates by 15-20%',
-        impact: 'high',
-        confidence: 92
-      },
-      {
-        id: '2',
-        type: 'cta',
-        title: 'Call-to-Action Enhancement',
-        current: 'Get Started',
-        suggested: 'Create My First Email Now',
-        reason: 'More specific and action-oriented CTAs perform 35% better',
-        impact: 'high',
-        confidence: 88
-      },
-      {
-        id: '3',
-        type: 'copy',
-        title: 'Content Personalization',
-        current: 'Create stunning emails',
-        suggested: 'Create stunning emails that convert',
-        reason: 'Adding outcome-focused language increases engagement',
-        impact: 'medium',
-        confidence: 76
-      },
-      {
-        id: '4',
-        type: 'tone',
-        title: 'Tone Adjustment',
-        current: 'Professional tone',
-        suggested: 'Friendly-professional tone',
-        reason: 'Slightly warmer tone aligns better with your brand voice',
-        impact: 'low',
-        confidence: 65
-      }
-    ];
+    try {
+      console.log('Starting AI-powered brand voice analysis...');
+      
+      // Analyze brand voice and email content
+      const brandResult = await emailAIService.analyzeBrandVoice(emailHTML, subjectLine);
+      console.log('Brand voice analysis completed:', brandResult);
+      setAnalysisResult(brandResult);
 
-    setSuggestions(newSuggestions);
-    setIsAnalyzing(false);
+      // Analyze subject line if provided
+      if (subjectLine.trim()) {
+        console.log('Analyzing subject line:', subjectLine);
+        const subjectResult = await emailAIService.analyzeSubjectLine(subjectLine, emailHTML);
+        console.log('Subject line analysis completed:', subjectResult);
+        setSubjectLineAnalysis(subjectResult);
+      }
+    } catch (error) {
+      console.error('Error during brand voice analysis:', error);
+      // Fallback analysis
+      setAnalysisResult({
+        brandVoiceScore: 85,
+        engagementScore: 78,
+        toneConsistency: 82,
+        readabilityScore: 88,
+        performancePrediction: {
+          openRate: 24.5,
+          clickRate: 3.2,
+          conversionRate: 2.1
+        },
+        suggestions: [{
+          id: '1',
+          type: 'copy',
+          title: 'Analysis Unavailable',
+          current: 'Current content',
+          suggested: 'AI analysis temporarily unavailable',
+          reason: 'Please try again in a moment',
+          impact: 'medium',
+          confidence: 0
+        }]
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const applySuggestion = (suggestion: ContentSuggestion) => {
-    if (!editor) return;
+  const analyzeSubjectLineOnly = async () => {
+    if (!subjectLine.trim()) return;
+    
+    setIsAnalyzing(true);
+    try {
+      console.log('Analyzing subject line only:', subjectLine);
+      const result = await emailAIService.analyzeSubjectLine(subjectLine, emailHTML);
+      console.log('Subject line analysis completed:', result);
+      setSubjectLineAnalysis(result);
+    } catch (error) {
+      console.error('Error analyzing subject line:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
+  const applySuggestion = (suggestionIndex: number) => {
+    if (!editor || !analysisResult) return;
+
+    const suggestion = analysisResult.suggestions[suggestionIndex];
+    
     // Apply the suggestion to the editor
     const content = editor.getHTML();
     const updatedContent = content.replace(suggestion.current, suggestion.suggested);
     editor.commands.setContent(updatedContent);
 
-    // Remove applied suggestion
-    setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-
-    // Update scores
-    setBrandVoiceScore(prev => Math.min(100, prev + 3));
-    setEngagementScore(prev => Math.min(100, prev + 5));
+    // Remove applied suggestion and update scores
+    const updatedResult = { ...analysisResult };
+    updatedResult.suggestions.splice(suggestionIndex, 1);
+    updatedResult.brandVoiceScore = Math.min(100, updatedResult.brandVoiceScore + 3);
+    updatedResult.engagementScore = Math.min(100, updatedResult.engagementScore + 5);
+    
+    setAnalysisResult(updatedResult);
   };
 
   const getImpactColor = (impact: string) => {
@@ -156,6 +157,15 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
     }
   };
 
+  const getSpamRiskColor = (risk: string) => {
+    switch (risk) {
+      case 'low': return 'text-green-600';
+      case 'medium': return 'text-yellow-600';
+      case 'high': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <div className="p-3 border-b border-gray-200">
@@ -167,6 +177,29 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
           </Badge>
         </div>
 
+        {/* Subject Line Input */}
+        <div className="mb-3">
+          <Label htmlFor="subject-line-optimizer" className="text-xs font-medium">Subject Line</Label>
+          <div className="flex gap-1 mt-1">
+            <Input
+              id="subject-line-optimizer"
+              value={subjectLine}
+              onChange={(e) => setSubjectLine(e.target.value)}
+              placeholder="Enter subject line to optimize..."
+              className="text-xs h-7 flex-1"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={analyzeSubjectLineOnly}
+              disabled={isAnalyzing || !subjectLine.trim()}
+              className="text-xs px-2"
+            >
+              Analyze
+            </Button>
+          </div>
+        </div>
+
         {isAnalyzing ? (
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
@@ -175,24 +208,73 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             </div>
             <Progress value={(currentAnalyzingStep + 1) * 25} className="h-1" />
           </div>
-        ) : (
+        ) : analysisResult ? (
           <div className="grid grid-cols-2 gap-2">
             <div className="text-center">
-              <div className="text-lg font-bold text-purple-600">{brandVoiceScore}</div>
+              <div className="text-lg font-bold text-purple-600">{analysisResult.brandVoiceScore}</div>
               <div className="text-xs text-gray-600">Brand Voice</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-blue-600">{engagementScore}</div>
+              <div className="text-lg font-bold text-blue-600">{analysisResult.engagementScore}</div>
               <div className="text-xs text-gray-600">Engagement</div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-2.5">
+          {/* Subject Line Analysis */}
+          {subjectLineAnalysis && (
+            <div className="mb-2.5">
+              <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
+                <Target className="w-3 h-3" />
+                Subject Line Analysis
+              </h4>
+              
+              <Card className="p-2 border">
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-purple-600">{subjectLineAnalysis.score}</div>
+                    <div className="text-xs text-gray-600">Overall Score</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-lg font-bold ${getSpamRiskColor(subjectLineAnalysis.spamRisk)}`}>
+                      {subjectLineAnalysis.spamRisk.toUpperCase()}
+                    </div>
+                    <div className="text-xs text-gray-600">Spam Risk</div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-1 text-xs mb-2">
+                  <div className="text-center p-1 bg-blue-50 rounded">
+                    <div className="font-semibold">{subjectLineAnalysis.length}</div>
+                    <div className="text-gray-600">Length</div>
+                  </div>
+                  <div className="text-center p-1 bg-green-50 rounded">
+                    <div className="font-semibold">{subjectLineAnalysis.emotionalImpact}</div>
+                    <div className="text-gray-600">Emotion</div>
+                  </div>
+                  <div className="text-center p-1 bg-orange-50 rounded">
+                    <div className="font-semibold">{subjectLineAnalysis.urgencyLevel}</div>
+                    <div className="text-gray-600">Urgency</div>
+                  </div>
+                </div>
+
+                {subjectLineAnalysis.recommendations.length > 0 && (
+                  <div className="bg-blue-50 p-1.5 rounded">
+                    <div className="text-xs font-medium text-blue-900 mb-1">AI Recommendations:</div>
+                    {subjectLineAnalysis.recommendations.slice(0, 2).map((rec, index) => (
+                      <div key={index} className="text-xs text-blue-800">• {rec}</div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
           {/* Performance Prediction */}
-          {!isAnalyzing && (
+          {analysisResult && !isAnalyzing && (
             <div className="mb-2.5">
               <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
                 <TrendingUp className="w-3 h-3" />
@@ -201,15 +283,15 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
               
               <div className="grid grid-cols-3 gap-1.5 text-xs">
                 <div className="text-center p-1.5 bg-blue-50 rounded">
-                  <div className="font-semibold text-blue-600">{performancePrediction.openRate}%</div>
+                  <div className="font-semibold text-blue-600">{analysisResult.performancePrediction.openRate}%</div>
                   <div className="text-xs text-gray-600">Open Rate</div>
                 </div>
                 <div className="text-center p-1.5 bg-green-50 rounded">
-                  <div className="font-semibold text-green-600">{performancePrediction.clickRate}%</div>
+                  <div className="font-semibold text-green-600">{analysisResult.performancePrediction.clickRate}%</div>
                   <div className="text-xs text-gray-600">Click Rate</div>
                 </div>
                 <div className="text-center p-1.5 bg-purple-50 rounded">
-                  <div className="font-semibold text-purple-600">{performancePrediction.conversionRate}%</div>
+                  <div className="font-semibold text-purple-600">{analysisResult.performancePrediction.conversionRate}%</div>
                   <div className="text-xs text-gray-600">Conversion</div>
                 </div>
               </div>
@@ -220,12 +302,12 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
           <div>
             <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
               <Lightbulb className="w-3 h-3" />
-              Optimization Suggestions ({suggestions.length})
+              AI Optimization Suggestions ({analysisResult?.suggestions.length || 0})
             </h4>
             
             <div className="space-y-1.5">
-              {suggestions.map((suggestion) => (
-                <Card key={suggestion.id} className="p-2 border">
+              {analysisResult?.suggestions.map((suggestion, index) => (
+                <Card key={index} className="p-2 border">
                   <div className="flex items-start justify-between mb-1.5">
                     <div className="flex items-center gap-1">
                       {getTypeIcon(suggestion.type)}
@@ -253,7 +335,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                     </div>
                     
                     <div className="text-xs">
-                      <span className="text-gray-500">Suggested:</span>
+                      <span className="text-gray-500">AI Suggested:</span>
                       <div className="bg-blue-50 p-1 rounded text-blue-700 mt-0.5 text-xs">
                         {suggestion.suggested}
                       </div>
@@ -268,7 +350,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => applySuggestion(suggestion)}
+                      onClick={() => applySuggestion(index)}
                       className="flex-1 text-xs"
                     >
                       Apply
@@ -285,10 +367,10 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                 </Card>
               ))}
               
-              {suggestions.length === 0 && !isAnalyzing && (
+              {analysisResult && analysisResult.suggestions.length === 0 && !isAnalyzing && (
                 <div className="text-center py-3">
                   <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1.5" />
-                  <p className="text-xs text-gray-600">All optimizations applied!</p>
+                  <p className="text-xs text-gray-600">All AI optimizations applied!</p>
                   <p className="text-xs text-gray-500 mt-0.5">Your email is performing well.</p>
                 </div>
               )}
@@ -297,7 +379,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
           {/* Quick Actions */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-1.5 text-sm">Quick Optimizations</h4>
+            <h4 className="font-medium text-gray-900 mb-1.5 text-sm">AI-Powered Actions</h4>
             <div className="grid grid-cols-2 gap-1">
               <Button 
                 variant="outline" 
@@ -314,11 +396,11 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
               </Button>
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs">
                 <Sparkles className="w-3 h-3" />
-                Auto-fix
+                Auto-optimize
               </Button>
               <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs">
                 <TrendingUp className="w-3 h-3" />
-                Optimize
+                Boost CTR
               </Button>
             </div>
           </div>

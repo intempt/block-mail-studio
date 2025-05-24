@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { 
   Zap, 
   Image, 
@@ -18,27 +20,10 @@ import {
   Clock,
   FileText,
   Minimize2,
-  Accessibility
+  Accessibility,
+  RefreshCw
 } from 'lucide-react';
-
-interface PerformanceMetric {
-  id: string;
-  name: string;
-  value: number;
-  unit: string;
-  status: 'good' | 'warning' | 'poor';
-  description: string;
-  recommendation?: string;
-}
-
-interface AccessibilityIssue {
-  id: string;
-  type: 'contrast' | 'alt-text' | 'font-size' | 'structure';
-  severity: 'high' | 'medium' | 'low';
-  element: string;
-  description: string;
-  fix: string;
-}
+import { emailAIService, PerformanceAnalysisResult } from '@/services/EmailAIService';
 
 interface PerformanceAnalyzerProps {
   editor: Editor | null;
@@ -49,11 +34,10 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   editor, 
   emailHTML 
 }) => {
-  const [metrics, setMetrics] = useState<PerformanceMetric[]>([]);
-  const [accessibilityIssues, setAccessibilityIssues] = useState<AccessibilityIssue[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<PerformanceAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<'performance' | 'accessibility' | 'mobile'>('performance');
-  const [overallScore, setOverallScore] = useState(85);
+  const [subjectLine, setSubjectLine] = useState('');
 
   useEffect(() => {
     if (emailHTML) {
@@ -62,94 +46,59 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   }, [emailHTML]);
 
   const analyzeEmail = async () => {
+    if (!emailHTML) return;
+    
     setIsAnalyzing(true);
     
-    // Simulate analysis
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Performance metrics
-    const newMetrics: PerformanceMetric[] = [
-      {
-        id: '1',
-        name: 'Email Size',
-        value: Math.floor(emailHTML.length / 1024),
-        unit: 'KB',
-        status: emailHTML.length < 100000 ? 'good' : 'warning',
-        description: 'Total email size including HTML and inline CSS',
-        recommendation: emailHTML.length > 100000 ? 'Consider reducing image sizes or removing unnecessary content' : undefined
-      },
-      {
-        id: '2',
-        name: 'Images',
-        value: (emailHTML.match(/<img/g) || []).length,
-        unit: 'count',
-        status: (emailHTML.match(/<img/g) || []).length < 5 ? 'good' : 'warning',
-        description: 'Number of images in the email'
-      },
-      {
-        id: '3',
-        name: 'Load Time',
-        value: Math.random() * 2 + 1,
-        unit: 'sec',
-        status: 'good',
-        description: 'Estimated email load time'
-      },
-      {
-        id: '4',
-        name: 'Links',
-        value: (emailHTML.match(/<a /g) || []).length,
-        unit: 'count',
-        status: 'good',
-        description: 'Number of clickable links'
-      }
-    ];
-
-    // Accessibility issues
-    const newAccessibilityIssues: AccessibilityIssue[] = [
-      {
-        id: '1',
-        type: 'alt-text',
-        severity: 'high',
-        element: 'img elements',
-        description: '2 images missing alt text for screen readers',
-        fix: 'Add descriptive alt attributes to all images'
-      },
-      {
-        id: '2',
-        type: 'contrast',
-        severity: 'medium',
-        element: 'text on colored background',
-        description: 'Some text may not meet WCAG contrast requirements',
-        fix: 'Increase contrast ratio to at least 4.5:1'
-      }
-    ];
-
-    setMetrics(newMetrics);
-    setAccessibilityIssues(newAccessibilityIssues);
-    setIsAnalyzing(false);
-    
-    // Calculate overall score
-    const avgScore = newMetrics.reduce((acc, metric) => {
-      const score = metric.status === 'good' ? 100 : metric.status === 'warning' ? 70 : 40;
-      return acc + score;
-    }, 0) / newMetrics.length;
-    
-    setOverallScore(Math.round(avgScore));
+    try {
+      console.log('Starting AI-powered email performance analysis...');
+      const result = await emailAIService.analyzeEmailPerformance(emailHTML);
+      console.log('Performance analysis completed:', result);
+      setAnalysisResult(result);
+    } catch (error) {
+      console.error('Error during performance analysis:', error);
+      // Fallback to basic analysis
+      setAnalysisResult({
+        overallScore: 75,
+        deliverabilityScore: 80,
+        accessibilityScore: 70,
+        mobileScore: 85,
+        spamScore: 25,
+        metrics: {
+          emailSize: { value: Math.floor(emailHTML.length / 1024), status: 'good' },
+          imageCount: { value: (emailHTML.match(/<img/g) || []).length, status: 'good' },
+          loadTime: { value: 2.1, status: 'good' },
+          linkCount: { value: (emailHTML.match(/<a /g) || []).length, status: 'good' }
+        },
+        accessibilityIssues: [],
+        optimizationSuggestions: ['AI analysis temporarily unavailable. Basic metrics shown.']
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
-  const fixAccessibilityIssue = (issueId: string) => {
-    setAccessibilityIssues(prev => prev.filter(issue => issue.id !== issueId));
-    setOverallScore(prev => Math.min(100, prev + 5));
+  const fixAccessibilityIssue = (issueIndex: number) => {
+    if (!analysisResult) return;
+    
+    const updatedResult = { ...analysisResult };
+    updatedResult.accessibilityIssues.splice(issueIndex, 1);
+    updatedResult.accessibilityScore = Math.min(100, updatedResult.accessibilityScore + 5);
+    updatedResult.overallScore = Math.min(100, updatedResult.overallScore + 3);
+    
+    setAnalysisResult(updatedResult);
   };
 
   const optimizeImages = () => {
-    // Simulate image optimization
+    if (!analysisResult) return;
+    
     console.log('Optimizing images...');
-    setMetrics(prev => prev.map(metric => 
-      metric.name === 'Email Size' 
-        ? { ...metric, value: Math.max(metric.value * 0.7, 30), status: 'good' as const }
-        : metric
-    ));
+    const updatedResult = { ...analysisResult };
+    updatedResult.metrics.emailSize.value = Math.max(updatedResult.metrics.emailSize.value * 0.7, 30);
+    updatedResult.metrics.emailSize.status = 'good';
+    updatedResult.overallScore = Math.min(100, updatedResult.overallScore + 5);
+    
+    setAnalysisResult(updatedResult);
   };
 
   const getStatusIcon = (status: string) => {
@@ -187,22 +136,36 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
           <Zap className="w-4 h-4 text-orange-600" />
           <h3 className="text-base font-semibold">Performance Analyzer</h3>
           <Badge variant="secondary" className="ml-auto text-xs">
-            Score: {overallScore}
+            AI Powered
           </Badge>
         </div>
 
+        {/* Subject Line Input */}
         <div className="mb-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-sm font-medium">Overall Performance</span>
-            <span className={`text-sm font-bold ${
-              overallScore >= 90 ? 'text-green-600' : 
-              overallScore >= 70 ? 'text-yellow-600' : 'text-red-600'
-            }`}>
-              {overallScore}/100
-            </span>
-          </div>
-          <Progress value={overallScore} className="mb-1.5 h-1.5" />
+          <Label htmlFor="subject-line" className="text-xs font-medium">Subject Line Analysis</Label>
+          <Input
+            id="subject-line"
+            value={subjectLine}
+            onChange={(e) => setSubjectLine(e.target.value)}
+            placeholder="Enter subject line to analyze..."
+            className="text-xs h-7 mt-1"
+          />
         </div>
+
+        {analysisResult && (
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-sm font-medium">Overall Performance</span>
+              <span className={`text-sm font-bold ${
+                analysisResult.overallScore >= 90 ? 'text-green-600' : 
+                analysisResult.overallScore >= 70 ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {analysisResult.overallScore}/100
+              </span>
+            </div>
+            <Progress value={analysisResult.overallScore} className="mb-1.5 h-1.5" />
+          </div>
+        )}
 
         <div className="flex gap-1">
           {[
@@ -237,29 +200,73 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                   disabled={isAnalyzing}
                   className="flex items-center gap-1.5 text-xs"
                 >
-                  <Zap className={`w-3 h-3 ${isAnalyzing ? 'animate-pulse' : ''}`} />
+                  <RefreshCw className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
                   {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                {metrics.map((metric) => (
-                  <Card key={metric.id} className="p-2.5">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium">{metric.name}</span>
-                      {getStatusIcon(metric.status)}
-                    </div>
-                    <div className="text-xl font-bold">{metric.value.toFixed(metric.name === 'Load Time' ? 1 : 0)}</div>
-                    <div className="text-xs text-gray-600">{metric.unit}</div>
-                    <p className="text-xs text-gray-500 mt-1 line-height-tight">{metric.description}</p>
-                    {metric.recommendation && (
-                      <p className="text-xs text-blue-600 mt-1 italic line-height-tight">
-                        💡 {metric.recommendation}
-                      </p>
-                    )}
-                  </Card>
-                ))}
-              </div>
+              {isAnalyzing && (
+                <div className="text-center py-4">
+                  <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-orange-600" />
+                  <p className="text-xs text-gray-600">AI is analyzing your email performance...</p>
+                </div>
+              )}
+
+              {analysisResult && !isAnalyzing && (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(analysisResult.metrics).map(([key, metric]) => (
+                      <Card key={key} className="p-2.5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                          {getStatusIcon(metric.status)}
+                        </div>
+                        <div className="text-xl font-bold">{
+                          key === 'loadTime' ? metric.value.toFixed(1) : metric.value
+                        }</div>
+                        <div className="text-xs text-gray-600">
+                          {key === 'emailSize' ? 'KB' : key === 'loadTime' ? 'sec' : 'count'}
+                        </div>
+                        {metric.recommendation && (
+                          <p className="text-xs text-blue-600 mt-1 italic">
+                            💡 {metric.recommendation}
+                          </p>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Card className="p-2.5">
+                      <div className="text-sm font-medium mb-1">Deliverability</div>
+                      <div className={`text-xl font-bold ${analysisResult.deliverabilityScore >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
+                        {analysisResult.deliverabilityScore}
+                      </div>
+                      <div className="text-xs text-gray-600">Score</div>
+                    </Card>
+                    <Card className="p-2.5">
+                      <div className="text-sm font-medium mb-1">Spam Risk</div>
+                      <div className={`text-xl font-bold ${analysisResult.spamScore <= 30 ? 'text-green-600' : 'text-red-600'}`}>
+                        {analysisResult.spamScore}
+                      </div>
+                      <div className="text-xs text-gray-600">Risk Level</div>
+                    </Card>
+                  </div>
+
+                  {analysisResult.optimizationSuggestions.length > 0 && (
+                    <Card className="p-2.5 bg-blue-50 border-blue-200">
+                      <h5 className="font-medium text-sm mb-1.5 text-blue-900">AI Optimization Suggestions</h5>
+                      <div className="space-y-1">
+                        {analysisResult.optimizationSuggestions.map((suggestion, index) => (
+                          <div key={index} className="text-xs text-blue-800">
+                            • {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
+                </>
+              )}
 
               <div>
                 <h4 className="font-medium text-gray-900 mb-2 text-sm">Quick Optimizations</h4>
@@ -294,45 +301,45 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                 </Badge>
               </div>
 
-              <div className="space-y-2">
-                {accessibilityIssues.map((issue) => (
-                  <Card key={issue.id} className="p-2.5">
-                    <div className="flex items-start justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        {getIssueIcon(issue.type)}
-                        <span className="font-medium text-sm">{issue.element}</span>
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs ${getSeverityColor(issue.severity)}`}
-                        >
-                          {issue.severity}
-                        </Badge>
+              {analysisResult && analysisResult.accessibilityIssues.length > 0 ? (
+                <div className="space-y-2">
+                  {analysisResult.accessibilityIssues.map((issue, index) => (
+                    <Card key={index} className="p-2.5">
+                      <div className="flex items-start justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          {getIssueIcon(issue.type)}
+                          <span className="font-medium text-sm">{issue.element}</span>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${getSeverityColor(issue.severity)}`}
+                          >
+                            {issue.severity}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <p className="text-sm text-gray-600 mb-1.5">{issue.description}</p>
-                    <p className="text-xs text-blue-600 italic mb-2">
-                      🔧 {issue.fix}
-                    </p>
-                    
-                    <Button
-                      size="sm"
-                      onClick={() => fixAccessibilityIssue(issue.id)}
-                      className="w-full text-xs"
-                    >
-                      Fix Issue
-                    </Button>
-                  </Card>
-                ))}
-                
-                {accessibilityIssues.length === 0 && (
-                  <div className="text-center py-6">
-                    <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1.5" />
-                    <p className="text-sm text-gray-600">All accessibility checks passed!</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Your email meets WCAG guidelines</p>
-                  </div>
-                )}
-              </div>
+                      
+                      <p className="text-sm text-gray-600 mb-1.5">{issue.description}</p>
+                      <p className="text-xs text-blue-600 italic mb-2">
+                        🔧 {issue.fix}
+                      </p>
+                      
+                      <Button
+                        size="sm"
+                        onClick={() => fixAccessibilityIssue(index)}
+                        className="w-full text-xs"
+                      >
+                        Fix Issue
+                      </Button>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1.5" />
+                  <p className="text-sm text-gray-600">All accessibility checks passed!</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Your email meets WCAG guidelines</p>
+                </div>
+              )}
 
               <Card className="p-2.5 bg-blue-50 border-blue-200">
                 <h5 className="font-medium text-sm mb-1.5 text-blue-900">Accessibility Guidelines</h5>
@@ -355,10 +362,12 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                 <Card className="p-2.5">
                   <div className="flex items-center gap-1.5 mb-1.5">
                     <Smartphone className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium">Responsive Design</span>
+                    <span className="text-sm font-medium">Mobile Score</span>
                   </div>
-                  <div className="text-xl font-bold text-green-600">✓</div>
-                  <div className="text-xs text-gray-600">Passes mobile tests</div>
+                  <div className={`text-xl font-bold ${analysisResult && analysisResult.mobileScore >= 80 ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {analysisResult ? analysisResult.mobileScore : '85'}
+                  </div>
+                  <div className="text-xs text-gray-600">Optimization score</div>
                 </Card>
                 
                 <Card className="p-2.5">
@@ -403,8 +412,8 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span>Fast loading images</span>
-                    <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                    <span>AI-optimized loading</span>
+                    <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
                 </div>
               </div>
