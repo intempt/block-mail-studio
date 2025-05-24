@@ -10,7 +10,6 @@ interface KeyboardShortcutsProps {
   onSave: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
-  collaborationMode?: boolean;
 }
 
 export const useKeyboardShortcuts = ({
@@ -21,8 +20,7 @@ export const useKeyboardShortcuts = ({
   onToggleFullscreen,
   onSave,
   onUndo,
-  onRedo,
-  collaborationMode = false
+  onRedo
 }: KeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -32,15 +30,7 @@ export const useKeyboardShortcuts = ({
         event.target instanceof HTMLTextAreaElement ||
         (event.target as any)?.isContentEditable
       ) {
-        // Allow undo/redo even in inputs for collaboration mode
-        if (collaborationMode && (
-          (event.ctrlKey && event.key === 'z') ||
-          (event.ctrlKey && event.key === 'y')
-        )) {
-          // Let the editor handle these
-          return;
-        }
-        // For other inputs, only allow save and panel toggles
+        // For inputs, only allow save and panel toggles
         if (!(
           (event.ctrlKey && event.key === 's') ||
           (event.ctrlKey && event.key === '[') ||
@@ -58,13 +48,13 @@ export const useKeyboardShortcuts = ({
         return;
       }
 
-      if (event.ctrlKey && event.key === 'z' && !collaborationMode && onUndo) {
+      if (event.ctrlKey && event.key === 'z' && onUndo) {
         event.preventDefault();
         onUndo();
         return;
       }
 
-      if (event.ctrlKey && event.key === 'y' && !collaborationMode && onRedo) {
+      if (event.ctrlKey && event.key === 'y' && onRedo) {
         event.preventDefault();
         onRedo();
         return;
@@ -88,8 +78,8 @@ export const useKeyboardShortcuts = ({
         return;
       }
 
-      // Canvas-specific shortcuts (when not in collaboration mode)
-      if (!collaborationMode && canvasRef.current) {
+      // Canvas-specific shortcuts
+      if (canvasRef.current) {
         // Delete selected block
         if (event.key === 'Delete' || event.key === 'Backspace') {
           if (canvasRef.current.deleteSelectedBlock) {
@@ -133,7 +123,6 @@ export const useKeyboardShortcuts = ({
     onToggleFullscreen,
     onSave,
     onUndo,
-    onRedo,
-    collaborationMode
+    onRedo
   ]);
 };

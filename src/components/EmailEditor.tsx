@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -56,7 +57,6 @@ import { EmailBlockPalette } from './EmailBlockPalette';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
-import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
 import { EmailSubjectLine } from './EmailSubjectLine';
 import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
@@ -71,13 +71,6 @@ type LeftPanelTab = 'ai' | 'design' | 'blocks';
 type RightPanelTab = 'analytics' | 'optimization';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
-interface Collaborator {
-  id: string;
-  name: string;
-  color: string;
-  isOnline: boolean;
-}
-
 const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [previewWidth, setPreviewWidth] = useState(1200);
@@ -88,17 +81,9 @@ const EmailEditor = () => {
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
   const [compactMode, setCompactMode] = useState(false);
   const canvasRef = useRef<EmailBlockCanvasRef>(null);
-  const [collaborationMode, setCollaborationMode] = useState(false);
-  const [collaborationConfig, setCollaborationConfig] = useState({
-    documentId: `email-${Date.now()}`,
-    userId: `user-${Math.random().toString(36).substr(2, 9)}`,
-    userName: 'Anonymous User',
-    userColor: '#3B82F6'
-  });
   const [fullscreenMode, setFullscreenMode] = useState(false);
   const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
   const [subjectLineScore, setSubjectLineScore] = useState(75);
@@ -189,17 +174,13 @@ const EmailEditor = () => {
     onToggleFullscreen: handleToggleFullscreen,
     onSave: handleSave,
     onUndo: handleUndo,
-    onRedo: handleRedo,
-    collaborationMode
+    onRedo: handleRedo
   });
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email', status: 'active' },
     { key: 'Ctrl + Z', action: 'Undo', status: emailActions.canUndo ? 'active' : 'disabled' },
     { key: 'Ctrl + Y', action: 'Redo', status: emailActions.canRedo ? 'active' : 'disabled' },
-    { key: 'Ctrl + B', action: 'Bold text (collaboration mode)', status: 'active' },
-    { key: 'Ctrl + I', action: 'Italic text (collaboration mode)', status: 'active' },
-    { key: 'Ctrl + K', action: 'Insert link (collaboration mode)', status: 'active' },
     { key: 'F11', action: 'Toggle fullscreen', status: 'active' },
     { key: 'Ctrl + [', action: 'Toggle left panel', status: 'active' },
     { key: 'Ctrl + ]', action: 'Toggle right panel', status: 'active' }
@@ -618,23 +599,13 @@ const EmailEditor = () => {
               }}
             />
             
-            {collaborationMode ? (
-              <EnhancedCollaborativeEditor
-                documentId={collaborationConfig.documentId}
-                userId={collaborationConfig.userId}
-                userName={collaborationConfig.userName}
-                userColor={collaborationConfig.userColor}
-                onContentChange={handleEmailContentChange}
-              />
-            ) : (
-              <EmailBlockCanvas 
-                ref={canvasRef}
-                onContentChange={handleEmailContentChange}
-                previewWidth={previewWidth}
-                previewMode={previewMode}
-                compactMode={compactMode}
-              />
-            )}
+            <EmailBlockCanvas 
+              ref={canvasRef}
+              onContentChange={handleEmailContentChange}
+              previewWidth={previewWidth}
+              previewMode={previewMode}
+              compactMode={compactMode}
+            />
           </div>
         </div>
         
