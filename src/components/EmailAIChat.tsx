@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,9 @@ import {
   ThumbsUp,
   ThumbsDown,
   Wand2,
-  Loader2
+  Loader2,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import { emailAIService } from '@/services/EmailAIService';
 
@@ -32,6 +35,7 @@ interface Message {
   timestamp: Date;
   suggestions?: string[];
   isLoading?: boolean;
+  actionType?: 'email_generated' | 'image_generated' | 'content_refined' | 'general';
 }
 
 interface EmailAIChatProps {
@@ -44,7 +48,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     {
       id: '1',
       type: 'ai',
-      content: 'Hi! I\'m your AI email assistant powered by OpenAI. I can help you create stunning emails, generate images, suggest improvements, and optimize for better performance. What would you like to work on today?',
+      content: 'Hi! I\'m your AI email assistant. I can create emails, generate images, write copy, and help optimize your content. Everything I create will appear directly in your editor for seamless editing. What would you like to work on?',
       timestamp: new Date(),
       suggestions: [
         'Create a welcome email series',
@@ -137,7 +141,8 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         id: Date.now().toString(),
         type: 'ai',
         content: 'I encountered an error while processing your request. Please check your API configuration and try again.',
-        timestamp: new Date()
+        timestamp: new Date(),
+        actionType: 'general'
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -149,13 +154,17 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     const input = userInput.toLowerCase();
     
     // Handle email generation requests
-    if (input.includes('create email') || input.includes('generate email') || input.includes('write email')) {
+    if (input.includes('create email') || input.includes('generate email') || input.includes('write email') || input.includes('email template')) {
       try {
         const emailResponse = await emailAIService.generateEmail({
           prompt: userInput,
           tone: input.includes('professional') ? 'professional' : 
                 input.includes('casual') ? 'casual' : 
-                input.includes('friendly') ? 'friendly' : 'professional'
+                input.includes('friendly') ? 'friendly' : 
+                input.includes('urgent') ? 'urgent' : 'professional',
+          type: input.includes('welcome') ? 'welcome' :
+                input.includes('promotional') || input.includes('sale') ? 'promotional' :
+                input.includes('newsletter') ? 'newsletter' : 'announcement'
         });
 
         // Insert generated email into editor
@@ -167,13 +176,15 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         return {
           id: Date.now().toString(),
           type: 'ai',
-          content: `I've generated an email for you with the subject: "${emailResponse.subject}". The content has been inserted into your editor. You can now customize it further!`,
+          content: `✅ Email created and inserted into your editor!\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nThe complete email is now in your editor - you can edit it manually or ask me to refine it further.`,
           timestamp: new Date(),
+          actionType: 'email_generated',
           suggestions: [
-            'Generate a different version',
-            'Optimize for mobile',
+            'Make it more casual',
+            'Add urgency',
+            'Shorten the content',
             'Add call-to-action buttons',
-            'Create email series'
+            'Create another variation'
           ]
         };
       } catch (error) {
@@ -181,36 +192,44 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         return {
           id: Date.now().toString(),
           type: 'ai',
-          content: 'I had trouble generating that email. Please check your OpenAI API key and try again.',
-          timestamp: new Date()
+          content: '❌ I had trouble generating that email. Please check your OpenAI API key configuration and try again.',
+          timestamp: new Date(),
+          actionType: 'general'
         };
       }
     }
 
     // Handle image generation requests
-    if (input.includes('generate image') || input.includes('create image') || input.includes('ai image')) {
+    if (input.includes('generate image') || input.includes('create image') || input.includes('ai image') || input.includes('add image')) {
       try {
-        const imagePrompt = userInput.replace(/generate image|create image|ai image/gi, '').trim() || 'professional email header image';
+        const imagePrompt = userInput.replace(/generate image|create image|ai image|add image/gi, '').trim() || 'professional email header image';
         const imageResponse = await emailAIService.generateImage({
           prompt: imagePrompt,
-          style: 'professional'
+          style: input.includes('creative') ? 'creative' : 
+                 input.includes('minimal') ? 'minimal' :
+                 input.includes('vibrant') ? 'vibrant' : 'professional'
         });
 
-        // Insert generated image into editor
+        // Insert generated image into editor at cursor position
         if (editor) {
-          editor.chain().focus().insertContent(`<img src="${imageResponse.imageUrl}" alt="${imagePrompt}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0;" />`).run();
+          editor.chain().focus().insertContent(`
+            <div class="email-block image-block" style="text-align: center; padding: 16px;">
+              <img src="${imageResponse.imageUrl}" alt="${imagePrompt}" style="max-width: 100%; height: auto; border-radius: 8px;" />
+            </div>
+          `).run();
         }
 
         return {
           id: Date.now().toString(),
           type: 'ai',
-          content: `I've generated and inserted an image for: "${imagePrompt}". The image has been added to your email editor!`,
+          content: `✅ Image generated and inserted into your editor!\n\n**Prompt:** ${imagePrompt}\n\nThe image is now in your email - you can resize, move, or ask me to generate alternatives.`,
           timestamp: new Date(),
+          actionType: 'image_generated',
           suggestions: [
-            'Generate another image',
-            'Resize the image',
+            'Generate another variation',
+            'Create a different style',
             'Add image caption',
-            'Create image gallery'
+            'Generate a header image'
           ]
         };
       } catch (error) {
@@ -218,14 +237,66 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         return {
           id: Date.now().toString(),
           type: 'ai',
-          content: 'I had trouble generating that image. Please check your OpenAI API key and try again.',
-          timestamp: new Date()
+          content: '❌ I had trouble generating that image. Please check your OpenAI API key and try again.',
+          timestamp: new Date(),
+          actionType: 'general'
         };
       }
     }
 
-    // Handle content generation requests
-    if (input.includes('write') || input.includes('copy') || input.includes('content')) {
+    // Handle content refinement requests
+    if ((input.includes('improve') || input.includes('refine') || input.includes('optimize') || input.includes('make it')) && editor) {
+      try {
+        const currentHtml = editor.getHTML();
+        if (currentHtml && currentHtml.length > 50) {
+          const refinedHtml = await emailAIService.refineEmail(currentHtml, userInput);
+          
+          // Update editor with refined content
+          editor.commands.setContent(refinedHtml);
+          onEmailGenerated?.(refinedHtml);
+
+          return {
+            id: Date.now().toString(),
+            type: 'ai',
+            content: `✅ Content refined and updated in your editor!\n\nI've applied your requested changes. The updated content is now in your editor for further editing.`,
+            timestamp: new Date(),
+            actionType: 'content_refined',
+            suggestions: [
+              'Make further adjustments',
+              'Add call-to-action',
+              'Optimize for mobile',
+              'Create A/B test version'
+            ]
+          };
+        } else {
+          return {
+            id: Date.now().toString(),
+            type: 'ai',
+            content: 'I need some content in your editor to refine. Please create an email first or paste some content, then ask me to improve it.',
+            timestamp: new Date(),
+            actionType: 'general',
+            suggestions: [
+              'Create a new email',
+              'Generate template content',
+              'Write email copy',
+              'Add content blocks'
+            ]
+          };
+        }
+      } catch (error) {
+        console.error('Error refining content:', error);
+        return {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: '❌ I had trouble refining that content. Please try again.',
+          timestamp: new Date(),
+          actionType: 'general'
+        };
+      }
+    }
+
+    // Handle content writing requests (copy, subject lines, etc.)
+    if (input.includes('write') || input.includes('copy') || input.includes('content') || input.includes('subject')) {
       try {
         const contentType = input.includes('subject') ? 'subject' : 
                            input.includes('cta') || input.includes('call to action') ? 'cta' :
@@ -233,41 +304,75 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         
         const content = await emailAIService.generateContent(userInput, contentType);
         
-        return {
-          id: Date.now().toString(),
-          type: 'ai',
-          content: `Here's the content I generated for you:\n\n${content}`,
-          timestamp: new Date(),
-          suggestions: [
-            'Generate alternative version',
-            'Make it more engaging',
-            'Optimize for conversions',
-            'Create variations'
-          ]
-        };
+        // Insert content into editor if it's substantial content
+        if (editor && (contentType === 'copy' || contentType === 'general') && content.length > 100) {
+          const wrappedContent = `<div class="email-block paragraph-block" style="padding: 16px;"><p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.7; margin: 0;">${content}</p></div>`;
+          editor.chain().focus().insertContent(wrappedContent).run();
+          
+          return {
+            id: Date.now().toString(),
+            type: 'ai',
+            content: `✅ Content written and inserted into your editor!\n\nThe generated content is now in your email for further editing and customization.`,
+            timestamp: new Date(),
+            actionType: 'content_refined',
+            suggestions: [
+              'Refine the tone',
+              'Make it shorter',
+              'Add more details',
+              'Create alternative version'
+            ]
+          };
+        } else {
+          return {
+            id: Date.now().toString(),
+            type: 'ai',
+            content: `Here's the content I generated:\n\n**${contentType === 'subject' ? 'Subject Line' : 'Content'}:**\n${content}\n\nWould you like me to create a full email with this content?`,
+            timestamp: new Date(),
+            actionType: 'general',
+            suggestions: [
+              'Create full email with this',
+              'Generate alternative',
+              'Make it more engaging',
+              'Add to current email'
+            ]
+          };
+        }
       } catch (error) {
         console.error('Error generating content:', error);
         return {
           id: Date.now().toString(),
           type: 'ai',
-          content: 'I had trouble generating that content. Please try again.',
-          timestamp: new Date()
+          content: '❌ I had trouble generating that content. Please try again.',
+          timestamp: new Date(),
+          actionType: 'general'
         };
       }
     }
 
     // Handle template requests
     if (input.includes('template') || input.includes('industry')) {
+      const industryTemplates = [
+        'E-commerce Product Launch',
+        'SaaS Welcome Series',
+        'Restaurant Newsletter',
+        'Real Estate Listing',
+        'Event Invitation',
+        'Educational Course',
+        'Healthcare Updates',
+        'Financial Services'
+      ];
+
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: 'I\'d love to help you with templates! Here are some popular industry templates I can create for you. Which industry matches your needs best?',
+        content: 'I can create professional email templates for any industry. Which type would you like me to generate? Just tell me the industry and I\'ll create a complete template in your editor.',
         timestamp: new Date(),
+        actionType: 'general',
         suggestions: industryTemplates
       };
     }
 
-    // Default AI response using the content generation
+    // Default helpful response
     try {
       const response = await emailAIService.generateContent(userInput, 'general');
       return {
@@ -275,19 +380,21 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         type: 'ai',
         content: response,
         timestamp: new Date(),
+        actionType: 'general',
         suggestions: [
-          'Generate email content',
-          'Create images',
+          'Create email content',
+          'Generate images',
           'Design templates',
-          'Optimize performance'
+          'Write compelling copy'
         ]
       };
     } catch (error) {
       return {
         id: Date.now().toString(),
         type: 'ai',
-        content: 'I understand! I can help you with email creation, image generation, content writing, and optimization. What specific task would you like assistance with?',
+        content: 'I\'m here to help with your email creation! I can generate complete emails, create images, write copy, and optimize content - all directly in your editor. What would you like to work on?',
         timestamp: new Date(),
+        actionType: 'general',
         suggestions: [
           'Create a new email',
           'Generate professional images',
@@ -300,7 +407,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
 
   const handleQuickAction = (action: string) => {
     setNewMessage(action);
-    handleSendMessage();
+    setTimeout(() => handleSendMessage(), 100);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -310,7 +417,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
   const applyAISuggestion = async (suggestion: string) => {
     if (!editor) return;
     
-    // Handle template application
+    // Handle quick template application
     if (suggestion.includes('Template') || suggestion.includes('template')) {
       try {
         const emailResponse = await emailAIService.generateEmail({
@@ -322,13 +429,25 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         
         editor.commands.setContent(emailResponse.html);
         onEmailGenerated?.(emailResponse.html);
+        
+        // Add confirmation message
+        const confirmMessage: Message = {
+          id: Date.now().toString(),
+          type: 'ai',
+          content: `✅ ${suggestion} template created and loaded into your editor!`,
+          timestamp: new Date(),
+          actionType: 'email_generated'
+        };
+        setMessages(prev => [...prev, confirmMessage]);
       } catch (error) {
         console.error('Error applying template:', error);
       }
       return;
     }
     
-    console.log('Applied AI suggestion:', suggestion);
+    // For other suggestions, treat as new message
+    setNewMessage(suggestion);
+    setTimeout(() => handleSendMessage(), 100);
   };
 
   return (
@@ -339,7 +458,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           <Sparkles className="w-5 h-5 text-blue-600" />
           <h3 className="font-semibold text-gray-900">AI Assistant</h3>
           <Badge variant="secondary" className="ml-auto bg-blue-50 text-blue-700">
-            OpenAI Powered
+            Editor Integration
           </Badge>
         </div>
         
@@ -366,16 +485,28 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         <div className="space-y-4">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg p-3`}>
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
+              <div className={`max-w-[85%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg p-3`}>
+                <div className="flex items-start gap-2">
+                  {message.type === 'ai' && message.actionType && (
+                    <div className="mt-1">
+                      {message.actionType === 'email_generated' && <Check className="w-4 h-4 text-green-600" />}
+                      {message.actionType === 'image_generated' && <Image className="w-4 h-4 text-blue-600" />}
+                      {message.actionType === 'content_refined' && <Wand2 className="w-4 h-4 text-purple-600" />}
+                      {message.actionType === 'general' && <Sparkles className="w-4 h-4 text-gray-600" />}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-xs opacity-70 mt-1">
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
                 
                 {message.suggestions && message.suggestions.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    <p className="text-xs font-medium opacity-80">Try these:</p>
-                    {message.suggestions.map((suggestion, index) => (
+                    <p className="text-xs font-medium opacity-80">Quick actions:</p>
+                    {message.suggestions.slice(0, 3).map((suggestion, index) => (
                       <div key={index} className="flex items-center gap-2">
                         <Button
                           variant="outline"
@@ -393,6 +524,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
                           onClick={() => applyAISuggestion(suggestion)}
                           className="p-1 h-auto"
                           disabled={isLoading}
+                          title="Apply directly"
                         >
                           <Zap className="w-3 h-3" />
                         </Button>
@@ -409,7 +541,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
               <div className="bg-gray-100 text-gray-900 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                  <span className="text-sm">AI is thinking...</span>
+                  <span className="text-sm">AI is working on your request...</span>
                 </div>
               </div>
             </div>
@@ -423,7 +555,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Ask AI to help with your email..."
+            placeholder="Ask AI to create content in your editor..."
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
             className="flex-1"
             disabled={isLoading}
@@ -438,7 +570,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
         </div>
         
         <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-          <span>Press Enter to send • Shift+Enter for new line</span>
+          <span>Content appears directly in editor • Manual editing enabled</span>
           <div className="flex items-center gap-2">
             <span>Powered by OpenAI</span>
             <Sparkles className="w-3 h-3" />
