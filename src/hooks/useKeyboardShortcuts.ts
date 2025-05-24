@@ -1,14 +1,15 @@
 
-import { useEffect, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
-interface UseKeyboardShortcutsProps {
-  editor?: any; // TipTap editor instance
-  canvasRef?: React.RefObject<any>; // Canvas reference
+interface KeyboardShortcutsProps {
+  editor: any;
+  canvasRef: React.RefObject<any>;
   onToggleLeftPanel: () => void;
   onToggleRightPanel: () => void;
   onToggleFullscreen: () => void;
   onSave: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
   collaborationMode: boolean;
 }
 
@@ -19,113 +20,120 @@ export const useKeyboardShortcuts = ({
   onToggleRightPanel,
   onToggleFullscreen,
   onSave,
+  onUndo,
+  onRedo,
   collaborationMode
-}: UseKeyboardShortcutsProps) => {
-  const { toast } = useToast();
-  const isFullscreenRef = useRef(false);
-
+}: KeyboardShortcutsProps) => {
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-      
-      if (isCtrlOrCmd) {
-        switch (e.key.toLowerCase()) {
-          case 's':
-            e.preventDefault();
-            onSave();
-            toast({
-              title: "Email Saved",
-              description: "Your email has been saved successfully.",
-            });
-            break;
-            
-          case 'z':
-            e.preventDefault();
-            if (collaborationMode && editor) {
-              editor.chain().focus().undo().run();
-            } else if (canvasRef?.current?.undo) {
-              canvasRef.current.undo();
-            }
-            toast({
-              title: "Undo",
-              description: "Last action undone.",
-            });
-            break;
-            
-          case 'y':
-            e.preventDefault();
-            if (collaborationMode && editor) {
-              editor.chain().focus().redo().run();
-            } else if (canvasRef?.current?.redo) {
-              canvasRef.current.redo();
-            }
-            toast({
-              title: "Redo",
-              description: "Action redone.",
-            });
-            break;
-            
-          case 'b':
-            e.preventDefault();
-            if (collaborationMode && editor) {
-              editor.chain().focus().toggleBold().run();
-              toast({
-                title: "Bold",
-                description: "Text formatting applied.",
-              });
-            }
-            break;
-            
-          case 'i':
-            e.preventDefault();
-            if (collaborationMode && editor) {
-              editor.chain().focus().toggleItalic().run();
-              toast({
-                title: "Italic",
-                description: "Text formatting applied.",
-              });
-            }
-            break;
-            
-          case 'k':
-            e.preventDefault();
-            if (collaborationMode && editor) {
-              const url = window.prompt('Enter URL:');
-              if (url) {
-                editor.chain().focus().setLink({ href: url }).run();
-                toast({
-                  title: "Link Added",
-                  description: "Link has been inserted.",
-                });
-              }
-            }
-            break;
-            
-          case '[':
-            e.preventDefault();
-            onToggleLeftPanel();
-            break;
-            
-          case ']':
-            e.preventDefault();
-            onToggleRightPanel();
-            break;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent shortcuts when typing in inputs
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        (event.target as any)?.isContentEditable
+      ) {
+        // Allow undo/redo even in inputs for collaboration mode
+        if (collaborationMode && (
+          (event.ctrlKey && event.key === 'z') ||
+          (event.ctrlKey && event.key === 'y')
+        )) {
+          // Let the editor handle these
+          return;
+        }
+        // For other inputs, only allow save and panel toggles
+        if (!(
+          (event.ctrlKey && event.key === 's') ||
+          (event.ctrlKey && event.key === '[') ||
+          (event.ctrlKey && event.key === ']') ||
+          event.key === 'F11'
+        )) {
+          return;
         }
       }
-      
-      // F11 for fullscreen (without Ctrl/Cmd)
-      if (e.key === 'F11') {
-        e.preventDefault();
+
+      // Enhanced keyboard shortcuts
+      if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        onSave();
+        return;
+      }
+
+      if (event.ctrlKey && event.key === 'z' && !collaborationMode) {
+        event.preventDefault();
+        onUndo?.();
+        return;
+      }
+
+      if (event.ctrlKey && event.key === 'y' && !collaborationMode) {
+        event.preventDefault();
+        onRedo?.();
+        return;
+      }
+
+      if (event.ctrlKey && event.key === '[') {
+        event.preventDefault();
+        onToggleLeftPanel();
+        return;
+      }
+
+      if (event.ctrlKey && event.key === ']') {
+        event.preventDefault();
+        onToggleRightPanel();
+        return;
+      }
+
+      if (event.key === 'F11') {
+        event.preventDefault();
         onToggleFullscreen();
-        isFullscreenRef.current = !isFullscreenRef.current;
-        toast({
-          title: isFullscreenRef.current ? "Fullscreen Mode" : "Normal Mode",
-          description: isFullscreenRef.current ? "Panels hidden for focus" : "Panels restored",
-        });
+        return;
+      }
+
+      // Canvas-specific shortcuts (when not in collaboration mode)
+      if (!collaborationMode && canvasRef.current) {
+        // Delete selected block
+        if (event.key === 'Delete' || event.key === 'Backspace') {
+          if (canvasRef.current.deleteSelectedBlock) {
+            canvasRef.current.deleteSelectedBlock();
+            event.preventDefault();
+          }
+        }
+
+        // Duplicate selected block
+        if (event.ctrlKey && event.key === 'd') {
+          if (canvasRef.current.duplicateSelectedBlock) {
+            canvasRef.current.duplicateSelectedBlock();
+            event.preventDefault();
+          }
+        }
+
+        // Move blocks up/down
+        if (event.ctrlKey && event.key === 'ArrowUp') {
+          if (canvasRef.current.moveSelectedBlockUp) {
+            canvasRef.current.moveSelectedBlockUp();
+            event.preventDefault();
+          }
+        }
+
+        if (event.ctrlKey && event.key === 'ArrowDown') {
+          if (canvasRef.current.moveSelectedBlockDown) {
+            canvasRef.current.moveSelectedBlockDown();
+            event.preventDefault();
+          }
+        }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editor, canvasRef, onToggleLeftPanel, onToggleRightPanel, onToggleFullscreen, onSave, collaborationMode, toast]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [
+    editor,
+    canvasRef,
+    onToggleLeftPanel,
+    onToggleRightPanel,
+    onToggleFullscreen,
+    onSave,
+    onUndo,
+    onRedo,
+    collaborationMode
+  ]);
 };

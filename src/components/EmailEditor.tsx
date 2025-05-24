@@ -57,8 +57,13 @@ import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
 import { EmailSubjectLine } from './EmailSubjectLine';
-import { EmailSnippet } from '@/types/snippets';
+import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
+import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useToast } from '@/hooks/use-toast';
+import { enhancedAIService } from '@/services/EnhancedAIService';
+import { EmailSnippet } from '@/types/snippets';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -96,9 +101,17 @@ const EmailEditor = () => {
   const [fullscreenMode, setFullscreenMode] = useState(false);
   const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
   const [subjectLineScore, setSubjectLineScore] = useState(75);
+  const { toast } = useToast();
+  
+  // Enhanced undo/redo for email content
+  const [emailContent, emailActions] = useUndoRedo('');
+  
+  const handleEmailContentChange = (newContent: string) => {
+    setEmailHTML(newContent);
+    emailActions.set(newContent);
+  };
 
   const handleSave = () => {
-    // Enhanced save functionality to create templates
     const templateName = prompt('Enter template name:');
     if (!templateName) return;
     
@@ -107,7 +120,7 @@ const EmailEditor = () => {
       name: templateName,
       description: 'Created from email canvas',
       html: emailHTML,
-      subject: subjectLine, // Include subject line in template
+      subject: subjectLine,
       category: 'Custom',
       tags: ['canvas-created'],
       createdAt: new Date(),
@@ -118,7 +131,11 @@ const EmailEditor = () => {
     
     setTemplates(prev => [...prev, newTemplate]);
     
-    // Also export HTML file
+    toast({
+      title: "Template Saved",
+      description: `"${templateName}" has been saved to your templates.`,
+    });
+    
     const htmlContent = generateEmailHTML(emailHTML);
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -129,32 +146,52 @@ const EmailEditor = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleToggleFullscreen = () => {
-    setFullscreenMode(prev => !prev);
-    if (!fullscreenMode) {
-      setLeftPanelCollapsed(true);
-      setRightPanelCollapsed(true);
-    } else {
-      setLeftPanelCollapsed(false);
-      setRightPanelCollapsed(false);
+  const handleUndo = () => {
+    if (emailActions.canUndo) {
+      emailActions.undo();
+      setEmailHTML(emailActions.getHistory().past[emailActions.getHistory().past.length - 1] || '');
+      toast({
+        title: "Undone",
+        description: "Last change has been undone."
+      });
     }
   };
 
-  // Initialize keyboard shortcuts
+  const handleRedo = () => {
+    if (emailActions.canRedo) {
+      emailActions.redo();
+      setEmailHTML(emailActions.getHistory().future[0] || '');
+      toast({
+        title: "Redone",
+        description: "Change has been restored."
+      });
+    }
+  };
+
+  const handleClearCache = () => {
+    enhancedAIService.clearCache();
+    toast({
+      title: "Cache Cleared",
+      description: "AI analysis cache has been cleared."
+    });
+  };
+
   useKeyboardShortcuts({
-    editor: null, // Will be passed from collaborative editor
+    editor: null,
     canvasRef,
     onToggleLeftPanel: () => setLeftPanelCollapsed(prev => !prev),
     onToggleRightPanel: () => setRightPanelCollapsed(prev => !prev),
     onToggleFullscreen: handleToggleFullscreen,
     onSave: handleSave,
+    onUndo: handleUndo,
+    onRedo: handleRedo,
     collaborationMode
   });
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email', status: 'active' },
-    { key: 'Ctrl + Z', action: 'Undo', status: 'active' },
-    { key: 'Ctrl + Y', action: 'Redo', status: 'active' },
+    { key: 'Ctrl + Z', action: 'Undo', status: emailActions.canUndo ? 'active' : 'disabled' },
+    { key: 'Ctrl + Y', action: 'Redo', status: emailActions.canRedo ? 'active' : 'disabled' },
     { key: 'Ctrl + B', action: 'Bold text (collaboration mode)', status: 'active' },
     { key: 'Ctrl + I', action: 'Italic text (collaboration mode)', status: 'active' },
     { key: 'Ctrl + K', action: 'Insert link (collaboration mode)', status: 'active' },
@@ -163,7 +200,6 @@ const EmailEditor = () => {
     { key: 'Ctrl + ]', action: 'Toggle right panel', status: 'active' }
   ];
 
-  // Responsive panel widths based on screen size and density
   const getLeftPanelWidth = () => {
     if (leftPanelCollapsed) return 'w-12';
     if (compactMode) return 'w-56 lg:w-64 xl:w-72';
@@ -322,7 +358,6 @@ const EmailEditor = () => {
 
   const handlePreviewModeChange = (mode: PreviewMode) => {
     setPreviewMode(mode);
-    // Set default widths for each device type
     switch (mode) {
       case 'desktop':
         setPreviewWidth(1200);
@@ -338,7 +373,6 @@ const EmailEditor = () => {
 
   const handleWidthChange = (value: number[]) => {
     setPreviewWidth(value[0]);
-    // Auto-update preview mode based on width
     if (value[0] <= 480) {
       setPreviewMode('mobile');
     } else if (value[0] <= 1024) {
@@ -352,11 +386,16 @@ const EmailEditor = () => {
     switch (rightPanelTab) {
       case 'analytics':
         return (
-          <PerformanceAnalyzer 
-            editor={null} 
-            emailHTML={emailHTML} 
-            canvasRef={canvasRef}
+          <EnhancedPerformanceAnalyzer 
+            emailHTML={emailHTML}
             subjectLine={subjectLine}
+            onOptimize={(suggestion) => {
+              console.log('Applying optimization:', suggestion);
+              toast({
+                title: "Optimization Applied",
+                description: suggestion
+              });
+            }}
           />
         );
       case 'optimization':
@@ -368,110 +407,56 @@ const EmailEditor = () => {
         );
       default:
         return (
-          <PerformanceAnalyzer 
-            editor={null} 
+          <EnhancedPerformanceAnalyzer 
             emailHTML={emailHTML}
-            canvasRef={canvasRef}
             subjectLine={subjectLine}
+            onOptimize={(suggestion) => {
+              console.log('Applying optimization:', suggestion);
+              toast({
+                title: "Optimization Applied",
+                description: suggestion
+              });
+            }}
           />
         );
     }
   };
 
-  // Add collaboration toggle to the header actions
   const renderHeaderActions = () => (
     <div className="flex items-center gap-2 lg:gap-3">
-      {/* Collaboration Mode Toggle */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant={collaborationMode ? "default" : "outline"}
-            size="sm"
-            className="h-6 lg:h-8"
-          >
-            <Users className="w-3 h-3 lg:w-4 lg:h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80" align="end">
-          <div className="space-y-4">
-            <h4 className="font-medium text-sm">Collaboration Settings</h4>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="collab-mode" className="text-sm">Enable Collaboration</Label>
-              <Switch
-                id="collab-mode"
-                checked={collaborationMode}
-                onCheckedChange={setCollaborationMode}
-              />
-            </div>
-            {collaborationMode && (
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs text-gray-600">Document ID</Label>
-                  <Input
-                    value={collaborationConfig.documentId}
-                    onChange={(e) => setCollaborationConfig(prev => ({
-                      ...prev,
-                      documentId: e.target.value
-                    }))}
-                    className="text-xs h-8"
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-600">Your Name</Label>
-                  <Input
-                    value={collaborationConfig.userName}
-                    onChange={(e) => setCollaborationConfig(prev => ({
-                      ...prev,
-                      userName: e.target.value
-                    }))}
-                    className="text-xs h-8"
-                  />
-                </div>
-                <p className="text-xs text-gray-500">
-                  Share the document ID with others to collaborate in real-time.
-                </p>
-              </div>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+      <div className="flex items-center gap-1 hidden lg:flex">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleUndo}
+          disabled={!emailActions.canUndo}
+          className="h-6 lg:h-8 px-2"
+          title="Undo (Ctrl+Z)"
+        >
+          <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4 rotate-180" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRedo}
+          disabled={!emailActions.canRedo}
+          className="h-6 lg:h-8 px-2"
+          title="Redo (Ctrl+Y)"
+        >
+          <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4" />
+        </Button>
+      </div>
 
-      {/* Theme Toggle */}
       <Button
         variant="outline"
         size="sm"
-        onClick={toggleTheme}
-        className="h-6 lg:h-8"
+        onClick={handleClearCache}
+        className="h-6 lg:h-8 hidden lg:flex"
+        title="Clear AI Cache"
       >
-        {theme === 'light' ? <Moon className="w-3 h-3 lg:w-4 lg:h-4" /> : <Sun className="w-3 h-3 lg:w-4 lg:h-4" />}
+        <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4" />
       </Button>
 
-      {/* Keyboard Shortcuts - Hidden on small screens */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-6 lg:h-8 hidden lg:flex">
-            <Keyboard className="w-3 h-3 lg:w-4 lg:h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80" align="end">
-          <div className="space-y-3">
-            <h4 className="font-medium text-sm">Keyboard Shortcuts</h4>
-            <div className="space-y-2">
-              {keyboardShortcuts.map((shortcut, index) => (
-                <div key={index} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-600">{shortcut.action}</span>
-                  <Badge variant="outline" className="text-xs font-mono">
-                    {shortcut.key}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-      
-      <Separator orientation="vertical" className="h-4 lg:h-6" />
-      
       <Button variant="outline" size="sm" onClick={exportHTML} className="h-6 lg:h-8 hidden sm:flex">
         <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
         <span className="hidden lg:inline">Export</span>
@@ -486,10 +471,8 @@ const EmailEditor = () => {
 
   return (
     <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''} ${fullscreenMode ? 'fullscreen-mode' : ''}`}>
-      {/* Compact Professional Header - hide in fullscreen */}
       {!fullscreenMode && (
         <header className={`bg-white border-b border-slate-200 ${getHeaderHeight()} flex items-center justify-between px-4 lg:px-6`}>
-          {/* Left: Branding & Project */}
           <div className="flex items-center gap-2 lg:gap-3">
             <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <Mail className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
@@ -500,7 +483,6 @@ const EmailEditor = () => {
             </div>
           </div>
 
-          {/* Center: Enhanced Preview Controls */}
           <div className="flex items-center gap-2 lg:gap-4">
             <div className="flex items-center bg-slate-100 rounded-lg p-1">
               <Button
@@ -529,7 +511,6 @@ const EmailEditor = () => {
               </Button>
             </div>
             
-            {/* Width Slider - Hidden on small screens */}
             <div className="hidden lg:flex items-center gap-3 min-w-[150px] xl:min-w-[200px]">
               <span className="text-xs text-slate-500 font-mono">Width:</span>
               <div className="flex-1">
@@ -548,17 +529,13 @@ const EmailEditor = () => {
             </div>
           </div>
 
-          {/* Right: Actions - now using the new function */}
           {renderHeaderActions()}
         </header>
       )}
 
-      {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Tools - hide in fullscreen or when collapsed */}
         {!(fullscreenMode || leftPanelCollapsed) && (
           <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${getLeftPanelWidth()} flex flex-col`}>
-            {/* Header */}
             {leftPanelCollapsed ? (
               renderLeftPanel()
             ) : (
@@ -612,7 +589,6 @@ const EmailEditor = () => {
           </div>
         )}
 
-        {/* Left Panel Toggle (when collapsed and not fullscreen) */}
         {leftPanelCollapsed && !fullscreenMode && (
           <div className="w-12 bg-white border-r border-slate-200 flex flex-col items-center py-4 gap-4">
             <Button 
@@ -626,14 +602,15 @@ const EmailEditor = () => {
           </div>
         )}
 
-        {/* Center: Canvas or Collaborative Editor */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
-            {/* Subject Line - always visible */}
-            <EmailSubjectLine
+            <EnhancedEmailSubjectLine
               value={subjectLine}
               onChange={setSubjectLine}
-              performanceScore={subjectLineScore}
+              emailContent={emailHTML}
+              onAnalysisComplete={(analysis) => {
+                console.log('Subject line analysis completed:', analysis);
+              }}
             />
             
             {collaborationMode ? (
@@ -642,12 +619,12 @@ const EmailEditor = () => {
                 userId={collaborationConfig.userId}
                 userName={collaborationConfig.userName}
                 userColor={collaborationConfig.userColor}
-                onContentChange={setEmailHTML}
+                onContentChange={handleEmailContentChange}
               />
             ) : (
               <EmailBlockCanvas 
                 ref={canvasRef}
-                onContentChange={setEmailHTML}
+                onContentChange={handleEmailContentChange}
                 previewWidth={previewWidth}
                 previewMode={previewMode}
                 compactMode={compactMode}
@@ -656,7 +633,6 @@ const EmailEditor = () => {
           </div>
         </div>
         
-        {/* Right Panel - Analytics & Tools - hide in fullscreen or when collapsed */}
         {!(fullscreenMode || rightPanelCollapsed) && (
           <div className={`border-l border-slate-200 bg-white ${getRightPanelWidth()}`}>
             <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
@@ -697,7 +673,6 @@ const EmailEditor = () => {
           </div>
         )}
 
-        {/* Right Panel Toggle (when collapsed and not fullscreen) */}
         {rightPanelCollapsed && !fullscreenMode && (
           <div className="w-12 bg-white border-l border-slate-200 flex flex-col items-center py-4">
             <Button 
@@ -713,7 +688,6 @@ const EmailEditor = () => {
         )}
       </div>
 
-      {/* Compact Status Bar - hide in fullscreen */}
       {!fullscreenMode && (
         <div className={`bg-white border-t border-slate-200 px-4 lg:px-6 ${compactMode ? 'py-1' : 'py-2'} text-xs text-slate-600 flex items-center justify-between`}>
           <div className="flex items-center gap-4 lg:gap-6">
@@ -721,20 +695,25 @@ const EmailEditor = () => {
             <span className="hidden sm:inline">Templates: {templates.length}</span>
             <span className="hidden lg:flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Canvas-based editor with snippets
+              Enhanced AI-powered editor
             </span>
+            {(emailActions.canUndo || emailActions.canRedo) && (
+              <span className="hidden lg:flex items-center gap-2 text-blue-600">
+                <RefreshCw className="w-3 h-3" />
+                {emailActions.canUndo ? 'Can undo' : ''} {emailActions.canRedo ? 'Can redo' : ''}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 lg:gap-4">
             <span className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Auto-saved
+              Enhanced auto-save
             </span>
-            <span className="text-slate-400 hidden lg:inline">Email Builder Pro v3.0</span>
+            <span className="text-slate-400 hidden lg:inline">Email Builder Pro v4.0</span>
           </div>
         </div>
       )}
 
-      {/* Fullscreen Mode Indicator */}
       {fullscreenMode && (
         <div className="fixed top-4 right-4 z-50">
           <Button
