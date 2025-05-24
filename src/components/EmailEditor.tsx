@@ -48,6 +48,8 @@ import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
 import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { EmailBlockPalette } from './EmailBlockPalette';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
+import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -190,11 +192,19 @@ const EmailEditor = () => {
         return <ProfessionalToolPalette editor={null} />;
       case 'blocks':
         return (
-          <EmailBlockPalette onBlockAdd={handleBlockAdd} />
+          <EnhancedEmailBlockPalette 
+            onBlockAdd={handleBlockAdd}
+            universalContent={[]}
+            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
+          />
         );
       default:
         return (
-          <EmailBlockPalette onBlockAdd={handleBlockAdd} />
+          <EnhancedEmailBlockPalette 
+            onBlockAdd={handleBlockAdd}
+            universalContent={[]}
+            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
+          />
         );
     }
   };
@@ -230,7 +240,15 @@ const EmailEditor = () => {
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'properties':
-        return <EmailPropertiesPanel emailHTML={emailHTML} />;
+        return (
+          <EnhancedPropertiesPanel 
+            emailHTML={emailHTML}
+            onBlockUpdate={(block) => console.log('Block updated:', block)}
+            onBlockDelete={(blockId) => console.log('Block deleted:', blockId)}
+            onBlockDuplicate={(block) => console.log('Block duplicated:', block)}
+            onBlockSave={(block, name) => console.log('Block saved:', block, name)}
+          />
+        );
       case 'analytics':
         return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
       case 'optimization':
@@ -245,7 +263,15 @@ const EmailEditor = () => {
           </div>
         );
       default:
-        return <EmailPropertiesPanel emailHTML={emailHTML} />;
+        return (
+          <EnhancedPropertiesPanel 
+            emailHTML={emailHTML}
+            onBlockUpdate={(block) => console.log('Block updated:', block)}
+            onBlockDelete={(blockId) => console.log('Block deleted:', blockId)}
+            onBlockDuplicate={(block) => console.log('Block duplicated:', block)}
+            onBlockSave={(block, name) => console.log('Block saved:', block, name)}
+          />
+        );
     }
   };
 
