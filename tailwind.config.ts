@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,20 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'inter': ['Inter', 'sans-serif'],
+				'roboto': ['Roboto', 'sans-serif'],
+				'open-sans': ['Open Sans', 'sans-serif'],
+				'lato': ['Lato', 'sans-serif'],
+				'montserrat': ['Montserrat', 'sans-serif'],
+				'poppins': ['Poppins', 'sans-serif'],
+				'source-sans': ['Source Sans Pro', 'sans-serif'],
+				'nunito': ['Nunito', 'sans-serif'],
+				'raleway': ['Raleway', 'sans-serif'],
+				'ubuntu': ['Ubuntu', 'sans-serif'],
+				'playfair': ['Playfair Display', 'serif'],
+				'merriweather': ['Merriweather', 'serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

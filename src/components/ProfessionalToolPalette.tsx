@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import {
   Monitor
 } from 'lucide-react';
 
-import { EmailPropertiesPanel } from './EmailPropertiesPanel';
+import { GlobalStylesPanel } from './GlobalStylesPanel';
 
 interface ProfessionalToolPaletteProps {
   editor: Editor | null;
@@ -26,8 +27,8 @@ export const ProfessionalToolPalette: React.FC<ProfessionalToolPaletteProps> = (
   const [activeCategory, setActiveCategory] = useState<ToolCategory>('properties');
 
   const toolCategories = [
-    { id: 'properties' as ToolCategory, name: 'Properties', icon: <Settings className="w-4 h-4" /> },
-    { id: 'styling' as ToolCategory, name: 'Styling', icon: <Palette className="w-4 h-4" /> },
+    { id: 'properties' as ToolCategory, name: 'Global Styles', icon: <Palette className="w-4 h-4" /> },
+    { id: 'styling' as ToolCategory, name: 'Styling', icon: <Settings className="w-4 h-4" /> },
     { id: 'layout' as ToolCategory, name: 'Layout', icon: <Layout className="w-4 h-4" /> },
     { id: 'advanced' as ToolCategory, name: 'Advanced', icon: <Sliders className="w-4 h-4" /> },
     { id: 'preview' as ToolCategory, name: 'Preview', icon: <Eye className="w-4 h-4" /> }
@@ -36,7 +37,7 @@ export const ProfessionalToolPalette: React.FC<ProfessionalToolPaletteProps> = (
   const renderCategoryContent = () => {
     switch (activeCategory) {
       case 'properties':
-        return <EmailPropertiesPanel />;
+        return <GlobalStylesPanel />;
       
       case 'styling':
         return (
