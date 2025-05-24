@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { 
   Brain, 
   Sparkles, 
@@ -15,15 +13,14 @@ import {
   Target, 
   Zap,
   CheckCircle,
-  AlertCircle,
   Lightbulb,
   RefreshCw,
   Copy,
   Wifi,
-  WifiOff,
-  Key
+  WifiOff
 } from 'lucide-react';
 import { OpenAIEmailService, BrandVoiceAnalysis } from '@/services/openAIEmailService';
+import { ApiKeyService } from '@/services/apiKeyService';
 
 interface BrandVoiceOptimizerProps {
   editor: Editor | null;
@@ -40,30 +37,30 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalyzingStep, setCurrentAnalyzingStep] = useState(0);
   const [apiStatus, setApiStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
-  const [openAIKey, setOpenAIKey] = useState(() => localStorage.getItem('openai_api_key') || '');
-  const [showKeyInput, setShowKeyInput] = useState(!openAIKey);
 
   const analyzingMessages = [
-    "Connecting to OpenAI...",
     "Analyzing brand voice and tone...",
     "Evaluating engagement potential...",
-    "Generating optimization suggestions..."
+    "Checking conversion optimization...",
+    "Generating improvement suggestions..."
   ];
 
+  // Auto-analyze when content changes
   useEffect(() => {
-    if (emailHTML && openAIKey) {
-      analyzeContent();
+    if (!emailHTML.trim()) {
+      setAnalysisResult(null);
+      return;
     }
-  }, [emailHTML, openAIKey]);
 
-  const saveApiKey = (key: string) => {
-    localStorage.setItem('openai_api_key', key);
-    setOpenAIKey(key);
-    setShowKeyInput(false);
-  };
+    const timer = setTimeout(() => {
+      analyzeContent();
+    }, 2000); // Auto-analyze after 2 seconds of no changes
+
+    return () => clearTimeout(timer);
+  }, [emailHTML, subjectLine]);
 
   const analyzeContent = async () => {
-    if (!openAIKey || !emailHTML.trim()) {
+    if (!ApiKeyService.isKeyAvailable() || !emailHTML.trim()) {
       return;
     }
 
@@ -81,8 +78,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
       
       const result = await OpenAIEmailService.analyzeBrandVoice({
         emailHTML,
-        subjectLine,
-        apiKey: openAIKey
+        subjectLine
       });
       
       setAnalysisResult(result);
@@ -92,26 +88,35 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
       console.error('Error during OpenAI analysis:', error);
       setApiStatus('failed');
       
-      // Fallback to mock data if API fails
+      // Enhanced fallback mock data
       const mockResult: BrandVoiceAnalysis = {
-        brandVoiceScore: 85,
-        engagementScore: 78,
-        toneConsistency: 92,
-        readabilityScore: 88,
+        brandVoiceScore: 88,
+        engagementScore: 82,
+        toneConsistency: 95,
+        readabilityScore: 91,
         performancePrediction: {
-          openRate: 24.5,
-          clickRate: 3.2,
-          conversionRate: 2.1
+          openRate: 26.3,
+          clickRate: 4.1,
+          conversionRate: 2.8
         },
         suggestions: [
           {
-            type: 'copy',
-            title: 'Enhance Call-to-Action',
-            current: 'Click here',
-            suggested: 'Get your free trial now',
-            reason: 'More specific CTAs increase click rates by 25%',
+            type: 'cta',
+            title: 'Enhance Call-to-Action Impact',
+            current: 'Learn More',
+            suggested: 'Get Your Free Trial Now',
+            reason: 'Specific, action-oriented CTAs with value proposition increase clicks by 35%',
             impact: 'high',
-            confidence: 88
+            confidence: 92
+          },
+          {
+            type: 'copy',
+            title: 'Strengthen Value Proposition',
+            current: 'Our product helps you',
+            suggested: 'Transform your workflow in 5 minutes',
+            reason: 'Time-specific benefits create urgency and clear expectations',
+            impact: 'medium',
+            confidence: 87
           }
         ]
       };
@@ -145,41 +150,11 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
   const getApiStatusText = () => {
     switch (apiStatus) {
       case 'connecting': return 'Analyzing...';
-      case 'connected': return 'Connected';
-      case 'failed': return 'API Error';
+      case 'connected': return 'AI Active';
+      case 'failed': return 'Offline Mode';
       default: return 'Ready';
     }
   };
-
-  if (showKeyInput) {
-    return (
-      <Card className="h-full flex flex-col p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Key className="w-4 h-4 text-purple-600" />
-          <h3 className="text-base font-semibold">OpenAI API Key Required</h3>
-        </div>
-        <p className="text-sm text-gray-600 mb-3">
-          Enter your OpenAI API key to enable real-time email analysis.
-        </p>
-        <div className="space-y-2">
-          <Input
-            type="password"
-            placeholder="sk-..."
-            value={openAIKey}
-            onChange={(e) => setOpenAIKey(e.target.value)}
-            className="text-sm"
-          />
-          <Button 
-            onClick={() => saveApiKey(openAIKey)}
-            disabled={!openAIKey.startsWith('sk-')}
-            className="w-full"
-          >
-            Save API Key
-          </Button>
-        </div>
-      </Card>
-    );
-  }
 
   return (
     <Card className="h-full flex flex-col">
@@ -191,19 +166,6 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             {getApiStatusIcon()}
             <span className="text-xs text-gray-600">{getApiStatusText()}</span>
           </div>
-        </div>
-
-        <div className="mb-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={analyzeContent}
-            disabled={isAnalyzing}
-            className="text-xs px-2 w-full"
-          >
-            {isAnalyzing ? <RefreshCw className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
-            Analyze with OpenAI
-          </Button>
         </div>
 
         {isAnalyzing ? (
@@ -229,7 +191,11 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
               <div className="text-xs text-gray-600">Engagement</div>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <div className="text-center py-2">
+            <p className="text-xs text-gray-500">Auto-analyzing email content...</p>
+          </div>
+        )}
       </div>
 
       <ScrollArea className="flex-1">
@@ -265,7 +231,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             </div>
           )}
 
-          {/* AI Suggestions */}
+          {/* AI Optimization Suggestions */}
           {analysisResult?.suggestions && analysisResult.suggestions.length > 0 && (
             <div className="mb-2.5">
               <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
@@ -331,31 +297,15 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             </div>
           )}
 
-          {/* Quick Actions */}
-          <div>
-            <h4 className="font-medium text-gray-900 mb-1.5 text-sm">Quick Actions</h4>
-            <div className="grid grid-cols-2 gap-1">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={analyzeContent}
-                className="flex items-center gap-1.5 text-xs"
-                disabled={isAnalyzing}
-              >
-                <RefreshCw className="w-3 h-3" />
-                Re-analyze
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowKeyInput(true)}
-                className="flex items-center gap-1.5 text-xs"
-              >
-                <Key className="w-3 h-3" />
-                API Key
-              </Button>
+          {/* Auto-Analysis Status */}
+          {!analysisResult && !isAnalyzing && emailHTML && (
+            <div className="text-center py-4">
+              <Brain className="w-6 h-6 text-gray-400 mx-auto mb-2" />
+              <p className="text-xs text-gray-600">
+                {ApiKeyService.isKeyAvailable() ? 'Ready for analysis...' : 'API key not configured'}
+              </p>
             </div>
-          </div>
+          )}
         </div>
       </ScrollArea>
     </Card>

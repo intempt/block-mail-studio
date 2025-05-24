@@ -1,30 +1,28 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
 import { 
   BarChart3, 
   CheckCircle, 
   AlertTriangle, 
   Zap, 
-  Eye,
   Clock,
   Smartphone,
   Monitor,
   Target,
   TrendingUp,
   RefreshCw,
-  Key,
   Wifi,
-  WifiOff
+  WifiOff,
+  Shield
 } from 'lucide-react';
 import { Editor } from '@tiptap/react';
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { OpenAIEmailService, PerformanceAnalysis } from '@/services/openAIEmailService';
+import { ApiKeyService } from '@/services/apiKeyService';
 
 interface PerformanceAnalyzerProps {
   editor: Editor | null;
@@ -42,8 +40,6 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [performanceResult, setPerformanceResult] = useState<PerformanceAnalysis | null>(null);
   const [apiStatus, setApiStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
-  const [openAIKey, setOpenAIKey] = useState(() => localStorage.getItem('openai_api_key') || '');
-  const [showKeyInput, setShowKeyInput] = useState(!openAIKey);
   const [currentStep, setCurrentStep] = useState(0);
 
   const [emailMetrics, setEmailMetrics] = useState({
@@ -55,27 +51,24 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   });
 
   const analyzingSteps = [
-    "Connecting to OpenAI...",
-    "Analyzing deliverability...",
+    "Analyzing deliverability factors...",
     "Checking mobile optimization...",
-    "Evaluating accessibility..."
+    "Evaluating accessibility compliance...",
+    "Generating performance insights..."
   ];
 
+  // Auto-analyze when content changes
   useEffect(() => {
     analyzeContent();
-  }, [emailHTML, subjectLine]);
+    
+    if (emailHTML && ApiKeyService.isKeyAvailable()) {
+      const timer = setTimeout(() => {
+        runFullAnalysis();
+      }, 2500); // Auto-analyze after 2.5 seconds
 
-  useEffect(() => {
-    if (emailHTML && openAIKey) {
-      runFullAnalysis();
+      return () => clearTimeout(timer);
     }
-  }, [emailHTML, openAIKey]);
-
-  const saveApiKey = (key: string) => {
-    localStorage.setItem('openai_api_key', key);
-    setOpenAIKey(key);
-    setShowKeyInput(false);
-  };
+  }, [emailHTML, subjectLine]);
 
   const analyzeContent = () => {
     const textContent = emailHTML.replace(/<[^>]*>/g, '');
@@ -93,7 +86,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   };
 
   const runFullAnalysis = async () => {
-    if (!openAIKey || !emailHTML.trim()) {
+    if (!ApiKeyService.isKeyAvailable() || !emailHTML.trim()) {
       return;
     }
 
@@ -111,8 +104,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
       
       const result = await OpenAIEmailService.analyzePerformance({
         emailHTML,
-        subjectLine,
-        apiKey: openAIKey
+        subjectLine
       });
       
       setPerformanceResult(result);
@@ -122,30 +114,37 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
       console.error('Error during OpenAI analysis:', error);
       setApiStatus('failed');
       
-      // Fallback to mock data if API fails
+      // Enhanced fallback mock data
       const mockResult: PerformanceAnalysis = {
-        overallScore: 85,
-        deliverabilityScore: 88,
-        mobileScore: 92,
-        spamScore: 15,
+        overallScore: 87,
+        deliverabilityScore: 91,
+        mobileScore: 94,
+        spamScore: 12,
         metrics: {
-          loadTime: { value: 1.2, status: 'good' },
-          accessibility: { value: 78, status: 'warning' },
-          imageOptimization: { value: 88, status: 'good' },
-          linkCount: { value: emailMetrics.linkCount, status: 'good' }
+          loadTime: { value: 1.1, status: 'good' },
+          accessibility: { value: 83, status: 'warning' },
+          imageOptimization: { value: 92, status: 'good' },
+          linkCount: { value: emailMetrics.linkCount, status: emailMetrics.linkCount > 10 ? 'warning' : 'good' }
         },
         accessibilityIssues: [
           {
             type: 'Missing Alt Text',
             severity: 'medium',
-            description: 'Some images are missing alt text for screen readers',
-            fix: 'Add descriptive alt text to all images'
+            description: 'Some images lack descriptive alt text for screen readers',
+            fix: 'Add meaningful alt attributes to all images describing their content or purpose'
+          },
+          {
+            type: 'Color Contrast',
+            severity: 'low',
+            description: 'Some text may not meet WCAG AA contrast requirements',
+            fix: 'Ensure text has at least 4.5:1 contrast ratio against background'
           }
         ],
         optimizationSuggestions: [
-          'Optimize image file sizes for faster loading',
-          'Add more descriptive alt text to images',
-          'Consider reducing the number of different fonts'
+          'Compress images to reduce load time by 25%',
+          'Add more descriptive alt text to improve accessibility',
+          'Consider reducing font variety for better mobile performance',
+          'Optimize email width for better mobile display'
         ]
       };
       setPerformanceResult(mockResult);
@@ -212,37 +211,14 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
     }
   };
 
-  if (showKeyInput) {
-    return (
-      <div className="h-full flex flex-col">
-        <Card className="p-4 m-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Key className="w-4 h-4 text-blue-600" />
-            <h3 className="text-base font-semibold">OpenAI API Key Required</h3>
-          </div>
-          <p className="text-sm text-gray-600 mb-3">
-            Enter your OpenAI API key to enable AI-powered performance analysis.
-          </p>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="sk-..."
-              value={openAIKey}
-              onChange={(e) => setOpenAIKey(e.target.value)}
-              className="text-sm"
-            />
-            <Button 
-              onClick={() => saveApiKey(openAIKey)}
-              disabled={!openAIKey.startsWith('sk-')}
-              className="w-full"
-            >
-              Save API Key
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
+  const getApiStatusText = () => {
+    switch (apiStatus) {
+      case 'connecting': return 'Analyzing...';
+      case 'connected': return 'AI Active';
+      case 'failed': return 'Offline Mode';
+      default: return 'Ready';
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -251,18 +227,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
           <h3 className="text-lg font-semibold text-gray-900">AI Performance Analytics</h3>
           <div className="flex items-center gap-2">
             {getApiStatusIcon()}
-            <Button
-              size="sm"
-              onClick={runFullAnalysis}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? (
-                <Clock className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <BarChart3 className="w-4 h-4 mr-2" />
-              )}
-              {isAnalyzing ? 'Analyzing...' : 'Analyze'}
-            </Button>
+            <span className="text-xs text-gray-600">{getApiStatusText()}</span>
           </div>
         </div>
 
@@ -294,7 +259,13 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
               </div>
             </Card>
           </div>
-        ) : null}
+        ) : (
+          <div className="text-center py-2">
+            <p className="text-sm text-gray-500">
+              {ApiKeyService.isKeyAvailable() ? 'Auto-analyzing performance...' : 'Add content to analyze'}
+            </p>
+          </div>
+        )}
       </div>
 
       <ScrollArea className="flex-1">
@@ -338,7 +309,10 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
           {/* Accessibility Issues */}
           {performanceResult && performanceResult.accessibilityIssues.length > 0 && (
             <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3">Accessibility Issues</h4>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Accessibility Issues
+              </h4>
               <div className="space-y-2">
                 {performanceResult.accessibilityIssues.map((issue, index) => (
                   <div key={index} className="p-3 border rounded">
@@ -361,7 +335,10 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
           {/* AI Optimization Suggestions */}
           {performanceResult && performanceResult.optimizationSuggestions.length > 0 && (
             <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3">AI Optimization Suggestions</h4>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                AI Optimization Suggestions
+              </h4>
               <div className="space-y-2">
                 {performanceResult.optimizationSuggestions.map((suggestion, index) => (
                   <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
@@ -396,52 +373,6 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
             <div className="mt-3 pt-3 border-t border-gray-200">
               <div className="text-sm text-gray-600">Estimated read time</div>
               <div className="font-medium">{emailMetrics.estimatedReadTime}</div>
-            </div>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Quick Optimizations</h4>
-            <div className="space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={optimizeImages}
-                className="w-full justify-start"
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                Optimize Images
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={minifyHTML}
-                className="w-full justify-start"
-              >
-                <Target className="w-4 h-4 mr-2" />
-                Minify HTML
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={checkLinks}
-                className="w-full justify-start"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Check Links
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowKeyInput(true)}
-                className="w-full justify-start"
-              >
-                <Key className="w-4 h-4 mr-2" />
-                API Key Settings
-              </Button>
             </div>
           </Card>
         </div>
