@@ -47,7 +47,7 @@ import { EmailAIChat } from './EmailAIChat';
 import { EmailEditorToolbar } from './EmailEditorToolbar';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
 import { CollaborativeEmailEditor } from './CollaborativeEmailEditor';
-import { IntelligentAssistant } from './IntelligentAssistant';
+import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
 import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
@@ -322,7 +322,7 @@ const EmailEditor = () => {
       case 'analytics':
         return <PerformanceAnalyzer editor={editor} emailHTML={emailHTML} />;
       case 'optimization':
-        return <IntelligentAssistant editor={editor} emailHTML={emailHTML} />;
+        return <BrandVoiceOptimizer editor={editor} emailHTML={emailHTML} />;
       case 'code':
         return (
           <div className="p-4">
