@@ -56,6 +56,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   onUniversalContentAdd,
   compactMode = false
 }) => {
+  console.log('EnhancedEmailBlockPalette rendering');
+  
   const [sectionsExpanded, setSectionsExpanded] = useState({
     blocks: true
   });
@@ -73,6 +75,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const handleSnippetSelect = (snippet: EmailSnippet) => {
+    console.log('Snippet selected:', snippet);
     if (onSnippetAdd) {
       onSnippetAdd(snippet);
     }
@@ -108,70 +111,94 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     );
   };
 
-  return (
-    <div className="h-full flex flex-col">
-      <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
-        <TabsList className={`mx-2 ${compactMode ? 'mb-1' : 'mb-2'}`}>
-          <TabsTrigger value="blocks" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-            Blocks
-          </TabsTrigger>
-          <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-            Layouts
-          </TabsTrigger>
-          <TabsTrigger value="snippets" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-            Snippets
-          </TabsTrigger>
-        </TabsList>
-
-        <div className="flex-1 overflow-hidden">
-          <TabsContent value="blocks" className="h-full mt-0">
-            <ScrollArea className="flex-1">
-              <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
-                <Collapsible 
-                  open={sectionsExpanded.blocks} 
-                  onOpenChange={() => toggleSection('blocks')}
-                >
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between p-0 h-auto mb-2">
-                      <div className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
-                        <Blocks className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
-                        Content Blocks
-                      </div>
-                      {sectionsExpanded.blocks ? 
-                        <ChevronDown className="w-4 h-4" /> : 
-                        <ChevronRight className="w-4 h-4" />
-                      }
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}>
-                      {blockItems.map(renderBlockItem)}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="layouts" className="h-full mt-0">
-            <ScrollArea className="flex-1">
-              <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
-                <LayoutConfigPanel 
-                  onLayoutSelect={handleLayoutSelect}
-                  compactMode={compactMode}
-                />
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="snippets" className="h-full mt-0">
-            <SnippetManager
-              onSnippetSelect={handleSnippetSelect}
-              compactMode={compactMode}
-            />
-          </TabsContent>
+  const renderSnippetsTab = () => {
+    try {
+      return (
+        <SnippetManager
+          onSnippetSelect={handleSnippetSelect}
+          compactMode={compactMode}
+        />
+      );
+    } catch (error) {
+      console.error('Error rendering snippets tab:', error);
+      return (
+        <div className="p-4 text-center">
+          <p className="text-slate-500 text-sm">Snippets not available</p>
         </div>
-      </Tabs>
-    </div>
-  );
+      );
+    }
+  };
+
+  try {
+    return (
+      <div className="h-full flex flex-col">
+        <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
+          <TabsList className={`mx-2 ${compactMode ? 'mb-1' : 'mb-2'}`}>
+            <TabsTrigger value="blocks" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+              Blocks
+            </TabsTrigger>
+            <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+              Layouts
+            </TabsTrigger>
+            <TabsTrigger value="snippets" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+              Snippets
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="flex-1 overflow-hidden">
+            <TabsContent value="blocks" className="h-full mt-0">
+              <ScrollArea className="flex-1">
+                <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
+                  <Collapsible 
+                    open={sectionsExpanded.blocks} 
+                    onOpenChange={() => toggleSection('blocks')}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-0 h-auto mb-2">
+                        <div className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
+                          <Blocks className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
+                          Content Blocks
+                        </div>
+                        {sectionsExpanded.blocks ? 
+                          <ChevronDown className="w-4 h-4" /> : 
+                          <ChevronRight className="w-4 h-4" />
+                        }
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <div className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}>
+                        {blockItems.map(renderBlockItem)}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="layouts" className="h-full mt-0">
+              <ScrollArea className="flex-1">
+                <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
+                  <LayoutConfigPanel 
+                    onLayoutSelect={handleLayoutSelect}
+                    compactMode={compactMode}
+                  />
+                </div>
+              </ScrollArea>
+            </TabsContent>
+
+            <TabsContent value="snippets" className="h-full mt-0">
+              {renderSnippetsTab()}
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
+    );
+  } catch (error) {
+    console.error('Error in EnhancedEmailBlockPalette:', error);
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-slate-500">Error loading block palette</p>
+      </div>
+    );
+  }
 };
