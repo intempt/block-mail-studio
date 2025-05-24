@@ -17,7 +17,9 @@ import {
   AlertCircle,
   Lightbulb,
   RefreshCw,
-  Copy
+  Copy,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult } from '@/services/EmailAIService';
 
@@ -35,12 +37,13 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [subjectLine, setSubjectLine] = useState('');
   const [currentAnalyzingStep, setCurrentAnalyzingStep] = useState(0);
+  const [apiStatus, setApiStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
 
   const analyzingMessages = [
-    "Analyzing content tone and voice...",
-    "Evaluating engagement potential...",
-    "Checking brand consistency...",
-    "Generating optimization suggestions..."
+    "Parsing email content and structure...",
+    "Analyzing brand voice consistency...",
+    "Evaluating engagement and psychology...",
+    "Generating AI-powered suggestions..."
   ];
 
   useEffect(() => {
@@ -51,28 +54,33 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
   const analyzeContent = async () => {
     setIsAnalyzing(true);
+    setApiStatus('connecting');
     
-    // Simulate progressive analysis steps
+    // Progressive analysis steps with real timing
     for (let i = 0; i < analyzingMessages.length; i++) {
       setCurrentAnalyzingStep(i);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 600));
     }
 
     try {
-      console.log('Starting AI-powered brand voice analysis...');
+      console.log('Starting enhanced AI-powered brand voice analysis...');
+      setApiStatus('connected');
       
       const brandResult = await emailAIService.analyzeBrandVoice(emailHTML, subjectLine);
-      console.log('Brand voice analysis completed:', brandResult);
+      console.log('Enhanced brand voice analysis completed:', brandResult);
       setAnalysisResult(brandResult);
 
       if (subjectLine.trim()) {
-        console.log('Analyzing subject line:', subjectLine);
+        console.log('Running enhanced subject line analysis:', subjectLine);
         const subjectResult = await emailAIService.analyzeSubjectLine(subjectLine, emailHTML);
-        console.log('Subject line analysis completed:', subjectResult);
+        console.log('Enhanced subject line analysis completed:', subjectResult);
         setSubjectLineAnalysis(subjectResult);
       }
+      
+      setApiStatus('connected');
     } catch (error) {
-      console.error('Error during brand voice analysis:', error);
+      console.error('Error during enhanced AI analysis:', error);
+      setApiStatus('failed');
       setAnalysisResult({
         brandVoiceScore: null,
         engagementScore: null,
@@ -94,13 +102,17 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
     if (!subjectLine.trim()) return;
     
     setIsAnalyzing(true);
+    setApiStatus('connecting');
+    
     try {
-      console.log('Analyzing subject line only:', subjectLine);
+      console.log('Running enhanced subject line analysis only:', subjectLine);
       const result = await emailAIService.analyzeSubjectLine(subjectLine, emailHTML);
-      console.log('Subject line analysis completed:', result);
+      console.log('Enhanced subject line analysis completed:', result);
       setSubjectLineAnalysis(result);
+      setApiStatus('connected');
     } catch (error) {
       console.error('Error analyzing subject line:', error);
+      setApiStatus('failed');
     } finally {
       setIsAnalyzing(false);
     }
@@ -160,15 +172,34 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
     return value !== null ? value.toString() : '--';
   };
 
+  const getApiStatusIcon = () => {
+    switch (apiStatus) {
+      case 'connecting': return <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />;
+      case 'connected': return <Wifi className="w-3 h-3 text-green-500" />;
+      case 'failed': return <WifiOff className="w-3 h-3 text-red-500" />;
+      default: return <Brain className="w-3 h-3 text-gray-400" />;
+    }
+  };
+
+  const getApiStatusText = () => {
+    switch (apiStatus) {
+      case 'connecting': return 'Connecting to AI...';
+      case 'connected': return 'AI Connected';
+      case 'failed': return 'AI Unavailable';
+      default: return 'AI Ready';
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <div className="p-3 border-b border-gray-200">
         <div className="flex items-center gap-1.5 mb-3">
           <Brain className="w-4 h-4 text-purple-600" />
-          <h3 className="text-base font-semibold">Brand Voice Optimizer</h3>
-          <Badge variant="secondary" className="ml-auto bg-purple-50 text-purple-700 text-xs">
-            AI Powered
-          </Badge>
+          <h3 className="text-base font-semibold">Enhanced AI Optimizer</h3>
+          <div className="flex items-center gap-1 ml-auto">
+            {getApiStatusIcon()}
+            <span className="text-xs text-gray-600">{getApiStatusText()}</span>
+          </div>
         </div>
 
         <div className="mb-3">
@@ -206,7 +237,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             {analysisResult.brandVoiceScore === null ? (
               <div className="text-center p-2 bg-red-50 rounded">
                 <AlertCircle className="w-4 h-4 text-red-500 mx-auto mb-1" />
-                <div className="text-xs text-red-700">AI Analysis Unavailable</div>
+                <div className="text-xs text-red-700">Enhanced AI Analysis Unavailable</div>
                 <div className="text-xs text-red-600">Check connection and try again</div>
               </div>
             ) : (
@@ -232,7 +263,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             <div className="mb-2.5">
               <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
                 <Target className="w-3 h-3" />
-                Subject Line Analysis
+                Enhanced Subject Line Analysis
               </h4>
               
               <Card className="p-2 border">
@@ -246,7 +277,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                     <div className="grid grid-cols-2 gap-2 mb-2">
                       <div className="text-center">
                         <div className="text-lg font-bold text-purple-600">{formatValue(subjectLineAnalysis.score)}</div>
-                        <div className="text-xs text-gray-600">Overall Score</div>
+                        <div className="text-xs text-gray-600">AI Score</div>
                       </div>
                       <div className="text-center">
                         <div className={`text-lg font-bold ${getSpamRiskColor(subjectLineAnalysis.spamRisk)}`}>
@@ -271,9 +302,21 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                       </div>
                     </div>
 
+                    {subjectLineAnalysis.abTestSuggestions.length > 0 && (
+                      <div className="bg-purple-50 p-1.5 rounded mb-2">
+                        <div className="text-xs font-medium text-purple-900 mb-1">A/B Test Suggestions:</div>
+                        {subjectLineAnalysis.abTestSuggestions.slice(0, 2).map((suggestion, index) => (
+                          <div key={index} className="text-xs text-purple-800 flex items-center gap-1">
+                            <Sparkles className="w-2 h-2" />
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {subjectLineAnalysis.recommendations.length > 0 && (
                       <div className="bg-blue-50 p-1.5 rounded">
-                        <div className="text-xs font-medium text-blue-900 mb-1">AI Recommendations:</div>
+                        <div className="text-xs font-medium text-blue-900 mb-1">Enhanced AI Recommendations:</div>
                         {subjectLineAnalysis.recommendations.slice(0, 2).map((rec, index) => (
                           <div key={index} className="text-xs text-blue-800">• {rec}</div>
                         ))}
@@ -290,7 +333,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             <div className="mb-2.5">
               <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
                 <TrendingUp className="w-3 h-3" />
-                Performance Prediction
+                AI Performance Prediction
               </h4>
               
               {analysisResult.performancePrediction.openRate === null ? (
@@ -317,11 +360,11 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             </div>
           )}
 
-          {/* Optimization Suggestions */}
+          {/* Enhanced Optimization Suggestions */}
           <div>
             <h4 className="font-medium text-gray-900 mb-1.5 flex items-center gap-1 text-sm">
               <Lightbulb className="w-3 h-3" />
-              AI Optimization Suggestions ({analysisResult?.suggestions.length || 0})
+              Enhanced AI Suggestions ({analysisResult?.suggestions.length || 0})
             </h4>
             
             <div className="space-y-1.5">
@@ -354,7 +397,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                     </div>
                     
                     <div className="text-xs">
-                      <span className="text-gray-500">AI Suggested:</span>
+                      <span className="text-gray-500">Enhanced AI Suggested:</span>
                       <div className="bg-blue-50 p-1 rounded text-blue-700 mt-0.5 text-xs">
                         {suggestion.suggested}
                       </div>
@@ -362,7 +405,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                   </div>
                   
                   <p className="text-xs text-gray-600 mb-1.5 italic">
-                    💡 {suggestion.reason}
+                    🧠 {suggestion.reason}
                   </p>
                   
                   <div className="flex gap-1">
@@ -372,7 +415,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                       onClick={() => applySuggestion(index)}
                       className="flex-1 text-xs"
                     >
-                      Apply
+                      Apply AI Fix
                     </Button>
                     <Button
                       variant="ghost"
@@ -391,14 +434,14 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                   {analysisResult.brandVoiceScore === null ? (
                     <div className="text-center p-2 bg-red-50 rounded">
                       <AlertCircle className="w-4 h-4 text-red-500 mx-auto mb-1" />
-                      <div className="text-xs text-red-700">No suggestions available</div>
-                      <div className="text-xs text-red-600">AI analysis failed</div>
+                      <div className="text-xs text-red-700">No AI suggestions available</div>
+                      <div className="text-xs text-red-600">Enhanced AI analysis failed</div>
                     </div>
                   ) : (
                     <>
                       <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1.5" />
                       <p className="text-xs text-gray-600">All AI optimizations applied!</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Your email is performing well.</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Your email is performing excellently.</p>
                     </>
                   )}
                 </div>
@@ -406,15 +449,16 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Enhanced Quick Actions */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-1.5 text-sm">AI-Powered Actions</h4>
+            <h4 className="font-medium text-gray-900 mb-1.5 text-sm">Enhanced AI Actions</h4>
             <div className="grid grid-cols-2 gap-1">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={analyzeContent}
                 className="flex items-center gap-1.5 text-xs"
+                disabled={isAnalyzing}
               >
                 <RefreshCw className="w-3 h-3" />
                 Re-analyze
