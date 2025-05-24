@@ -14,7 +14,7 @@ import Underline from '@tiptap/extension-underline';
 import FontFamily from '@tiptap/extension-font-family';
 import Placeholder from '@tiptap/extension-placeholder';
 import Gapcursor from '@tiptap/extension-gapcursor';
-import { Users, MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { Users, MessageSquare, Image as ImageIcon, TrendingUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -43,7 +43,8 @@ import {
   Table as TableIcon,
   Brain,
   Store,
-  User
+  User,
+  Layout
 } from 'lucide-react';
 
 import { EmailBlockLibrary } from './EmailBlockLibrary';
@@ -67,26 +68,64 @@ import { ResponsiveLayoutControls } from './ResponsiveLayoutControls';
 import { DynamicContentEditor } from './DynamicContentEditor';
 import { IndustryTemplateLibrary } from './IndustryTemplateLibrary';
 import { SmartDesignAssistant } from './SmartDesignAssistant';
+import { IntelligentAssistant } from './IntelligentAssistant';
+import { WorkspaceManager } from './WorkspaceManager';
+import { TemplateEvolution } from './TemplateEvolution';
+import { CollaborationHub } from './CollaborationHub';
 
 type ViewMode = 'chat' | 'build';
 type EditorMode = 'visual' | 'code' | 'prompt' | 'blocks';
-type BuildTool = 'blocks' | 'advanced' | 'brand' | 'table' | 'responsive' | 'dynamic' | 'templates' | 'assistant';
+type BuildTool = 'blocks' | 'advanced' | 'brand' | 'table' | 'responsive' | 'dynamic' | 'templates' | 'assistant' | 'intelligent' | 'evolution' | 'collaboration' | 'workspace';
+
+interface DevicePreset {
+  name: string;
+  width: number;
+  height: number;
+  icon: React.ReactNode;
+}
+
+interface ResponsiveLayoutControlsProps {
+  currentDevice: string;
+  onDeviceChange: (device: string) => void;
+  onWidthChange: (width: number) => void;
+}
+
+interface WorkspaceSettings {
+  theme: 'light' | 'dark' | 'auto';
+  sidebarPosition: 'left' | 'right';
+  panelLayout: 'default' | 'minimal' | 'expanded';
+  showToolbar: boolean;
+  showStatusBar: boolean;
+  autoSave: boolean;
+  keyboardShortcuts: boolean;
+  compactMode: boolean;
+}
 
 const EmailEditor = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
   const [editorMode, setEditorMode] = useState<EditorMode>('visual');
   const [buildTool, setBuildTool] = useState<BuildTool>('blocks');
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [previewMode, setPreviewMode<'desktop' | 'mobile'>>('desktop');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [collaborationMode, setCollaborationMode] = useState(false);
+  const [collaborationMode, setCollaborationMode(false);
   const [documentId] = useState(`email-${Date.now()}`);
   const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
   const [userName] = useState('Email Editor User');
   const [currentBrandKit, setCurrentBrandKit] = useState<BrandKit>();
   const [customWidth, setCustomWidth] = useState(600);
+  const [workspaceSettings, setWorkspaceSettings] = useState({
+    theme: 'light' as const,
+    sidebarPosition: 'left' as const,
+    panelLayout: 'default' as const,
+    showToolbar: true,
+    showStatusBar: true,
+    autoSave: true,
+    keyboardShortcuts: true,
+    compactMode: false
+  });
 
   const editor = useEditor({
     extensions: [
@@ -196,13 +235,17 @@ const EmailEditor = () => {
     { id: 'table', name: 'Tables', icon: <TableIcon className="w-4 h-4" /> },
     { id: 'dynamic', name: 'Dynamic', icon: <User className="w-4 h-4" /> },
     { id: 'templates', name: 'Industry', icon: <Store className="w-4 h-4" /> },
-    { id: 'assistant', name: 'AI Assistant', icon: <Brain className="w-4 h-4" /> }
+    { id: 'assistant', name: 'AI Assistant', icon: <Brain className="w-4 h-4" /> },
+    { id: 'intelligent', name: 'Smart AI', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'evolution', name: 'Evolution', icon: <TrendingUp className="w-4 h-4" /> },
+    { id: 'collaboration', name: 'Team', icon: <Users className="w-4 h-4" /> },
+    { id: 'workspace', name: 'Workspace', icon: <Layout className="w-4 h-4" /> }
   ];
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col">
+    <div className={`h-screen bg-slate-50 flex flex-col ${workspaceSettings.theme === 'dark' ? 'dark' : ''}`}>
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+      <header className={`bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between ${!workspaceSettings.showToolbar ? 'hidden' : ''}`}>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
@@ -263,7 +306,7 @@ const EmailEditor = () => {
         {viewMode === 'chat' && (
           <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
             sidebarCollapsed ? 'w-0' : 'w-80'
-          } flex flex-col`}>
+          } flex flex-col ${workspaceSettings.sidebarPosition === 'right' ? 'order-last border-l border-r-0' : ''}`}>
             {!sidebarCollapsed && (
               <>
                 <div className="p-4 border-b border-slate-200">
@@ -289,7 +332,7 @@ const EmailEditor = () => {
         {viewMode === 'build' && (
           <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
             sidebarCollapsed ? 'w-0' : 'w-80'
-          } flex flex-col`}>
+          } flex flex-col ${workspaceSettings.sidebarPosition === 'right' ? 'order-last border-l border-r-0' : ''}`}>
             {!sidebarCollapsed && (
               <>
                 <div className="p-4 border-b border-slate-200">
@@ -304,17 +347,17 @@ const EmailEditor = () => {
                     </Button>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className={`grid gap-1 ${workspaceSettings.compactMode ? 'grid-cols-3' : 'grid-cols-2'}`}>
                     {buildTools.map((tool) => (
                       <Button
                         key={tool.id}
                         variant={buildTool === tool.id ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setBuildTool(tool.id as BuildTool)}
-                        className="flex items-center gap-1 text-xs p-2 h-auto"
+                        className={`flex items-center gap-1 text-xs p-2 h-auto ${workspaceSettings.compactMode ? 'flex-col' : ''}`}
                       >
                         {tool.icon}
-                        <span className="hidden sm:inline">{tool.name}</span>
+                        <span className={workspaceSettings.compactMode ? 'text-xs' : 'hidden sm:inline'}>{tool.name}</span>
                       </Button>
                     ))}
                   </div>
@@ -334,6 +377,18 @@ const EmailEditor = () => {
                   {buildTool === 'templates' && <IndustryTemplateLibrary editor={editor} />}
                   {buildTool === 'assistant' && (
                     <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />
+                  )}
+                  {buildTool === 'intelligent' && (
+                    <IntelligentAssistant editor={editor} emailHTML={emailHTML} />
+                  )}
+                  {buildTool === 'evolution' && (
+                    <TemplateEvolution editor={editor} templateId={documentId} />
+                  )}
+                  {buildTool === 'collaboration' && (
+                    <CollaborationHub projectId={documentId} />
+                  )}
+                  {buildTool === 'workspace' && (
+                    <WorkspaceManager onSettingsChange={setWorkspaceSettings} />
                   )}
                 </div>
               </>
@@ -503,6 +558,24 @@ const EmailEditor = () => {
               </div>
             )}
           </div>
+          {workspaceSettings.showStatusBar && (
+            <div className="bg-white border-t border-slate-200 px-6 py-2 text-xs text-gray-600 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span>Words: {emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length}</span>
+                <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
+                <span>Est. read time: {Math.ceil(emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)} min</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {workspaceSettings.autoSave && (
+                  <span className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    Auto-saved
+                  </span>
+                )}
+                <span>v{Date.now().toString().slice(-3)}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
