@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { EmailBlock } from '@/types/emailBlocks';
+import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, SpacerBlock, DividerBlock } from '@/types/emailBlocks';
 import { ContextualEditor } from './ContextualEditor';
 import { Card } from '@/components/ui/card';
 import { generateUniqueId, createDefaultStyling } from '@/utils/blockUtils';
@@ -83,19 +83,20 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 
     switch (block.type) {
       case 'text':
-        return `<div style="${baseStyles} color: ${styling.textColor || '#000'}; font-size: ${styling.fontSize || '16px'}; font-weight: ${styling.fontWeight || 'normal'};">${(block as any).content.html || ''}</div>`;
+        const textBlock = block as TextBlock;
+        return `<div style="${baseStyles} color: ${styling.textColor || '#000'}; font-size: ${styling.fontSize || '16px'}; font-weight: ${styling.fontWeight || 'normal'};">${textBlock.content.html || ''}</div>`;
       case 'image':
-        const imageBlock = block as any;
+        const imageBlock = block as ImageBlock;
         const imageEl = `<img src="${imageBlock.content.src || ''}" alt="${imageBlock.content.alt || ''}" style="width: 100%; height: auto; border-radius: ${styling.borderRadius || '0'};" />`;
         return `<div style="${baseStyles} text-align: center;">${imageBlock.content.link ? `<a href="${imageBlock.content.link}">${imageEl}</a>` : imageEl}</div>`;
       case 'button':
-        const buttonBlock = block as any;
+        const buttonBlock = block as ButtonBlock;
         return `<div style="${baseStyles} text-align: center;"><a href="${buttonBlock.content.link || '#'}" style="display: inline-block; padding: 12px 24px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">${buttonBlock.content.text || 'Button'}</a></div>`;
       case 'spacer':
-        const spacerBlock = block as any;
+        const spacerBlock = block as SpacerBlock;
         return `<div style="height: ${spacerBlock.content.height || '40px'}; line-height: ${spacerBlock.content.height || '40px'}; font-size: 1px;">&nbsp;</div>`;
       case 'divider':
-        const dividerBlock = block as any;
+        const dividerBlock = block as DividerBlock;
         return `<div style="${baseStyles}"><hr style="border: 0; height: ${dividerBlock.content.thickness || '1px'}; background-color: ${dividerBlock.content.color || '#e0e0e0'}; margin: 0;" /></div>`;
       default:
         return `<div style="${baseStyles}">Unknown block type</div>`;
@@ -128,7 +129,8 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     // Initialize with a welcome block
     if (blocks.length === 0) {
       const welcomeBlock = createBlockFromType('text');
-      welcomeBlock.content.html = '<h1 style="color: #1f2937; font-size: 32px; font-weight: 700; margin: 0 0 16px 0; text-align: center;">Welcome to Your Email</h1><p style="color: #6b7280; font-size: 16px; margin: 0; text-align: center;">Drag blocks from the left panel to start building your email.</p>';
+      const textBlock = welcomeBlock as TextBlock;
+      textBlock.content.html = '<h1 style="color: #1f2937; font-size: 32px; font-weight: 700; margin: 0 0 16px 0; text-align: center;">Welcome to Your Email</h1><p style="color: #6b7280; font-size: 16px; margin: 0; text-align: center;">Drag blocks from the left panel to start building your email.</p>';
       setBlocks([welcomeBlock]);
       generateHTML([welcomeBlock]);
     }
