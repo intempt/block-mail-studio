@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,18 +30,21 @@ export const CollaborativeEmailEditor: React.FC<CollaborativeEmailEditorProps> =
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Collaboration.configure({
-        document: null, // Will be configured with Y.js document
-      }),
-      CollaborationCursor.configure({
-        provider: null, // Will be configured with collaboration provider
-        user: {
-          name: userName,
-          color: userColor,
-        },
-      }),
     ],
-    content: '',
+    content: `
+      <div class="email-container">
+        <div class="email-block header-block">
+          <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
+            Collaborative Email Editor
+          </h1>
+        </div>
+        <div class="email-block paragraph-block">
+          <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+            Start collaborating on your email with real-time editing and AI-powered features.
+          </p>
+        </div>
+      </div>
+    `,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       onContentChange?.(html);
@@ -101,10 +102,7 @@ export const CollaborativeEmailEditor: React.FC<CollaborativeEmailEditorProps> =
       const imageUrl = await TipTapProCollabService.generateImage(prompt, 'email-professional');
       
       if (editor) {
-        editor.chain().focus().setImage({ 
-          src: imageUrl, 
-          alt: prompt
-        }).run();
+        editor.chain().focus().insertContent(`<img src="${imageUrl}" alt="${prompt}" style="max-width: 100%; height: auto; border-radius: 8px;" />`).run();
       }
     } catch (error) {
       console.error('Failed to generate image:', error);
