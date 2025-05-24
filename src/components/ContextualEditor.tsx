@@ -21,7 +21,7 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
   onBlockUpdate, 
   onClose 
 }) => {
-  const isTextBlock = block.type === 'text' || block.type === 'button';
+  const isTextBlock = block.type === 'text';
   
   const editor = useEditor({
     extensions: [StarterKit],
@@ -147,8 +147,18 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
     const buttonBlock = block as ButtonBlock;
     return (
       <div className="space-y-4">
-        {renderTextEditor()}
-        <Separator />
+        <div>
+          <Label htmlFor="button-text">Button Text</Label>
+          <Input
+            id="button-text"
+            value={buttonBlock.content.text}
+            onChange={(e) => onBlockUpdate({
+              ...buttonBlock,
+              content: { ...buttonBlock.content, text: e.target.value }
+            })}
+            placeholder="Click Here"
+          />
+        </div>
         <div>
           <Label htmlFor="button-link">Button Link</Label>
           <Input

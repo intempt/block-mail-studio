@@ -45,7 +45,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected,
       case 'code':
         return <CodeBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       default:
-        return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {block.type}</div>;
+        return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
     }
   };
 
