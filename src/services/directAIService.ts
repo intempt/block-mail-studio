@@ -29,7 +29,7 @@ class DirectAIServiceManager {
     for (let i = 0; i < count; i++) {
       const variant = await emailAIService.generateContent(
         `Create a variant of this subject line that has similar meaning but different wording: "${subjectLine}"`,
-        'subject'
+        'general'
       );
       variants.push(variant.trim().replace(/^["']|["']$/g, ''));
     }
@@ -38,7 +38,7 @@ class DirectAIServiceManager {
 
   async generateContent(prompt: string, type: string): Promise<string> {
     console.log('Direct content generation:', type);
-    return emailAIService.generateContent(prompt, type);
+    return emailAIService.generateContent(prompt, 'general');
   }
 }
 

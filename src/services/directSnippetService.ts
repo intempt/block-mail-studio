@@ -60,7 +60,7 @@ export class DirectSnippetService {
         id: 'default_cta',
         name: 'Call to Action',
         description: 'Button with call to action',
-        category: 'action',
+        category: 'content',
         tags: ['button', 'cta'],
         blockData: { type: 'button', content: 'Click Here' },
         blockType: 'button',
