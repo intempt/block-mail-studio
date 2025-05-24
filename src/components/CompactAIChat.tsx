@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import {
   ChevronDown,
   Lightbulb,
   Upload,
-  Stop
+  Square
 } from 'lucide-react';
 
 interface Message {
@@ -182,7 +181,7 @@ export const CompactAIChat: React.FC<CompactAIChatProps> = ({ onMessage }) => {
               disabled={!isLoading}
               className="w-8 h-8 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
             >
-              <Stop className="w-4 h-4" />
+              <Square className="w-4 h-4" />
             </Button>
             
             <Button
