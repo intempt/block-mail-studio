@@ -24,11 +24,9 @@ export const CustomEmailExtension = Extension.create({
 
   addCommands() {
     return {
-      setEmailStyle: (style: string) => ({ chain }) => {
-        return chain()
-          .updateAttributes('paragraph', { style })
-          .updateAttributes('heading', { style })
-          .run();
+      setEmailStyle: (style: string) => ({ commands }) => {
+        return commands.updateAttributes('paragraph', { style }) &&
+               commands.updateAttributes('heading', { style });
       },
     };
   },
