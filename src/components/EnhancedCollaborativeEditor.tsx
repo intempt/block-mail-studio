@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
@@ -10,6 +10,7 @@ import { Share2, MessageSquare, Users, Settings } from 'lucide-react';
 import { CollaborationProvider, useCollaboration } from './CollaborationProvider';
 import { PresenceIndicator } from './PresenceIndicator';
 import { CommentSystem } from './CommentSystem';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface EnhancedCollaborativeEditorProps {
   documentId: string;
@@ -17,6 +18,7 @@ interface EnhancedCollaborativeEditorProps {
   userName: string;
   userColor?: string;
   onContentChange?: (html: string) => void;
+  onEditorReady?: (editor: any) => void;
 }
 
 const EditorContent_: React.FC<EnhancedCollaborativeEditorProps> = ({
@@ -24,7 +26,8 @@ const EditorContent_: React.FC<EnhancedCollaborativeEditorProps> = ({
   userId,
   userName,
   userColor = '#3B82F6',
-  onContentChange
+  onContentChange,
+  onEditorReady
 }) => {
   const { ydoc, provider } = useCollaboration();
   const [showComments, setShowComments] = useState(false);
@@ -60,7 +63,7 @@ const EditorContent_: React.FC<EnhancedCollaborativeEditorProps> = ({
         </div>
         <div class="email-block paragraph-block">
           <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
-            Select text to add comments or see other users' cursors in real-time as they edit.
+            Select text to add comments or see other users' cursors in real-time as they edit. Use <strong>Ctrl+B</strong> for bold, <strong>Ctrl+I</strong> for italic, <strong>Ctrl+K</strong> for links.
           </p>
         </div>
       </div>
@@ -69,6 +72,24 @@ const EditorContent_: React.FC<EnhancedCollaborativeEditorProps> = ({
       const html = editor.getHTML();
       onContentChange?.(html);
     },
+  });
+
+  // Pass editor instance to parent when ready
+  useEffect(() => {
+    if (editor && onEditorReady) {
+      onEditorReady(editor);
+    }
+  }, [editor, onEditorReady]);
+
+  // Set up keyboard shortcuts for collaboration mode
+  useKeyboardShortcuts({
+    editor,
+    canvasRef: undefined,
+    onToggleLeftPanel: () => {},
+    onToggleRightPanel: () => {},
+    onToggleFullscreen: () => {},
+    onSave: () => {},
+    collaborationMode: true
   });
 
   return (

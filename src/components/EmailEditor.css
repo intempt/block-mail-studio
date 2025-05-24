@@ -1,0 +1,27 @@
+
+.fullscreen-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: white;
+}
+
+.fullscreen-mode .email-canvas {
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+}
+
+/* Smooth transitions for panel toggles */
+.panel-transition {
+  transition: width 0.3s ease, opacity 0.3s ease;
+}
+
+/* Focus indicator for keyboard navigation */
+.keyboard-focus {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
