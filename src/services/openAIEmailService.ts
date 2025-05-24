@@ -1,4 +1,3 @@
-
 import { ApiKeyService } from './apiKeyService';
 
 export interface OpenAIEmailAnalysisRequest {
@@ -71,10 +70,6 @@ export interface PerformanceAnalysis {
 export class OpenAIEmailService {
   private static async callOpenAI(prompt: string): Promise<any> {
     const apiKey = ApiKeyService.getOpenAIKey();
-    
-    if (!ApiKeyService.isKeyAvailable()) {
-      throw new Error('OpenAI API key not configured properly');
-    }
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {

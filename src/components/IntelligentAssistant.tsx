@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -75,11 +74,6 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
   }, [emailHTML]);
 
   const analyzeContent = async () => {
-    if (!ApiKeyService.isKeyAvailable()) {
-      setAnalysisError('AI not available');
-      return;
-    }
-
     setIsAnalyzing(true);
     setAnalysisError(null);
     
@@ -117,7 +111,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
       setSuggestions(newSuggestions);
     } catch (error) {
       console.error('Analysis failed:', error);
-      setAnalysisError('AI not available');
+      setAnalysisError('Analysis temporarily unavailable');
       
       // Clear scores on error
       setBrandVoiceScore(0);
@@ -186,12 +180,12 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
           <Brain className="w-4 h-4 text-purple-600" />
           <h3 className="text-base font-semibold">Intelligent Assistant</h3>
           <Badge variant="secondary" className="ml-auto bg-purple-50 text-purple-700 text-xs">
-            {ApiKeyService.isKeyAvailable() ? 'AI Powered' : 'Setup Required'}
+            AI Powered
           </Badge>
         </div>
 
         {analysisError ? (
-          <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+          <div className="flex items-center gap-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-700">
             <AlertCircle className="w-3 h-3" />
             <span>{analysisError}</span>
             <Button

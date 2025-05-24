@@ -61,7 +61,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   useEffect(() => {
     analyzeContent();
     
-    if (emailHTML && ApiKeyService.isKeyAvailable()) {
+    if (emailHTML) {
       const timer = setTimeout(() => {
         runFullAnalysis();
       }, 2500); // Auto-analyze after 2.5 seconds
@@ -86,7 +86,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   };
 
   const runFullAnalysis = async () => {
-    if (!ApiKeyService.isKeyAvailable() || !emailHTML.trim()) {
+    if (!emailHTML.trim()) {
       return;
     }
 
@@ -206,7 +206,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
     switch (apiStatus) {
       case 'connecting': return <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />;
       case 'connected': return <Wifi className="w-3 h-3 text-green-500" />;
-      case 'failed': return <WifiOff className="w-3 h-3 text-red-500" />;
+      case 'failed': return <WifiOff className="w-3 h-3 text-yellow-500" />;
       default: return <BarChart3 className="w-3 h-3 text-gray-400" />;
     }
   };
@@ -215,7 +215,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
     switch (apiStatus) {
       case 'connecting': return 'Analyzing...';
       case 'connected': return 'AI Active';
-      case 'failed': return 'Offline Mode';
+      case 'failed': return 'Fallback Mode';
       default: return 'Ready';
     }
   };

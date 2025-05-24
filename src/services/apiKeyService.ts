@@ -8,11 +8,11 @@ export class ApiKeyService {
   }
   
   public static isKeyAvailable(): boolean {
-    return this.API_KEY && this.API_KEY.length > 0 && this.API_KEY.startsWith('sk-') && this.API_KEY !== 'sk-your-actual-openai-api-key-here';
+    return this.API_KEY && this.API_KEY.length > 0 && this.API_KEY.startsWith('sk-');
   }
   
   public static getKeyStatus(): 'valid' | 'missing' | 'invalid' {
-    if (!this.API_KEY || this.API_KEY === 'sk-your-actual-openai-api-key-here') {
+    if (!this.API_KEY) {
       return 'missing';
     }
     if (!this.API_KEY.startsWith('sk-')) {
