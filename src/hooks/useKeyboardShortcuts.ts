@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 
 interface KeyboardShortcutsProps {
-  editor: any;
+  editor?: any;
   canvasRef: React.RefObject<any>;
   onToggleLeftPanel: () => void;
   onToggleRightPanel: () => void;
@@ -10,7 +10,7 @@ interface KeyboardShortcutsProps {
   onSave: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
-  collaborationMode: boolean;
+  collaborationMode?: boolean;
 }
 
 export const useKeyboardShortcuts = ({
@@ -22,7 +22,7 @@ export const useKeyboardShortcuts = ({
   onSave,
   onUndo,
   onRedo,
-  collaborationMode
+  collaborationMode = false
 }: KeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -58,15 +58,15 @@ export const useKeyboardShortcuts = ({
         return;
       }
 
-      if (event.ctrlKey && event.key === 'z' && !collaborationMode) {
+      if (event.ctrlKey && event.key === 'z' && !collaborationMode && onUndo) {
         event.preventDefault();
-        onUndo?.();
+        onUndo();
         return;
       }
 
-      if (event.ctrlKey && event.key === 'y' && !collaborationMode) {
+      if (event.ctrlKey && event.key === 'y' && !collaborationMode && onRedo) {
         event.preventDefault();
-        onRedo?.();
+        onRedo();
         return;
       }
 
