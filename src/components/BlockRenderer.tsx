@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
 import { TextBlockRenderer } from './blocks/TextBlockRenderer';
 import { ImageBlockRenderer } from './blocks/ImageBlockRenderer';
-import { ButtonBlockRenderer from './blocks/ButtonBlockRenderer';
+import { ButtonBlockRenderer } from './blocks/ButtonBlockRenderer';
 import { SplitBlockRenderer } from './blocks/SplitBlockRenderer';
 import { SpacerBlockRenderer } from './blocks/SpacerBlockRenderer';
 import { DividerBlockRenderer } from './blocks/DividerBlockRenderer';
