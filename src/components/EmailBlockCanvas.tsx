@@ -1,9 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, SpacerBlock, DividerBlock, ColumnsBlock } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
 import { ContextualEditor } from './ContextualEditor';
 import { Card } from '@/components/ui/card';
 import { generateUniqueId, createDefaultStyling } from '@/utils/blockUtils';
 import { BlockRenderer } from './BlockRenderer';
+import { SnippetService } from '@/services/snippetService';
+import { SnippetSaveDialog } from './SnippetSaveDialog';
 import './EmailBlockCanvas.css';
 
 interface EmailBlockCanvasProps {
@@ -15,6 +18,7 @@ interface EmailBlockCanvasProps {
 
 export interface EmailBlockCanvasRef {
   insertBlock: (blockType: string) => void;
+  insertSnippet: (snippet: EmailSnippet) => void;
 }
 
 export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
@@ -26,6 +30,8 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showContextualEditor, setShowContextualEditor] = useState(false);
+  const [showSnippetSaveDialog, setShowSnippetSaveDialog] = useState(false);
+  const [blockToSave, setBlockToSave] = useState<EmailBlock | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const selectedBlock = blocks.find(block => block.id === selectedBlockId);
@@ -41,6 +47,49 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
       const newBlock = createBlockFromType(blockType);
       setBlocks(prev => [...prev, newBlock]);
       generateHTML([...blocks, newBlock]);
+    }
+  };
+
+  const insertSnippet = (snippet: EmailSnippet) => {
+    console.log('Inserting snippet:', snippet);
+    
+    // Create a new block from the snippet data
+    const newBlock = {
+      ...snippet.blockData,
+      id: generateUniqueId(), // Generate new unique ID
+      snippetId: snippet.id, // Keep reference to original snippet
+      isStarred: false // Reset starred state for the new instance
+    };
+    
+    setBlocks(prev => [...prev, newBlock]);
+    generateHTML([...blocks, newBlock]);
+    
+    // Increment usage count for the snippet
+    SnippetService.incrementUsage(snippet.id);
+  };
+
+  const handleStarBlock = (block: EmailBlock) => {
+    setBlockToSave(block);
+    setShowSnippetSaveDialog(true);
+  };
+
+  const handleSaveSnippet = async (name: string, description: string, category: string, tags: string[]) => {
+    if (!blockToSave) return;
+    
+    try {
+      await SnippetService.saveSnippet(blockToSave, name, description, category, tags);
+      
+      // Update the block to show it's starred
+      setBlocks(prev => prev.map(b => 
+        b.id === blockToSave.id ? { ...b, isStarred: true } : b
+      ));
+      
+      setShowSnippetSaveDialog(false);
+      setBlockToSave(null);
+      
+      console.log('Snippet saved successfully');
+    } catch (error) {
+      console.error('Failed to save snippet:', error);
     }
   };
 
@@ -251,9 +300,10 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     e.preventDefault();
   };
 
-  // Expose the insertBlock function through ref
+  // Expose functions through ref
   React.useImperativeHandle(ref, () => ({
     insertBlock,
+    insertSnippet,
   }));
 
   React.useEffect(() => {
@@ -320,6 +370,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
                 block={block}
                 isSelected={selectedBlockId === block.id}
                 onUpdate={handleBlockUpdate}
+                onStarBlock={handleStarBlock}
                 {...(block.type === 'columns' ? { onBlockAdd: insertBlockIntoColumn } : {})}
               />
             </div>
@@ -344,6 +395,16 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
             setSelectedBlockId(null);
           }}
           onDelete={() => handleDeleteBlock(selectedBlock.id)}
+        />
+      )}
+
+      {showSnippetSaveDialog && (
+        <SnippetSaveDialog
+          onSave={handleSaveSnippet}
+          onClose={() => {
+            setShowSnippetSaveDialog(false);
+            setBlockToSave(null);
+          }}
         />
       )}
     </div>

@@ -46,6 +46,8 @@ export interface BaseBlock {
   displayOptions: DisplayOptions;
   selected?: boolean;
   sectionId?: string;
+  isStarred?: boolean;
+  snippetId?: string;
 }
 
 export interface TextBlock extends BaseBlock {

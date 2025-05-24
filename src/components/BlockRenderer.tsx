@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
+import { Button } from '@/components/ui/button';
+import { Star } from 'lucide-react';
 import { TextBlockRenderer } from './blocks/TextBlockRenderer';
 import { ImageBlockRenderer } from './blocks/ImageBlockRenderer';
 import { ButtonBlockRenderer } from './blocks/ButtonBlockRenderer';
@@ -19,9 +21,16 @@ interface BlockRendererProps {
   isSelected: boolean;
   onUpdate: (block: EmailBlock) => void;
   onBlockAdd?: (blockType: string, columnId: string) => void;
+  onStarBlock?: (block: EmailBlock) => void;
 }
 
-export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected, onUpdate, onBlockAdd }) => {
+export const BlockRenderer: React.FC<BlockRendererProps> = ({ 
+  block, 
+  isSelected, 
+  onUpdate, 
+  onBlockAdd,
+  onStarBlock 
+}) => {
   const getBlockComponent = () => {
     switch (block.type) {
       case 'text':
@@ -59,9 +68,38 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected,
     }
   };
 
+  const handleStarBlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onStarBlock) {
+      onStarBlock(block);
+    }
+  };
+
   return (
-    <div className={`block-renderer ${isSelected ? 'selected' : ''}`}>
+    <div className={`block-renderer ${isSelected ? 'selected' : ''} relative group`}>
       {getBlockComponent()}
+      
+      {/* Star button - shows on hover or when block is starred */}
+      {onStarBlock && (
+        <div className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity ${
+          block.isStarred ? 'opacity-100' : ''
+        }`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleStarBlock}
+            className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white"
+          >
+            <Star 
+              className={`w-4 h-4 ${
+                block.isStarred 
+                  ? 'fill-yellow-400 text-yellow-400' 
+                  : 'text-slate-400 hover:text-yellow-400'
+              }`} 
+            />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

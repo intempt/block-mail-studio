@@ -56,6 +56,7 @@ import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
+import { EmailSnippet } from '@/types/snippets';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
@@ -94,6 +95,26 @@ const EmailEditor = () => {
   const [fullscreenMode, setFullscreenMode] = useState(false);
 
   const handleSave = () => {
+    // Enhanced save functionality to create templates
+    const templateName = prompt('Enter template name:');
+    if (!templateName) return;
+    
+    const newTemplate: EmailTemplate = {
+      id: `template-${Date.now()}`,
+      name: templateName,
+      description: 'Created from email canvas',
+      html: emailHTML,
+      category: 'Custom',
+      tags: ['canvas-created'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isFavorite: false,
+      usageCount: 0
+    };
+    
+    setTemplates(prev => [...prev, newTemplate]);
+    
+    // Also export HTML file
     const htmlContent = generateEmailHTML(emailHTML);
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -237,6 +258,10 @@ const EmailEditor = () => {
     canvasRef.current?.insertBlock(blockType);
   };
 
+  const handleSnippetAdd = (snippet: EmailSnippet) => {
+    canvasRef.current?.insertSnippet(snippet);
+  };
+
   const renderLeftPanel = () => {
     if (leftPanelCollapsed) {
       return (
@@ -269,6 +294,7 @@ const EmailEditor = () => {
         return (
           <EnhancedEmailBlockPalette 
             onBlockAdd={handleBlockAdd}
+            onSnippetAdd={handleSnippetAdd}
             universalContent={[]}
             onUniversalContentAdd={(content) => console.log('Universal content:', content)}
             compactMode={compactMode}
@@ -278,6 +304,7 @@ const EmailEditor = () => {
         return (
           <EnhancedEmailBlockPalette 
             onBlockAdd={handleBlockAdd}
+            onSnippetAdd={handleSnippetAdd}
             universalContent={[]}
             onUniversalContentAdd={(content) => console.log('Universal content:', content)}
             compactMode={compactMode}
@@ -424,7 +451,7 @@ const EmailEditor = () => {
         <span className="hidden lg:inline">Export</span>
       </Button>
       
-      <Button size="sm" className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
+      <Button size="sm" onClick={handleSave} className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
         <Zap className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
         <span className="hidden lg:inline">Publish</span>
       </Button>
@@ -590,6 +617,7 @@ const EmailEditor = () => {
                 onContentChange={setEmailHTML}
                 previewWidth={previewWidth}
                 previewMode={previewMode}
+                compactMode={compactMode}
               />
             )}
           </div>
@@ -660,7 +688,7 @@ const EmailEditor = () => {
             <span className="hidden sm:inline">Templates: {templates.length}</span>
             <span className="hidden lg:flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Canvas-based editor
+              Canvas-based editor with snippets
             </span>
           </div>
           <div className="flex items-center gap-2 lg:gap-4">

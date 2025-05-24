@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,14 @@ import {
   ChevronDown,
   ChevronRight,
   Blocks,
-  Split
+  Split,
+  Star,
+  Bookmark
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
 import { LayoutConfigPanel } from './LayoutConfigPanel';
+import { SnippetManager } from './SnippetManager';
 
 interface BlockItem {
   id: string;
@@ -30,6 +35,7 @@ interface BlockItem {
 
 interface EnhancedEmailBlockPaletteProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
   universalContent: UniversalContent[];
   onUniversalContentAdd: (content: UniversalContent) => void;
   compactMode?: boolean;
@@ -49,6 +55,7 @@ const blockItems: BlockItem[] = [
 
 export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps> = ({
   onBlockAdd,
+  onSnippetAdd,
   universalContent,
   onUniversalContentAdd,
   compactMode = false
@@ -67,6 +74,12 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
 
   const handleLayoutSelect = (layout: any) => {
     onBlockAdd('columns', layout);
+  };
+
+  const handleSnippetSelect = (snippet: EmailSnippet) => {
+    if (onSnippetAdd) {
+      onSnippetAdd(snippet);
+    }
   };
 
   const renderBlockItem = (block: BlockItem) => {
@@ -103,8 +116,15 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     <div className="h-full flex flex-col">
       <Tabs defaultValue="layouts" className="flex-1 flex flex-col">
         <TabsList className={`mx-2 ${compactMode ? 'mb-1' : 'mb-2'}`}>
-          <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>Layouts</TabsTrigger>
-          <TabsTrigger value="blocks" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>Blocks</TabsTrigger>
+          <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+            Layouts
+          </TabsTrigger>
+          <TabsTrigger value="blocks" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+            Blocks
+          </TabsTrigger>
+          <TabsTrigger value="snippets" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+            Snippets
+          </TabsTrigger>
         </TabsList>
 
         <div className="flex-1 overflow-hidden">
@@ -146,6 +166,13 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                 </Collapsible>
               </div>
             </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="snippets" className="h-full mt-0">
+            <SnippetManager
+              onSnippetSelect={handleSnippetSelect}
+              compactMode={compactMode}
+            />
           </TabsContent>
         </div>
       </Tabs>
