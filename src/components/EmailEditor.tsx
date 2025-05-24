@@ -46,10 +46,7 @@ import { Label } from '@/components/ui/label';
 import { EmailAIChat } from './EmailAIChat';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
-import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
-import { TemplateManager, EmailTemplate } from './TemplateManager';
-import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
 import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { EmailBlockPalette } from './EmailBlockPalette';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
@@ -280,36 +277,43 @@ const EmailEditor = () => {
 
     switch (leftPanelTab) {
       case 'ai':
-        return (
-          <EmailAIChatWithTemplates 
-            editor={null} 
-            templates={templates}
-            onLoadTemplate={handleLoadTemplate}
-            onSaveTemplate={handleSaveTemplate}
-          />
-        );
+        return <EmailAIChat editor={null} />;
       case 'design':
         return <ProfessionalToolPalette editor={null} />;
       case 'blocks':
         return (
-          <EnhancedEmailBlockPalette 
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={[]}
-            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
-            compactMode={compactMode}
-          />
+          <div className="p-4">
+            <h3 className="font-semibold text-sm mb-3">Blocks</h3>
+            <div className="space-y-2">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => handleBlockAdd('text')}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Text Block
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => handleBlockAdd('heading')}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Heading
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start" 
+                onClick={() => handleBlockAdd('button')}
+              >
+                <Code2 className="w-4 h-4 mr-2" />
+                Button
+              </Button>
+            </div>
+          </div>
         );
       default:
-        return (
-          <EnhancedEmailBlockPalette 
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={[]}
-            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
-            compactMode={compactMode}
-          />
-        );
+        return <EmailAIChat editor={null} />;
     }
   };
 
@@ -600,26 +604,16 @@ const EmailEditor = () => {
           </div>
         )}
 
-        {/* Center: Canvas or Collaborative Editor */}
+        {/* Center: Canvas */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
-            {collaborationMode ? (
-              <EnhancedCollaborativeEditor
-                documentId={collaborationConfig.documentId}
-                userId={collaborationConfig.userId}
-                userName={collaborationConfig.userName}
-                userColor={collaborationConfig.userColor}
-                onContentChange={setEmailHTML}
-              />
-            ) : (
-              <EmailBlockCanvas 
-                ref={canvasRef}
-                onContentChange={setEmailHTML}
-                previewWidth={previewWidth}
-                previewMode={previewMode}
-                compactMode={compactMode}
-              />
-            )}
+            <EmailBlockCanvas 
+              ref={canvasRef}
+              onContentChange={setEmailHTML}
+              previewWidth={previewWidth}
+              previewMode={previewMode}
+              compactMode={compactMode}
+            />
           </div>
         </div>
         
