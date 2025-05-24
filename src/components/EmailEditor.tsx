@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -105,7 +106,7 @@ const EmailEditor = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
   const [editorMode, setEditorMode] = useState<EditorMode>('visual');
   const [buildTool, setBuildTool] = useState<BuildTool>('blocks');
-  const [previewMode, setPreviewMode<'desktop' | 'mobile'>('desktop');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [emailHTML, setEmailHTML] = useState('');
@@ -116,7 +117,7 @@ const EmailEditor = () => {
   const [userName] = useState('Email Editor User');
   const [currentBrandKit, setCurrentBrandKit] = useState<BrandKit>();
   const [customWidth, setCustomWidth] = useState(600);
-  const [workspaceSettings, setWorkspaceSettings] = useState({
+  const [workspaceSettings, setWorkspaceSettings] = useState<WorkspaceSettings>({
     theme: 'light' as const,
     sidebarPosition: 'left' as const,
     panelLayout: 'default' as const,
