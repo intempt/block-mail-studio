@@ -37,7 +37,8 @@ import {
   Blocks,
   Brain,
   Minimize2,
-  Maximize2
+  Maximize2,
+  RefreshCw
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -174,6 +175,10 @@ const EmailEditor = () => {
       title: "Cache Cleared",
       description: "AI analysis cache has been cleared."
     });
+  };
+
+  const handleToggleFullscreen = () => {
+    setFullscreenMode(prev => !prev);
   };
 
   useKeyboardShortcuts({
