@@ -1,5 +1,5 @@
 
-import { EmailBlock } from '@/types/emailBlocks';
+import { EmailBlock, TextBlock, ImageBlock, ButtonBlock } from '@/types/emailBlocks';
 import { createBlock } from '@/utils/enhancedBlockFactory';
 import { EmailStructureAnalysis } from './EmailContentAnalyzer';
 
@@ -28,7 +28,7 @@ export class AIBlockGenerator {
 
         switch (blockInfo.type) {
           case 'text':
-            block = createBlock('text');
+            block = createBlock('text') as TextBlock;
             block.content.html = blockInfo.content || '<p>Add your text here...</p>';
             if (blockInfo.styling) {
               Object.assign(block.styling.desktop, blockInfo.styling);
@@ -36,7 +36,7 @@ export class AIBlockGenerator {
             break;
 
           case 'image':
-            block = createBlock('image');
+            block = createBlock('image') as ImageBlock;
             // Extract image src from content if it's an img tag
             const imgMatch = blockInfo.content.match(/src="([^"]+)"/);
             if (imgMatch) {
@@ -46,7 +46,7 @@ export class AIBlockGenerator {
             break;
 
           case 'button':
-            block = createBlock('button');
+            block = createBlock('button') as ButtonBlock;
             // Extract button text and link
             const textMatch = blockInfo.content.match(/>([^<]+)</);
             const linkMatch = blockInfo.content.match(/href="([^"]+)"/);
@@ -63,7 +63,7 @@ export class AIBlockGenerator {
             break;
 
           default:
-            block = createBlock('text');
+            block = createBlock('text') as TextBlock;
             block.content.html = blockInfo.content;
         }
 
@@ -72,7 +72,7 @@ export class AIBlockGenerator {
       } catch (error) {
         console.error('Error creating block:', error);
         // Fallback to text block
-        const fallbackBlock = createBlock('text');
+        const fallbackBlock = createBlock('text') as TextBlock;
         fallbackBlock.content.html = blockInfo.content || '<p>Content block</p>';
         blocks.push(fallbackBlock);
       }
