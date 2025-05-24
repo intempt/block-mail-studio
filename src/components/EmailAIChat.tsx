@@ -2,80 +2,108 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Send, 
-  Bot, 
-  User, 
-  Image as ImageIcon, 
-  Loader2, 
-  Sparkles,
-  Copy,
-  RefreshCw,
-  Paperclip,
+  Sparkles, 
+  Image, 
+  Type, 
+  Layout, 
+  Palette,
+  FileTemplate,
   Zap,
-  Clock,
-  CheckCircle
+  Target,
+  BarChart3,
+  Users,
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
+  Wand2
 } from 'lucide-react';
-import { emailAIService, EmailGenerationRequest } from '@/services/EmailAIService';
-import { ImageUploader } from './ImageUploader';
 
 interface Message {
   id: string;
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
-  emailData?: {
-    subject: string;
-    html: string;
-    previewText: string;
-  };
-  status?: 'sending' | 'sent' | 'applied';
+  suggestions?: string[];
 }
 
 interface EmailAIChatProps {
   editor: Editor | null;
 }
 
-const quickStarters = [
-  {
-    icon: <Sparkles className="w-4 h-4" />,
-    label: 'Welcome Series',
-    prompt: 'Create a welcome email series for new subscribers to a SaaS platform',
-    gradient: 'from-blue-500 to-purple-600'
-  },
-  {
-    icon: <Zap className="w-4 h-4" />,
-    label: 'Product Launch',
-    prompt: 'Design a product launch announcement with excitement and clear CTAs',
-    gradient: 'from-orange-500 to-red-600'
-  },
-  {
-    icon: <Clock className="w-4 h-4" />,
-    label: 'Newsletter',
-    prompt: 'Create a weekly newsletter template with company updates and insights',
-    gradient: 'from-green-500 to-teal-600'
-  },
-  {
-    icon: <CheckCircle className="w-4 h-4" />,
-    label: 'Promotional',
-    prompt: 'Design a promotional email for a limited-time 30% off sale',
-    gradient: 'from-pink-500 to-rose-600'
-  }
-];
-
 export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      type: 'ai',
+      content: 'Hi! I\'m your AI email assistant. I can help you create stunning emails, suggest improvements, generate content, and optimize for better performance. What would you like to work on today?',
+      timestamp: new Date(),
+      suggestions: [
+        'Create a welcome email series',
+        'Design a product announcement',
+        'Build a newsletter template',
+        'Optimize for mobile devices'
+      ]
+    }
+  ]);
+  const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedTone, setSelectedTone] = useState<'professional' | 'casual' | 'friendly' | 'urgent'>('professional');
-  const [selectedType, setSelectedType] = useState<'welcome' | 'promotional' | 'newsletter' | 'announcement'>('welcome');
-  const [showImageUploader, setShowImageUploader] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const quickActions = [
+    { 
+      icon: <FileTemplate className="w-4 h-4" />, 
+      label: 'Templates', 
+      action: 'Show me industry email templates',
+      color: 'bg-blue-50 text-blue-700 border-blue-200'
+    },
+    { 
+      icon: <Palette className="w-4 h-4" />, 
+      label: 'Brand Kit', 
+      action: 'Help me apply my brand colors and fonts',
+      color: 'bg-purple-50 text-purple-700 border-purple-200'
+    },
+    { 
+      icon: <Image className="w-4 h-4" />, 
+      label: 'AI Images', 
+      action: 'Generate professional images for my email',
+      color: 'bg-green-50 text-green-700 border-green-200'
+    },
+    { 
+      icon: <Type className="w-4 h-4" />, 
+      label: 'Copywriting', 
+      action: 'Write compelling email copy that converts',
+      color: 'bg-orange-50 text-orange-700 border-orange-200'
+    },
+    { 
+      icon: <Target className="w-4 h-4" />, 
+      label: 'Optimize', 
+      action: 'Analyze and improve my email performance',
+      color: 'bg-red-50 text-red-700 border-red-200'
+    },
+    { 
+      icon: <BarChart3 className="w-4 h-4" />, 
+      label: 'A/B Test', 
+      action: 'Create variations for split testing',
+      color: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    }
+  ];
+
+  const industryTemplates = [
+    'E-commerce Product Launch',
+    'SaaS Welcome Series',
+    'Restaurant Newsletter',
+    'Real Estate Listing',
+    'Event Invitation',
+    'Educational Course',
+    'Healthcare Updates',
+    'Financial Services'
+  ];
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -83,304 +111,257 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor }) => {
     }
   }, [messages]);
 
-  useEffect(() => {
-    // Add welcome message
-    if (messages.length === 0) {
-      addMessage({ 
-        type: 'ai', 
-        content: "Hi! I'm your AI email assistant. I can help you create professional email campaigns. What kind of email would you like to build today?" 
-      });
-    }
-  }, []);
-
-  const addMessage = (message: Omit<Message, 'id' | 'timestamp'>) => {
-    const newMessage: Message = {
-      ...message,
-      id: Date.now().toString(),
-      timestamp: new Date(),
-      status: message.type === 'user' ? 'sent' : undefined
-    };
-    setMessages(prev => [...prev, newMessage]);
-    return newMessage.id;
-  };
-
-  const updateMessageStatus = (id: string, status: Message['status']) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === id ? { ...msg, status } : msg
-    ));
-  };
-
   const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!newMessage.trim()) return;
 
-    const userMessage = input.trim();
-    setInput('');
-    const messageId = addMessage({ type: 'user', content: userMessage });
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: newMessage,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setNewMessage('');
     setIsLoading(true);
 
-    try {
-      const aiMessageId = addMessage({ 
-        type: 'ai', 
-        content: '', 
-        status: 'sending'
-      });
-
-      const request: EmailGenerationRequest = {
-        prompt: userMessage,
-        tone: selectedTone,
-        type: selectedType
-      };
-
-      const response = await emailAIService.generateEmail(request);
-      
-      setMessages(prev => prev.map(msg => 
-        msg.id === aiMessageId ? {
-          ...msg,
-          content: `I've created an email campaign for you! **Subject:** "${response.subject}"\n\n**Preview:** ${response.previewText}\n\nClick "Apply to Editor" to use this email in your editor.`,
-          emailData: response,
-          status: 'sent'
-        } : msg
-      ));
-    } catch (error) {
-      addMessage({ 
-        type: 'ai', 
-        content: '❌ Sorry, I encountered an error generating your email. Please try again with a different prompt.',
-        status: 'sent'
-      });
-    } finally {
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse = generateAIResponse(newMessage);
+      setMessages(prev => [...prev, aiResponse]);
       setIsLoading(false);
-    }
+    }, 1500);
   };
 
-  const handleQuickStarter = (starter: typeof quickStarters[0]) => {
-    setInput(starter.prompt);
-    textareaRef.current?.focus();
-  };
-
-  const applyEmailToEditor = (emailData: Message['emailData'], messageId: string) => {
-    if (editor && emailData) {
-      editor.commands.setContent(emailData.html);
-      updateMessageStatus(messageId, 'applied');
-      addMessage({
+  const generateAIResponse = (userInput: string): Message => {
+    const input = userInput.toLowerCase();
+    
+    if (input.includes('template') || input.includes('industry')) {
+      return {
+        id: Date.now().toString(),
         type: 'ai',
-        content: '✅ Email applied to editor! You can now edit it using the visual editor or switch to other editing modes.',
-        status: 'sent'
-      });
+        content: 'I\'d love to help you with templates! Here are some popular industry templates I can create for you. Which industry matches your needs best?',
+        timestamp: new Date(),
+        suggestions: industryTemplates
+      };
     }
+    
+    if (input.includes('brand') || input.includes('color') || input.includes('font')) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'Great! Let\'s set up your brand kit. I can help you choose colors, fonts, and create a consistent brand experience across all your emails. What\'s your brand\'s primary color?',
+        timestamp: new Date(),
+        suggestions: [
+          'Use blue (#2563EB) as primary',
+          'Set up a professional color palette',
+          'Apply brand fonts throughout',
+          'Create brand guidelines'
+        ]
+      };
+    }
+    
+    if (input.includes('image') || input.includes('generate') || input.includes('photo')) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'I can generate professional images for your email! Describe what kind of image you need and I\'ll create it for you. For example: "professional team photo", "modern office space", or "product showcase".',
+        timestamp: new Date(),
+        suggestions: [
+          'Generate hero image for header',
+          'Create product showcase grid',
+          'Design abstract background',
+          'Make team photos'
+        ]
+      };
+    }
+    
+    if (input.includes('optimize') || input.includes('improve') || input.includes('performance')) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'I\'ll analyze your email for optimization opportunities! I can check deliverability, mobile responsiveness, engagement potential, and accessibility. Let me scan your current email...',
+        timestamp: new Date(),
+        suggestions: [
+          'Check mobile responsiveness',
+          'Improve subject line',
+          'Optimize call-to-action buttons',
+          'Enhance accessibility'
+        ]
+      };
+    }
+
+    if (input.includes('copy') || input.includes('write') || input.includes('text')) {
+      return {
+        id: Date.now().toString(),
+        type: 'ai',
+        content: 'I\'d be happy to help with copywriting! What type of email copy do you need? I can write subject lines, body content, call-to-action text, and more. What\'s the main goal of your email?',
+        timestamp: new Date(),
+        suggestions: [
+          'Write compelling subject lines',
+          'Create engaging body copy',
+          'Craft powerful CTAs',
+          'Develop email sequence'
+        ]
+      };
+    }
+    
+    return {
+      id: Date.now().toString(),
+      type: 'ai',
+      content: 'I understand! I can help you with that. Let me provide some specific suggestions based on what you\'re looking to accomplish. Here are some ways I can assist:',
+      timestamp: new Date(),
+      suggestions: [
+        'Generate email content',
+        'Design improvements',
+        'Performance optimization',
+        'Template suggestions'
+      ]
+    };
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+  const handleQuickAction = (action: string) => {
+    setNewMessage(action);
+    handleSendMessage();
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const handleSuggestionClick = (suggestion: string) => {
+    setNewMessage(suggestion);
+  };
+
+  const applyAISuggestion = (suggestion: string) => {
+    if (!editor) return;
+    
+    // Simulate applying AI suggestions to the editor
+    if (suggestion.includes('template') || suggestion.includes('Template')) {
+      const templateContent = `
+        <div class="email-container">
+          <div class="email-block header-block">
+            <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: white; margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px 8px 0 0;">
+              ${suggestion}
+            </h1>
+          </div>
+          <div class="email-block paragraph-block">
+            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+              Professional email template tailored for your industry. Ready to customize with your content and branding.
+            </p>
+          </div>
+        </div>
+      `;
+      editor.commands.setContent(templateContent);
+    }
+    
+    console.log('Applied AI suggestion:', suggestion);
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Chat Header */}
-      <div className="p-4 border-b border-slate-200 bg-slate-50">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <Bot className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h3 className="font-medium text-slate-900">AI Email Assistant</h3>
-            <p className="text-xs text-slate-500">Powered by advanced language models</p>
-          </div>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-5 h-5 text-blue-600" />
+          <h3 className="font-semibold text-gray-900">AI Assistant</h3>
+          <Badge variant="secondary" className="ml-auto bg-blue-50 text-blue-700">
+            Advanced AI
+          </Badge>
         </div>
         
-        {/* Quick Settings */}
-        <div className="flex gap-2 mb-3">
-          <select 
-            value={selectedTone} 
-            onChange={(e) => setSelectedTone(e.target.value as any)}
-            className="px-3 py-1.5 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="professional">Professional</option>
-            <option value="casual">Casual</option>
-            <option value="friendly">Friendly</option>
-            <option value="urgent">Urgent</option>
-          </select>
-          
-          <select 
-            value={selectedType} 
-            onChange={(e) => setSelectedType(e.target.value as any)}
-            className="px-3 py-1.5 border border-slate-300 rounded-md text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="welcome">Welcome</option>
-            <option value="promotional">Promotional</option>
-            <option value="newsletter">Newsletter</option>
-            <option value="announcement">Announcement</option>
-          </select>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          {quickActions.map((action, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickAction(action.action)}
+              className={`flex items-center gap-2 justify-start h-auto p-2 text-xs ${action.color}`}
+            >
+              {action.icon}
+              <span className="truncate">{action.label}</span>
+            </Button>
+          ))}
         </div>
-
-        {/* Quick Starters */}
-        {messages.length <= 1 && (
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-slate-600 uppercase tracking-wide">Quick Starters</p>
-            <div className="grid grid-cols-1 gap-2">
-              {quickStarters.map((starter, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleQuickStarter(starter)}
-                  className="justify-start h-auto p-3 text-left border-slate-200 hover:border-slate-300"
-                >
-                  <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${starter.gradient} flex items-center justify-center mr-3 text-white`}>
-                    {starter.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-medium text-slate-900">{starter.label}</div>
-                    <div className="text-xs text-slate-500 line-clamp-2">{starter.prompt}</div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Messages */}
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
+      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
         <div className="space-y-4">
           {messages.map((message) => (
-            <div key={message.id} className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {message.type === 'ai' && (
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  {message.status === 'sending' ? (
-                    <Loader2 className="w-4 h-4 text-white animate-spin" />
-                  ) : (
-                    <Bot className="w-4 h-4 text-white" />
-                  )}
-                </div>
-              )}
-              
-              <div className={`max-w-[80%] ${message.type === 'user' ? 'order-2' : ''}`}>
-                <div className={`p-3 rounded-lg ${
-                  message.type === 'user' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-slate-100 text-slate-900'
-                }`}>
-                  <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                  
-                  {message.emailData && (
-                    <div className="mt-3 p-3 bg-white rounded-lg border border-slate-200">
-                      <div className="space-y-2">
-                        <div className="text-xs">
-                          <span className="font-medium text-slate-600">Subject:</span>
-                          <span className="ml-2 text-slate-900">{message.emailData.subject}</span>
-                        </div>
-                        <div className="text-xs">
-                          <span className="font-medium text-slate-600">Preview:</span>
-                          <span className="ml-2 text-slate-700">{message.emailData.previewText}</span>
-                        </div>
+            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-900'} rounded-lg p-3`}>
+                <p className="text-sm">{message.content}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                
+                {message.suggestions && message.suggestions.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-medium opacity-80">Try these:</p>
+                    {message.suggestions.map((suggestion, index) => (
+                      <div key={index} className="flex items-center gap-2">
                         <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => applyEmailToEditor(message.emailData, message.id)}
-                          disabled={message.status === 'applied'}
-                          className={`w-full mt-2 ${
-                            message.status === 'applied' 
-                              ? 'bg-green-600 hover:bg-green-600' 
-                              : 'bg-blue-600 hover:bg-blue-700'
-                          }`}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="flex-1 justify-start h-auto p-2 text-xs bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                         >
-                          {message.status === 'applied' ? (
-                            <>
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Applied to Editor
-                            </>
-                          ) : (
-                            <>
-                              <Zap className="w-4 h-4 mr-2" />
-                              Apply to Editor
-                            </>
-                          )}
+                          <Wand2 className="w-3 h-3 mr-2" />
+                          {suggestion}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => applyAISuggestion(suggestion)}
+                          className="p-1 h-auto"
+                        >
+                          <Zap className="w-3 h-3" />
                         </Button>
                       </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className={`flex items-center gap-2 mt-1 text-xs text-slate-500 ${
-                  message.type === 'user' ? 'justify-end' : 'justify-start'
-                }`}>
-                  <span>{formatTime(message.timestamp)}</span>
-                  {message.status === 'applied' && (
-                    <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                      Applied
-                    </Badge>
-                  )}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              
-              {message.type === 'user' && (
-                <div className="w-8 h-8 bg-slate-200 rounded-lg flex items-center justify-center flex-shrink-0 order-1">
-                  <User className="w-4 h-4 text-slate-600" />
-                </div>
-              )}
             </div>
           ))}
+          
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 text-gray-900 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  <span className="text-sm">AI is thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
-      <div className="p-4 border-t border-slate-200 bg-white">
-        <div className="flex gap-2 mb-2">
-          <div className="flex-1 relative">
-            <Textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Describe the email you want to create..."
-              className="resize-none pr-20 bg-slate-50 border-slate-200 focus:bg-white"
-              rows={2}
-            />
-            <div className="absolute right-2 bottom-2 flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowImageUploader(!showImageUploader)}
-                className="h-8 w-8 p-0"
-              >
-                <Paperclip className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-          <Button
-            onClick={handleSendMessage}
-            disabled={!input.trim() || isLoading}
+      {/* Input */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Ask AI to help with your email..."
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            className="flex-1"
+          />
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={!newMessage.trim() || isLoading}
             size="sm"
-            className="self-end bg-blue-600 hover:bg-blue-700 h-16 px-4"
           >
-            {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
+            <Send className="w-4 h-4" />
           </Button>
         </div>
         
-        {showImageUploader && (
-          <div className="mt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <ImageUploader 
-              maxImages={3}
-              onImagesChange={(images) => {
-                console.log('Images uploaded:', images);
-              }}
-            />
+        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+          <span>Press Enter to send</span>
+          <div className="flex items-center gap-2">
+            <span>Powered by AI</span>
+            <Sparkles className="w-3 h-3" />
           </div>
-        )}
-        
-        <div className="flex items-center justify-between text-xs text-slate-500 mt-2">
-          <span>Press Enter to send, Shift+Enter for new line</span>
-          <span>{input.length}/2000</span>
         </div>
       </div>
     </div>

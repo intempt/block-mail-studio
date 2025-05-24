@@ -15,7 +15,6 @@ import Underline from '@tiptap/extension-underline';
 import FontFamily from '@tiptap/extension-font-family';
 import Placeholder from '@tiptap/extension-placeholder';
 import Gapcursor from '@tiptap/extension-gapcursor';
-import { Users, MessageSquare, TrendingUp } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,7 +23,6 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Monitor, 
   Smartphone, 
-  Code, 
   Eye, 
   Download, 
   Settings, 
@@ -34,22 +32,31 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
-  Maximize2,
-  Minimize2,
   Layout,
   PanelLeftClose,
-  PanelRightClose
+  PanelRightClose,
+  Users,
+  BarChart3,
+  Palette,
+  FileTemplate
 } from 'lucide-react';
 
 import { EmailAIChat } from './EmailAIChat';
 import { EmailEditorToolbar } from './EmailEditorToolbar';
-import { EmailPropertiesPanel } from './EmailPropertiesPanel';
-import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
 import { CollaborativeEmailEditor } from './CollaborativeEmailEditor';
+import { IntelligentAssistant } from './IntelligentAssistant';
+import { SmartDesignAssistant } from './SmartDesignAssistant';
+import { PerformanceAnalyzer } from './PerformanceAnalyzer';
+import { TemplateManager, EmailTemplate } from './TemplateManager';
+import { ResponsiveLayoutControls } from './ResponsiveLayoutControls';
+import { WorkspaceManager } from './WorkspaceManager';
+import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 
-type EditorMode = 'design' | 'ai';
-type PreviewMode = 'desktop' | 'mobile';
+type EditorMode = 'design' | 'ai' | 'templates' | 'analytics' | 'team';
+type PreviewMode = 'desktop' | 'mobile' | 'tablet';
+type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
+type RightPanelTab = 'properties' | 'analytics' | 'responsive' | 'workspace';
 
 interface WorkspaceSettings {
   theme: 'light' | 'dark' | 'auto';
@@ -67,12 +74,15 @@ const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
+  const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('ai');
+  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('properties');
   const [emailHTML, setEmailHTML] = useState('');
   const [collaborationMode, setCollaborationMode] = useState(false);
   const [documentId] = useState(`email-${Date.now()}`);
   const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
   const [userName] = useState('Email Editor User');
-  const [workspaceSettings] = useState<WorkspaceSettings>({
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [workspaceSettings, setWorkspaceSettings] = useState<WorkspaceSettings>({
     theme: 'light' as const,
     sidebarPosition: 'left' as const,
     panelLayout: 'default' as const,
@@ -180,6 +190,111 @@ const EmailEditor = () => {
 </html>`;
   };
 
+  const handleSaveTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
+    const newTemplate: EmailTemplate = {
+      ...template,
+      id: `template-${Date.now()}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      usageCount: 0
+    };
+    setTemplates(prev => [...prev, newTemplate]);
+  };
+
+  const handleLoadTemplate = (template: EmailTemplate) => {
+    if (editor) {
+      editor.commands.setContent(template.html);
+      setTemplates(prev => prev.map(t => 
+        t.id === template.id ? { ...t, usageCount: t.usageCount + 1 } : t
+      ));
+    }
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    setTemplates(prev => prev.map(t => 
+      t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
+    ));
+  };
+
+  const renderLeftPanel = () => {
+    if (leftPanelCollapsed) {
+      return (
+        <div className="flex flex-col items-center py-4 gap-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setLeftPanelCollapsed(false)}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          <Sparkles className="w-5 h-5 text-slate-400" />
+        </div>
+      );
+    }
+
+    switch (leftPanelTab) {
+      case 'ai':
+        return editorMode === 'ai' ? (
+          <EmailAIChat editor={editor} />
+        ) : (
+          <IntelligentAssistant editor={editor} emailHTML={emailHTML} />
+        );
+      case 'design':
+        return <ProfessionalToolPalette editor={editor} />;
+      case 'templates':
+        return (
+          <TemplateManager
+            editor={editor}
+            templates={templates}
+            onSaveTemplate={handleSaveTemplate}
+            onLoadTemplate={handleLoadTemplate}
+            onDeleteTemplate={handleDeleteTemplate}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        );
+      case 'team':
+        return (
+          <div className="p-4">
+            <h4 className="font-medium mb-4">Team Collaboration</h4>
+            <p className="text-sm text-gray-600 mb-4">
+              Collaborate with your team in real-time on email campaigns.
+            </p>
+            <Button 
+              onClick={() => setCollaborationMode(!collaborationMode)}
+              className="w-full"
+            >
+              {collaborationMode ? 'Exit Team Mode' : 'Start Collaboration'}
+            </Button>
+          </div>
+        );
+      default:
+        return <EmailAIChat editor={editor} />;
+    }
+  };
+
+  const renderRightPanel = () => {
+    switch (rightPanelTab) {
+      case 'analytics':
+        return <PerformanceAnalyzer editor={editor} emailHTML={emailHTML} />;
+      case 'responsive':
+        return (
+          <ResponsiveLayoutControls
+            currentDevice={previewMode}
+            onDeviceChange={(device) => setPreviewMode(device as PreviewMode)}
+            onWidthChange={() => {}}
+          />
+        );
+      case 'workspace':
+        return <WorkspaceManager onSettingsChange={setWorkspaceSettings} />;
+      default:
+        return <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />;
+    }
+  };
+
   return (
     <div className={`h-screen bg-slate-50 flex flex-col ${workspaceSettings.theme === 'dark' ? 'dark' : ''}`}>
       {/* Professional Header */}
@@ -192,7 +307,7 @@ const EmailEditor = () => {
             </div>
             <div>
               <h1 className="text-sm font-semibold text-slate-900">Email Builder Pro</h1>
-              <p className="text-xs text-slate-500">Untitled Campaign</p>
+              <p className="text-xs text-slate-500">Professional Campaign</p>
             </div>
           </div>
           
@@ -216,7 +331,16 @@ const EmailEditor = () => {
               className="h-8 px-4 rounded-md"
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              AI Assistant
+              AI
+            </Button>
+            <Button
+              variant={editorMode === 'analytics' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setEditorMode('analytics')}
+              className="h-8 px-4 rounded-md"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
             </Button>
           </div>
         </div>
@@ -231,6 +355,14 @@ const EmailEditor = () => {
               className="h-8 px-3 rounded-md"
             >
               <Monitor className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={previewMode === 'tablet' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setPreviewMode('tablet')}
+              className="h-8 px-3 rounded-md"
+            >
+              <Layout className="w-4 h-4" />
             </Button>
             <Button
               variant={previewMode === 'mobile' ? 'default' : 'ghost'}
@@ -270,7 +402,7 @@ const EmailEditor = () => {
       </header>
 
       {/* Professional Toolbar */}
-      {editorMode === 'design' && <EmailEditorToolbar editor={editor} />}
+      {workspaceSettings.showToolbar && <EmailEditorToolbar editor={editor} />}
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
@@ -279,27 +411,12 @@ const EmailEditor = () => {
           leftPanelCollapsed ? 'w-12' : 'w-80'
         } flex flex-col`}>
           {leftPanelCollapsed ? (
-            <div className="flex flex-col items-center py-4 gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setLeftPanelCollapsed(false)}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              {editorMode === 'design' ? (
-                <Layout className="w-5 h-5 text-slate-400" />
-              ) : (
-                <Sparkles className="w-5 h-5 text-slate-400" />
-              )}
-            </div>
+            renderLeftPanel()
           ) : (
             <>
               <div className="p-4 border-b border-slate-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-slate-900">
-                    {editorMode === 'design' ? 'Design Tools' : 'AI Assistant'}
-                  </h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-slate-900">Tools & AI</h3>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -308,14 +425,45 @@ const EmailEditor = () => {
                     <PanelLeftClose className="w-4 h-4" />
                   </Button>
                 </div>
+                
+                <div className="flex gap-1">
+                  <Button
+                    variant={leftPanelTab === 'ai' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLeftPanelTab('ai')}
+                    className="flex-1"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={leftPanelTab === 'design' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLeftPanelTab('design')}
+                    className="flex-1"
+                  >
+                    <Palette className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={leftPanelTab === 'templates' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLeftPanelTab('templates')}
+                    className="flex-1"
+                  >
+                    <FileTemplate className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant={leftPanelTab === 'team' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setLeftPanelTab('team')}
+                    className="flex-1"
+                  >
+                    <Users className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
               
               <div className="flex-1 overflow-hidden">
-                {editorMode === 'design' ? (
-                  <ProfessionalToolPalette editor={editor} />
-                ) : (
-                  <EmailAIChat editor={editor} />
-                )}
+                {renderLeftPanel()}
               </div>
             </>
           )}
@@ -326,7 +474,8 @@ const EmailEditor = () => {
           <div className="flex-1 p-8 overflow-y-auto">
             {collaborationMode ? (
               <Card className={`mx-auto transition-all duration-300 shadow-lg ${
-                previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
+                previewMode === 'desktop' ? 'max-w-4xl' : 
+                previewMode === 'tablet' ? 'max-w-2xl' : 'max-w-sm'
               }`}>
                 <CollaborativeEmailEditor
                   documentId={documentId}
@@ -337,7 +486,8 @@ const EmailEditor = () => {
               </Card>
             ) : (
               <Card className={`mx-auto transition-all duration-300 shadow-lg ${
-                previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
+                previewMode === 'desktop' ? 'max-w-4xl' : 
+                previewMode === 'tablet' ? 'max-w-2xl' : 'max-w-sm'
               }`}>
                 <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
                   <div className="flex items-center gap-2">
@@ -348,7 +498,7 @@ const EmailEditor = () => {
                     </div>
                     <span className="text-xs text-slate-500 ml-2">Email Preview</span>
                     <Badge variant="secondary" className="ml-auto text-xs">
-                      {previewMode === 'desktop' ? 'Desktop' : 'Mobile'}
+                      {previewMode.charAt(0).toUpperCase() + previewMode.slice(1)}
                     </Badge>
                   </div>
                 </div>
@@ -364,11 +514,11 @@ const EmailEditor = () => {
         </div>
         
         {/* Right Panel */}
-        {!rightPanelCollapsed && editorMode === 'design' && (
+        {!rightPanelCollapsed && (
           <div className="w-80 border-l border-slate-200 bg-white">
             <div className="p-4 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900">Properties</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-slate-900">Analytics & Tools</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -377,13 +527,50 @@ const EmailEditor = () => {
                   <PanelRightClose className="w-4 h-4" />
                 </Button>
               </div>
+              
+              <div className="flex gap-1">
+                <Button
+                  variant={rightPanelTab === 'properties' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRightPanelTab('properties')}
+                  className="flex-1"
+                >
+                  <Eye className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={rightPanelTab === 'analytics' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRightPanelTab('analytics')}
+                  className="flex-1"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={rightPanelTab === 'responsive' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRightPanelTab('responsive')}
+                  className="flex-1"
+                >
+                  <Monitor className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={rightPanelTab === 'workspace' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setRightPanelTab('workspace')}
+                  className="flex-1"
+                >
+                  <Settings className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <EmailPropertiesPanel editor={editor} />
+            <div className="flex-1 overflow-hidden">
+              {renderRightPanel()}
+            </div>
           </div>
         )}
 
         {/* Right Panel Toggle (when collapsed) */}
-        {rightPanelCollapsed && editorMode === 'design' && (
+        {rightPanelCollapsed && (
           <div className="w-12 bg-white border-l border-slate-200 flex flex-col items-center py-4">
             <Button 
               variant="ghost" 
@@ -404,6 +591,7 @@ const EmailEditor = () => {
             <span>Words: {emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length}</span>
             <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
             <span>Est. read time: {Math.ceil(emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)} min</span>
+            <span>Templates: {templates.length}</span>
           </div>
           <div className="flex items-center gap-4">
             {workspaceSettings.autoSave && (
@@ -412,7 +600,7 @@ const EmailEditor = () => {
                 Auto-saved just now
               </span>
             )}
-            <span className="text-slate-400">Email Builder Pro v2.0</span>
+            <span className="text-slate-400">Email Builder Pro v2.0 - Professional Edition</span>
           </div>
         </div>
       )}
