@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -556,44 +557,6 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     }
   };
 
-  const handleSaveCurrentTemplate = () => {
-    if (!editor) return;
-    
-    const currentHtml = editor.getHTML();
-    if (currentHtml && currentHtml.length > 100) {
-      setShowSaveTemplate(true);
-    } else {
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: 'Please create some content in your editor first before saving as a template.',
-        timestamp: new Date(),
-        actionType: 'general'
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    }
-  };
-
-  const confirmSaveTemplate = (templateData: { name: string; description: string; category: string; tags: string[] }) => {
-    if (editor && onSaveTemplate) {
-      const currentHtml = editor.getHTML();
-      onSaveTemplate({
-        ...templateData,
-        html: currentHtml
-      });
-      
-      const confirmMessage: Message = {
-        id: Date.now().toString(),
-        type: 'ai',
-        content: `✅ Template "${templateData.name}" saved successfully!\n\nYour template is now available in your template library for future use.`,
-        timestamp: new Date(),
-        actionType: 'general'
-      };
-      setMessages(prev => [...prev, confirmMessage]);
-      setShowSaveTemplate(false);
-    }
-  };
-
   if (showTemplates) {
     return (
       <div className="h-full flex flex-col">
@@ -638,15 +601,6 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
     );
   }
 
-  if (showSaveTemplate) {
-    return (
-      <SaveTemplateDialog 
-        onSave={confirmSaveTemplate}
-        onCancel={() => setShowSaveTemplate(false)}
-      />
-    );
-  }
-
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-gray-200">
@@ -657,26 +611,92 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
             Smart
           </Badge>
         </div>
+        
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          {quickActions.map((action, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              onClick={() => handleQuickAction(action)}
+              className={`flex flex-col items-center gap-2 h-auto p-4 text-white border-0 ${action.color}`}
+              disabled={isLoading}
+            >
+              <div className="flex items-center justify-center w-8 h-8">
+                {action.icon}
+              </div>
+              <div className="text-center">
+                <div className="font-semibold text-sm">{action.label}</div>
+                <div className="text-xs opacity-90">{action.description}</div>
+              </div>
+            </Button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        {activeTab === 'chat' && renderChatTab()}
-        {activeTab === 'prompts' && (
-          <div className="h-full">
-            <div className="p-3 border-b border-gray-200 flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Prompt Library</h4>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setActiveTab('chat')}
-              >
-                ← Back
-              </Button>
+      {/* Messages */}
+      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-900'} rounded-lg p-4`}>
+                <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                <p className="text-xs opacity-70 mt-2">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                
+                {message.suggestions && message.suggestions.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-medium opacity-80">Suggestions:</p>
+                    {message.suggestions.slice(0, 3).map((suggestion, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTemplateSelect(suggestion)}
+                        className="block w-full text-left"
+                        disabled={isLoading}
+                      >
+                        {suggestion}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <EmailPromptLibrary onSelectPrompt={handlePromptSelect} />
-          </div>
-        )}
-        {activeTab === 'templates' && renderTemplatesTab()}
+          ))}
+          
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-gray-600">AI is thinking...</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+
+      {/* Input */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Tell me what kind of email you want to create..."
+            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button 
+            onClick={handleSendMessage} 
+            disabled={!newMessage.trim() || isLoading}
+          >
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          </Button>
+        </div>
       </div>
     </div>
   );
