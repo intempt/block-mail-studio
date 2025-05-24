@@ -38,12 +38,19 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected,
         return <VideoBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'social':
         return <SocialBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
-      case 'menu':
-        return <MenuBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'html':
         return <HtmlBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'menu':
+        return <MenuBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'code':
         return <CodeBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'product':
+      case 'table':
+      case 'header-link-bar':
+      case 'drop-shadow':
+      case 'review-quote':
+      case 'columns':
+        return <div className="p-4 bg-blue-100 text-blue-700">Block type "{block.type}" coming soon</div>;
       default:
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
     }

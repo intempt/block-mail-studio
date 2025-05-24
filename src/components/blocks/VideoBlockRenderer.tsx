@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { VideoBlock } from '@/types/emailBlocks';
 import { Play } from 'lucide-react';
@@ -33,7 +32,7 @@ export const VideoBlockRenderer: React.FC<VideoBlockRendererProps> = ({ block, i
             borderRadius: styling.borderRadius,
           }}
         />
-        {block.content.playButton !== false && (
+        {block.content.showPlayButton && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center">
               <Play className="w-8 h-8 text-white ml-1" />

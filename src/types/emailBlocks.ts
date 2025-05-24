@@ -1,4 +1,3 @@
-
 export interface BlockPosition {
   x: number;
   y: number;
@@ -245,6 +244,25 @@ export interface HtmlBlock extends BaseBlock {
   };
 }
 
+export interface MenuBlock extends BaseBlock {
+  type: 'menu';
+  content: {
+    items: Array<{
+      label: string;
+      url: string;
+    }>;
+    layout: 'horizontal' | 'vertical';
+  };
+}
+
+export interface CodeBlock extends BaseBlock {
+  type: 'code';
+  content: {
+    code: string;
+    language: string;
+  };
+}
+
 export type EmailBlock = 
   | TextBlock 
   | ImageBlock 
@@ -260,7 +278,9 @@ export type EmailBlock =
   | SocialBlock
   | SpacerBlock 
   | DividerBlock 
-  | HtmlBlock;
+  | HtmlBlock
+  | MenuBlock
+  | CodeBlock;
 
 export interface EmailSection {
   id: string;

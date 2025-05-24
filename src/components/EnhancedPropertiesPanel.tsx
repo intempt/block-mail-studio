@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,7 +66,7 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
           [property]: value
         }
       }
-    };
+    } as EmailBlock;
     onBlockUpdate(updatedBlock);
   };
 
@@ -80,7 +79,7 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
         ...selectedBlock.content,
         [property]: value
       }
-    };
+    } as EmailBlock;
     onBlockUpdate(updatedBlock);
   };
 
@@ -93,7 +92,7 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
         ...selectedBlock.displayOptions,
         [property]: value
       }
-    };
+    } as EmailBlock;
     onBlockUpdate(updatedBlock);
   };
 
