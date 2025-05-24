@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { X, Bold, Italic, Underline, Link, AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react';
-import { EmailBlock, TextBlock, ImageBlock, ButtonBlock } from '@/types/emailBlocks';
+import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, SpacerBlock, DividerBlock } from '@/types/emailBlocks';
 
 interface ContextualEditorProps {
   block: EmailBlock;
@@ -259,10 +259,13 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
               <Label htmlFor="spacer-height">Height</Label>
               <Input
                 id="spacer-height"
-                value={(block as any).content.height || '40px'}
+                value={(block as SpacerBlock).content.height || '40px'}
                 onChange={(e) => onBlockUpdate({
                   ...block,
-                  content: { height: e.target.value }
+                  content: { 
+                    height: e.target.value,
+                    mobileHeight: (block as SpacerBlock).content.mobileHeight || '20px'
+                  }
                 })}
                 placeholder="40px"
               />
@@ -274,10 +277,10 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
                 <Label htmlFor="divider-thickness">Thickness</Label>
                 <Input
                   id="divider-thickness"
-                  value={(block as any).content.thickness || '1px'}
+                  value={(block as DividerBlock).content.thickness || '1px'}
                   onChange={(e) => onBlockUpdate({
                     ...block,
-                    content: { ...(block as any).content, thickness: e.target.value }
+                    content: { ...(block as DividerBlock).content, thickness: e.target.value }
                   })}
                   placeholder="1px"
                 />
@@ -287,10 +290,10 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
                 <Input
                   id="divider-color"
                   type="color"
-                  value={(block as any).content.color || '#e0e0e0'}
+                  value={(block as DividerBlock).content.color || '#e0e0e0'}
                   onChange={(e) => onBlockUpdate({
                     ...block,
-                    content: { ...(block as any).content, color: e.target.value }
+                    content: { ...(block as DividerBlock).content, color: e.target.value }
                   })}
                 />
               </div>
