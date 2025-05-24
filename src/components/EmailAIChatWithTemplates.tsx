@@ -23,12 +23,16 @@ import {
   Target,
   BarChart3,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { EmailPromptLibrary, EmailPrompt } from './EmailPromptLibrary';
 import { EmailTemplate } from './TemplateManager';
 import { emailAIService } from '@/services/EmailAIService';
 import { ApiKeyService } from '@/services/apiKeyService';
+import { EmailContentAnalyzer } from '@/services/EmailContentAnalyzer';
+import { AIBlockGenerator } from '@/services/AIBlockGenerator';
 
 interface Message {
   id: string;
@@ -36,6 +40,12 @@ interface Message {
   content: string;
   timestamp: Date;
   suggestions?: string[];
+  emailData?: {
+    subject: string;
+    html: string;
+    previewText: string;
+  };
+  canLoadToEditor?: boolean;
 }
 
 interface EmailAIChatWithTemplatesProps {
@@ -43,13 +53,15 @@ interface EmailAIChatWithTemplatesProps {
   templates?: EmailTemplate[];
   onLoadTemplate?: (template: EmailTemplate) => void;
   onSaveTemplate?: (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => void;
+  onLoadToEditor?: (blocks: any[], layoutConfig: any) => void;
 }
 
 export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> = ({ 
   editor, 
   templates = [],
   onLoadTemplate,
-  onSaveTemplate
+  onSaveTemplate,
+  onLoadToEditor
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -69,6 +81,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'chat' | 'prompts' | 'templates'>('chat');
   const [templateSearch, setTemplateSearch] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const quickActions = [
     {
@@ -147,14 +160,20 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
           const aiResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: `✅ Email created and inserted into your editor!\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nThe complete email is now in your editor - you can edit it manually or ask me to refine it further.`,
+            content: `✅ Email created successfully!\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nI've inserted the email into your editor. You can also load it as structured blocks for easier editing using the button below.`,
             timestamp: new Date(),
             suggestions: [
+              'Load to block editor',
               'Make it more casual',
               'Add urgency',
-              'Shorten the content',
-              'Add call-to-action buttons'
-            ]
+              'Optimize for mobile'
+            ],
+            emailData: {
+              subject: emailResponse.subject,
+              html: emailResponse.html,
+              previewText: emailResponse.previewText
+            },
+            canLoadToEditor: true
           };
           setMessages(prev => [...prev, aiResponse]);
         } catch (error) {
@@ -206,6 +225,58 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     }
   };
 
+  const handleLoadToEditor = async (message: Message) => {
+    if (!message.emailData || !onLoadToEditor) return;
+
+    setIsAnalyzing(true);
+    try {
+      // Analyze the email content
+      const analysis = await EmailContentAnalyzer.analyzeEmailContent(
+        message.emailData.subject,
+        message.emailData.html
+      );
+
+      // Generate blocks from analysis
+      const result = AIBlockGenerator.generateBlocksFromAnalysis(
+        analysis,
+        message.emailData.html
+      );
+
+      // Load into editor
+      onLoadToEditor(result.blocks, result.layoutConfig);
+
+      // Update message to show it was loaded
+      setMessages(prev => prev.map(msg => 
+        msg.id === message.id 
+          ? { ...msg, content: msg.content + '\n\n✅ **Loaded to block editor!** You can now drag, drop, and edit individual components.' }
+          : msg
+      ));
+
+      // Add suggestions message
+      if (result.suggestions.length > 0) {
+        const suggestionsMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          type: 'ai',
+          content: `💡 **Layout Suggestions:**\n${result.suggestions.map(s => `• ${s}`).join('\n')}\n\nYour email is now in the block editor where you can refine the design!`,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, suggestionsMessage]);
+      }
+
+    } catch (error) {
+      console.error('Failed to load to editor:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 3).toString(),
+        type: 'error',
+        content: 'Failed to convert email to blocks. The content has been loaded into the text editor instead.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleQuickAction = (action: any) => {
     if (action.onClick) {
       action.onClick();
@@ -240,6 +311,15 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
   };
 
   const handleSuggestionClick = (suggestion: string) => {
+    if (suggestion === 'Load to block editor') {
+      // Find the most recent message with emailData
+      const lastEmailMessage = messages.slice().reverse().find(m => m.emailData);
+      if (lastEmailMessage) {
+        handleLoadToEditor(lastEmailMessage);
+      }
+      return;
+    }
+    
     setInputMessage(suggestion);
     setTimeout(() => sendMessage(), 100);
   };
@@ -360,6 +440,26 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
                     </div>
                   )}
                 </div>
+
+                {/* Load to Editor Button */}
+                {message.canLoadToEditor && message.emailData && (
+                  <div className="mt-3 ml-11">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleLoadToEditor(message)}
+                      disabled={isAnalyzing}
+                      className="text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+                    >
+                      {isAnalyzing ? (
+                        <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
+                      ) : (
+                        <Download className="w-3 h-3 mr-2" />
+                      )}
+                      {isAnalyzing ? 'Converting to blocks...' : 'Load to Block Editor'}
+                    </Button>
+                  </div>
+                )}
 
                 {message.suggestions && message.suggestions.length > 0 && message.type === 'ai' && (
                   <div className="mt-3 ml-11">

@@ -1,4 +1,3 @@
-
 import { ApiKeyService } from './apiKeyService';
 
 export interface OpenAIEmailAnalysisRequest {
@@ -111,7 +110,7 @@ export class OpenAIEmailService {
     }
   }
 
-  private static async callOpenAI(prompt: string, retries: number = 2, expectJSON: boolean = true): Promise<any> {
+  static async callOpenAI(prompt: string, retries: number = 2, expectJSON: boolean = true): Promise<any> {
     const apiKey = ApiKeyService.getOpenAIKey();
 
     if (!ApiKeyService.isKeyAvailable()) {
