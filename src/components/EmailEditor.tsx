@@ -10,15 +10,15 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Color from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
-import ListItem from '@tiptap/extension-list-item';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
 import Underline from '@tiptap/extension-underline';
+import FontFamily from '@tiptap/extension-font-family';
+import Placeholder from '@tiptap/extension-placeholder';
+import Gapcursor from '@tiptap/extension-gapcursor';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Monitor, Smartphone, Code, Eye, Download, Upload, Settings, Layers } from 'lucide-react';
+import { Monitor, Smartphone, Code, Eye, Download, Upload, Settings, Layers, Sparkles } from 'lucide-react';
 
 import { EmailBlockLibrary } from './EmailBlockLibrary';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
@@ -27,13 +27,17 @@ import { EmailEditorToolbar } from './EmailEditorToolbar';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 import { EmailAIChat } from './EmailAIChat';
+import { EmailPromptLibrary, EmailPrompt } from './EmailPromptLibrary';
+import { TemplateManager, EmailTemplate } from './TemplateManager';
+import { ImageUploader } from './ImageUploader';
 
 const EmailEditor = () => {
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [viewMode, setViewMode] = useState<'visual' | 'code'>('visual');
-  const [sidebarTab, setSidebarTab] = useState<'blocks' | 'templates' | 'ai'>('ai');
+  const [sidebarTab, setSidebarTab] = useState<'ai' | 'prompts' | 'blocks' | 'templates' | 'manager'>('ai');
   const [showProperties, setShowProperties] = useState(true);
   const [emailHTML, setEmailHTML] = useState('');
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
 
   const editor = useEditor({
     extensions: [
@@ -63,17 +67,11 @@ const EmailEditor = () => {
       Color,
       TextStyle,
       Underline,
-      ListItem,
-      BulletList.configure({
-        HTMLAttributes: {
-          class: 'email-bullet-list',
-        },
+      FontFamily,
+      Placeholder.configure({
+        placeholder: 'Start creating your email...',
       }),
-      OrderedList.configure({
-        HTMLAttributes: {
-          class: 'email-ordered-list',
-        },
-      }),
+      Gapcursor,
     ],
     content: `
       <div class="email-container">
@@ -84,7 +82,7 @@ const EmailEditor = () => {
         </div>
         <div class="email-block paragraph-block">
           <p style="font-family: Arial, sans-serif; color: #666; line-height: 1.6; margin: 0; padding: 20px;">
-            Create stunning, responsive email campaigns with our advanced editor. Drag and drop components, customize styling, and preview across devices.
+            Create stunning, responsive email campaigns with our AI-powered editor. Drag and drop components, customize styling, and preview across devices.
           </p>
         </div>
       </div>
@@ -94,6 +92,49 @@ const EmailEditor = () => {
       setEmailHTML(html);
     },
   });
+
+  const handlePromptSelect = (prompt: EmailPrompt) => {
+    setSidebarTab('ai');
+    // The AI chat component will handle the prompt
+  };
+
+  const handleSaveTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
+    const newTemplate: EmailTemplate = {
+      ...template,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      usageCount: 0
+    };
+    setTemplates(prev => [...prev, newTemplate]);
+  };
+
+  const handleLoadTemplate = (template: EmailTemplate) => {
+    if (editor) {
+      editor.commands.setContent(template.html);
+      setTemplates(prev => 
+        prev.map(t => 
+          t.id === template.id 
+            ? { ...t, usageCount: t.usageCount + 1 }
+            : t
+        )
+      );
+    }
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleToggleFavorite = (id: string) => {
+    setTemplates(prev => 
+      prev.map(t => 
+        t.id === id 
+          ? { ...t, isFavorite: !t.isFavorite }
+          : t
+      )
+    );
+  };
 
   const exportHTML = () => {
     if (editor) {
@@ -183,24 +224,32 @@ const EmailEditor = () => {
       {/* Left Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Email Builder</h2>
-          <p className="text-sm text-gray-600 mt-1">Professional email campaign editor</p>
+          <h2 className="text-lg font-semibold text-gray-900">Email Builder Pro</h2>
+          <p className="text-sm text-gray-600 mt-1">AI-powered email campaign editor</p>
         </div>
         
         <div className="border-b border-gray-200">
-          <Tabs value={sidebarTab} onValueChange={(value) => setSidebarTab(value as 'blocks' | 'templates' | 'ai')}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="ai" className="flex items-center gap-2">
-                <Layers className="w-4 h-4" />
+          <Tabs value={sidebarTab} onValueChange={(value) => setSidebarTab(value as any)}>
+            <TabsList className="grid w-full grid-cols-5 text-xs">
+              <TabsTrigger value="ai" className="flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
                 AI
               </TabsTrigger>
-              <TabsTrigger value="blocks" className="flex items-center gap-2">
-                <Layers className="w-4 h-4" />
+              <TabsTrigger value="prompts" className="flex items-center gap-1">
+                <Layers className="w-3 h-3" />
+                Prompts
+              </TabsTrigger>
+              <TabsTrigger value="blocks" className="flex items-center gap-1">
+                <Layers className="w-3 h-3" />
                 Blocks
               </TabsTrigger>
-              <TabsTrigger value="templates" className="flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Templates
+              <TabsTrigger value="templates" className="flex items-center gap-1">
+                <Settings className="w-3 h-3" />
+                Library
+              </TabsTrigger>
+              <TabsTrigger value="manager" className="flex items-center gap-1">
+                <Settings className="w-3 h-3" />
+                Saved
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -209,14 +258,25 @@ const EmailEditor = () => {
         <div className="flex-1 overflow-hidden">
           {sidebarTab === 'ai' ? (
             <EmailAIChat editor={editor} />
+          ) : sidebarTab === 'prompts' ? (
+            <EmailPromptLibrary onSelectPrompt={handlePromptSelect} />
           ) : sidebarTab === 'blocks' ? (
             <EmailBlockLibrary editor={editor} />
-          ) : (
+          ) : sidebarTab === 'templates' ? (
             <EmailTemplateLibrary editor={editor} />
+          ) : (
+            <TemplateManager
+              editor={editor}
+              templates={templates}
+              onSaveTemplate={handleSaveTemplate}
+              onLoadTemplate={handleLoadTemplate}
+              onDeleteTemplate={handleDeleteTemplate}
+              onToggleFavorite={handleToggleFavorite}
+            />
           )}
         </div>
 
-        {sidebarTab !== 'ai' && (
+        {!['ai', 'prompts', 'manager'].includes(sidebarTab) && (
           <div className="p-4 border-t border-gray-200 space-y-2">
             <div className="flex gap-2">
               <Button 

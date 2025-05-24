@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { emailAIService, EmailGenerationRequest } from '@/services/EmailAIService';
+import { ImageUploader } from './ImageUploader';
 
 interface Message {
   id: string;
@@ -190,6 +190,15 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor }) => {
             <option value="newsletter">Newsletter</option>
             <option value="announcement">Announcement</option>
           </select>
+        </div>
+        
+        <div className="mb-3">
+          <ImageUploader 
+            maxImages={3}
+            onImagesChange={(images) => {
+              console.log('Images uploaded:', images);
+            }}
+          />
         </div>
         
         <div className="flex flex-wrap gap-1">
