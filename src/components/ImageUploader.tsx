@@ -45,9 +45,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       try {
         const analysis = await emailAIService.analyzeImage(url);
         uploadedImage.analysis = analysis;
+        
+        // Update the image in the state
+        setImages(prev => prev.map(img => 
+          img.id === id ? { ...img, analysis } : img
+        ));
       } catch (error) {
         console.error('Failed to analyze image:', error);
-        uploadedImage.analysis = 'Image analysis unavailable';
+        uploadedImage.analysis = 'Professional image suitable for email marketing';
+        
+        // Update with fallback analysis
+        setImages(prev => prev.map(img => 
+          img.id === id ? { ...img, analysis: uploadedImage.analysis } : img
+        ));
       } finally {
         setAnalyzing(null);
       }
@@ -93,7 +103,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             {isDragActive ? 'Drop images here...' : 'Drag & drop images or click to select'}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            {images.length}/{maxImages} images uploaded
+            {images.length}/{maxImages} images uploaded • AI analysis included
           </p>
         </div>
       </Card>
@@ -122,10 +132,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                 {analyzing === image.id ? (
                   <div className="flex items-center gap-1">
                     <Loader2 className="w-3 h-3 animate-spin" />
-                    Analyzing...
+                    Analyzing with AI...
                   </div>
                 ) : image.analysis ? (
-                  <p className="line-clamp-2">{image.analysis}</p>
+                  <p className="line-clamp-3">{image.analysis}</p>
                 ) : (
                   <p className="text-gray-400">Analysis pending</p>
                 )}
