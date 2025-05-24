@@ -57,7 +57,7 @@ import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
-type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
+type RightPanelTab = 'analytics' | 'optimization';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
 interface Collaborator {
@@ -73,7 +73,7 @@ const EmailEditor = () => {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('blocks');
-  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('properties');
+  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('analytics');
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -293,41 +293,12 @@ const EmailEditor = () => {
 
   const renderRightPanel = () => {
     switch (rightPanelTab) {
-      case 'properties':
-        return (
-          <EnhancedPropertiesPanel 
-            emailHTML={emailHTML}
-            onBlockUpdate={(block) => console.log('Block updated:', block)}
-            onBlockDelete={(blockId) => console.log('Block deleted:', blockId)}
-            onBlockDuplicate={(block) => console.log('Block duplicated:', block)}
-            onBlockSave={(block, name) => console.log('Block saved:', block, name)}
-            compactMode={compactMode}
-          />
-        );
       case 'analytics':
         return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
       case 'optimization':
         return <BrandVoiceOptimizer editor={null} emailHTML={emailHTML} />;
-      case 'code':
-        return (
-          <div className={compactMode ? "p-2" : "p-4"}>
-            <h4 className="font-medium mb-4">HTML Preview</h4>
-            <div className="bg-slate-100 rounded-lg p-4 text-xs font-mono overflow-auto max-h-96">
-              <pre>{emailHTML}</pre>
-            </div>
-          </div>
-        );
       default:
-        return (
-          <EnhancedPropertiesPanel 
-            emailHTML={emailHTML}
-            onBlockUpdate={(block) => console.log('Block updated:', block)}
-            onBlockDelete={(blockId) => console.log('Block deleted:', blockId)}
-            onBlockDuplicate={(block) => console.log('Block duplicated:', block)}
-            onBlockSave={(block, name) => console.log('Block saved:', block, name)}
-            compactMode={compactMode}
-          />
-        );
+        return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
     }
   };
 
@@ -557,14 +528,6 @@ const EmailEditor = () => {
               
               <div className="flex gap-1">
                 <Button
-                  variant={rightPanelTab === 'properties' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRightPanelTab('properties')}
-                  className="flex-1 h-6 lg:h-8"
-                >
-                  <Eye className="w-3 h-3 lg:w-4 lg:h-4" />
-                </Button>
-                <Button
                   variant={rightPanelTab === 'analytics' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setRightPanelTab('analytics')}
@@ -579,14 +542,6 @@ const EmailEditor = () => {
                   className="flex-1 h-6 lg:h-8"
                 >
                   <Target className="w-3 h-3 lg:w-4 lg:h-4" />
-                </Button>
-                <Button
-                  variant={rightPanelTab === 'code' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRightPanelTab('code')}
-                  className="flex-1 h-6 lg:h-8"
-                >
-                  <Code2 className="w-3 h-3 lg:w-4 lg:h-4" />
                 </Button>
               </div>
             </div>
