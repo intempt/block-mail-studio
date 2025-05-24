@@ -196,43 +196,43 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
 
   const quickActions = [
     { 
-      icon: <FileText className="w-6 h-6" />, 
-      label: 'Industry Templates', 
+      icon: <FileText className="w-5 h-5" />, 
+      label: 'Templates', 
       action: 'Show me industry email templates',
-      description: 'Browse pre-made templates',
+      description: 'Pre-made designs',
       color: 'bg-blue-500 hover:bg-blue-600',
       onClick: () => setShowTemplates(true)
     },
     { 
-      icon: <Palette className="w-6 h-6" />, 
+      icon: <Palette className="w-5 h-5" />, 
       label: 'Brand Kit', 
       action: 'Help me apply my brand colors and fonts',
       description: 'Apply brand styling',
       color: 'bg-purple-500 hover:bg-purple-600'
     },
     { 
-      icon: <Image className="w-6 h-6" />, 
+      icon: <Image className="w-5 h-5" />, 
       label: 'AI Images', 
       action: 'Generate professional images for my email',
       description: 'Create custom visuals',
       color: 'bg-green-500 hover:bg-green-600'
     },
     { 
-      icon: <Type className="w-6 h-6" />, 
+      icon: <Type className="w-5 h-5" />, 
       label: 'Smart Copy', 
       action: 'Write compelling email copy that converts',
       description: 'AI-powered copywriting',
       color: 'bg-orange-500 hover:bg-orange-600'
     },
     { 
-      icon: <Target className="w-6 h-6" />, 
+      icon: <Target className="w-5 h-5" />, 
       label: 'Optimize', 
       action: 'Analyze and improve my email performance',
       description: 'Enhance engagement',
       color: 'bg-red-500 hover:bg-red-600'
     },
     { 
-      icon: <BarChart3 className="w-6 h-6" />, 
+      icon: <BarChart3 className="w-5 h-5" />, 
       label: 'A/B Testing', 
       action: 'Create variations for split testing',
       description: 'Test multiple versions',
@@ -560,37 +560,37 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
   if (showTemplates) {
     return (
       <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-3 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className="font-semibold text-gray-900">Industry Templates</h3>
-              <p className="text-sm text-gray-600">Choose a template to load into your editor</p>
+              <h3 className="font-semibold text-gray-900 text-base">Industry Templates</h3>
+              <p className="text-xs text-gray-600">Choose a template to load</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setShowTemplates(false)}>
+            <Button variant="ghost" size="sm" onClick={() => setShowTemplates(false)} className="text-xs">
               ← Back to Chat
             </Button>
           </div>
         </div>
 
         <ScrollArea className="flex-1">
-          <div className="p-4 grid gap-4">
+          <div className="p-3 grid gap-3">
             {Object.entries(industryTemplates).map(([name, template]) => (
-              <Card key={name} className="p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleTemplateSelect(name)}>
-                <div className="flex items-start justify-between mb-3">
+              <Card key={name} className="p-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleTemplateSelect(name)}>
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 mb-1">{name}</h4>
-                    <p className="text-sm text-gray-600 mb-2">{template.description}</p>
+                    <h4 className="font-medium text-gray-900 mb-1 text-sm">{name}</h4>
+                    <p className="text-xs text-gray-600 mb-2">{template.description}</p>
                     <Badge variant="secondary" className="text-xs">{template.category}</Badge>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
                 </div>
                 
-                <div className="bg-gray-50 rounded-md p-3 text-xs text-gray-700 font-mono">
-                  Preview: {template.html.substring(0, 100)}...
+                <div className="bg-gray-50 rounded-md p-2 text-xs text-gray-700 font-mono">
+                  Preview: {template.html.substring(0, 80)}...
                 </div>
                 
-                <Button className="w-full mt-3" variant="outline">
-                  <Zap className="w-4 h-4 mr-2" />
+                <Button className="w-full mt-2 text-xs" variant="outline" size="sm">
+                  <Zap className="w-3 h-3 mr-1" />
                   Load Template
                 </Button>
               </Card>
@@ -603,30 +603,30 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
 
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-3 border-b border-gray-200 max-h-[240px] overflow-y-auto">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">AI Email Assistant</h3>
+          <Sparkles className="w-4 h-4 text-blue-600" />
+          <h3 className="text-base font-semibold text-gray-900">AI Email Assistant</h3>
           <Badge variant="secondary" className="ml-auto text-xs">
             Smart
           </Badge>
         </div>
         
-        {/* Quick Actions Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Compact Quick Actions Grid */}
+        <div className="grid grid-cols-2 gap-2">
           {quickActions.map((action, index) => (
             <Button
               key={index}
               variant="outline"
               onClick={() => handleQuickAction(action)}
-              className={`flex flex-col items-center gap-2 h-auto p-4 text-white border-0 ${action.color}`}
+              className={`flex flex-col items-center gap-1 h-auto p-3 text-white border-0 ${action.color}`}
               disabled={isLoading}
             >
-              <div className="flex items-center justify-center w-8 h-8">
+              <div className="flex items-center justify-center w-6 h-6">
                 {action.icon}
               </div>
               <div className="text-center">
-                <div className="font-semibold text-sm">{action.label}</div>
+                <div className="font-semibold text-xs">{action.label}</div>
                 <div className="text-xs opacity-90">{action.description}</div>
               </div>
             </Button>
@@ -635,18 +635,18 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-3" ref={scrollAreaRef}>
+        <div className="space-y-3">
           {messages.map((message) => (
             <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-900'} rounded-lg p-4`}>
+              <div className={`max-w-[80%] ${message.type === 'user' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-900'} rounded-lg p-3`}>
                 <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-                <p className="text-xs opacity-70 mt-2">
+                <p className="text-xs opacity-70 mt-1">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 
                 {message.suggestions && message.suggestions.length > 0 && (
-                  <div className="mt-3 space-y-2">
+                  <div className="mt-2 space-y-1">
                     <p className="text-xs font-medium opacity-80">Suggestions:</p>
                     {message.suggestions.slice(0, 3).map((suggestion, index) => (
                       <Button
@@ -654,7 +654,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
                         variant="outline"
                         size="sm"
                         onClick={() => handleTemplateSelect(suggestion)}
-                        className="block w-full text-left"
+                        className="block w-full text-left text-xs"
                         disabled={isLoading}
                       >
                         {suggestion}
@@ -668,10 +668,10 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-3">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm text-gray-600">AI is thinking...</span>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span className="text-xs text-gray-600">AI is thinking...</span>
                 </div>
               </div>
             </div>
@@ -680,21 +680,22 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-3 border-t border-gray-200">
         <div className="flex gap-2">
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Tell me what kind of email you want to create..."
             onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            className="flex-1"
+            className="flex-1 text-sm"
             disabled={isLoading}
           />
           <Button 
             onClick={handleSendMessage} 
             disabled={!newMessage.trim() || isLoading}
+            size="sm"
           >
-            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
           </Button>
         </div>
       </div>

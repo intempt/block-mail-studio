@@ -158,31 +158,31 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
-          <Brain className="w-5 h-5 text-purple-600" />
-          <h3 className="text-lg font-semibold">Brand Voice Optimizer</h3>
-          <Badge variant="secondary" className="ml-auto bg-purple-50 text-purple-700">
+      <div className="p-3 border-b border-gray-200 max-h-[140px] overflow-y-auto">
+        <div className="flex items-center gap-2 mb-3">
+          <Brain className="w-4 h-4 text-purple-600" />
+          <h3 className="text-base font-semibold">Brand Voice Optimizer</h3>
+          <Badge variant="secondary" className="ml-auto bg-purple-50 text-purple-700 text-xs">
             AI Powered
           </Badge>
         </div>
 
         {isAnalyzing ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span className="text-sm">{analyzingMessages[currentAnalyzingStep]}</span>
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              <span className="text-xs">{analyzingMessages[currentAnalyzingStep]}</span>
             </div>
-            <Progress value={(currentAnalyzingStep + 1) * 25} className="h-2" />
+            <Progress value={(currentAnalyzingStep + 1) * 25} className="h-1" />
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{brandVoiceScore}</div>
+              <div className="text-lg font-bold text-purple-600">{brandVoiceScore}</div>
               <div className="text-xs text-gray-600">Brand Voice</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{engagementScore}</div>
+              <div className="text-lg font-bold text-blue-600">{engagementScore}</div>
               <div className="text-xs text-gray-600">Engagement</div>
             </div>
           </div>
@@ -190,16 +190,16 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+        <div className="p-3 space-y-3">
           {/* Performance Prediction */}
           {!isAnalyzing && (
-            <div className="mb-4">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
+            <div className="mb-3">
+              <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1 text-sm">
+                <TrendingUp className="w-3 h-3" />
                 Performance Prediction
               </h4>
               
-              <div className="grid grid-cols-3 gap-3 text-sm">
+              <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center p-2 bg-blue-50 rounded">
                   <div className="font-semibold text-blue-600">{performancePrediction.openRate}%</div>
                   <div className="text-xs text-gray-600">Open Rate</div>
@@ -218,18 +218,18 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
           {/* Optimization Suggestions */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
+            <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1 text-sm">
+              <Lightbulb className="w-3 h-3" />
               Optimization Suggestions ({suggestions.length})
             </h4>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               {suggestions.map((suggestion) => (
-                <Card key={suggestion.id} className="p-3 border">
+                <Card key={suggestion.id} className="p-2 border">
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {getTypeIcon(suggestion.type)}
-                      <span className="font-medium text-sm">{suggestion.title}</span>
+                      <span className="font-medium text-xs">{suggestion.title}</span>
                       <Badge 
                         variant="outline" 
                         className={`text-xs ${getImpactColor(suggestion.impact)}`}
@@ -244,32 +244,32 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                     </div>
                   </div>
                   
-                  <div className="space-y-2 mb-3">
+                  <div className="space-y-1 mb-2">
                     <div className="text-xs">
                       <span className="text-gray-500">Current:</span>
-                      <div className="bg-gray-50 p-2 rounded text-gray-700 mt-1">
+                      <div className="bg-gray-50 p-1 rounded text-gray-700 mt-1 text-xs">
                         {suggestion.current}
                       </div>
                     </div>
                     
                     <div className="text-xs">
                       <span className="text-gray-500">Suggested:</span>
-                      <div className="bg-blue-50 p-2 rounded text-blue-700 mt-1">
+                      <div className="bg-blue-50 p-1 rounded text-blue-700 mt-1 text-xs">
                         {suggestion.suggested}
                       </div>
                     </div>
                   </div>
                   
-                  <p className="text-xs text-gray-600 mb-3 italic">
+                  <p className="text-xs text-gray-600 mb-2 italic">
                     💡 {suggestion.reason}
                   </p>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => applySuggestion(suggestion)}
-                      className="flex-1"
+                      className="flex-1 text-xs"
                     >
                       Apply
                     </Button>
@@ -277,17 +277,18 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => navigator.clipboard.writeText(suggestion.suggested)}
+                      className="text-xs"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-3 h-3" />
                     </Button>
                   </div>
                 </Card>
               ))}
               
               {suggestions.length === 0 && !isAnalyzing && (
-                <div className="text-center py-6">
-                  <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                  <p className="text-sm text-gray-600">All optimizations applied!</p>
+                <div className="text-center py-4">
+                  <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-2" />
+                  <p className="text-xs text-gray-600">All optimizations applied!</p>
                   <p className="text-xs text-gray-500 mt-1">Your email is performing well.</p>
                 </div>
               )}
@@ -296,27 +297,27 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
 
           {/* Quick Actions */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Quick Optimizations</h4>
-            <div className="grid grid-cols-2 gap-2">
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">Quick Optimizations</h4>
+            <div className="grid grid-cols-2 gap-1">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={analyzeContent}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 text-xs"
               >
-                <RefreshCw className="w-4 h-4" />
+                <RefreshCw className="w-3 h-3" />
                 Re-analyze
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Target className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <Target className="w-3 h-3" />
                 A/B Test
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <Sparkles className="w-3 h-3" />
                 Auto-fix
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <TrendingUp className="w-3 h-3" />
                 Optimize
               </Button>
             </div>

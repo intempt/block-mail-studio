@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -166,25 +165,25 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
-          <Brain className="w-5 h-5" />
-          <h3 className="text-lg font-semibold">Design Assistant</h3>
-          <Badge variant="secondary" className="ml-auto">
+      <div className="p-3 border-b border-gray-200 max-h-[200px] overflow-y-auto">
+        <div className="flex items-center gap-2 mb-3">
+          <Brain className="w-4 h-4" />
+          <h3 className="text-base font-semibold">Design Assistant</h3>
+          <Badge variant="secondary" className="ml-auto text-xs">
             AI Powered
           </Badge>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">Overall Score</span>
-            <span className={`text-2xl font-bold ${getScoreColor(designScore.overall)}`}>
+            <span className="text-xs font-medium">Overall Score</span>
+            <span className={`text-lg font-bold ${getScoreColor(designScore.overall)}`}>
               {designScore.overall}
             </span>
           </div>
-          <Progress value={designScore.overall} className="mb-3" />
+          <Progress value={designScore.overall} className="mb-2 h-2" />
           
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex justify-between">
               <span className="text-gray-600">Accessibility</span>
               <span className={getScoreColor(designScore.accessibility)}>
@@ -214,11 +213,11 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+        <div className="p-3 space-y-3">
           {/* Suggestions */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
+            <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1 text-sm">
+              <AlertTriangle className="w-3 h-3" />
               Suggestions ({suggestions.filter(s => !s.fixed).length})
             </h4>
             
@@ -226,13 +225,13 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
               {suggestions.map((suggestion) => (
                 <Card 
                   key={suggestion.id} 
-                  className={`p-3 border ${suggestion.fixed ? 'opacity-60' : ''}`}
+                  className={`p-2 border ${suggestion.fixed ? 'opacity-60' : ''}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-1 mb-1">
                         {getTypeIcon(suggestion.type)}
-                        <span className="font-medium text-sm">{suggestion.title}</span>
+                        <span className="font-medium text-xs">{suggestion.title}</span>
                         <Badge 
                           variant="outline" 
                           className={`text-xs ${getSeverityColor(suggestion.severity)}`}
@@ -240,10 +239,10 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
                           {suggestion.severity}
                         </Badge>
                         {suggestion.fixed && (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <CheckCircle className="w-3 h-3 text-green-600" />
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">
+                      <p className="text-xs text-gray-600 mb-1">
                         {suggestion.description}
                       </p>
                       {suggestion.action && (
@@ -258,7 +257,7 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
                         variant="outline"
                         size="sm"
                         onClick={() => applySuggestion(suggestion.id)}
-                        className="ml-2"
+                        className="ml-1 text-xs px-2 py-1"
                       >
                         Fix
                       </Button>
@@ -271,21 +270,21 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
 
           {/* AI Insights */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <Lightbulb className="w-4 h-4" />
+            <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-1 text-sm">
+              <Lightbulb className="w-3 h-3" />
               AI Insights
             </h4>
             
             <div className="space-y-2">
               {aiInsights.map((insight) => (
-                <Card key={insight.id} className="p-3 bg-blue-50 border-blue-200">
-                  <div className="flex items-start gap-2">
-                    <BarChart3 className="w-4 h-4 text-blue-600 mt-0.5" />
+                <Card key={insight.id} className="p-2 bg-blue-50 border-blue-200">
+                  <div className="flex items-start gap-1">
+                    <BarChart3 className="w-3 h-3 text-blue-600 mt-0.5" />
                     <div className="flex-1">
-                      <h5 className="font-medium text-sm text-blue-900 mb-1">
+                      <h5 className="font-medium text-xs text-blue-900 mb-1">
                         {insight.title}
                       </h5>
-                      <p className="text-xs text-blue-700 mb-2">
+                      <p className="text-xs text-blue-700 mb-1">
                         {insight.description}
                       </p>
                       <p className="text-xs text-blue-600 italic">
@@ -300,22 +299,22 @@ export const SmartDesignAssistant: React.FC<SmartDesignAssistantProps> = ({
 
           {/* Quick Actions */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Quick Optimizations</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4" />
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">Quick Optimizations</h4>
+            <div className="grid grid-cols-2 gap-1">
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <Smartphone className="w-3 h-3" />
                 Mobile Check
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Eye className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <Eye className="w-3 h-3" />
                 Accessibility
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Zap className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <Zap className="w-3 h-3" />
                 Performance
               </Button>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
-                <Target className="w-4 h-4" />
+              <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs">
+                <Target className="w-3 h-3" />
                 A/B Test Ideas
               </Button>
             </div>
