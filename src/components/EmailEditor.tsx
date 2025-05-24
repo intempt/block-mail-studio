@@ -52,7 +52,9 @@ import {
   UserPlus,
   Share2,
   Wifi,
-  WifiOff
+  WifiOff,
+  Blocks,
+  Brain
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -65,9 +67,10 @@ import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
 import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
+import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
-type LeftPanelTab = 'ai' | 'design' | 'templates';
+type LeftPanelTab = 'ai' | 'design' | 'blocks';
 type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
 
 interface Collaborator {
@@ -95,6 +98,7 @@ const EmailEditor = () => {
   const [ydoc] = useState(() => new Y.Doc());
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
+  const [isProviderReady, setIsProviderReady] = useState(false);
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email' },
@@ -113,6 +117,9 @@ const EmailEditor = () => {
     wsProvider.on('status', (event: any) => {
       console.log('WebSocket status:', event.status);
       setConnectionStatus(event.status);
+      if (event.status === 'connected') {
+        setIsProviderReady(true);
+      }
     });
 
     wsProvider.awareness.setLocalStateField('user', {
@@ -140,12 +147,15 @@ const EmailEditor = () => {
     });
 
     setProvider(wsProvider);
+    // Set provider ready after a short delay to ensure connection is stable
+    setTimeout(() => setIsProviderReady(true), 1000);
 
     return () => {
       wsProvider.destroy();
     };
   }, [documentId, userName, userColor, ydoc]);
 
+  // Only create editor when provider is ready
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -153,13 +163,13 @@ const EmailEditor = () => {
       Collaboration.configure({
         document: ydoc,
       }),
-      CollaborationCursor.configure({
+      ...(provider ? [CollaborationCursor.configure({
         provider: provider,
         user: {
           name: userName,
           color: userColor,
         },
-      }),
+      })] : []),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -188,7 +198,6 @@ const EmailEditor = () => {
       Placeholder.configure({
         placeholder: 'Start creating your email...',
       }),
-      Gapcursor,
     ],
     content: `
       <div class="email-container">
@@ -208,7 +217,7 @@ const EmailEditor = () => {
       const html = editor.getHTML();
       setEmailHTML(html);
     },
-  }, [provider]); // Add provider as dependency to recreate editor when provider changes
+  }, [isProviderReady, provider]);
 
   useEffect(() => {
     const initCollaboration = async () => {
@@ -355,29 +364,39 @@ const EmailEditor = () => {
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <Sparkles className="w-5 h-5 text-slate-400" />
+          <Brain className="w-5 h-5 text-slate-400" />
         </div>
       );
     }
 
     switch (leftPanelTab) {
       case 'ai':
-        return <EmailAIChat editor={editor} />;
-      case 'design':
-        return <ProfessionalToolPalette editor={editor} />;
-      case 'templates':
         return (
-          <TemplateManager
-            editor={editor}
+          <EmailAIChatWithTemplates 
+            editor={editor} 
             templates={templates}
-            onSaveTemplate={handleSaveTemplate}
             onLoadTemplate={handleLoadTemplate}
-            onDeleteTemplate={handleDeleteTemplate}
-            onToggleFavorite={handleToggleFavorite}
+            onSaveTemplate={handleSaveTemplate}
           />
         );
+      case 'design':
+        return <ProfessionalToolPalette editor={editor} />;
+      case 'blocks':
+        return (
+          <div className="p-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Blocks</h3>
+            <p className="text-sm text-gray-500">Drag and drop components coming soon...</p>
+          </div>
+        );
       default:
-        return <EmailAIChat editor={editor} />;
+        return (
+          <EmailAIChatWithTemplates 
+            editor={editor} 
+            templates={templates}
+            onLoadTemplate={handleLoadTemplate}
+            onSaveTemplate={handleSaveTemplate}
+          />
+        );
     }
   };
 
@@ -597,7 +616,7 @@ const EmailEditor = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Creation Tools */}
+        {/* Left Panel - Tools */}
         <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
           leftPanelCollapsed ? 'w-12' : 'w-80'
         } flex flex-col`}>
@@ -607,7 +626,7 @@ const EmailEditor = () => {
             <>
               <div className="p-4 border-b border-slate-200">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-slate-900">Creation Tools</h3>
+                  <h3 className="font-semibold text-slate-900">Tools</h3>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -624,7 +643,7 @@ const EmailEditor = () => {
                     onClick={() => setLeftPanelTab('ai')}
                     className="flex-1"
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Brain className="w-4 h-4" />
                   </Button>
                   <Button
                     variant={leftPanelTab === 'design' ? 'default' : 'outline'}
@@ -635,12 +654,12 @@ const EmailEditor = () => {
                     <Palette className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant={leftPanelTab === 'templates' ? 'default' : 'outline'}
+                    variant={leftPanelTab === 'blocks' ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setLeftPanelTab('templates')}
+                    onClick={() => setLeftPanelTab('blocks')}
                     className="flex-1"
                   >
-                    <FileText className="w-4 h-4" />
+                    <Blocks className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
