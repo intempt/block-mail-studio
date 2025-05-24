@@ -38,7 +38,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Palette,
+  Table as TableIcon,
+  Brain,
+  Store,
+  User
 } from 'lucide-react';
 
 import { EmailBlockLibrary } from './EmailBlockLibrary';
@@ -56,13 +61,21 @@ import { EmailPromptEditor } from './EmailPromptEditor';
 import { EmailBlockEditor } from './EmailBlockEditor';
 import { CollaborativeEmailEditor } from './CollaborativeEmailEditor';
 import { AdvancedBlockLibrary } from './AdvancedBlockLibrary';
+import { BrandKitManager, BrandKit } from './BrandKitManager';
+import { AdvancedTableBuilder } from './AdvancedTableBuilder';
+import { ResponsiveLayoutControls } from './ResponsiveLayoutControls';
+import { DynamicContentEditor } from './DynamicContentEditor';
+import { IndustryTemplateLibrary } from './IndustryTemplateLibrary';
+import { SmartDesignAssistant } from './SmartDesignAssistant';
 
 type ViewMode = 'chat' | 'build';
 type EditorMode = 'visual' | 'code' | 'prompt' | 'blocks';
+type BuildTool = 'blocks' | 'advanced' | 'brand' | 'table' | 'responsive' | 'dynamic' | 'templates' | 'assistant';
 
 const EmailEditor = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('chat');
   const [editorMode, setEditorMode] = useState<EditorMode>('visual');
+  const [buildTool, setBuildTool] = useState<BuildTool>('blocks');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
@@ -72,6 +85,8 @@ const EmailEditor = () => {
   const [documentId] = useState(`email-${Date.now()}`);
   const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
   const [userName] = useState('Email Editor User');
+  const [currentBrandKit, setCurrentBrandKit] = useState<BrandKit>();
+  const [customWidth, setCustomWidth] = useState(600);
 
   const editor = useEditor({
     extensions: [
@@ -174,6 +189,16 @@ const EmailEditor = () => {
 </html>`;
   };
 
+  const buildTools = [
+    { id: 'blocks', name: 'Blocks', icon: <Layers className="w-4 h-4" /> },
+    { id: 'advanced', name: 'Advanced', icon: <Edit3 className="w-4 h-4" /> },
+    { id: 'brand', name: 'Brand Kit', icon: <Palette className="w-4 h-4" /> },
+    { id: 'table', name: 'Tables', icon: <TableIcon className="w-4 h-4" /> },
+    { id: 'dynamic', name: 'Dynamic', icon: <User className="w-4 h-4" /> },
+    { id: 'templates', name: 'Industry', icon: <Store className="w-4 h-4" /> },
+    { id: 'assistant', name: 'AI Assistant', icon: <Brain className="w-4 h-4" /> }
+  ];
+
   return (
     <div className="h-screen bg-slate-50 flex flex-col">
       {/* Header */}
@@ -185,7 +210,7 @@ const EmailEditor = () => {
             </div>
             <div>
               <h1 className="text-lg font-semibold text-slate-900">Email Builder Pro</h1>
-              <p className="text-xs text-slate-500">AI-powered email campaigns</p>
+              <p className="text-xs text-slate-500">Professional email marketing platform</p>
             </div>
           </div>
           
@@ -195,11 +220,11 @@ const EmailEditor = () => {
             <TabsList className="bg-slate-100">
               <TabsTrigger value="chat" className="flex items-center gap-2 data-[state=active]:bg-white">
                 <MessageSquare className="w-4 h-4" />
-                Chat
+                AI Chat
               </TabsTrigger>
               <TabsTrigger value="build" className="flex items-center gap-2 data-[state=active]:bg-white">
                 <Wrench className="w-4 h-4" />
-                Build
+                Professional Tools
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -218,7 +243,7 @@ const EmailEditor = () => {
           
           <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
-            Ready
+            Professional
           </Badge>
           
           <Button variant="outline" size="sm" onClick={exportHTML}>
@@ -234,7 +259,7 @@ const EmailEditor = () => {
       </header>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Chat Mode */}
+        {/* Left Sidebar */}
         {viewMode === 'chat' && (
           <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
             sidebarCollapsed ? 'w-0' : 'w-80'
@@ -261,16 +286,15 @@ const EmailEditor = () => {
           </div>
         )}
 
-        {/* Left Sidebar - Build Mode */}
         {viewMode === 'build' && (
           <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
-            sidebarCollapsed ? 'w-0' : 'w-72'
+            sidebarCollapsed ? 'w-0' : 'w-80'
           } flex flex-col`}>
             {!sidebarCollapsed && (
               <>
                 <div className="p-4 border-b border-slate-200">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-slate-900">Tools</h3>
+                    <h3 className="font-medium text-slate-900">Professional Tools</h3>
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -280,17 +304,37 @@ const EmailEditor = () => {
                     </Button>
                   </div>
                   
-                  <Tabs value={editorMode} onValueChange={(value) => setEditorMode(value as EditorMode)}>
-                    <TabsList className="grid w-full grid-cols-2 text-xs">
-                      <TabsTrigger value="visual">Blocks</TabsTrigger>
-                      <TabsTrigger value="blocks">Advanced</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+                  <div className="grid grid-cols-2 gap-1">
+                    {buildTools.map((tool) => (
+                      <Button
+                        key={tool.id}
+                        variant={buildTool === tool.id ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setBuildTool(tool.id as BuildTool)}
+                        className="flex items-center gap-1 text-xs p-2 h-auto"
+                      >
+                        {tool.icon}
+                        <span className="hidden sm:inline">{tool.name}</span>
+                      </Button>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="flex-1 overflow-hidden">
-                  {editorMode === 'visual' && <AdvancedBlockLibrary editor={editor} />}
-                  {editorMode === 'blocks' && <EmailBlockEditor editor={editor} />}
+                  {buildTool === 'blocks' && <AdvancedBlockLibrary editor={editor} />}
+                  {buildTool === 'advanced' && <EmailBlockEditor editor={editor} />}
+                  {buildTool === 'brand' && (
+                    <BrandKitManager 
+                      currentBrandKit={currentBrandKit}
+                      onBrandKitChange={setCurrentBrandKit}
+                    />
+                  )}
+                  {buildTool === 'table' && <AdvancedTableBuilder editor={editor} />}
+                  {buildTool === 'dynamic' && <DynamicContentEditor editor={editor} />}
+                  {buildTool === 'templates' && <IndustryTemplateLibrary editor={editor} />}
+                  {buildTool === 'assistant' && (
+                    <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />
+                  )}
                 </div>
               </>
             )}
@@ -312,7 +356,7 @@ const EmailEditor = () => {
             {viewMode === 'chat' ? (
               <MessageSquare className="w-5 h-5 text-slate-400" />
             ) : (
-              <Layers className="w-5 h-5 text-slate-400" />
+              <Wrench className="w-5 h-5 text-slate-400" />
             )}
           </div>
         )}
@@ -341,12 +385,16 @@ const EmailEditor = () => {
                         <Sparkles className="w-4 h-4" />
                         Prompt
                       </TabsTrigger>
-                      <TabsTrigger value="blocks" className="flex items-center gap-2">
-                        <Edit3 className="w-4 h-4" />
-                        Blocks
-                      </TabsTrigger>
                     </TabsList>
                   </Tabs>
+                )}
+                
+                {viewMode === 'build' && (
+                  <ResponsiveLayoutControls
+                    currentDevice={previewMode}
+                    onDeviceChange={(device) => setPreviewMode(device as 'desktop' | 'mobile')}
+                    onWidthChange={setCustomWidth}
+                  />
                 )}
               </div>
 
@@ -423,7 +471,7 @@ const EmailEditor = () => {
                 <div className="h-full p-8 overflow-y-auto">
                   <Card className={`mx-auto transition-all duration-300 shadow-lg ${
                     previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
-                  }`}>
+                  }`} style={{ maxWidth: previewMode === 'desktop' ? `${customWidth}px` : '375px' }}>
                     <div className="p-6 bg-white rounded-lg">
                       <EditorContent 
                         editor={editor} 
@@ -439,10 +487,6 @@ const EmailEditor = () => {
               ) : viewMode === 'build' && editorMode === 'prompt' ? (
                 <div className="h-full p-6">
                   <EmailPromptEditor editor={editor} />
-                </div>
-              ) : viewMode === 'build' && editorMode === 'blocks' ? (
-                <div className="h-full p-6">
-                  <EmailBlockEditor editor={editor} />
                 </div>
               ) : (
                 <EmailPreview 
