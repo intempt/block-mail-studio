@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
   Mail,
   Shield
 } from 'lucide-react';
-import { enhancedAIService } from '@/services/EnhancedAIService';
+import { directAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,9 +45,11 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
 
     setIsAnalyzing(true);
     try {
-      console.log('Running enhanced performance analysis...');
-      const result = await enhancedAIService.analyzePerformanceEnhanced(emailHTML);
-      console.log('Enhanced performance analysis completed:', result);
+      console.log('Direct performance analysis...');
+      
+      // Direct API call - no caching
+      const result = await directAIService.analyzePerformance(emailHTML);
+      console.log('Direct performance analysis completed:', result);
       
       setAnalysis(result);
       
@@ -85,7 +86,7 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
       if (emailHTML.trim()) {
         runAnalysis();
       }
-    }, 1500); // Longer debounce for performance analysis
+    }, 2000); // Slightly longer debounce since no caching
 
     return () => clearTimeout(timer);
   }, [emailHTML, subjectLine, autoAnalyze, runAnalysis]);

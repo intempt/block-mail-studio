@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import {
   Zap,
   BarChart3
 } from 'lucide-react';
+import { directAIService } from '@/services/directAIService';
 
 // Simple mock interface
 interface SubjectLineAnalysisResult {
@@ -58,27 +58,29 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
 
     setIsAnalyzing(true);
     try {
-      console.log('Analyzing subject line:', value);
+      console.log('Direct subject line analysis:', value);
       
-      // Mock analysis with safe defaults
-      const result: SubjectLineAnalysisResult = {
-        score: 82,
-        spamRisk: 'low',
-        length: value.length,
-        emotionalImpact: 75,
-        urgencyLevel: 60,
-        recommendations: ['Consider adding urgency', 'Use action words'],
-        benchmarkComparison: {
-          predictedOpenRate: 26.3
-        }
-      };
+      // Direct API call - no caching
+      const result = await directAIService.analyzeSubjectLine(value, emailContent);
       
       setAnalysis(result);
       onAnalysisComplete?.(result);
       
     } catch (error) {
       console.error('Error analyzing subject line:', error);
-      setAnalysis(null);
+      // Fallback to mock data
+      const fallbackResult: SubjectLineAnalysisResult = {
+        score: 75,
+        spamRisk: 'low',
+        length: value.length,
+        emotionalImpact: 70,
+        urgencyLevel: 60,
+        recommendations: ['Consider adding urgency', 'Use action words'],
+        benchmarkComparison: {
+          predictedOpenRate: 24.5
+        }
+      };
+      setAnalysis(fallbackResult);
     } finally {
       setIsAnalyzing(false);
     }
@@ -91,19 +93,20 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     setShowVariants(true);
     
     try {
-      console.log('Generating subject line variants:', value);
+      console.log('Direct variant generation:', value);
       
-      // Mock variants
-      const newVariants = [
-        "🚀 " + value,
-        value + " - Limited Time!",
-        "Don't Miss: " + value,
-        value.replace(/get/gi, 'discover')
-      ].filter(v => v !== value).slice(0, 3);
-      
+      // Direct API call - no caching
+      const newVariants = await directAIService.generateSubjectVariants(value, 3);
       setVariants(newVariants);
     } catch (error) {
       console.error('Error generating variants:', error);
+      // Fallback variants
+      const fallbackVariants = [
+        "🚀 " + value,
+        value + " - Limited Time!",
+        "Don't Miss: " + value
+      ].filter(v => v !== value).slice(0, 3);
+      setVariants(fallbackVariants);
     } finally {
       setIsGeneratingVariants(false);
     }

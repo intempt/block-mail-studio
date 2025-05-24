@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -62,7 +61,7 @@ import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useToast } from '@/hooks/use-toast';
-import { enhancedAIService } from '@/services/EnhancedAIService';
+import { directAIService } from '@/services/directAIService';
 import { EmailSnippet } from '@/types/snippets';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
@@ -125,14 +124,6 @@ const EmailEditor = () => {
     a.download = `email-template-${Date.now()}.html`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const handleClearCache = () => {
-    enhancedAIService.clearCache();
-    toast({
-      title: "Cache Cleared",
-      description: "AI analysis cache has been cleared."
-    });
   };
 
   const handleToggleFullscreen = () => {
@@ -379,16 +370,6 @@ const EmailEditor = () => {
 
   const renderHeaderActions = () => (
     <div className="flex items-center gap-2 lg:gap-3">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleClearCache}
-        className="h-6 lg:h-8 hidden lg:flex"
-        title="Clear AI Cache"
-      >
-        <RefreshCw className="w-3 h-3 lg:w-4 lg:h-4" />
-      </Button>
-
       <Button variant="outline" size="sm" onClick={exportHTML} className="h-6 lg:h-8 hidden sm:flex">
         <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
         <span className="hidden lg:inline">Export</span>
