@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -126,19 +125,6 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     setIsLoading(true);
 
     try {
-      // Check if API key is available
-      if (!ApiKeyService.isKeyAvailable()) {
-        const errorMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'error',
-          content: 'AI not available. Please configure your OpenAI API key in the service settings.',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        setIsLoading(false);
-        return;
-      }
-
       // Handle email generation requests
       if (inputMessage.toLowerCase().includes('create') || inputMessage.toLowerCase().includes('generate')) {
         try {
@@ -194,13 +180,27 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
       }
     } catch (error) {
       console.error('AI response error:', error);
-      const errorMessage: Message = {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
+      let userFriendlyMessage = 'AI features are temporarily unavailable.';
+      
+      if (errorMessage.includes('API key')) {
+        userFriendlyMessage = '🔐 Please configure your OpenAI API key in the service settings to use AI features.';
+      } else if (errorMessage.includes('rate limit')) {
+        userFriendlyMessage = '⏱️ Rate limit exceeded. Please wait a moment and try again.';
+      } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+        userFriendlyMessage = '🌐 Network connection issue. Please check your internet connection and try again.';
+      } else if (errorMessage.includes('parse') || errorMessage.includes('JSON')) {
+        userFriendlyMessage = '🔧 AI response formatting issue. Please try rephrasing your request.';
+      }
+
+      const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'error',
-        content: 'AI not available',
+        content: userFriendlyMessage,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorResponse]);
     } finally {
       setIsLoading(false);
     }
@@ -548,92 +548,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
             <EmailPromptLibrary onSelectPrompt={handlePromptSelect} />
           </div>
         )}
-        {activeTab === 'templates' && (
-          <div className="flex flex-col h-full">
-            <div className="p-4 border-b border-gray-200 bg-white">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-gray-900 text-sm">Templates</h4>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setActiveTab('chat')}
-                  className="text-xs text-gray-600 hover:text-gray-900"
-                >
-                  ← Back
-                </Button>
-              </div>
-              
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
-                <Input
-                  placeholder="Search templates..."
-                  value={templateSearch}
-                  onChange={(e) => setTemplateSearch(e.target.value)}
-                  className="pl-9 text-sm h-9 border-gray-300"
-                />
-              </div>
-            </div>
-
-            <ScrollArea className="flex-1">
-              <div className="p-4 space-y-3">
-                {filteredTemplates.map((template) => (
-                  <Card key={template.id} className="p-4 border border-gray-200 hover:shadow-sm transition-shadow">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h5 className="text-sm font-semibold text-gray-900 mb-1">
-                          {template.name}
-                        </h5>
-                        <p className="text-xs text-gray-600 mb-2">
-                          {template.description}
-                        </p>
-                        
-                        <div className="flex items-center gap-1 flex-wrap mb-2">
-                          <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
-                            {template.category}
-                          </Badge>
-                          {template.tags.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="outline" className="text-xs border-gray-300 text-gray-600">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            {template.usageCount}
-                          </span>
-                          {template.isFavorite && (
-                            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleTemplateLoad(template)}
-                      className="w-full text-xs border-gray-300 hover:bg-gray-50"
-                    >
-                      <Zap className="w-3 h-3 mr-2" />
-                      Use Template
-                    </Button>
-                  </Card>
-                ))}
-
-                {filteredTemplates.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 text-sm">No templates found</p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Try adjusting your search
-                    </p>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-        )}
+        {activeTab === 'templates' && renderTemplatesTab()}
       </div>
     </div>
   );

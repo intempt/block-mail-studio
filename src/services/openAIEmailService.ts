@@ -187,23 +187,7 @@ Requirements:
 - Use div with class="email-block" for sections
 - Include inline styles for email compatibility`;
 
-    try {
-      return await this.callOpenAI(prompt);
-    } catch (error) {
-      console.error('Email generation failed:', error);
-      // Return fallback response
-      return {
-        subject: "Welcome to Our Service",
-        previewText: "Thank you for joining us - let's get started together",
-        html: `<div class="email-block header-block" style="padding: 24px; text-align: center; background: #f8fafc;">
-          <h1 style="color: #1f2937; margin: 0;">Welcome!</h1>
-        </div>
-        <div class="email-block paragraph-block" style="padding: 24px;">
-          <p style="color: #374151; line-height: 1.6; margin: 0;">Thank you for joining us. We're excited to have you on board.</p>
-        </div>`,
-        keyPoints: ["Welcome message", "Getting started", "Next steps"]
-      };
-    }
+    return await this.callOpenAI(prompt);
   }
 
   static async generateSubjectLines(emailContent: string, count: number = 5): Promise<string[]> {
@@ -214,19 +198,8 @@ Requirements:
 
 Email content: ${emailContent.slice(0, 500)}...`;
 
-    try {
-      const response = await this.callOpenAI(prompt);
-      return response.subjectLines || [];
-    } catch (error) {
-      console.error('Subject line generation failed:', error);
-      return [
-        "Your Important Update",
-        "Don't Miss This",
-        "Quick Update for You",
-        "Something Special Inside",
-        "Just for You"
-      ];
-    }
+    const response = await this.callOpenAI(prompt);
+    return response.subjectLines || [];
   }
 
   static async optimizeCopy(currentContent: string, optimizationType: 'engagement' | 'conversion' | 'clarity' | 'brevity'): Promise<string> {
@@ -236,13 +209,8 @@ Current content: ${currentContent}
 
 Focus on ${optimizationType} while maintaining email-safe HTML structure.`;
 
-    try {
-      const response = await this.callOpenAI(prompt);
-      return response.optimizedHTML || response.html || currentContent;
-    } catch (error) {
-      console.error('Copy optimization failed:', error);
-      return currentContent;
-    }
+    const response = await this.callOpenAI(prompt);
+    return response.optimizedHTML || response.html || currentContent;
   }
 
   static async conversationalResponse(request: ConversationalRequest): Promise<string> {
@@ -251,14 +219,43 @@ Focus on ${optimizationType} while maintaining email-safe HTML structure.`;
 Context: ${request.conversationContext?.join(' ') || 'None'}
 Current email: ${request.currentEmailContent?.slice(0, 200) || 'None'}
 
-Provide a brief, helpful response about email marketing.`;
+Return a simple string response (no JSON needed) about email marketing. Be helpful and direct.`;
 
     try {
-      const response = await this.callOpenAI(prompt);
-      return response.response || response.message || "I'm here to help with your email marketing needs.";
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${ApiKeyService.getOpenAIKey()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful email marketing expert. Respond directly without JSON formatting.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 500
+        })
+      });
+
+      if (!response.ok) {
+        throw new OpenAIServiceError(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      this.validateAPIResponse(data);
+      
+      return data.choices[0].message.content;
     } catch (error) {
       console.error('Conversational response failed:', error);
-      return "I'm having trouble connecting right now, but I'm here to help with your email marketing needs.";
+      throw error;
     }
   }
 
@@ -290,23 +287,7 @@ Provide a brief, helpful response about email marketing.`;
 Subject: ${request.subjectLine}
 Content: ${request.emailHTML.slice(0, 1000)}...`;
 
-    try {
-      return await this.callOpenAI(prompt);
-    } catch (error) {
-      console.error('Brand voice analysis failed:', error);
-      return {
-        brandVoiceScore: 75,
-        engagementScore: 70,
-        toneConsistency: 80,
-        readabilityScore: 85,
-        performancePrediction: {
-          openRate: 22,
-          clickRate: 6,
-          conversionRate: 2
-        },
-        suggestions: []
-      };
-    }
+    return await this.callOpenAI(prompt);
   }
 
   static async analyzePerformance(request: OpenAIEmailAnalysisRequest): Promise<PerformanceAnalysis> {
@@ -329,36 +310,6 @@ Content: ${request.emailHTML.slice(0, 1000)}...`;
 Subject: ${request.subjectLine}
 Content: ${request.emailHTML.slice(0, 1000)}...`;
 
-    try {
-      return await this.callOpenAI(prompt);
-    } catch (error) {
-      console.error('Performance analysis failed:', error);
-      const linkCount = (request.emailHTML.match(/<a\s+[^>]*href/gi) || []).length;
-      return {
-        overallScore: 82,
-        deliverabilityScore: 85,
-        mobileScore: 88,
-        spamScore: 18,
-        metrics: {
-          loadTime: { value: 1.1, status: 'good' },
-          accessibility: { value: 80, status: 'warning' },
-          imageOptimization: { value: 85, status: 'good' },
-          linkCount: { value: linkCount, status: linkCount > 10 ? 'warning' : 'good' }
-        },
-        accessibilityIssues: [
-          {
-            type: 'Missing Alt Text',
-            severity: 'medium',
-            description: 'Some images may lack descriptive alt text',
-            fix: 'Add meaningful alt attributes to all images'
-          }
-        ],
-        optimizationSuggestions: [
-          'Add descriptive alt text to images',
-          'Optimize image file sizes',
-          'Test email across different clients'
-        ]
-      };
-    }
+    return await this.callOpenAI(prompt);
   }
 }
