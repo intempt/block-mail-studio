@@ -17,6 +17,7 @@ import Gapcursor from '@tiptap/extension-gapcursor';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
 import * as Y from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -49,7 +50,9 @@ import {
   Moon,
   Keyboard,
   UserPlus,
-  Share2
+  Share2,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -64,7 +67,7 @@ import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
 import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
-type LeftPanelTab = 'ai' | 'design' | 'templates' | 'team';
+type LeftPanelTab = 'ai' | 'design' | 'templates';
 type RightPanelTab = 'properties' | 'analytics' | 'optimization' | 'code';
 
 interface Collaborator {
@@ -90,6 +93,8 @@ const EmailEditor = () => {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [ydoc] = useState(() => new Y.Doc());
+  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email' },
@@ -101,6 +106,46 @@ const EmailEditor = () => {
     { key: 'F11', action: 'Toggle fullscreen' }
   ];
 
+  // Set up WebSocket provider
+  useEffect(() => {
+    const wsProvider = new WebsocketProvider('wss://demos.yjs.dev', documentId, ydoc);
+    
+    wsProvider.on('status', (event: any) => {
+      console.log('WebSocket status:', event.status);
+      setConnectionStatus(event.status);
+    });
+
+    wsProvider.awareness.setLocalStateField('user', {
+      name: userName,
+      color: userColor,
+    });
+
+    // Listen for awareness changes to update collaborators
+    wsProvider.awareness.on('change', () => {
+      const states = wsProvider.awareness.getStates();
+      const users: Collaborator[] = [];
+      
+      states.forEach((state, clientId) => {
+        if (state.user) {
+          users.push({
+            id: clientId.toString(),
+            name: state.user.name,
+            color: state.user.color,
+            isOnline: true
+          });
+        }
+      });
+      
+      setCollaborators(users);
+    });
+
+    setProvider(wsProvider);
+
+    return () => {
+      wsProvider.destroy();
+    };
+  }, [documentId, userName, userColor, ydoc]);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -108,7 +153,13 @@ const EmailEditor = () => {
       Collaboration.configure({
         document: ydoc,
       }),
-      // Removed CollaborationCursor temporarily until we have a proper provider
+      CollaborationCursor.configure({
+        provider: provider,
+        user: {
+          name: userName,
+          color: userColor,
+        },
+      }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -157,7 +208,7 @@ const EmailEditor = () => {
       const html = editor.getHTML();
       setEmailHTML(html);
     },
-  });
+  }, [provider]); // Add provider as dependency to recreate editor when provider changes
 
   useEffect(() => {
     const initCollaboration = async () => {
@@ -325,45 +376,6 @@ const EmailEditor = () => {
             onToggleFavorite={handleToggleFavorite}
           />
         );
-      case 'team':
-        return (
-          <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="font-medium">Team Collaboration</h4>
-              <Badge variant="secondary">
-                {collaborators.filter(c => c.isOnline).length} online
-              </Badge>
-            </div>
-            
-            <div className="space-y-3 mb-4">
-              {collaborators.map((collaborator) => (
-                <div key={collaborator.id} className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback style={{ backgroundColor: collaborator.color }}>
-                        {collaborator.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    {collaborator.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{collaborator.name}</div>
-                    <div className="text-xs text-gray-500">
-                      {collaborator.isOnline ? 'Online' : 'Offline'}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            <Button onClick={inviteCollaborator} className="w-full" size="sm">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Invite Collaborator
-            </Button>
-          </div>
-        );
       default:
         return <EmailAIChat editor={editor} />;
     }
@@ -416,6 +428,19 @@ const EmailEditor = () => {
         );
       default:
         return <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />;
+    }
+  };
+
+  const getConnectionStatusIcon = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return <Wifi className="w-4 h-4 text-green-500" />;
+      case 'connecting':
+        return <Wifi className="w-4 h-4 text-yellow-500 animate-pulse" />;
+      case 'disconnected':
+        return <WifiOff className="w-4 h-4 text-red-500" />;
+      default:
+        return <WifiOff className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -484,6 +509,12 @@ const EmailEditor = () => {
 
         {/* Right: Collaborators & Actions */}
         <div className="flex items-center gap-3">
+          {/* Connection Status */}
+          <div className="flex items-center gap-2">
+            {getConnectionStatusIcon()}
+            <span className="text-xs text-slate-500 capitalize">{connectionStatus}</span>
+          </div>
+
           {/* Collaborators */}
           {collaborators.length > 0 && (
             <div className="flex items-center gap-2">
@@ -611,14 +642,6 @@ const EmailEditor = () => {
                   >
                     <FileText className="w-4 h-4" />
                   </Button>
-                  <Button
-                    variant={leftPanelTab === 'team' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setLeftPanelTab('team')}
-                    className="flex-1"
-                  >
-                    <Users className="w-4 h-4" />
-                  </Button>
                 </div>
               </div>
               
@@ -650,6 +673,11 @@ const EmailEditor = () => {
                   {collaborators.filter(c => c.isOnline).length > 1 && (
                     <Badge variant="outline" className="text-xs">
                       {collaborators.filter(c => c.isOnline).length} collaborating
+                    </Badge>
+                  )}
+                  {connectionStatus === 'connected' && (
+                    <Badge variant="outline" className="text-xs text-green-600">
+                      Live
                     </Badge>
                   )}
                 </div>
@@ -748,13 +776,17 @@ const EmailEditor = () => {
               {collaborators.filter(c => c.isOnline).length} collaborating
             </span>
           )}
+          <span className="flex items-center gap-2">
+            {getConnectionStatusIcon()}
+            WebSocket {connectionStatus}
+          </span>
         </div>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             Auto-saved just now
           </span>
-          <span className="text-slate-400">Email Builder Pro v2.0 - Professional Edition</span>
+          <span className="text-slate-400">Email Builder Pro v2.0 - Collaborative Edition</span>
         </div>
       </div>
     </div>
