@@ -35,7 +35,13 @@ export const EmailPropertiesPanel: React.FC<EmailPropertiesPanelProps> = ({ edit
   };
 
   const handleFontSizeChange = (size: string) => {
-    editor.chain().focus().setFontSize(size).run();
+    // Using insertContent to apply font size styling
+    const selection = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(selection.from, selection.to);
+    
+    if (selectedText) {
+      editor.chain().focus().insertContent(`<span style="font-size: ${size}px">${selectedText}</span>`).run();
+    }
   };
 
   return (
@@ -86,7 +92,7 @@ export const EmailPropertiesPanel: React.FC<EmailPropertiesPanelProps> = ({ edit
                 type="number" 
                 defaultValue="16" 
                 className="w-full"
-                onChange={(e) => handleFontSizeChange(e.target.value + 'px')}
+                onChange={(e) => handleFontSizeChange(e.target.value)}
               />
             </div>
             

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -13,7 +12,7 @@ import {
   Type, 
   Layout, 
   Palette,
-  FileTemplate,
+  FileText,
   Zap,
   Target,
   BarChart3,
@@ -57,7 +56,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor }) => {
 
   const quickActions = [
     { 
-      icon: <FileTemplate className="w-4 h-4" />, 
+      icon: <FileText className="w-4 h-4" />, 
       label: 'Templates', 
       action: 'Show me industry email templates',
       color: 'bg-blue-50 text-blue-700 border-blue-200'

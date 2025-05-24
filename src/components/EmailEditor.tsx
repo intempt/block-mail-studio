@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -38,7 +37,7 @@ import {
   Users,
   BarChart3,
   Palette,
-  FileTemplate
+  FileText
 } from 'lucide-react';
 
 import { EmailAIChat } from './EmailAIChat';
@@ -449,7 +448,7 @@ const EmailEditor = () => {
                     onClick={() => setLeftPanelTab('templates')}
                     className="flex-1"
                   >
-                    <FileTemplate className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
                   </Button>
                   <Button
                     variant={leftPanelTab === 'team' ? 'default' : 'outline'}

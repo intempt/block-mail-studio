@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import {
   Type, 
   Image, 
   Table, 
-  Separator as SeparatorIcon,
+  Minus,
   Quote,
   List,
   Calendar,
@@ -71,7 +70,7 @@ export const BlockInserter: React.FC<BlockInserterProps> = ({ editor }) => {
     {
       id: 'separator',
       name: 'Separator',
-      icon: <SeparatorIcon className="w-4 h-4" />,
+      icon: <Minus className="w-4 h-4" />,
       category: 'layout',
       content: '<hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />'
     },
