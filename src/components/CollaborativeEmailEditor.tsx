@@ -4,7 +4,6 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
-import Comments from '@tiptap/extension-comments';
 import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,11 +40,6 @@ export const CollaborativeEmailEditor: React.FC<CollaborativeEmailEditorProps> =
         user: {
           name: userName,
           color: userColor,
-        },
-      }),
-      Comments.configure({
-        HTMLAttributes: {
-          class: 'comment',
         },
       }),
     ],
@@ -109,8 +103,7 @@ export const CollaborativeEmailEditor: React.FC<CollaborativeEmailEditorProps> =
       if (editor) {
         editor.chain().focus().setImage({ 
           src: imageUrl, 
-          alt: prompt,
-          style: 'max-width: 100%; height: auto; border-radius: 8px;'
+          alt: prompt
         }).run();
       }
     } catch (error) {
@@ -120,24 +113,20 @@ export const CollaborativeEmailEditor: React.FC<CollaborativeEmailEditorProps> =
     }
   };
 
-  const addComment = () => {
-    if (!editor) return;
-    
+  const addComment = async () => {
     const content = window.prompt('Add a comment:');
     if (!content) return;
 
-    editor.chain().focus().addComment({
-      content,
-      author: userName
-    }).run();
-
-    TipTapProCollabService.addComment(documentId, {
-      content,
-      author: userName,
-      resolved: false
-    }).then(() => {
+    try {
+      await TipTapProCollabService.addComment(documentId, {
+        content,
+        author: userName,
+        resolved: false
+      });
       loadComments();
-    });
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+    }
   };
 
   return (
