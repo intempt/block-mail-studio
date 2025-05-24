@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -16,10 +15,7 @@ import {
   Table,
   ChevronDown,
   ChevronRight,
-  Blocks,
-  Split,
-  Star,
-  Bookmark
+  Blocks
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -114,13 +110,13 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
 
   return (
     <div className="h-full flex flex-col">
-      <Tabs defaultValue="layouts" className="flex-1 flex flex-col">
+      <Tabs defaultValue="blocks" className="flex-1 flex flex-col">
         <TabsList className={`mx-2 ${compactMode ? 'mb-1' : 'mb-2'}`}>
-          <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-            Layouts
-          </TabsTrigger>
           <TabsTrigger value="blocks" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
             Blocks
+          </TabsTrigger>
+          <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+            Layouts
           </TabsTrigger>
           <TabsTrigger value="snippets" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
             Snippets
@@ -128,17 +124,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
         </TabsList>
 
         <div className="flex-1 overflow-hidden">
-          <TabsContent value="layouts" className="h-full mt-0">
-            <ScrollArea className="flex-1">
-              <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
-                <LayoutConfigPanel 
-                  onLayoutSelect={handleLayoutSelect}
-                  compactMode={compactMode}
-                />
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
           <TabsContent value="blocks" className="h-full mt-0">
             <ScrollArea className="flex-1">
               <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
@@ -164,6 +149,17 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="layouts" className="h-full mt-0">
+            <ScrollArea className="flex-1">
+              <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
+                <LayoutConfigPanel 
+                  onLayoutSelect={handleLayoutSelect}
+                  compactMode={compactMode}
+                />
               </div>
             </ScrollArea>
           </TabsContent>
