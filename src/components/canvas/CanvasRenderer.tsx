@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { UniversalTipTapEditor } from '../UniversalTipTapEditor';
 import { BlockControls } from './BlockControls';
@@ -23,6 +22,7 @@ interface CanvasRendererProps {
   onBlockDrop: (e: React.DragEvent, targetIndex: number) => void;
   onDeleteBlock: (blockId: string) => void;
   onDuplicateBlock: (blockId: string) => void;
+  onSaveAsSnippet?: (blockId: string) => void;
   onTipTapChange: (blockId: string, html: string) => void;
   onTipTapBlur: () => void;
   onColumnDrop: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
@@ -40,6 +40,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onBlockDrop,
   onDeleteBlock,
   onDuplicateBlock,
+  onSaveAsSnippet,
   onTipTapChange,
   onTipTapBlur,
   onColumnDrop
@@ -347,6 +348,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               onDelete={onDeleteBlock}
               onDuplicate={onDuplicateBlock}
               onDragStart={onBlockDragStart}
+              onSaveAsSnippet={onSaveAsSnippet}
             />
             {renderBlock(block)}
           </div>

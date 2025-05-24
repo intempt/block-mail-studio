@@ -1,9 +1,11 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
 import { EmailSnippet } from '@/types/snippets';
+import { DirectSnippetService } from '@/services/directSnippetService';
 import { useDragDropHandler } from './canvas/DragDropHandler';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { CanvasStatus } from './canvas/CanvasStatus';
+import { useToast } from '@/hooks/use-toast';
 import './EmailBlockCanvas.css';
 
 export interface EmailBlockCanvasRef {
@@ -20,6 +22,7 @@ export interface EmailBlockCanvasRef {
 interface EmailBlockCanvasProps {
   onContentChange?: (content: string) => void;
   onBlockSelect?: (block: SimpleBlock | null) => void;
+  onSnippetSaved?: () => void;
   previewWidth?: number;
   previewMode?: 'desktop' | 'mobile' | 'tablet';
   compactMode?: boolean;
@@ -33,7 +36,9 @@ interface SimpleBlock {
 }
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
-  ({ onContentChange, onBlockSelect, previewWidth = 600, previewMode = 'desktop', compactMode = false }, ref) => {
+  ({ onContentChange, onBlockSelect, onSnippetSaved, previewWidth = 600, previewMode = 'desktop', compactMode = false }, ref) => {
+    const { toast } = useToast();
+    
     const [blocks, setBlocks] = useState<SimpleBlock[]>([
       {
         id: 'header-1',
@@ -183,6 +188,20 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       onContentChange?.(html);
     }, [blocks, onContentChange]);
 
+    const handleSaveAsSnippet = (blockId: string) => {
+      const block = blocks.find(b => b.id === blockId);
+      if (block) {
+        const snippet = DirectSnippetService.createSnippetFromBlock(block);
+        
+        toast({
+          title: "Snippet Saved",
+          description: `"${snippet.name}" has been saved to your snippets.`,
+        });
+
+        onSnippetSaved?.();
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       insertBlock: (blockType: string) => {
         const newBlock: SimpleBlock = {
@@ -197,9 +216,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       insertSnippet: (snippet: EmailSnippet) => {
         const newBlock: SimpleBlock = {
           id: `snippet-${Date.now()}`,
-          type: 'text',
-          content: { text: snippet.blockData || snippet.description },
-          styles: { margin: '10px 0' }
+          type: snippet.blockType || 'text',
+          content: snippet.blockData?.content || { text: snippet.description },
+          styles: snippet.blockData?.styles || { margin: '10px 0' }
         };
         setBlocks(prev => [...prev, newBlock]);
       },
@@ -289,10 +308,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       const block = blocks.find(b => b.id === blockId);
       if (!block) return;
 
-      // Handle different content types and properties
       let updatedContent = { ...block.content };
       
-      // Determine which property is being edited based on current editing context
       if (block.type === 'text') {
         updatedContent.text = html;
       } else if (block.type === 'button') {
@@ -316,13 +333,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           }
         }
       } else if (block.type === 'social') {
-        // Handle social platform updates
         const platforms = [...(block.content.platforms || [])];
-        // This would need more context about which platform is being edited
         updatedContent.platforms = platforms;
       } else if (block.type === 'table') {
-        // Handle table cell updates
-        // This would need more context about which cell is being edited
       } else if (block.type === 'html') {
         updatedContent.html = html;
       }
@@ -331,7 +344,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     };
 
     const handleTipTapBlur = () => {
-      // Editor will handle its own cleanup
     };
 
     const handleBlockClick = (blockId: string) => {
@@ -341,9 +353,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       onBlockSelect?.(selectedBlock);
     };
 
-    // Remove the double-click handler since we now have universal click-to-edit
     const handleBlockDoubleClick = () => {
-      // No longer needed - all editing is handled by single clicks
     };
 
     const deleteBlock = (blockId: string) => {
@@ -404,6 +414,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
                 onBlockDrop={dragDropHandlers.handleBlockDrop}
                 onDeleteBlock={deleteBlock}
                 onDuplicateBlock={duplicateBlock}
+                onSaveAsSnippet={handleSaveAsSnippet}
                 onTipTapChange={handleTipTapChange}
                 onTipTapBlur={handleTipTapBlur}
                 onColumnDrop={dragDropHandlers.handleColumnDrop}

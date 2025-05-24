@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,6 +34,7 @@ interface EnhancedEmailBlockPaletteProps {
   universalContent: UniversalContent[];
   onUniversalContentAdd: (content: UniversalContent) => void;
   compactMode?: boolean;
+  snippetRefreshTrigger?: number;
 }
 
 const blockItems: BlockItem[] = [
@@ -54,7 +54,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   onSnippetAdd,
   universalContent,
   onUniversalContentAdd,
-  compactMode = false
+  compactMode = false,
+  snippetRefreshTrigger = 0
 }) => {
   console.log('EnhancedEmailBlockPalette rendering');
   
@@ -120,6 +121,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
         <SnippetManager
           onSnippetSelect={handleSnippetSelect}
           compactMode={compactMode}
+          refreshTrigger={snippetRefreshTrigger}
         />
       );
     } catch (error) {
