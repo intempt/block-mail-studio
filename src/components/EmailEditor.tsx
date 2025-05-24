@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -94,7 +93,7 @@ const EmailEditor = () => {
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
   const [compactMode, setCompactMode] = useState(false);
-  const canvasRef = useRef<EmailBlockCanvasRef>(null);
+  const [canvasRef] = useState(useRef<EmailBlockCanvasRef>(null));
   const [collaborationMode, setCollaborationMode] = useState(false);
   const [collaborationConfig, setCollaborationConfig] = useState({
     documentId: `email-${Date.now()}`,
@@ -400,13 +399,6 @@ const EmailEditor = () => {
             emailHTML={emailHTML}
             subjectLine={subjectLine}
             canvasRef={canvasRef}
-            onOptimize={(suggestion) => {
-              console.log('Applying optimization:', suggestion);
-              toast({
-                title: "Optimization Applied",
-                description: suggestion
-              });
-            }}
           />
         );
       case 'optimization':
@@ -422,13 +414,6 @@ const EmailEditor = () => {
             emailHTML={emailHTML}
             subjectLine={subjectLine}
             canvasRef={canvasRef}
-            onOptimize={(suggestion) => {
-              console.log('Applying optimization:', suggestion);
-              toast({
-                title: "Optimization Applied",
-                description: suggestion
-              });
-            }}
           />
         );
     }
