@@ -19,7 +19,8 @@ import {
   Sparkles,
   RefreshCw,
   Play,
-  AlertTriangle
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
 import { EmailAIService } from '@/services/EmailAIService';
@@ -32,6 +33,7 @@ interface TestResult {
   message?: string;
   duration?: number;
   error?: string;
+  details?: string;
 }
 
 export const AITestingSuite: React.FC = () => {
@@ -83,6 +85,7 @@ export const AITestingSuite: React.FC = () => {
 
     try {
       let result;
+      let details = '';
       
       switch (test.id) {
         case 'api-key':
@@ -90,59 +93,73 @@ export const AITestingSuite: React.FC = () => {
           if (keyStatus !== 'valid') {
             throw new Error(`API key status: ${keyStatus}`);
           }
-          result = 'API key is properly configured';
+          result = 'API key is properly configured and valid';
+          details = `Key status: ${keyStatus}, Available: ${ApiKeyService.isKeyAvailable()}`;
           break;
 
         case 'api-connectivity':
-          // Test basic OpenAI connectivity with a simple request
+          console.log('Testing OpenAI connectivity...');
           result = await OpenAIEmailService.conversationalResponse({
-            userMessage: 'Test connection',
+            userMessage: 'Test connection - respond with "Connection successful"',
             conversationContext: [],
             currentEmailContent: ''
           });
+          details = `Response received: ${typeof result === 'string' ? result.slice(0, 100) : 'Valid response'}`;
           break;
 
         case 'email-generation':
+          console.log('Testing email generation...');
           result = await EmailAIService.generateEmail({
             prompt: 'Create a professional welcome email for a SaaS platform',
             tone: 'professional',
             type: 'welcome'
           });
+          details = `Generated email with subject: ${result.subject || 'No subject'}`;
           break;
 
         case 'brand-voice-analysis':
+          console.log('Testing brand voice analysis...');
           result = await EmailAIService.analyzeBrandVoice(
             testSampleContent.emailHTML,
             testSampleContent.subjectLine
           );
+          details = `Brand voice score: ${result.brandVoiceScore}, Engagement: ${result.engagementScore}`;
           break;
 
         case 'performance-analysis':
+          console.log('Testing performance analysis...');
           result = await EmailAIService.analyzeEmailPerformance(
             testSampleContent.emailHTML,
             testSampleContent.subjectLine
           );
+          details = `Overall score: ${result.overallScore}, Deliverability: ${result.deliverabilityScore}`;
           break;
 
         case 'subject-line-optimization':
+          console.log('Testing subject line optimization...');
           result = await EmailAIService.analyzeSubjectLine(
             testSampleContent.subjectLine,
             testSampleContent.emailHTML
           );
+          details = `Generated ${result.suggestions?.length || 0} suggestions, Score: ${result.score}`;
           break;
 
         case 'content-refinement':
+          console.log('Testing content refinement...');
           result = await EmailAIService.refineEmail(
             testSampleContent.emailHTML,
             'Make this email more engaging and add urgency'
           );
+          details = `Content refined successfully, length: ${typeof result === 'string' ? result.length : 'N/A'} chars`;
           break;
 
         case 'conversational-ai':
+          console.log('Testing conversational AI...');
           result = await EmailAIService.getConversationalResponse(
             'Help me create a product announcement email',
             []
           );
+          details = `Response length: ${typeof result === 'string' ? result.length : 'N/A'} characters`;
           break;
 
         default:
@@ -152,16 +169,21 @@ export const AITestingSuite: React.FC = () => {
       const duration = Date.now() - startTime;
       updateTestResult(test.id, { 
         status: 'success', 
-        message: `✅ Test passed - ${typeof result === 'string' ? result.slice(0, 100) + '...' : 'Response received'}`,
+        message: `✅ Test passed successfully`,
+        details,
         duration 
       });
 
     } catch (error) {
       const duration = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Test ${test.id} failed:`, error);
+      
       updateTestResult(test.id, { 
         status: 'error', 
         message: `❌ Test failed`,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
+        details: `Error after ${duration}ms: ${errorMessage}`,
         duration 
       });
     }
@@ -192,6 +214,25 @@ export const AITestingSuite: React.FC = () => {
     setCurrentTest(null);
     setIsRunning(false);
     setOverallStatus(hasFailures ? 'failed' : 'completed');
+  };
+
+  const runSingleTest = async (testId: string) => {
+    const test = tests.find(t => t.id === testId);
+    if (!test) return;
+
+    setIsRunning(true);
+    
+    // Update only this test
+    const initialResult = { ...test, status: 'pending' as const };
+    setTestResults(prev => prev.map(t => t.id === testId ? initialResult : t));
+
+    try {
+      await runTest(test);
+    } catch (error) {
+      console.error(`Single test ${testId} failed:`, error);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   const getStatusIcon = (status: TestResult['status']) => {
@@ -298,27 +339,50 @@ export const AITestingSuite: React.FC = () => {
                     <p className="text-sm text-gray-600 mt-1">{test.message}</p>
                     
                     {test.status === 'success' && test.duration && (
-                      <p className="text-xs text-green-600 mt-2">
-                        ✅ Completed in {test.duration}ms
-                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-green-600">
+                          ✅ Completed in {test.duration}ms
+                        </p>
+                        {test.details && (
+                          <p className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                            {test.details}
+                          </p>
+                        )}
+                      </div>
                     )}
                     
-                    {test.status === 'error' && test.error && (
+                    {test.status === 'error' && (
                       <div className="mt-2 p-2 bg-red-100 border border-red-200 rounded text-xs">
                         <p className="text-red-800 font-medium">Error Details:</p>
                         <p className="text-red-700 mt-1">{test.error}</p>
+                        {test.details && (
+                          <p className="text-red-600 mt-1 text-xs">{test.details}</p>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
                 
-                <Badge 
-                  variant={test.status === 'success' ? 'default' : 
-                          test.status === 'error' ? 'destructive' : 'secondary'}
-                  className="ml-3"
-                >
-                  {test.status}
-                </Badge>
+                <div className="flex items-center gap-2 ml-3">
+                  <Badge 
+                    variant={test.status === 'success' ? 'default' : 
+                            test.status === 'error' ? 'destructive' : 'secondary'}
+                  >
+                    {test.status}
+                  </Badge>
+                  
+                  {!isRunning && test.status !== 'running' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => runSingleTest(test.id)}
+                      disabled={!ApiKeyService.isKeyAvailable()}
+                      className="text-xs"
+                    >
+                      Retry
+                    </Button>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
@@ -328,8 +392,12 @@ export const AITestingSuite: React.FC = () => {
       <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="text-xs text-gray-600 space-y-1">
           <p><strong>Test Coverage:</strong> All major AI components and OpenAI integrations</p>
-          <p><strong>API Key:</strong> {ApiKeyService.isKeyAvailable() ? 'Configured and ready' : 'Not available'}</p>
+          <p><strong>API Key:</strong> {ApiKeyService.isKeyAvailable() ? 'Configured and ready' : 'Not available - check API key configuration'}</p>
           <p><strong>Service Status:</strong> {ApiKeyService.getKeyStatus()}</p>
+          <div className="flex items-center gap-1 mt-2">
+            <Info className="w-3 h-3 text-blue-500" />
+            <span className="text-blue-600">Enhanced error handling and fallback responses active</span>
+          </div>
         </div>
       </div>
     </div>
