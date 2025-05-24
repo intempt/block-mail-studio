@@ -1,6 +1,9 @@
 
 import { Node, mergeAttributes } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
+import React from 'react';
+import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
+import { BlockRenderer } from '@/components/BlockRenderer';
 import { EmailBlock } from '@/types/emailBlocks';
 
 // Base Email Block Extension
@@ -64,8 +67,8 @@ export const EmailBlockNode = Node.create({
         });
       },
       
-      updateEmailBlock: (blockData: EmailBlock) => ({ commands, state }) => {
-        const { from, to } = state.selection;
+      updateEmailBlock: (blockData: EmailBlock) => ({ commands }) => {
+        const { from, to } = commands.state?.selection || { from: 0, to: 0 };
         return commands.updateAttributes(this.name, {
           blockData,
         });
@@ -75,10 +78,6 @@ export const EmailBlockNode = Node.create({
 });
 
 // React component for rendering blocks in TipTap
-import React from 'react';
-import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
-import { BlockRenderer } from '@/components/BlockRenderer';
-
 const EmailBlockNodeView: React.FC<NodeViewProps> = ({ node, selected, updateAttributes }) => {
   const blockData = node.attrs.blockData as EmailBlock;
   
