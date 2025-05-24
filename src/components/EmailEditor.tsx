@@ -54,6 +54,7 @@ import { EmailBlockPalette } from './EmailBlockPalette';
 import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
+import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -81,6 +82,13 @@ const EmailEditor = () => {
   const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
   const [compactMode, setCompactMode] = useState(false);
   const canvasRef = useRef<EmailBlockCanvasRef>(null);
+  const [collaborationMode, setCollaborationMode] = useState(false);
+  const [collaborationConfig, setCollaborationConfig] = useState({
+    documentId: `email-${Date.now()}`,
+    userId: `user-${Math.random().toString(36).substr(2, 9)}`,
+    userName: 'Anonymous User',
+    userColor: '#3B82F6'
+  });
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email' },
@@ -302,6 +310,112 @@ const EmailEditor = () => {
     }
   };
 
+  // Add collaboration toggle to the header actions
+  const renderHeaderActions = () => (
+    <div className="flex items-center gap-2 lg:gap-3">
+      {/* Collaboration Mode Toggle */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant={collaborationMode ? "default" : "outline"}
+            size="sm"
+            className="h-6 lg:h-8"
+          >
+            <Users className="w-3 h-3 lg:w-4 lg:h-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80" align="end">
+          <div className="space-y-4">
+            <h4 className="font-medium text-sm">Collaboration Settings</h4>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="collab-mode" className="text-sm">Enable Collaboration</Label>
+              <Switch
+                id="collab-mode"
+                checked={collaborationMode}
+                onCheckedChange={setCollaborationMode}
+              />
+            </div>
+            {collaborationMode && (
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs text-gray-600">Document ID</Label>
+                  <Input
+                    value={collaborationConfig.documentId}
+                    onChange={(e) => setCollaborationConfig(prev => ({
+                      ...prev,
+                      documentId: e.target.value
+                    }))}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-600">Your Name</Label>
+                  <Input
+                    value={collaborationConfig.userName}
+                    onChange={(e) => setCollaborationConfig(prev => ({
+                      ...prev,
+                      userName: e.target.value
+                    }))}
+                    className="text-xs h-8"
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Share the document ID with others to collaborate in real-time.
+                </p>
+              </div>
+            )}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* Theme Toggle */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={toggleTheme}
+        className="h-6 lg:h-8"
+      >
+        {theme === 'light' ? <Moon className="w-3 h-3 lg:w-4 lg:h-4" /> : <Sun className="w-3 h-3 lg:w-4 lg:h-4" />}
+      </Button>
+
+      {/* Keyboard Shortcuts - Hidden on small screens */}
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-6 lg:h-8 hidden lg:flex">
+            <Keyboard className="w-3 h-3 lg:w-4 lg:h-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-80" align="end">
+          <div className="space-y-3">
+            <h4 className="font-medium text-sm">Keyboard Shortcuts</h4>
+            <div className="space-y-2">
+              {keyboardShortcuts.map((shortcut, index) => (
+                <div key={index} className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">{shortcut.action}</span>
+                  <Badge variant="outline" className="text-xs font-mono">
+                    {shortcut.key}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      <Separator orientation="vertical" className="h-4 lg:h-6" />
+      
+      <Button variant="outline" size="sm" onClick={exportHTML} className="h-6 lg:h-8 hidden sm:flex">
+        <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+        <span className="hidden lg:inline">Export</span>
+      </Button>
+      
+      <Button size="sm" className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
+        <Zap className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+        <span className="hidden lg:inline">Publish</span>
+      </Button>
+    </div>
+  );
+
   return (
     <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
       {/* Compact Professional Header */}
@@ -365,81 +479,8 @@ const EmailEditor = () => {
           </div>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2 lg:gap-3">
-          {/* Compact Mode Toggle */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-6 lg:h-8"
-              >
-                {compactMode ? <Minimize2 className="w-3 h-3 lg:w-4 lg:h-4" /> : <Maximize2 className="w-3 h-3 lg:w-4 lg:h-4" />}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64" align="end">
-              <div className="space-y-3">
-                <h4 className="font-medium text-sm">View Settings</h4>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="compact-mode" className="text-sm">Compact Mode</Label>
-                  <Switch
-                    id="compact-mode"
-                    checked={compactMode}
-                    onCheckedChange={setCompactMode}
-                  />
-                </div>
-                <p className="text-xs text-gray-600">Reduces spacing for better laptop experience</p>
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Theme Toggle */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleTheme}
-            className="h-6 lg:h-8"
-          >
-            {theme === 'light' ? <Moon className="w-3 h-3 lg:w-4 lg:h-4" /> : <Sun className="w-3 h-3 lg:w-4 lg:h-4" />}
-          </Button>
-
-          {/* Keyboard Shortcuts - Hidden on small screens */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-6 lg:h-8 hidden lg:flex">
-                <Keyboard className="w-3 h-3 lg:w-4 lg:h-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
-              <div className="space-y-3">
-                <h4 className="font-medium text-sm">Keyboard Shortcuts</h4>
-                <div className="space-y-2">
-                  {keyboardShortcuts.map((shortcut, index) => (
-                    <div key={index} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">{shortcut.action}</span>
-                      <Badge variant="outline" className="text-xs font-mono">
-                        {shortcut.key}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          
-          <Separator orientation="vertical" className="h-4 lg:h-6" />
-          
-          <Button variant="outline" size="sm" onClick={exportHTML} className="h-6 lg:h-8 hidden sm:flex">
-            <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
-            <span className="hidden lg:inline">Export</span>
-          </Button>
-          
-          <Button size="sm" className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
-            <Zap className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
-            <span className="hidden lg:inline">Publish</span>
-          </Button>
-        </div>
+        {/* Right: Actions - now using the new function */}
+        {renderHeaderActions()}
       </header>
 
       {/* Main Content Area */}
@@ -498,15 +539,25 @@ const EmailEditor = () => {
           )}
         </div>
 
-        {/* Center: Block Canvas */}
+        {/* Center: Canvas or Collaborative Editor */}
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
-            <EmailBlockCanvas 
-              ref={canvasRef}
-              onContentChange={setEmailHTML}
-              previewWidth={previewWidth}
-              previewMode={previewMode}
-            />
+            {collaborationMode ? (
+              <EnhancedCollaborativeEditor
+                documentId={collaborationConfig.documentId}
+                userId={collaborationConfig.userId}
+                userName={collaborationConfig.userName}
+                userColor={collaborationConfig.userColor}
+                onContentChange={setEmailHTML}
+              />
+            ) : (
+              <EmailBlockCanvas 
+                ref={canvasRef}
+                onContentChange={setEmailHTML}
+                previewWidth={previewWidth}
+                previewMode={previewMode}
+              />
+            )}
           </div>
         </div>
         
