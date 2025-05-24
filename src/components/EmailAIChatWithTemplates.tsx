@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -69,47 +70,47 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
 
   const quickActions = [
     {
-      icon: <FileText className="w-5 h-5" />,
+      icon: <FileText className="w-4 h-4" />,
       label: 'Templates',
       description: 'Pre-made designs',
       action: 'Show me industry email templates',
-      color: 'bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
+      accent: 'blue',
       onClick: () => setActiveTab('templates')
     },
     {
-      icon: <Palette className="w-5 h-5" />,
+      icon: <Palette className="w-4 h-4" />,
       label: 'Brand Kit',
       description: 'Apply styling',
       action: 'Help me apply my brand colors and fonts to this email',
-      color: 'bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+      accent: 'purple'
     },
     {
-      icon: <Image className="w-5 h-5" />,
+      icon: <Image className="w-4 h-4" />,
       label: 'AI Images',
       description: 'Generate visuals',
       action: 'Generate professional images for my email campaign',
-      color: 'bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+      accent: 'green'
     },
     {
-      icon: <Type className="w-5 h-5" />,
+      icon: <Type className="w-4 h-4" />,
       label: 'Smart Copy',
       description: 'AI copywriting',
       action: 'Write compelling email copy that converts readers into customers',
-      color: 'bg-gradient-to-br from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+      accent: 'orange'
     },
     {
-      icon: <Target className="w-5 h-5" />,
+      icon: <Target className="w-4 h-4" />,
       label: 'Optimize',
       description: 'Enhance performance',
       action: 'Analyze and improve my current email for better performance',
-      color: 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
+      accent: 'red'
     },
     {
-      icon: <BarChart3 className="w-5 h-5" />,
+      icon: <BarChart3 className="w-4 h-4" />,
       label: 'A/B Testing',
       description: 'Create variations',
       action: 'Create multiple variations of this email for split testing',
-      color: 'bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
+      accent: 'indigo'
     }
   ];
 
@@ -241,35 +242,59 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
     setTimeout(() => sendMessage(), 100);
   };
 
+  const getAccentClass = (accent: string) => {
+    switch (accent) {
+      case 'blue': return 'border-blue-200 hover:border-blue-300 hover:bg-blue-50';
+      case 'purple': return 'border-purple-200 hover:border-purple-300 hover:bg-purple-50';
+      case 'green': return 'border-green-200 hover:border-green-300 hover:bg-green-50';
+      case 'orange': return 'border-orange-200 hover:border-orange-300 hover:bg-orange-50';
+      case 'red': return 'border-red-200 hover:border-red-300 hover:bg-red-50';
+      case 'indigo': return 'border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50';
+      default: return 'border-gray-200 hover:border-gray-300 hover:bg-gray-50';
+    }
+  };
+
+  const getAccentIconClass = (accent: string) => {
+    switch (accent) {
+      case 'blue': return 'text-blue-600';
+      case 'purple': return 'text-purple-600';
+      case 'green': return 'text-green-600';
+      case 'orange': return 'text-orange-600';
+      case 'red': return 'text-red-600';
+      case 'indigo': return 'text-indigo-600';
+      default: return 'text-gray-600';
+    }
+  };
+
   const renderChatTab = () => (
     <div className="flex flex-col h-full">
-      <div className="p-3 bg-gradient-to-br from-slate-50 to-blue-50 border-b border-gray-200 max-h-[280px] overflow-y-auto">
-        <div className="mb-3">
-          <h4 className="text-lg font-bold text-gray-900 mb-1">Quick Actions</h4>
-          <p className="text-xs text-gray-600">Choose an action to get started</p>
+      <div className="p-4 bg-white border-b border-gray-100">
+        <div className="mb-4">
+          <h4 className="text-lg font-semibold text-gray-900 mb-1">Quick Actions</h4>
+          <p className="text-sm text-gray-600">Choose an action to get started</p>
         </div>
         
-        <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {quickActions.map((action, index) => (
             <Card
               key={index}
-              className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-105 border-0 overflow-hidden ${action.color} text-white`}
+              className={`group cursor-pointer transition-all duration-200 hover:shadow-sm ${getAccentClass(action.accent)} bg-white border-2`}
               onClick={() => handleQuickAction(action)}
             >
-              <div className="p-3">
-                <div className="flex flex-col items-center text-center space-y-2">
-                  <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-xl group-hover:bg-white/30 transition-colors">
+              <div className="p-4">
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-xl bg-gray-50 group-hover:bg-white transition-colors ${getAccentIconClass(action.accent)}`}>
                     {action.icon}
                   </div>
                   
                   <div className="space-y-1">
-                    <h5 className="text-sm font-bold">{action.label}</h5>
-                    <p className="text-xs opacity-90 leading-tight">{action.description}</p>
+                    <h5 className="text-sm font-semibold text-gray-900">{action.label}</h5>
+                    <p className="text-xs text-gray-600 leading-relaxed">{action.description}</p>
                   </div>
                   
-                  <div className="flex items-center text-xs font-medium opacity-80 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
                     <span>Start</span>
-                    <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </div>
               </div>
@@ -282,74 +307,74 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
             variant="outline"
             size="sm"
             onClick={() => setActiveTab('prompts')}
-            className="bg-white/50 border-white/20 text-gray-700 hover:bg-white/70 text-xs px-3 py-1"
+            className="border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-4 py-2"
           >
-            <Sparkles className="w-3 h-3 mr-1" />
+            <Sparkles className="w-3 h-3 mr-2" />
             Prompts
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setActiveTab('templates')}
-            className="bg-white/50 border-white/20 text-gray-700 hover:bg-white/70 text-xs px-3 py-1"
+            className="border-gray-200 text-gray-700 hover:bg-gray-50 text-xs px-4 py-2"
           >
-            <Wand2 className="w-3 h-3 mr-1" />
+            <Wand2 className="w-3 h-3 mr-2" />
             Templates
           </Button>
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-3">
-        <div className="space-y-3">
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4">
           {messages.map((message) => (
             <div key={message.id}>
               <div
-                className={`flex gap-2 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {message.type === 'ai' && (
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-3 h-3 text-white" />
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
                 
                 <div
-                  className={`max-w-[80%] p-3 rounded-xl text-sm ${
+                  className={`max-w-[80%] rounded-xl text-sm ${
                     message.type === 'user'
-                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                      : 'bg-white border border-gray-200 text-gray-900 shadow-sm'
+                      ? 'bg-blue-600 text-white px-4 py-3'
+                      : 'bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3'
                   }`}
                 >
-                  {message.content}
-                  <p className="text-xs opacity-70 mt-1">
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <p className="text-xs opacity-70 mt-2">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
                 
                 {message.type === 'user' && (
-                  <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                    <User className="w-3 h-3 text-gray-600" />
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-gray-600" />
                   </div>
                 )}
               </div>
 
               {message.suggestions && message.suggestions.length > 0 && message.type === 'ai' && (
-                <div className="mt-2 ml-8">
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
-                    <p className="text-xs font-semibold text-blue-800 mb-2 flex items-center gap-1">
+                <div className="mt-3 ml-11">
+                  <div className="bg-white rounded-lg p-3 border border-gray-200">
+                    <p className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
                       <Sparkles className="w-3 h-3" />
                       Quick Follow-ups
                     </p>
-                    <div className="grid grid-cols-2 gap-1">
+                    <div className="grid grid-cols-2 gap-2">
                       {message.suggestions.map((suggestion, index) => (
                         <Button
                           key={index}
                           variant="outline"
                           size="sm"
                           onClick={() => handleSuggestionClick(suggestion)}
-                          className="justify-start h-auto p-2 bg-white text-gray-700 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all text-xs"
+                          className="justify-start h-auto p-2 bg-white text-gray-700 border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all text-xs"
                           disabled={isLoading}
                         >
-                          <Zap className="w-3 h-3 mr-1 text-blue-500" />
+                          <Zap className="w-3 h-3 mr-2 text-blue-500" />
                           <span className="text-xs">{suggestion}</span>
                         </Button>
                       ))}
@@ -361,11 +386,11 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
           ))}
           
           {isLoading && (
-            <div className="flex gap-2 justify-start">
-              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                <Bot className="w-3 h-3 text-white" />
+            <div className="flex gap-3 justify-start">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="bg-white border border-gray-200 shadow-sm p-3 rounded-xl">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                 <div className="flex gap-1">
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -377,7 +402,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
         </div>
       </ScrollArea>
       
-      <div className="p-3 border-t border-gray-200 bg-white">
+      <div className="p-4 border-t border-gray-200 bg-white">
         <div className="flex gap-2">
           <Input
             value={inputMessage}
@@ -390,7 +415,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
             onClick={sendMessage} 
             disabled={!inputMessage.trim() || isLoading}
             size="sm"
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             <Send className="w-4 h-4" />
           </Button>
@@ -401,37 +426,37 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
 
   const renderTemplatesTab = () => (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="font-medium text-gray-900 text-sm">Templates</h4>
+      <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-semibold text-gray-900 text-sm">Templates</h4>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setActiveTab('chat')}
-            className="text-xs"
+            className="text-xs text-gray-600 hover:text-gray-900"
           >
             ← Back
           </Button>
         </div>
         
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
           <Input
             placeholder="Search templates..."
             value={templateSearch}
             onChange={(e) => setTemplateSearch(e.target.value)}
-            className="pl-8 text-sm h-8"
+            className="pl-9 text-sm h-9 border-gray-300"
           />
         </div>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-3 space-y-2">
+        <div className="p-4 space-y-3">
           {filteredTemplates.map((template) => (
-            <Card key={template.id} className="p-3">
-              <div className="flex items-start justify-between mb-2">
+            <Card key={template.id} className="p-4 border border-gray-200 hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h5 className="text-sm font-medium text-gray-900 mb-1">
+                  <h5 className="text-sm font-semibold text-gray-900 mb-1">
                     {template.name}
                   </h5>
                   <p className="text-xs text-gray-600 mb-2">
@@ -439,11 +464,11 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
                   </p>
                   
                   <div className="flex items-center gap-1 flex-wrap mb-2">
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
                       {template.category}
                     </Badge>
                     {template.tags.slice(0, 2).map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs">
+                      <Badge key={tag} variant="outline" className="text-xs border-gray-300 text-gray-600">
                         {tag}
                       </Badge>
                     ))}
@@ -465,16 +490,16 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
                 variant="outline"
                 size="sm"
                 onClick={() => handleTemplateLoad(template)}
-                className="w-full text-xs"
+                className="w-full text-xs border-gray-300 hover:bg-gray-50"
               >
-                <Zap className="w-3 h-3 mr-1" />
+                <Zap className="w-3 h-3 mr-2" />
                 Use Template
               </Button>
             </Card>
           ))}
 
           {filteredTemplates.length === 0 && (
-            <div className="text-center py-6">
+            <div className="text-center py-8">
               <p className="text-gray-500 text-sm">No templates found</p>
               <p className="text-gray-400 text-xs mt-1">
                 Try adjusting your search
@@ -487,14 +512,14 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
   );
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-            <Bot className="w-3 h-3 text-white" />
+    <div className="h-full flex flex-col bg-white">
+      <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <Bot className="w-4 h-4 text-white" />
           </div>
           <h3 className="text-base font-semibold text-gray-900">AI Assistant</h3>
-          <Badge variant="secondary" className="ml-auto text-xs bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
+          <Badge variant="secondary" className="ml-auto text-xs bg-blue-50 text-blue-700 border-blue-200">
             Smart
           </Badge>
         </div>
@@ -504,13 +529,13 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
         {activeTab === 'chat' && renderChatTab()}
         {activeTab === 'prompts' && (
           <div className="h-full">
-            <div className="p-2 border-b border-gray-200 flex items-center justify-between">
-              <h4 className="font-medium text-gray-900 text-sm">Prompt Library</h4>
+            <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-white">
+              <h4 className="font-semibold text-gray-900 text-sm">Prompt Library</h4>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setActiveTab('chat')}
-                className="text-xs"
+                className="text-xs text-gray-600 hover:text-gray-900"
               >
                 ← Back
               </Button>
