@@ -101,7 +101,7 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
       console.log('Starting mock brand voice analysis...');
       setApiStatus('connected');
       
-      // Mock analysis result
+      // Mock analysis result with safe defaults
       const brandResult: BrandVoiceAnalysisResult = {
         brandVoiceScore: 85,
         engagementScore: 78,
@@ -247,13 +247,13 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
                 <div className="grid grid-cols-2 gap-2 mb-2">
                   <div className="text-center">
                     <div className="text-lg font-bold text-purple-600">
-                      {formatValue(subjectLineAnalysis.score)}
+                      {subjectLineAnalysis?.score ? formatValue(subjectLineAnalysis.score) : '--'}
                     </div>
                     <div className="text-xs text-gray-600">Score</div>
                   </div>
                   <div className="text-center">
-                    <div className={`text-lg font-bold ${getSpamRiskColor(subjectLineAnalysis.spamRisk)}`}>
-                      {subjectLineAnalysis.spamRisk.toUpperCase()}
+                    <div className={`text-lg font-bold ${getSpamRiskColor(subjectLineAnalysis?.spamRisk || 'unknown')}`}>
+                      {subjectLineAnalysis?.spamRisk ? subjectLineAnalysis.spamRisk.toUpperCase() : 'UNKNOWN'}
                     </div>
                     <div className="text-xs text-gray-600">Spam Risk</div>
                   </div>
@@ -273,19 +273,19 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
               <div className="grid grid-cols-3 gap-1.5 text-xs">
                 <div className="text-center p-1.5 bg-blue-50 rounded">
                   <div className="font-semibold text-blue-600">
-                    {formatValue(analysisResult.performancePrediction.openRate)}%
+                    {analysisResult?.performancePrediction?.openRate ? formatValue(analysisResult.performancePrediction.openRate) : '--'}%
                   </div>
                   <div className="text-xs text-gray-600">Open Rate</div>
                 </div>
                 <div className="text-center p-1.5 bg-green-50 rounded">
                   <div className="font-semibold text-green-600">
-                    {formatValue(analysisResult.performancePrediction.clickRate)}%
+                    {analysisResult?.performancePrediction?.clickRate ? formatValue(analysisResult.performancePrediction.clickRate) : '--'}%
                   </div>
                   <div className="text-xs text-gray-600">Click Rate</div>
                 </div>
                 <div className="text-center p-1.5 bg-purple-50 rounded">
                   <div className="font-semibold text-purple-600">
-                    {formatValue(analysisResult.performancePrediction.conversionRate)}%
+                    {analysisResult?.performancePrediction?.conversionRate ? formatValue(analysisResult.performancePrediction.conversionRate) : '--'}%
                   </div>
                   <div className="text-xs text-gray-600">Conversion</div>
                 </div>

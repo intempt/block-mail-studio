@@ -60,7 +60,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     try {
       console.log('Analyzing subject line:', value);
       
-      // Mock analysis
+      // Mock analysis with safe defaults
       const result: SubjectLineAnalysisResult = {
         score: 82,
         spamRisk: 'low',
@@ -158,7 +158,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
             Subject Line
           </h3>
           <div className="flex items-center gap-2">
-            {analysis?.score !== null && (
+            {analysis?.score !== null && analysis?.score !== undefined && (
               <Badge variant="outline" className={`text-xs ${getScoreColor(analysis.score)}`}>
                 Score: {analysis.score || '--'}
               </Badge>
@@ -224,25 +224,25 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="text-center p-2 bg-white rounded">
                   <div className="font-semibold text-purple-600">
-                    {analysis.emotionalImpact || '--'}
+                    {analysis?.emotionalImpact || '--'}
                   </div>
                   <div className="text-gray-600">Emotion</div>
                 </div>
                 <div className="text-center p-2 bg-white rounded">
                   <div className="font-semibold text-orange-600">
-                    {analysis.urgencyLevel || '--'}
+                    {analysis?.urgencyLevel || '--'}
                   </div>
                   <div className="text-gray-600">Urgency</div>
                 </div>
                 <div className="text-center p-2 bg-white rounded">
                   <div className="font-semibold text-blue-600">
-                    {analysis.benchmarkComparison.predictedOpenRate?.toFixed(1) || '--'}%
+                    {analysis?.benchmarkComparison?.predictedOpenRate?.toFixed(1) || '--'}%
                   </div>
                   <div className="text-gray-600">Est. Open</div>
                 </div>
               </div>
 
-              {analysis.recommendations.length > 0 && (
+              {analysis.recommendations && analysis.recommendations.length > 0 && (
                 <div className="bg-blue-50 p-2 rounded">
                   <div className="text-xs font-medium text-blue-900 mb-1">💡 Recommendations:</div>
                   <div className="space-y-1">
