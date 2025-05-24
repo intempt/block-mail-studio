@@ -5,6 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Plus, Trash2 } from 'lucide-react';
 
 interface SimpleBlock {
   id: string;
@@ -173,6 +176,171 @@ export const SimplePropertyEditor: React.FC<SimplePropertyEditorProps> = ({
     );
   };
 
+  const renderDividerProperties = () => (
+    <div className="space-y-4">
+      <div>
+        <Label>Style</Label>
+        <Select
+          value={block.content.style || 'solid'}
+          onValueChange={(value) => updateContent({ style: value })}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="solid">Solid</SelectItem>
+            <SelectItem value="dashed">Dashed</SelectItem>
+            <SelectItem value="dotted">Dotted</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Thickness</Label>
+        <Input
+          value={block.content.thickness || '1px'}
+          onChange={(e) => updateContent({ thickness: e.target.value })}
+          className="mt-1"
+          placeholder="1px"
+        />
+      </div>
+      <div>
+        <Label>Color</Label>
+        <Input
+          type="color"
+          value={block.content.color || '#dddddd'}
+          onChange={(e) => updateContent({ color: e.target.value })}
+          className="mt-1"
+        />
+      </div>
+    </div>
+  );
+
+  const renderVideoProperties = () => (
+    <div className="space-y-4">
+      <div>
+        <Label>Video URL</Label>
+        <Input
+          value={block.content.videoUrl || ''}
+          onChange={(e) => updateContent({ videoUrl: e.target.value })}
+          className="mt-1"
+          placeholder="https://..."
+        />
+      </div>
+      <div>
+        <Label>Thumbnail URL</Label>
+        <Input
+          value={block.content.thumbnail || ''}
+          onChange={(e) => updateContent({ thumbnail: e.target.value })}
+          className="mt-1"
+          placeholder="https://..."
+        />
+      </div>
+    </div>
+  );
+
+  const renderSocialProperties = () => {
+    const platforms = block.content.platforms || [];
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label>Social Platforms</Label>
+          <Button
+            size="sm"
+            onClick={() => {
+              const newPlatforms = [...platforms, { name: 'Platform', url: '#', icon: 'link' }];
+              updateContent({ platforms: newPlatforms });
+            }}
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+        </div>
+        {platforms.map((platform: any, index: number) => (
+          <div key={index} className="space-y-2 p-3 border rounded">
+            <div className="flex items-center justify-between">
+              <Label>Platform {index + 1}</Label>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  const newPlatforms = platforms.filter((_: any, i: number) => i !== index);
+                  updateContent({ platforms: newPlatforms });
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+            <Input
+              value={platform.name}
+              onChange={(e) => {
+                const newPlatforms = [...platforms];
+                newPlatforms[index] = { ...platform, name: e.target.value };
+                updateContent({ platforms: newPlatforms });
+              }}
+              placeholder="Platform name"
+            />
+            <Input
+              value={platform.url}
+              onChange={(e) => {
+                const newPlatforms = [...platforms];
+                newPlatforms[index] = { ...platform, url: e.target.value };
+                updateContent({ platforms: newPlatforms });
+              }}
+              placeholder="https://..."
+            />
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderHtmlProperties = () => (
+    <div className="space-y-4">
+      <div>
+        <Label>HTML Content</Label>
+        <Textarea
+          value={block.content.html || ''}
+          onChange={(e) => updateContent({ html: e.target.value })}
+          className="mt-1 font-mono text-sm"
+          rows={6}
+          placeholder="<div>Your HTML content here...</div>"
+        />
+      </div>
+    </div>
+  );
+
+  const renderTableProperties = () => {
+    const rows = block.content.rows || 2;
+    const columns = block.content.columns || 2;
+    
+    return (
+      <div className="space-y-4">
+        <div>
+          <Label>Rows: {rows}</Label>
+          <Slider
+            value={[rows]}
+            onValueChange={([value]) => updateContent({ rows: value })}
+            max={10}
+            min={1}
+            step={1}
+            className="mt-2"
+          />
+        </div>
+        <div>
+          <Label>Columns: {columns}</Label>
+          <Slider
+            value={[columns]}
+            onValueChange={([value]) => updateContent({ columns: value })}
+            max={6}
+            min={1}
+            step={1}
+            className="mt-2"
+          />
+        </div>
+      </div>
+    );
+  };
+
   const renderProperties = () => {
     switch (block.type) {
       case 'text':
@@ -183,6 +351,16 @@ export const SimplePropertyEditor: React.FC<SimplePropertyEditorProps> = ({
         return renderImageProperties();
       case 'spacer':
         return renderSpacerProperties();
+      case 'divider':
+        return renderDividerProperties();
+      case 'video':
+        return renderVideoProperties();
+      case 'social':
+        return renderSocialProperties();
+      case 'html':
+        return renderHtmlProperties();
+      case 'table':
+        return renderTableProperties();
       default:
         return (
           <div className="p-4 text-center text-gray-500">

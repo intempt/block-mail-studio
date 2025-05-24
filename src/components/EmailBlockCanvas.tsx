@@ -77,6 +77,34 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             return `<img src="${block.content.src}" alt="${block.content.alt || ''}" style="${styleString}" />`;
           case 'spacer':
             return `<div style="height: ${block.content.height};"></div>`;
+          case 'divider':
+            return `<hr style="${styleString}; border: none; border-top: ${block.content.thickness || '1px'} ${block.content.style || 'solid'} ${block.content.color || '#ddd'}; margin: 20px 0;" />`;
+          case 'video':
+            return `<div style="text-align: center; margin: 20px 0;">
+              <img src="${block.content.thumbnail}" alt="Video thumbnail" style="max-width: 100%; height: auto; cursor: pointer;" />
+              <p style="margin-top: 10px;"><a href="${block.content.videoUrl}" style="color: #3B82F6;">Watch Video</a></p>
+            </div>`;
+          case 'social':
+            const socialLinks = block.content.platforms?.map((platform: any) => 
+              `<a href="${platform.url}" style="margin: 0 5px; text-decoration: none;">${platform.name}</a>`
+            ).join('') || '';
+            return `<div style="text-align: center; margin: 20px 0;">${socialLinks}</div>`;
+          case 'html':
+            return block.content.html || '<div>Custom HTML content</div>';
+          case 'table':
+            const tableRows = block.content.rows || 2;
+            const tableCols = block.content.columns || 2;
+            let tableHTML = '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">';
+            for (let i = 0; i < tableRows; i++) {
+              tableHTML += '<tr>';
+              for (let j = 0; j < tableCols; j++) {
+                const cellContent = block.content.cells?.[i]?.[j]?.content || `Cell ${i + 1},${j + 1}`;
+                tableHTML += `<td style="border: 1px solid #ddd; padding: 8px;">${cellContent}</td>`;
+              }
+              tableHTML += '</tr>';
+            }
+            tableHTML += '</table>';
+            return tableHTML;
           default:
             return `<div style="${styleString}">${block.content.text || ''}</div>`;
         }
@@ -162,7 +190,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       },
 
       minifyHTML: () => {
-        // Simulate HTML minification by removing unnecessary styles
         setBlocks(prev => prev.map(block => ({
           ...block,
           styles: Object.fromEntries(
@@ -178,7 +205,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           (block.type === 'text' && block.content.text?.includes('<a'))
         );
         
-        // Simulate link checking
         const total = linkBlocks.length;
         const working = Math.floor(total * 0.9);
         const broken = total - working;
@@ -196,6 +222,23 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         case 'button': return { text: 'Click Me', link: '#' };
         case 'image': return { src: '/placeholder.svg', alt: 'New image' };
         case 'spacer': return { height: '40px' };
+        case 'divider': return { style: 'solid', thickness: '1px', color: '#ddd', width: '100%' };
+        case 'video': return { videoUrl: '#', thumbnail: '/placeholder.svg', showPlayButton: true };
+        case 'social': return { 
+          platforms: [
+            { name: 'Facebook', url: '#', icon: 'facebook' },
+            { name: 'Twitter', url: '#', icon: 'twitter' }
+          ]
+        };
+        case 'html': return { html: '<div>Custom HTML content</div>' };
+        case 'table': return { 
+          rows: 2, 
+          columns: 2, 
+          cells: [
+            [{ content: 'Header 1' }, { content: 'Header 2' }],
+            [{ content: 'Cell 1' }, { content: 'Cell 2' }]
+          ]
+        };
         default: return { text: 'New block' };
       }
     };
@@ -213,6 +256,11 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         };
         case 'image': return { maxWidth: '100%', height: 'auto', display: 'block' };
         case 'spacer': return { height: '40px' };
+        case 'divider': return { margin: '20px 0' };
+        case 'video': return { maxWidth: '100%', textAlign: 'center' };
+        case 'social': return { textAlign: 'center', margin: '20px 0' };
+        case 'html': return { margin: '10px 0' };
+        case 'table': return { width: '100%', borderCollapse: 'collapse', margin: '20px 0' };
         default: return { margin: '10px 0' };
       }
     };
@@ -253,6 +301,121 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       }
     };
 
+    const renderBlock = (block: SimpleBlock) => {
+      switch (block.type) {
+        case 'text':
+          return editingBlockId === block.id ? (
+            <SimpleTipTapEditor
+              content={block.content.text}
+              onChange={(html) => handleTipTapChange(block.id, html)}
+              onBlur={handleTipTapBlur}
+            />
+          ) : (
+            <div 
+              dangerouslySetInnerHTML={{ __html: block.content.text }} 
+              className="min-h-[20px]"
+            />
+          );
+        
+        case 'button':
+          return (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <a
+                href={block.content.link}
+                style={{
+                  ...block.styles,
+                  textDecoration: 'none',
+                  display: 'inline-block'
+                }}
+                onClick={(e) => e.preventDefault()}
+              >
+                {block.content.text}
+              </a>
+            </div>
+          );
+        
+        case 'image':
+          return (
+            <img
+              src={block.content.src}
+              alt={block.content.alt}
+              style={block.styles}
+            />
+          );
+
+        case 'spacer':
+          return <div style={{ height: block.content.height, backgroundColor: 'transparent' }} />;
+
+        case 'divider':
+          return (
+            <hr 
+              style={{
+                ...block.styles,
+                border: 'none',
+                borderTop: `${block.content.thickness || '1px'} ${block.content.style || 'solid'} ${block.content.color || '#ddd'}`
+              }} 
+            />
+          );
+
+        case 'video':
+          return (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <img 
+                src={block.content.thumbnail} 
+                alt="Video thumbnail" 
+                style={{ maxWidth: '100%', height: 'auto', cursor: 'pointer' }} 
+              />
+              <p style={{ marginTop: '10px' }}>
+                <a href={block.content.videoUrl} style={{ color: '#3B82F6' }}>Watch Video</a>
+              </p>
+            </div>
+          );
+
+        case 'social':
+          return (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              {block.content.platforms?.map((platform: any, index: number) => (
+                <a 
+                  key={index}
+                  href={platform.url} 
+                  style={{ margin: '0 5px', textDecoration: 'none' }}
+                >
+                  {platform.name}
+                </a>
+              ))}
+            </div>
+          );
+
+        case 'html':
+          return <div dangerouslySetInnerHTML={{ __html: block.content.html }} />;
+
+        case 'table':
+          const tableRows = block.content.rows || 2;
+          const tableCols = block.content.columns || 2;
+          return (
+            <table style={{ width: '100%', borderCollapse: 'collapse', margin: '20px 0' }}>
+              <tbody>
+                {Array.from({ length: tableRows }, (_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: tableCols }, (_, j) => (
+                      <td 
+                        key={j}
+                        style={{ border: '1px solid #ddd', padding: '8px' }}
+                      >
+                        {block.content.cells?.[i]?.[j]?.content || `Cell ${i + 1},${j + 1}`}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+
+        default:
+          return <div>Unknown block type: {block.type}</div>;
+      }
+    };
+
     return (
       <div className="h-full flex flex-col bg-gray-50">
         <div className="flex-1 overflow-auto p-4">
@@ -270,55 +433,13 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
                   onDoubleClick={() => handleBlockDoubleClick(block.id, block.type)}
                   style={block.styles}
                 >
-                  {block.type === 'text' && (
-                    editingBlockId === block.id ? (
-                      <SimpleTipTapEditor
-                        content={block.content.text}
-                        onChange={(html) => handleTipTapChange(block.id, html)}
-                        onBlur={handleTipTapBlur}
-                      />
-                    ) : (
-                      <div 
-                        dangerouslySetInnerHTML={{ __html: block.content.text }} 
-                        className="min-h-[20px]"
-                      />
-                    )
-                  )}
-                  
-                  {block.type === 'button' && (
-                    <div style={{ textAlign: 'center', margin: '20px 0' }}>
-                      <a
-                        href={block.content.link}
-                        style={{
-                          ...block.styles,
-                          textDecoration: 'none',
-                          display: 'inline-block'
-                        }}
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        {block.content.text}
-                      </a>
-                    </div>
-                  )}
-                  
-                  {block.type === 'image' && (
-                    <img
-                      src={block.content.src}
-                      alt={block.content.alt}
-                      style={block.styles}
-                    />
-                  )}
-
-                  {block.type === 'spacer' && (
-                    <div style={{ height: block.content.height, backgroundColor: 'transparent' }} />
-                  )}
+                  {renderBlock(block)}
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Canvas Status */}
         <div className="bg-white border-t p-2 text-xs text-gray-600 flex items-center justify-between">
           <div>
             Blocks: {blocks.length} | Width: {getCanvasWidth()}px
