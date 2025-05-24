@@ -54,6 +54,7 @@ import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EnhancedCollaborativeEditor } from './EnhancedCollaborativeEditor';
 import { EmailSnippet } from '@/types/snippets';
+import { EmailTemplate } from './TemplateManager';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
