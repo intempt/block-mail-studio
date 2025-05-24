@@ -198,44 +198,32 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
       icon: <FileText className="w-4 h-4" />, 
       label: 'Templates', 
       action: 'Show me industry email templates',
-      description: 'Pre-made designs',
-      accent: 'slate',
       onClick: () => setShowTemplates(true)
     },
     { 
       icon: <Palette className="w-4 h-4" />, 
       label: 'Brand Kit', 
-      action: 'Help me apply my brand colors and fonts',
-      description: 'Apply brand styling',
-      accent: 'slate'
+      action: 'Help me apply my brand colors and fonts'
     },
     { 
       icon: <Image className="w-4 h-4" />, 
       label: 'AI Images', 
-      action: 'Generate professional images for my email',
-      description: 'Create custom visuals',
-      accent: 'slate'
+      action: 'Generate professional images for my email'
     },
     { 
       icon: <Type className="w-4 h-4" />, 
       label: 'Smart Copy', 
-      action: 'Write compelling email copy that converts',
-      description: 'AI-powered copywriting',
-      accent: 'slate'
+      action: 'Write compelling email copy that converts'
     },
     { 
       icon: <Target className="w-4 h-4" />, 
       label: 'Optimize', 
-      action: 'Analyze and improve my email performance',
-      description: 'Enhance engagement',
-      accent: 'slate'
+      action: 'Analyze and improve my email performance'
     },
     { 
       icon: <BarChart3 className="w-4 h-4" />, 
       label: 'A/B Testing', 
-      action: 'Create variations for split testing',
-      description: 'Test multiple versions',
-      accent: 'slate'
+      action: 'Create variations for split testing'
     }
   ];
 
@@ -625,31 +613,27 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           </Badge>
         </div>
         
-        {/* Refined Quick Actions Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {quickActions.map((action, index) => (
-            <div
-              key={index}
-              className={`group cursor-pointer transition-all duration-200 hover:shadow-sm ${getAccentClass(action.accent)} bg-white border border-gray-200 rounded-xl p-4`}
-              onClick={() => handleQuickAction(action)}
-            >
-              <div className="flex flex-col items-center text-center space-y-3">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 group-hover:bg-slate-100 transition-colors ${getAccentIconClass(action.accent)}`}>
-                  {action.icon}
-                </div>
-                
-                <div className="space-y-1">
-                  <h5 className="text-sm font-medium text-gray-900">{action.label}</h5>
-                  <p className="text-xs text-gray-600 leading-relaxed">{action.description}</p>
-                </div>
-                
-                <div className="flex items-center text-xs font-medium text-gray-500 group-hover:text-gray-700 transition-colors">
-                  <span>Start</span>
-                  <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </div>
+        {/* Compact Quick Actions Grid with Scrollbar */}
+        <div className="h-32 overflow-hidden">
+          <ScrollArea className="h-full">
+            <div className="grid grid-cols-3 gap-2 pr-2">
+              {quickActions.map((action, index) => (
+                <Card
+                  key={index}
+                  className="group cursor-pointer transition-all duration-200 hover:shadow-sm border border-gray-200 hover:border-gray-300 hover:bg-gray-50 bg-white rounded-lg p-3"
+                  onClick={() => handleQuickAction(action)}
+                >
+                  <div className="flex flex-col items-center text-center space-y-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 group-hover:bg-slate-100 transition-colors text-slate-700">
+                      {action.icon}
+                    </div>
+                    
+                    <h5 className="text-xs font-medium text-gray-900">{action.label}</h5>
+                  </div>
+                </Card>
+              ))}
             </div>
-          ))}
+          </ScrollArea>
         </div>
       </div>
 
