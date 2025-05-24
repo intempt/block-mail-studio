@@ -23,12 +23,16 @@ export const CommentSystem: React.FC<CommentSystemProps> = ({ isOpen, onClose })
 
   const handleAddComment = () => {
     if (newComment.trim()) {
-      addComment({
+      const commentData = {
+        id: `comment-${Date.now()}`,
         content: newComment,
         author: 'Current User', // This should come from auth context
+        timestamp: new Date(),
         resolved: false,
-        position: 0 // This should be the current cursor position
-      });
+        position: 0, // This should be the current cursor position
+        replies: []
+      };
+      addComment(commentData);
       setNewComment('');
     }
   };

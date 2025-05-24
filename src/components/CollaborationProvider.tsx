@@ -114,14 +114,8 @@ export const CollaborationProvider: React.FC<CollaborationProviderProps> = ({
     };
   }, [documentId, userId, userName, userColor, ydoc]);
 
-  const addComment = (comment: Omit<CommentData, 'id' | 'timestamp' | 'replies'>) => {
-    const newComment: CommentData = {
-      ...comment,
-      id: `comment-${Date.now()}`,
-      timestamp: new Date(),
-      replies: []
-    };
-    setComments(prev => [...prev, newComment]);
+  const addComment = (comment: CommentData) => {
+    setComments(prev => [...prev, comment]);
   };
 
   return (
