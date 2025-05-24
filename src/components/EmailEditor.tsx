@@ -67,6 +67,7 @@ import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 import { SimplePropertyEditor } from './SimplePropertyEditor';
 import { DirectTemplateService } from '@/services/directTemplateService';
+import { AITestingSuite } from './AITestingSuite';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
@@ -91,6 +92,7 @@ const EmailEditor = () => {
   const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
   const [subjectLineScore, setSubjectLineScore] = useState(75);
   const { toast } = useToast();
+  const [showAITesting, setShowAITesting] = useState(false);
   
   const handleEmailContentChange = (newContent: string) => {
     setEmailHTML(newContent);
@@ -316,6 +318,10 @@ const EmailEditor = () => {
       );
     }
 
+    if (showAITesting) {
+      return <AITestingSuite />;
+    }
+
     switch (leftPanelTab) {
       case 'ai':
         return (
@@ -433,6 +439,16 @@ const EmailEditor = () => {
 
   const renderHeaderActions = () => (
     <div className="flex items-center gap-2 lg:gap-3">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => setShowAITesting(!showAITesting)}
+        className="h-6 lg:h-8 hidden sm:flex"
+      >
+        <Brain className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
+        <span className="hidden lg:inline">Test AI</span>
+      </Button>
+      
       <Button variant="outline" size="sm" onClick={handleExport} className="h-6 lg:h-8 hidden sm:flex">
         <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
         <span className="hidden lg:inline">Export</span>
@@ -455,54 +471,60 @@ const EmailEditor = () => {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xs lg:text-sm font-semibold text-slate-900">Email Builder Pro</h1>
-              <p className="text-xs text-slate-500 hidden lg:block">Canvas Edition</p>
+              <p className="text-xs text-slate-500 hidden lg:block">
+                {showAITesting ? 'AI Testing Mode' : 'Canvas Edition'}
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 lg:gap-4">
-            <div className="flex items-center bg-slate-100 rounded-lg p-1">
-              <Button
-                variant={previewMode === 'desktop' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handlePreviewModeChange('desktop')}
-                className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
-              >
-                <Monitor className="w-3 h-3 lg:w-4 lg:h-4" />
-              </Button>
-              <Button
-                variant={previewMode === 'tablet' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handlePreviewModeChange('tablet')}
-                className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
-              >
-                <Layout className="w-3 h-3 lg:w-4 lg:h-4" />
-              </Button>
-              <Button
-                variant={previewMode === 'mobile' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => handlePreviewModeChange('mobile')}
-                className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
-              >
-                <Smartphone className="w-3 h-3 lg:w-4 lg:h-4" />
-              </Button>
-            </div>
-            
-            <div className="hidden lg:flex items-center gap-3 min-w-[150px] xl:min-w-[200px]">
-              <span className="text-xs text-slate-500 font-mono">Width:</span>
-              <div className="flex-1">
-                <Slider
-                  value={[previewWidth]}
-                  onValueChange={handleWidthChange}
-                  max={1440}
-                  min={320}
-                  step={10}
-                  className="w-full"
-                />
-              </div>
-              <Badge variant="secondary" className="text-xs font-mono min-w-[60px] justify-center">
-                {previewWidth}px
-              </Badge>
-            </div>
+            {!showAITesting && (
+              <>
+                <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                  <Button
+                    variant={previewMode === 'desktop' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handlePreviewModeChange('desktop')}
+                    className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
+                  >
+                    <Monitor className="w-3 h-3 lg:w-4 lg:h-4" />
+                  </Button>
+                  <Button
+                    variant={previewMode === 'tablet' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handlePreviewModeChange('tablet')}
+                    className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
+                  >
+                    <Layout className="w-3 h-3 lg:w-4 lg:h-4" />
+                  </Button>
+                  <Button
+                    variant={previewMode === 'mobile' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => handlePreviewModeChange('mobile')}
+                    className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
+                  >
+                    <Smartphone className="w-3 h-3 lg:w-4 lg:h-4" />
+                  </Button>
+                </div>
+                
+                <div className="hidden lg:flex items-center gap-3 min-w-[150px] xl:min-w-[200px]">
+                  <span className="text-xs text-slate-500 font-mono">Width:</span>
+                  <div className="flex-1">
+                    <Slider
+                      value={[previewWidth]}
+                      onValueChange={handleWidthChange}
+                      max={1440}
+                      min={320}
+                      step={10}
+                      className="w-full"
+                    />
+                  </div>
+                  <Badge variant="secondary" className="text-xs font-mono min-w-[60px] justify-center">
+                    {previewWidth}px
+                  </Badge>
+                </div>
+              </>
+            )}
           </div>
 
           {renderHeaderActions()}
@@ -518,43 +540,59 @@ const EmailEditor = () => {
               <>
                 <div className={`${compactMode ? 'p-2' : 'p-4'} border-b border-slate-200`}>
                   <div className="flex items-center justify-between mb-2 lg:mb-3">
-                    <h3 className="font-semibold text-slate-900 text-sm lg:text-base">Tools</h3>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => setLeftPanelCollapsed(true)}
-                      className="h-6 w-6 p-0 lg:h-8 lg:w-8"
-                    >
-                      <PanelLeftClose className="w-3 h-3 lg:w-4 lg:h-4" />
-                    </Button>
+                    <h3 className="font-semibold text-slate-900 text-sm lg:text-base">
+                      {showAITesting ? 'AI Testing' : 'Tools'}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {showAITesting && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setShowAITesting(false)}
+                          className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+                        >
+                          <ChevronLeft className="w-3 h-3 lg:w-4 lg:h-4" />
+                        </Button>
+                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setLeftPanelCollapsed(true)}
+                        className="h-6 w-6 p-0 lg:h-8 lg:w-8"
+                      >
+                        <PanelLeftClose className="w-3 h-3 lg:w-4 lg:h-4" />
+                      </Button>
+                    </div>
                   </div>
                   
-                  <div className="flex gap-1">
-                    <Button
-                      variant={leftPanelTab === 'ai' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setLeftPanelTab('ai')}
-                      className="flex-1 h-6 lg:h-8"
-                    >
-                      <Brain className="w-3 h-3 lg:w-4 lg:h-4" />
-                    </Button>
-                    <Button
-                      variant={leftPanelTab === 'design' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setLeftPanelTab('design')}
-                      className="flex-1 h-6 lg:h-8"
-                    >
-                      <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
-                    </Button>
-                    <Button
-                      variant={leftPanelTab === 'blocks' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setLeftPanelTab('blocks')}
-                      className="flex-1 h-6 lg:h-8"
-                    >
-                      <Blocks className="w-3 h-3 lg:w-4 lg:h-4" />
-                    </Button>
-                  </div>
+                  {!showAITesting && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant={leftPanelTab === 'ai' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLeftPanelTab('ai')}
+                        className="flex-1 h-6 lg:h-8"
+                      >
+                        <Brain className="w-3 h-3 lg:w-4 lg:h-4" />
+                      </Button>
+                      <Button
+                        variant={leftPanelTab === 'design' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLeftPanelTab('design')}
+                        className="flex-1 h-6 lg:h-8"
+                      >
+                        <Palette className="w-3 h-3 lg:w-4 lg:h-4" />
+                      </Button>
+                      <Button
+                        variant={leftPanelTab === 'blocks' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setLeftPanelTab('blocks')}
+                        className="flex-1 h-6 lg:h-8"
+                      >
+                        <Blocks className="w-3 h-3 lg:w-4 lg:h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex-1 overflow-hidden">
