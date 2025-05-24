@@ -182,17 +182,17 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-orange-600" />
-          <h3 className="text-lg font-semibold">Performance Analyzer</h3>
-          <Badge variant="secondary" className="ml-auto">
+      <div className="p-3 border-b border-gray-200">
+        <div className="flex items-center gap-1.5 mb-3">
+          <Zap className="w-4 h-4 text-orange-600" />
+          <h3 className="text-base font-semibold">Performance Analyzer</h3>
+          <Badge variant="secondary" className="ml-auto text-xs">
             Score: {overallScore}
           </Badge>
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-1.5">
             <span className="text-sm font-medium">Overall Performance</span>
             <span className={`text-sm font-bold ${
               overallScore >= 90 ? 'text-green-600' : 
@@ -201,7 +201,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
               {overallScore}/100
             </span>
           </div>
-          <Progress value={overallScore} className="mb-2" />
+          <Progress value={overallScore} className="mb-1.5 h-1.5" />
         </div>
 
         <div className="flex gap-1">
@@ -215,7 +215,7 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
               variant={activeTab === tab.id ? 'default' : 'outline'}
               size="sm"
               onClick={() => setActiveTab(tab.id as any)}
-              className="flex items-center gap-2"
+              className="flex items-center gap-1.5 text-xs"
             >
               {tab.icon}
               {tab.label}
@@ -225,35 +225,35 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4">
+        <div className="p-3">
           {activeTab === 'performance' && (
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Performance Metrics</h4>
+                <h4 className="font-medium text-gray-900 text-sm">Performance Metrics</h4>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={analyzeEmail}
                   disabled={isAnalyzing}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1.5 text-xs"
                 >
-                  <Zap className={`w-4 h-4 ${isAnalyzing ? 'animate-pulse' : ''}`} />
+                  <Zap className={`w-3 h-3 ${isAnalyzing ? 'animate-pulse' : ''}`} />
                   {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 {metrics.map((metric) => (
-                  <Card key={metric.id} className="p-3">
-                    <div className="flex items-center justify-between mb-2">
+                  <Card key={metric.id} className="p-2.5">
+                    <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-medium">{metric.name}</span>
                       {getStatusIcon(metric.status)}
                     </div>
-                    <div className="text-2xl font-bold">{metric.value.toFixed(metric.name === 'Load Time' ? 1 : 0)}</div>
+                    <div className="text-xl font-bold">{metric.value.toFixed(metric.name === 'Load Time' ? 1 : 0)}</div>
                     <div className="text-xs text-gray-600">{metric.unit}</div>
-                    <p className="text-xs text-gray-500 mt-1">{metric.description}</p>
+                    <p className="text-xs text-gray-500 mt-1 line-height-tight">{metric.description}</p>
                     {metric.recommendation && (
-                      <p className="text-xs text-blue-600 mt-1 italic">
+                      <p className="text-xs text-blue-600 mt-1 italic line-height-tight">
                         💡 {metric.recommendation}
                       </p>
                     )}
@@ -262,22 +262,22 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">Quick Optimizations</h4>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" onClick={optimizeImages} className="flex items-center gap-2">
-                    <Minimize2 className="w-4 h-4" />
+                <h4 className="font-medium text-gray-900 mb-2 text-sm">Quick Optimizations</h4>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <Button variant="outline" size="sm" onClick={optimizeImages} className="flex items-center gap-1.5 text-xs">
+                    <Minimize2 className="w-3 h-3" />
                     Optimize Images
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs">
+                    <FileText className="w-3 h-3" />
                     Minify HTML
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs">
+                    <Globe className="w-3 h-3" />
                     Check Links
                   </Button>
-                  <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
+                  <Button variant="outline" size="sm" className="flex items-center gap-1.5 text-xs">
+                    <Shield className="w-3 h-3" />
                     Security Scan
                   </Button>
                 </div>
@@ -286,19 +286,19 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
           )}
 
           {activeTab === 'accessibility' && (
-            <div className="space-y-4">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium text-gray-900">Accessibility Issues</h4>
+                <h4 className="font-medium text-gray-900 text-sm">Accessibility Issues</h4>
                 <Badge variant="outline" className="text-xs">
                   WCAG 2.1 AA
                 </Badge>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {accessibilityIssues.map((issue) => (
-                  <Card key={issue.id} className="p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                  <Card key={issue.id} className="p-2.5">
+                    <div className="flex items-start justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
                         {getIssueIcon(issue.type)}
                         <span className="font-medium text-sm">{issue.element}</span>
                         <Badge 
@@ -310,15 +310,15 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
-                    <p className="text-xs text-blue-600 italic mb-3">
+                    <p className="text-sm text-gray-600 mb-1.5">{issue.description}</p>
+                    <p className="text-xs text-blue-600 italic mb-2">
                       🔧 {issue.fix}
                     </p>
                     
                     <Button
                       size="sm"
                       onClick={() => fixAccessibilityIssue(issue.id)}
-                      className="w-full"
+                      className="w-full text-xs"
                     >
                       Fix Issue
                     </Button>
@@ -326,17 +326,17 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
                 ))}
                 
                 {accessibilityIssues.length === 0 && (
-                  <div className="text-center py-8">
-                    <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <div className="text-center py-6">
+                    <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1.5" />
                     <p className="text-sm text-gray-600">All accessibility checks passed!</p>
-                    <p className="text-xs text-gray-500">Your email meets WCAG guidelines</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Your email meets WCAG guidelines</p>
                   </div>
                 )}
               </div>
 
-              <Card className="p-3 bg-blue-50 border-blue-200">
-                <h5 className="font-medium text-sm mb-2 text-blue-900">Accessibility Guidelines</h5>
-                <div className="space-y-1 text-xs text-blue-800">
+              <Card className="p-2.5 bg-blue-50 border-blue-200">
+                <h5 className="font-medium text-sm mb-1.5 text-blue-900">Accessibility Guidelines</h5>
+                <div className="space-y-0.5 text-xs text-blue-800">
                   <div>• All images have descriptive alt text</div>
                   <div>• Text contrast ratio is at least 4.5:1</div>
                   <div>• Font sizes are at least 14px</div>
@@ -348,39 +348,39 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
           )}
 
           {activeTab === 'mobile' && (
-            <div className="space-y-4">
-              <h4 className="font-medium text-gray-900">Mobile Optimization</h4>
+            <div className="space-y-2.5">
+              <h4 className="font-medium text-gray-900 text-sm">Mobile Optimization</h4>
               
-              <div className="grid grid-cols-2 gap-3">
-                <Card className="p-3">
-                  <div className="flex items-center gap-2 mb-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Card className="p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1.5">
                     <Smartphone className="w-4 h-4 text-blue-600" />
                     <span className="text-sm font-medium">Responsive Design</span>
                   </div>
-                  <div className="text-2xl font-bold text-green-600">✓</div>
+                  <div className="text-xl font-bold text-green-600">✓</div>
                   <div className="text-xs text-gray-600">Passes mobile tests</div>
                 </Card>
                 
-                <Card className="p-3">
-                  <div className="flex items-center gap-2 mb-2">
+                <Card className="p-2.5">
+                  <div className="flex items-center gap-1.5 mb-1.5">
                     <Eye className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium">Touch Targets</span>
                   </div>
-                  <div className="text-2xl font-bold text-green-600">44px</div>
+                  <div className="text-xl font-bold text-green-600">44px</div>
                   <div className="text-xs text-gray-600">Minimum size met</div>
                 </Card>
               </div>
 
-              <Card className="p-4">
-                <h5 className="font-medium text-sm mb-3">Mobile Preview</h5>
-                <div className="bg-gray-100 rounded-lg p-4 max-w-xs mx-auto">
-                  <div className="bg-white rounded shadow-sm p-3">
-                    <div className="h-2 bg-blue-500 rounded mb-2"></div>
-                    <div className="space-y-1">
+              <Card className="p-2.5">
+                <h5 className="font-medium text-sm mb-2">Mobile Preview</h5>
+                <div className="bg-gray-100 rounded-lg p-3 max-w-xs mx-auto">
+                  <div className="bg-white rounded shadow-sm p-2.5">
+                    <div className="h-1.5 bg-blue-500 rounded mb-1.5"></div>
+                    <div className="space-y-0.5">
                       <div className="h-1 bg-gray-300 rounded w-3/4"></div>
                       <div className="h-1 bg-gray-300 rounded w-1/2"></div>
                     </div>
-                    <div className="bg-blue-500 text-white text-xs text-center py-1 rounded mt-2">
+                    <div className="bg-blue-500 text-white text-xs text-center py-1 rounded mt-1.5">
                       CTA Button
                     </div>
                   </div>
@@ -388,8 +388,8 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
               </Card>
 
               <div>
-                <h5 className="font-medium text-sm mb-2">Mobile Optimizations</h5>
-                <div className="space-y-2">
+                <h5 className="font-medium text-sm mb-1.5">Mobile Optimizations</h5>
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
                     <span>Single column layout</span>
                     <CheckCircle className="w-4 h-4 text-green-600" />
