@@ -20,6 +20,7 @@ import {
   Type,
   Palette
 } from 'lucide-react';
+import { BlockInserter } from './BlockInserter';
 
 interface EmailEditorToolbarProps {
   editor: Editor | null;
@@ -49,6 +50,11 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({ editor }
   return (
     <div className="bg-white border-b border-slate-200 px-6 py-3">
       <div className="flex items-center gap-1">
+        {/* Block Inserter - Featured prominently */}
+        <BlockInserter editor={editor} />
+
+        <Separator orientation="vertical" className="mx-2 h-6" />
+
         {/* History */}
         <div className="flex items-center gap-1">
           <Button

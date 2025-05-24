@@ -1,276 +1,163 @@
 
 import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
-  Layers, 
-  Edit3, 
-  Palette, 
-  Table as TableIcon, 
-  User, 
-  Store, 
-  Brain, 
-  Sparkles, 
-  TrendingUp, 
-  Users, 
-  Layout,
-  Type,
-  Image,
-  Link,
-  Grid3X3,
-  Mail,
-  Zap,
   Settings,
-  ChevronDown,
-  ChevronRight
+  Palette,
+  Layout,
+  Sliders,
+  Code,
+  Eye,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 
-import { AdvancedBlockLibrary } from './AdvancedBlockLibrary';
-import { EmailBlockEditor } from './EmailBlockEditor';
-import { BrandKitManager, BrandKit } from './BrandKitManager';
-import { AdvancedTableBuilder } from './AdvancedTableBuilder';
-import { DynamicContentEditor } from './DynamicContentEditor';
-import { IndustryTemplateLibrary } from './IndustryTemplateLibrary';
-import { SmartDesignAssistant } from './SmartDesignAssistant';
-import { IntelligentAssistant } from './IntelligentAssistant';
-import { TemplateEvolution } from './TemplateEvolution';
-import { CollaborationHub } from './CollaborationHub';
-import { WorkspaceManager } from './WorkspaceManager';
-
-interface ToolCategory {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  tools: Tool[];
-}
-
-interface Tool {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  badge?: string;
-}
+import { EmailPropertiesPanel } from './EmailPropertiesPanel';
 
 interface ProfessionalToolPaletteProps {
   editor: Editor | null;
 }
 
-export const ProfessionalToolPalette: React.FC<ProfessionalToolPaletteProps> = ({ editor }) => {
-  const [selectedTool, setSelectedTool] = useState<string>('blocks');
-  const [expandedCategory, setExpandedCategory] = useState<string>('content');
-  const [currentBrandKit, setCurrentBrandKit] = useState<BrandKit>();
+type ToolCategory = 'properties' | 'styling' | 'layout' | 'advanced' | 'preview';
 
-  const toolCategories: ToolCategory[] = [
-    {
-      id: 'content',
-      name: 'Content',
-      icon: <Edit3 className="w-4 h-4" />,
-      description: 'Add and edit content blocks',
-      tools: [
-        {
-          id: 'blocks',
-          name: 'Content Blocks',
-          icon: <Layers className="w-4 h-4" />,
-          description: 'Pre-built content sections'
-        },
-        {
-          id: 'advanced',
-          name: 'Custom Blocks',
-          icon: <Grid3X3 className="w-4 h-4" />,
-          description: 'Advanced block editor'
-        },
-        {
-          id: 'table',
-          name: 'Tables',
-          icon: <TableIcon className="w-4 h-4" />,
-          description: 'Data tables and layouts'
-        }
-      ]
-    },
-    {
-      id: 'design',
-      name: 'Design',
-      icon: <Palette className="w-4 h-4" />,
-      description: 'Styling and branding tools',
-      tools: [
-        {
-          id: 'brand',
-          name: 'Brand Kit',
-          icon: <Palette className="w-4 h-4" />,
-          description: 'Colors, fonts, and assets'
-        },
-        {
-          id: 'templates',
-          name: 'Industry Templates',
-          icon: <Store className="w-4 h-4" />,
-          description: 'Professional templates'
-        }
-      ]
-    },
-    {
-      id: 'personalization',
-      name: 'Personalization',
-      icon: <User className="w-4 h-4" />,
-      description: 'Dynamic and personalized content',
-      tools: [
-        {
-          id: 'dynamic',
-          name: 'Dynamic Content',
-          icon: <User className="w-4 h-4" />,
-          description: 'Personalized content blocks'
-        }
-      ]
-    },
-    {
-      id: 'ai',
-      name: 'AI Tools',
-      icon: <Brain className="w-4 h-4" />,
-      description: 'AI-powered features',
-      tools: [
-        {
-          id: 'assistant',
-          name: 'Smart Assistant',
-          icon: <Brain className="w-4 h-4" />,
-          description: 'AI design suggestions',
-          badge: 'Pro'
-        },
-        {
-          id: 'intelligent',
-          name: 'AI Optimizer',
-          icon: <Sparkles className="w-4 h-4" />,
-          description: 'Intelligent optimization',
-          badge: 'Pro'
-        },
-        {
-          id: 'evolution',
-          name: 'A/B Testing',
-          icon: <TrendingUp className="w-4 h-4" />,
-          description: 'Template evolution',
-          badge: 'Pro'
-        }
-      ]
-    },
-    {
-      id: 'collaboration',
-      name: 'Team',
-      icon: <Users className="w-4 h-4" />,
-      description: 'Team collaboration tools',
-      tools: [
-        {
-          id: 'collaboration',
-          name: 'Team Hub',
-          icon: <Users className="w-4 h-4" />,
-          description: 'Collaboration features'
-        },
-        {
-          id: 'workspace',
-          name: 'Workspace',
-          icon: <Layout className="w-4 h-4" />,
-          description: 'Workspace settings'
-        }
-      ]
-    }
+export const ProfessionalToolPalette: React.FC<ProfessionalToolPaletteProps> = ({ editor }) => {
+  const [activeCategory, setActiveCategory] = useState<ToolCategory>('properties');
+
+  const toolCategories = [
+    { id: 'properties' as ToolCategory, name: 'Properties', icon: <Settings className="w-4 h-4" /> },
+    { id: 'styling' as ToolCategory, name: 'Styling', icon: <Palette className="w-4 h-4" /> },
+    { id: 'layout' as ToolCategory, name: 'Layout', icon: <Layout className="w-4 h-4" /> },
+    { id: 'advanced' as ToolCategory, name: 'Advanced', icon: <Sliders className="w-4 h-4" /> },
+    { id: 'preview' as ToolCategory, name: 'Preview', icon: <Eye className="w-4 h-4" /> }
   ];
 
-  const renderToolContent = () => {
-    switch (selectedTool) {
-      case 'blocks':
-        return <AdvancedBlockLibrary editor={editor} />;
+  const renderCategoryContent = () => {
+    switch (activeCategory) {
+      case 'properties':
+        return <EmailPropertiesPanel editor={editor} />;
+      
+      case 'styling':
+        return (
+          <div className="p-4 space-y-4">
+            <h4 className="font-medium text-slate-900">Advanced Styling</h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-slate-600 block mb-1">Font Family</label>
+                <select className="w-full h-8 px-2 border border-slate-300 rounded text-sm">
+                  <option>Arial</option>
+                  <option>Helvetica</option>
+                  <option>Georgia</option>
+                  <option>Times New Roman</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-600 block mb-1">Font Size</label>
+                <input type="range" min="12" max="48" className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs text-slate-600 block mb-1">Line Height</label>
+                <input type="range" min="1" max="3" step="0.1" className="w-full" />
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'layout':
+        return (
+          <div className="p-4 space-y-4">
+            <h4 className="font-medium text-slate-900">Layout Controls</h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-slate-600 block mb-1">Container Width</label>
+                <input type="range" min="300" max="800" className="w-full" />
+              </div>
+              <div>
+                <label className="text-xs text-slate-600 block mb-1">Padding</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" placeholder="Top" className="h-8 px-2 border border-slate-300 rounded text-sm" />
+                  <input type="number" placeholder="Bottom" className="h-8 px-2 border border-slate-300 rounded text-sm" />
+                  <input type="number" placeholder="Left" className="h-8 px-2 border border-slate-300 rounded text-sm" />
+                  <input type="number" placeholder="Right" className="h-8 px-2 border border-slate-300 rounded text-sm" />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      
       case 'advanced':
-        return <EmailBlockEditor editor={editor} />;
-      case 'brand':
-        return <BrandKitManager currentBrandKit={currentBrandKit} onBrandKitChange={setCurrentBrandKit} />;
-      case 'table':
-        return <AdvancedTableBuilder editor={editor} />;
-      case 'dynamic':
-        return <DynamicContentEditor editor={editor} />;
-      case 'templates':
-        return <IndustryTemplateLibrary editor={editor} />;
-      case 'assistant':
-        return <SmartDesignAssistant editor={editor} emailHTML="" />;
-      case 'intelligent':
-        return <IntelligentAssistant editor={editor} emailHTML="" />;
-      case 'evolution':
-        return <TemplateEvolution editor={editor} templateId="template-1" />;
-      case 'collaboration':
-        return <CollaborationHub projectId="project-1" />;
-      case 'workspace':
-        return <WorkspaceManager onSettingsChange={() => {}} />;
+        return (
+          <div className="p-4 space-y-4">
+            <h4 className="font-medium text-slate-900">Advanced Features</h4>
+            <div className="space-y-3">
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Code className="w-4 h-4 mr-2" />
+                Custom CSS
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Settings className="w-4 h-4 mr-2" />
+                Email Settings
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Sliders className="w-4 h-4 mr-2" />
+                A/B Testing
+              </Button>
+            </div>
+          </div>
+        );
+      
+      case 'preview':
+        return (
+          <div className="p-4 space-y-4">
+            <h4 className="font-medium text-slate-900">Preview Options</h4>
+            <div className="space-y-3">
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Monitor className="w-4 h-4 mr-2" />
+                Desktop Preview
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Smartphone className="w-4 h-4 mr-2" />
+                Mobile Preview
+              </Button>
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Eye className="w-4 h-4 mr-2" />
+                Send Test Email
+              </Button>
+            </div>
+          </div>
+        );
+      
       default:
-        return <AdvancedBlockLibrary editor={editor} />;
+        return null;
     }
   };
 
   return (
     <div className="h-full flex flex-col">
-      {/* Tool Navigation */}
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-2">
+      {/* Category Tabs */}
+      <div className="border-b border-slate-200">
+        <div className="flex flex-col">
           {toolCategories.map((category) => (
-            <div key={category.id} className="space-y-1">
-              <Button
-                variant="ghost"
-                className="w-full justify-between h-auto p-3 hover:bg-slate-50"
-                onClick={() => setExpandedCategory(expandedCategory === category.id ? '' : category.id)}
-              >
-                <div className="flex items-center gap-3">
-                  {category.icon}
-                  <div className="text-left">
-                    <div className="font-medium text-sm">{category.name}</div>
-                    <div className="text-xs text-slate-500">{category.description}</div>
-                  </div>
-                </div>
-                {expandedCategory === category.id ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </Button>
-              
-              {expandedCategory === category.id && (
-                <div className="ml-4 space-y-1">
-                  {category.tools.map((tool) => (
-                    <Button
-                      key={tool.id}
-                      variant={selectedTool === tool.id ? 'default' : 'ghost'}
-                      className="w-full justify-start h-auto p-3"
-                      onClick={() => setSelectedTool(tool.id)}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        {tool.icon}
-                        <div className="text-left flex-1">
-                          <div className="font-medium text-sm flex items-center gap-2">
-                            {tool.name}
-                            {tool.badge && (
-                              <Badge variant="secondary" className="text-xs">
-                                {tool.badge}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-500">{tool.description}</div>
-                        </div>
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Button
+              key={category.id}
+              variant={activeCategory === category.id ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setActiveCategory(category.id)}
+              className="justify-start h-10 px-4 rounded-none"
+            >
+              {category.icon}
+              <span className="ml-2">{category.name}</span>
+            </Button>
           ))}
         </div>
-      </ScrollArea>
-
-      <Separator />
-
-      {/* Tool Content */}
-      <div className="flex-1 overflow-hidden">
-        {renderToolContent()}
       </div>
+
+      {/* Category Content */}
+      <ScrollArea className="flex-1">
+        {renderCategoryContent()}
+      </ScrollArea>
     </div>
   );
 };
