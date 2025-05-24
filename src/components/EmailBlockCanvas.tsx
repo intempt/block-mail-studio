@@ -53,12 +53,14 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
   const insertSnippet = (snippet: EmailSnippet) => {
     console.log('Inserting snippet:', snippet);
     
-    // Create a new block from the snippet data
+    // Create a new block from the snippet data with enhanced metadata
     const newBlock = {
       ...snippet.blockData,
       id: generateUniqueId(), // Generate new unique ID
       snippetId: snippet.id, // Keep reference to original snippet
-      isStarred: false // Reset starred state for the new instance
+      isStarred: false, // Reset starred state for the new instance
+      snippetName: snippet.name, // Add snippet name for reference
+      snippetTags: snippet.tags // Add tags for context
     };
     
     setBlocks(prev => [...prev, newBlock]);
@@ -66,9 +68,20 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     
     // Increment usage count for the snippet
     SnippetService.incrementUsage(snippet.id);
+    
+    console.log(`Snippet "${snippet.name}" inserted and usage count incremented`);
   };
 
   const handleStarBlock = (block: EmailBlock) => {
+    console.log('Starring block for snippet save:', block);
+    
+    // Check if this block is already saved as a snippet
+    if (block.isStarred) {
+      // If already starred, could toggle or show manage options
+      console.log('Block already starred, showing management options');
+      // For now, just open save dialog to create another variant
+    }
+    
     setBlockToSave(block);
     setShowSnippetSaveDialog(true);
   };
@@ -77,7 +90,19 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     if (!blockToSave) return;
     
     try {
-      await SnippetService.saveSnippet(blockToSave, name, description, category, tags);
+      console.log('Saving snippet:', { name, description, category, tags });
+      
+      // Clean the block data before saving (remove canvas-specific properties)
+      const cleanBlockData = {
+        ...blockToSave,
+        selected: false,
+        isStarred: undefined,
+        snippetId: undefined,
+        snippetName: undefined,
+        snippetTags: undefined
+      };
+      
+      const savedSnippet = await SnippetService.saveSnippet(cleanBlockData, name, description, category, tags);
       
       // Update the block to show it's starred
       setBlocks(prev => prev.map(b => 
@@ -87,7 +112,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
       setShowSnippetSaveDialog(false);
       setBlockToSave(null);
       
-      console.log('Snippet saved successfully');
+      console.log('Snippet saved successfully:', savedSnippet);
     } catch (error) {
       console.error('Failed to save snippet:', error);
     }
@@ -349,6 +374,9 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
             <span className={`${compactMode ? 'text-xs' : 'text-xs'} text-slate-500 ml-2`}>
               Email Canvas ({blocks.length} blocks)
             </span>
+            <div className="ml-auto text-xs text-slate-400">
+              {SnippetService.getAllSnippets().length} snippets saved
+            </div>
           </div>
         </div>
         
@@ -380,6 +408,9 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
             <div className={`text-center ${compactMode ? 'py-8' : 'py-16'} text-gray-400`}>
               <p className={compactMode ? 'text-sm' : 'text-base'}>
                 Drop blocks here to start building your email
+              </p>
+              <p className={`${compactMode ? 'text-xs' : 'text-sm'} mt-1`}>
+                Star blocks to save them as reusable snippets
               </p>
             </div>
           )}
