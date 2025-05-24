@@ -17,8 +17,6 @@ import {
   ChevronDown,
   ChevronRight,
   Blocks,
-  Layout,
-  Columns,
   Split
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -58,7 +56,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   compactMode = false
 }) => {
   const [sectionsExpanded, setSectionsExpanded] = useState({
-    layout: true,
     blocks: true
   });
 
@@ -116,37 +113,10 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
           <TabsContent value="layouts" className="h-full mt-0">
             <ScrollArea className="flex-1">
               <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
-                <Collapsible 
-                  open={sectionsExpanded.layout} 
-                  onOpenChange={() => toggleSection('layout')}
-                >
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between p-0 h-auto mb-2">
-                      <div className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
-                        <Layout className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
-                        Column Layouts
-                      </div>
-                      {sectionsExpanded.layout ? 
-                        <ChevronDown className="w-4 h-4" /> : 
-                        <ChevronRight className="w-4 h-4" />
-                      }
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <div className="mb-4">
-                      <LayoutConfigPanel 
-                        onLayoutSelect={handleLayoutSelect}
-                        compactMode={compactMode}
-                      />
-                    </div>
-                    <div className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}>
-                      {[
-                        { id: 'columns', name: 'Columns', description: 'Multi-column layouts for complex designs', icon: <Columns className="w-4 h-4" /> },
-                        { id: 'split', name: 'Split', description: 'Two-column content blocks', icon: <Split className="w-4 h-4" /> }
-                      ].map(renderBlockItem)}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
+                <LayoutConfigPanel 
+                  onLayoutSelect={handleLayoutSelect}
+                  compactMode={compactMode}
+                />
               </div>
             </ScrollArea>
           </TabsContent>

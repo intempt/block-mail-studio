@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -184,13 +185,5 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
     );
   }
 
-  return (
-    <div>
-      <Label className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2 mb-3`}>
-        <Layout className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
-        Layout
-      </Label>
-      {content}
-    </div>
-  );
+  return content;
 };
