@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -88,7 +87,6 @@ export const BrandVoiceOptimizer: React.FC<BrandVoiceOptimizerProps> = ({
           conversionRate: 2.1
         },
         suggestions: [{
-          id: '1',
           type: 'copy',
           title: 'Analysis Unavailable',
           current: 'Current content',
