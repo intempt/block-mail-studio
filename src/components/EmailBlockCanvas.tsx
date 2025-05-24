@@ -1,11 +1,10 @@
+
 import React, { useState, useRef } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import { EmailBlockNode } from '@/extensions/EmailBlockExtensions';
 import { EmailBlock } from '@/types/emailBlocks';
 import { ContextualEditor } from './ContextualEditor';
 import { Card } from '@/components/ui/card';
 import { generateUniqueId, createDefaultStyling } from '@/utils/blockUtils';
+import { BlockRenderer } from './BlockRenderer';
 import './EmailBlockCanvas.css';
 
 interface EmailBlockCanvasProps {
@@ -23,65 +22,84 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
   previewWidth,
   previewMode
 }, ref) => {
-  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
+  const [blocks, setBlocks] = useState<EmailBlock[]>([]);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [showContextualEditor, setShowContextualEditor] = useState(false);
+  const canvasRef = useRef<HTMLDivElement>(null);
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        // Keep paragraph but disable heading to avoid conflicts
-        heading: false,
-      }),
-      EmailBlockNode,
-    ],
-    
-    content: `
-      <div class="email-container" style="max-width: 600px; margin: 0 auto; background: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-        <div data-email-block="text" class="email-block-wrapper">
-          <div class="p-6 text-center">
-            <h1 style="color: #1f2937; font-size: 32px; font-weight: 700; margin: 0 0 16px 0;">Welcome to Your Email</h1>
-            <p style="color: #6b7280; font-size: 16px; margin: 0;">Drag blocks from the left panel to start building your email.</p>
-          </div>
-        </div>
-      </div>
-    `,
-    
-    onSelectionUpdate: ({ editor }) => {
-      const { from, to } = editor.state.selection;
-      const selectedNode = editor.state.doc.nodeAt(from);
-      
-      if (selectedNode && selectedNode.type.name === 'emailBlock') {
-        const blockData = selectedNode.attrs.blockData as EmailBlock;
-        if (blockData) {
-          setSelectedBlock(blockData);
-          setShowContextualEditor(true);
-        }
-      } else {
-        setSelectedBlock(null);
-        setShowContextualEditor(false);
-      }
-    },
-    
-    onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      onContentChange?.(html);
-    },
-  });
+  const selectedBlock = blocks.find(block => block.id === selectedBlockId);
 
   const insertBlock = (blockType: string) => {
-    if (!editor) return;
+    const newBlock = createBlockFromType(blockType);
+    setBlocks(prev => [...prev, newBlock]);
+    generateHTML([...blocks, newBlock]);
+  };
 
-    const blockData = createBlockFromType(blockType);
-    // Use the command directly from the editor
-    (editor.chain().focus() as any).insertEmailBlock(blockData).run();
+  const handleBlockClick = (blockId: string) => {
+    setSelectedBlockId(blockId);
+    setShowContextualEditor(true);
   };
 
   const handleBlockUpdate = (updatedBlock: EmailBlock) => {
-    if (!editor) return;
-    
-    // Use the command directly from the editor
-    (editor.chain().focus() as any).updateEmailBlock(updatedBlock).run();
-    setSelectedBlock(updatedBlock);
+    setBlocks(prev => {
+      const updated = prev.map(block => 
+        block.id === updatedBlock.id ? updatedBlock : block
+      );
+      generateHTML(updated);
+      return updated;
+    });
+  };
+
+  const handleDeleteBlock = (blockId: string) => {
+    setBlocks(prev => {
+      const updated = prev.filter(block => block.id !== blockId);
+      generateHTML(updated);
+      return updated;
+    });
+    if (selectedBlockId === blockId) {
+      setSelectedBlockId(null);
+      setShowContextualEditor(false);
+    }
+  };
+
+  const generateHTML = (currentBlocks: EmailBlock[]) => {
+    const emailHTML = `
+      <div class="email-container" style="max-width: 600px; margin: 0 auto; background: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        ${currentBlocks.map(block => renderBlockToHTML(block)).join('\n')}
+      </div>
+    `;
+    onContentChange?.(emailHTML);
+  };
+
+  const renderBlockToHTML = (block: EmailBlock): string => {
+    const styling = block.styling.desktop;
+    const baseStyles = `
+      background-color: ${styling.backgroundColor || 'transparent'};
+      padding: ${styling.padding || '16px'};
+      margin: ${styling.margin || '0'};
+      border-radius: ${styling.borderRadius || '0'};
+      border: ${styling.border || 'none'};
+    `;
+
+    switch (block.type) {
+      case 'text':
+        return `<div style="${baseStyles} color: ${styling.textColor || '#000'}; font-size: ${styling.fontSize || '16px'}; font-weight: ${styling.fontWeight || 'normal'};">${(block as any).content.html || ''}</div>`;
+      case 'image':
+        const imageBlock = block as any;
+        const imageEl = `<img src="${imageBlock.content.src || ''}" alt="${imageBlock.content.alt || ''}" style="width: 100%; height: auto; border-radius: ${styling.borderRadius || '0'};" />`;
+        return `<div style="${baseStyles} text-align: center;">${imageBlock.content.link ? `<a href="${imageBlock.content.link}">${imageEl}</a>` : imageEl}</div>`;
+      case 'button':
+        const buttonBlock = block as any;
+        return `<div style="${baseStyles} text-align: center;"><a href="${buttonBlock.content.link || '#'}" style="display: inline-block; padding: 12px 24px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">${buttonBlock.content.text || 'Button'}</a></div>`;
+      case 'spacer':
+        const spacerBlock = block as any;
+        return `<div style="height: ${spacerBlock.content.height || '40px'}; line-height: ${spacerBlock.content.height || '40px'}; font-size: 1px;">&nbsp;</div>`;
+      case 'divider':
+        const dividerBlock = block as any;
+        return `<div style="${baseStyles}"><hr style="border: 0; height: ${dividerBlock.content.thickness || '1px'}; background-color: ${dividerBlock.content.color || '#e0e0e0'}; margin: 0;" /></div>`;
+      default:
+        return `<div style="${baseStyles}">Unknown block type</div>`;
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -106,6 +124,16 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     insertBlock,
   }));
 
+  React.useEffect(() => {
+    // Initialize with a welcome block
+    if (blocks.length === 0) {
+      const welcomeBlock = createBlockFromType('text');
+      welcomeBlock.content.html = '<h1 style="color: #1f2937; font-size: 32px; font-weight: 700; margin: 0 0 16px 0; text-align: center;">Welcome to Your Email</h1><p style="color: #6b7280; font-size: 16px; margin: 0; text-align: center;">Drag blocks from the left panel to start building your email.</p>';
+      setBlocks([welcomeBlock]);
+      generateHTML([welcomeBlock]);
+    }
+  }, []);
+
   return (
     <div className="relative h-full">
       <Card 
@@ -121,15 +149,37 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
               <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
               <div className="w-3 h-3 bg-green-400 rounded-full"></div>
             </div>
-            <span className="text-xs text-slate-500 ml-2">Email Canvas</span>
+            <span className="text-xs text-slate-500 ml-2">Email Canvas ({blocks.length} blocks)</span>
           </div>
         </div>
         
-        <div className="bg-white min-h-[600px]">
-          <EditorContent 
-            editor={editor} 
-            className="block-canvas focus:outline-none"
-          />
+        <div 
+          ref={canvasRef}
+          className="bg-white min-h-[600px] p-4"
+        >
+          {blocks.map((block) => (
+            <div
+              key={block.id}
+              className={`block-wrapper mb-4 cursor-pointer transition-all duration-200 ${
+                selectedBlockId === block.id 
+                  ? 'ring-2 ring-blue-500 ring-offset-2' 
+                  : 'hover:ring-1 hover:ring-gray-300 hover:ring-offset-1'
+              }`}
+              onClick={() => handleBlockClick(block.id)}
+            >
+              <BlockRenderer 
+                block={block}
+                isSelected={selectedBlockId === block.id}
+                onUpdate={handleBlockUpdate}
+              />
+            </div>
+          ))}
+          
+          {blocks.length === 0 && (
+            <div className="text-center py-16 text-gray-400">
+              <p>Drop blocks here to start building your email</p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -139,8 +189,9 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
           onBlockUpdate={handleBlockUpdate}
           onClose={() => {
             setShowContextualEditor(false);
-            setSelectedBlock(null);
+            setSelectedBlockId(null);
           }}
+          onDelete={() => handleDeleteBlock(selectedBlock.id)}
         />
       )}
     </div>
@@ -149,7 +200,6 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 
 EmailBlockCanvas.displayName = 'EmailBlockCanvas';
 
-// Update the createBlockFromType function to use the new utility
 const createBlockFromType = (type: string): EmailBlock => {
   const baseBlock = {
     id: generateUniqueId(),

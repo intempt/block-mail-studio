@@ -1,100 +1,114 @@
 
-import React from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { X, Bold, Italic, Underline, Link, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { X, Bold, Italic, Underline, Link, AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react';
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock } from '@/types/emailBlocks';
 
 interface ContextualEditorProps {
   block: EmailBlock;
   onBlockUpdate: (block: EmailBlock) => void;
   onClose: () => void;
+  onDelete: () => void;
 }
 
 export const ContextualEditor: React.FC<ContextualEditorProps> = ({ 
   block, 
   onBlockUpdate, 
-  onClose 
+  onClose,
+  onDelete
 }) => {
+  const [textContent, setTextContent] = useState(
+    block.type === 'text' ? (block as TextBlock).content.html || '' : ''
+  );
+
   const isTextBlock = block.type === 'text';
-  
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: isTextBlock ? (block as TextBlock).content.html || '' : '',
-    onUpdate: ({ editor }) => {
-      if (isTextBlock) {
-        const updatedBlock = {
-          ...block,
-          content: {
-            ...(block as TextBlock).content,
-            html: editor.getHTML()
-          }
-        };
-        onBlockUpdate(updatedBlock);
+
+  const handleTextChange = (value: string) => {
+    setTextContent(value);
+    if (isTextBlock) {
+      const updatedBlock = {
+        ...block,
+        content: {
+          ...(block as TextBlock).content,
+          html: value
+        }
+      };
+      onBlockUpdate(updatedBlock);
+    }
+  };
+
+  const applyTextStyle = (style: string) => {
+    const textarea = document.querySelector(`#text-content-${block.id}`) as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textContent.substring(start, end);
+    
+    if (selectedText) {
+      let styledText = '';
+      switch (style) {
+        case 'bold':
+          styledText = `<strong>${selectedText}</strong>`;
+          break;
+        case 'italic':
+          styledText = `<em>${selectedText}</em>`;
+          break;
+        case 'underline':
+          styledText = `<u>${selectedText}</u>`;
+          break;
+        default:
+          styledText = selectedText;
       }
-    },
-  });
+      
+      const newText = textContent.substring(0, start) + styledText + textContent.substring(end);
+      handleTextChange(newText);
+    }
+  };
 
   const renderTextEditor = () => (
     <div className="space-y-4">
-      {/* TipTap Toolbar */}
+      {/* Simple Toolbar */}
       <div className="flex items-center gap-1 p-2 bg-gray-50 rounded border">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          className={editor?.isActive('bold') ? 'bg-gray-200' : ''}
+          onClick={() => applyTextStyle('bold')}
         >
           <Bold className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          className={editor?.isActive('italic') ? 'bg-gray-200' : ''}
+          onClick={() => applyTextStyle('italic')}
         >
           <Italic className="w-4 h-4" />
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor?.chain().focus().toggleUnderline().run()}
-          className={editor?.isActive('underline') ? 'bg-gray-200' : ''}
+          onClick={() => applyTextStyle('underline')}
         >
           <Underline className="w-4 h-4" />
         </Button>
-        <Separator orientation="vertical" className="h-6 mx-1" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-        >
-          <AlignLeft className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-        >
-          <AlignCenter className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-        >
-          <AlignRight className="w-4 h-4" />
-        </Button>
       </div>
 
-      {/* Editor Content */}
-      <div className="border rounded p-3 min-h-24 focus-within:ring-2 focus-within:ring-blue-500">
-        <EditorContent editor={editor} className="prose prose-sm max-w-none" />
+      {/* Text Content Editor */}
+      <div>
+        <Label htmlFor={`text-content-${block.id}`}>Content</Label>
+        <Textarea
+          id={`text-content-${block.id}`}
+          value={textContent}
+          onChange={(e) => handleTextChange(e.target.value)}
+          placeholder="Enter your text content..."
+          className="min-h-24 mt-2"
+        />
+        <p className="text-xs text-gray-500 mt-1">You can use HTML tags for formatting</p>
       </div>
     </div>
   );
@@ -223,9 +237,14 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
     <Card className="fixed right-4 top-4 bottom-4 w-80 bg-white shadow-lg z-50 flex flex-col">
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Edit {block.type} Block</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onDelete} className="text-red-600 hover:text-red-700">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-auto p-4 space-y-6">
@@ -235,6 +254,48 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
           {block.type === 'text' && renderTextEditor()}
           {block.type === 'image' && renderImageEditor()}
           {block.type === 'button' && renderButtonEditor()}
+          {block.type === 'spacer' && (
+            <div>
+              <Label htmlFor="spacer-height">Height</Label>
+              <Input
+                id="spacer-height"
+                value={(block as any).content.height || '40px'}
+                onChange={(e) => onBlockUpdate({
+                  ...block,
+                  content: { height: e.target.value }
+                })}
+                placeholder="40px"
+              />
+            </div>
+          )}
+          {block.type === 'divider' && (
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="divider-thickness">Thickness</Label>
+                <Input
+                  id="divider-thickness"
+                  value={(block as any).content.thickness || '1px'}
+                  onChange={(e) => onBlockUpdate({
+                    ...block,
+                    content: { ...(block as any).content, thickness: e.target.value }
+                  })}
+                  placeholder="1px"
+                />
+              </div>
+              <div>
+                <Label htmlFor="divider-color">Color</Label>
+                <Input
+                  id="divider-color"
+                  type="color"
+                  value={(block as any).content.color || '#e0e0e0'}
+                  onChange={(e) => onBlockUpdate({
+                    ...block,
+                    content: { ...(block as any).content, color: e.target.value }
+                  })}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <Separator />

@@ -1,25 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import TextAlign from '@tiptap/extension-text-align';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
-import Color from '@tiptap/extension-color';
-import TextStyle from '@tiptap/extension-text-style';
-import Underline from '@tiptap/extension-underline';
-import FontFamily from '@tiptap/extension-font-family';
-import Placeholder from '@tiptap/extension-placeholder';
-import Gapcursor from '@tiptap/extension-gapcursor';
-import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
-import * as Y from 'yjs';
-import { WebsocketProvider } from 'y-websocket';
-
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,16 +40,13 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import { EmailAIChat } from './EmailAIChat';
-import { EmailEditorToolbar } from './EmailEditorToolbar';
 import { ProfessionalToolPalette } from './ProfessionalToolPalette';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
 import { SmartDesignAssistant } from './SmartDesignAssistant';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
 import { TemplateManager, EmailTemplate } from './TemplateManager';
-import { CustomEmailExtension } from '../extensions/CustomEmailExtension';
-import { TipTapProCollabService, CollaborationConfig } from '@/services/TipTapProCollabService';
 import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
-import { EmailBlockCanvas } from './EmailBlockCanvas';
+import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { EmailBlockPalette } from './EmailBlockPalette';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
@@ -88,20 +65,13 @@ const EmailEditor = () => {
   const [previewWidth, setPreviewWidth] = useState(1200);
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
-  const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('ai');
+  const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('blocks');
   const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('properties');
   const [emailHTML, setEmailHTML] = useState('');
-  const [documentId] = useState(`email-${Date.now()}`);
-  const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
-  const [userName] = useState('Email Editor User');
-  const [userColor] = useState('#3B82F6');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
-  const [ydoc] = useState(() => new Y.Doc());
-  const [provider, setProvider] = useState<WebsocketProvider | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
-  const [isProviderReady, setIsProviderReady] = useState(false);
+  const canvasRef = useRef<EmailBlockCanvasRef>(null);
 
   const keyboardShortcuts = [
     { key: 'Ctrl + S', action: 'Save email' },
@@ -112,100 +82,6 @@ const EmailEditor = () => {
     { key: 'Ctrl + K', action: 'Insert link' },
     { key: 'F11', action: 'Toggle fullscreen' }
   ];
-
-  // Set up WebSocket provider
-  useEffect(() => {
-    const wsProvider = new WebsocketProvider('wss://demos.yjs.dev', documentId, ydoc);
-    
-    wsProvider.on('status', (event: any) => {
-      console.log('WebSocket status:', event.status);
-      setConnectionStatus(event.status);
-      if (event.status === 'connected') {
-        setIsProviderReady(true);
-      }
-    });
-
-    wsProvider.awareness.setLocalStateField('user', {
-      name: userName,
-      color: userColor,
-    });
-
-    // Listen for awareness changes to update collaborators
-    wsProvider.awareness.on('change', () => {
-      const states = wsProvider.awareness.getStates();
-      const users: Collaborator[] = [];
-      
-      states.forEach((state, clientId) => {
-        if (state.user) {
-          users.push({
-            id: clientId.toString(),
-            name: state.user.name,
-            color: state.user.color,
-            isOnline: true
-          });
-        }
-      });
-      
-      setCollaborators(users);
-    });
-
-    setProvider(wsProvider);
-    // Set provider ready after a short delay to ensure connection is stable
-    setTimeout(() => setIsProviderReady(true), 1000);
-
-    return () => {
-      wsProvider.destroy();
-    };
-  }, [documentId, userName, userColor, ydoc]);
-
-  useEffect(() => {
-    const initCollaboration = async () => {
-      try {
-        await TipTapProCollabService.createDocument(documentId);
-        
-        const config: CollaborationConfig = {
-          documentId,
-          userId,
-          userName,
-          userColor
-        };
-        
-        await TipTapProCollabService.joinCollaboration(config);
-        loadCollaborators();
-      } catch (error) {
-        console.error('Failed to initialize collaboration:', error);
-      }
-    };
-
-    initCollaboration();
-  }, [documentId, userId, userName, userColor]);
-
-  const loadCollaborators = async () => {
-    try {
-      const response = await TipTapProCollabService.getCollaborators(documentId);
-      const data = await response.json();
-      const collabData = data.users || [];
-      
-      // Transform API response to our collaborator format
-      const transformedCollaborators: Collaborator[] = collabData.map((user: any) => ({
-        id: user.id || user.userId,
-        name: user.name || user.userName,
-        color: user.color || user.userColor || '#3B82F6',
-        isOnline: user.isOnline !== false
-      }));
-      
-      setCollaborators(transformedCollaborators);
-    } catch (error) {
-      console.error('Failed to load collaborators:', error);
-      // Add current user as fallback
-      setCollaborators([{
-        id: userId,
-        name: userName,
-        color: userColor,
-        isOnline: true
-      }]);
-    }
-  };
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -252,14 +128,6 @@ const EmailEditor = () => {
 </html>`;
   };
 
-  const inviteCollaborator = () => {
-    const email = window.prompt('Enter email address to invite:');
-    if (email) {
-      console.log(`Inviting ${email} to collaborate on document ${documentId}`);
-      // In a real implementation, this would send an invitation
-    }
-  };
-
   const handleSaveTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
     const newTemplate: EmailTemplate = {
       ...template,
@@ -289,8 +157,7 @@ const EmailEditor = () => {
   };
 
   const handleBlockAdd = (blockType: string) => {
-    // This will be handled by the EmailBlockCanvas component
-    console.log('Adding block:', blockType);
+    canvasRef.current?.insertBlock(blockType);
   };
 
   const renderLeftPanel = () => {
@@ -304,7 +171,7 @@ const EmailEditor = () => {
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
-          <Brain className="w-5 h-5 text-slate-400" />
+          <Blocks className="w-5 h-5 text-slate-400" />
         </div>
       );
     }
@@ -382,19 +249,6 @@ const EmailEditor = () => {
     }
   };
 
-  const getConnectionStatusIcon = () => {
-    switch (connectionStatus) {
-      case 'connected':
-        return <Wifi className="w-4 h-4 text-green-500" />;
-      case 'connecting':
-        return <Wifi className="w-4 h-4 text-yellow-500 animate-pulse" />;
-      case 'disconnected':
-        return <WifiOff className="w-4 h-4 text-red-500" />;
-      default:
-        return <WifiOff className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
   return (
     <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''}`}>
       {/* Professional Header */}
@@ -406,7 +260,7 @@ const EmailEditor = () => {
           </div>
           <div>
             <h1 className="text-sm font-semibold text-slate-900">Email Builder Pro</h1>
-            <p className="text-xs text-slate-500">Professional Campaign</p>
+            <p className="text-xs text-slate-500">Canvas Edition</p>
           </div>
         </div>
 
@@ -458,43 +312,8 @@ const EmailEditor = () => {
           </div>
         </div>
 
-        {/* Right: Collaborators & Actions */}
+        {/* Right: Actions */}
         <div className="flex items-center gap-3">
-          {/* Connection Status */}
-          <div className="flex items-center gap-2">
-            {getConnectionStatusIcon()}
-            <span className="text-xs text-slate-500 capitalize">{connectionStatus}</span>
-          </div>
-
-          {/* Collaborators */}
-          {collaborators.length > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {collaborators.slice(0, 3).map((collaborator) => (
-                  <Avatar key={collaborator.id} className="w-8 h-8 border-2 border-white">
-                    <AvatarFallback 
-                      className="text-xs font-medium"
-                      style={{ backgroundColor: collaborator.color }}
-                    >
-                      {collaborator.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ))}
-                {collaborators.length > 3 && (
-                  <Badge variant="secondary" className="ml-2 text-xs">
-                    +{collaborators.length - 3}
-                  </Badge>
-                )}
-              </div>
-              
-              <Button variant="outline" size="sm" onClick={inviteCollaborator} className="h-8">
-                <Share2 className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
-
-          <Separator orientation="vertical" className="h-6" />
-
           {/* Theme Toggle */}
           <Button
             variant="outline"
@@ -604,6 +423,7 @@ const EmailEditor = () => {
         <div className="flex-1 flex flex-col bg-slate-50">
           <div className="flex-1 p-8 overflow-y-auto">
             <EmailBlockCanvas 
+              ref={canvasRef}
               onContentChange={setEmailHTML}
               previewWidth={previewWidth}
               previewMode={previewMode}
@@ -685,19 +505,11 @@ const EmailEditor = () => {
       {/* Status Bar */}
       <div className="bg-white border-t border-slate-200 px-6 py-2 text-xs text-slate-600 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <span>Words: {emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length}</span>
           <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
-          <span>Est. read time: {Math.ceil(emailHTML.replace(/<[^>]*>/g, '').split(/\s+/).length / 200)} min</span>
           <span>Templates: {templates.length}</span>
-          {collaborators.length > 1 && (
-            <span className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              {collaborators.filter(c => c.isOnline).length} collaborating
-            </span>
-          )}
           <span className="flex items-center gap-2">
-            {getConnectionStatusIcon()}
-            WebSocket {connectionStatus}
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            Canvas-based editor
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -705,7 +517,7 @@ const EmailEditor = () => {
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             Auto-saved just now
           </span>
-          <span className="text-slate-400">Email Builder Pro v2.0 - Collaborative Edition</span>
+          <span className="text-slate-400">Email Builder Pro v3.0 - Canvas Edition</span>
         </div>
       </div>
     </div>
