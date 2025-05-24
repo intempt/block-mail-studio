@@ -613,7 +613,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
           </Badge>
         </div>
         
-        {/* Compact Quick Actions Grid with Scrollbar */}
+        {/* Compact Quick Actions Grid with Thin Scrollbar */}
         <div className="h-32 overflow-hidden">
           <ScrollArea className="h-full">
             <div className="grid grid-cols-3 gap-2 pr-2">
