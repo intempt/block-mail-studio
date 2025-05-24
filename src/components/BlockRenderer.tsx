@@ -12,6 +12,7 @@ import { SocialBlockRenderer } from './blocks/SocialBlockRenderer';
 import { MenuBlockRenderer } from './blocks/MenuBlockRenderer';
 import { HtmlBlockRenderer } from './blocks/HtmlBlockRenderer';
 import { CodeBlockRenderer } from './blocks/CodeBlockRenderer';
+import { ColumnsBlockRenderer } from './blocks/ColumnsBlockRenderer';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -30,6 +31,8 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected,
         return <ButtonBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'split':
         return <SplitBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'columns':
+        return <ColumnsBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'spacer':
         return <SpacerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'divider':
@@ -49,7 +52,6 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected,
       case 'header-link-bar':
       case 'drop-shadow':
       case 'review-quote':
-      case 'columns':
         return <div className="p-4 bg-blue-100 text-blue-700">Block type "{block.type}" coming soon</div>;
       default:
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;

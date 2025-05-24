@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, SpacerBlock, DividerBlock } from '@/types/emailBlocks';
 import { ContextualEditor } from './ContextualEditor';
@@ -94,6 +93,12 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
       case 'button':
         const buttonBlock = block as ButtonBlock;
         return `<div style="${baseStyles} text-align: center;"><a href="${buttonBlock.content.link || '#'}" style="display: inline-block; padding: 12px 24px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">${buttonBlock.content.text || 'Button'}</a></div>`;
+      case 'columns':
+        const columnsBlock = block as any; // ColumnsBlock type
+        const columnWidths = getColumnWidthsForRender(columnsBlock.content.columnRatio);
+        return `<div style="${baseStyles}"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${columnsBlock.content.columns.map((column: any, index: number) => 
+          `<td style="width: ${columnWidths[index]}; vertical-align: top; ${index > 0 ? 'padding-left: 8px;' : ''} ${index < columnsBlock.content.columns.length - 1 ? 'padding-right: 8px;' : ''}">${column.blocks.map((innerBlock: EmailBlock) => renderBlockToHTML(innerBlock)).join('')}</td>`
+        ).join('')}</tr></table></div>`;
       case 'spacer':
         const spacerBlock = block as SpacerBlock;
         return `<div style="height: ${spacerBlock.content.height || '40px'}; line-height: ${spacerBlock.content.height || '40px'}; font-size: 1px;">&nbsp;</div>`;
@@ -102,6 +107,17 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
         return `<div style="${baseStyles}"><hr style="border: 0; height: ${dividerBlock.content.thickness || '1px'}; background-color: ${dividerBlock.content.color || '#e0e0e0'}; margin: 0;" /></div>`;
       default:
         return `<div style="${baseStyles}">Unknown block type</div>`;
+    }
+  };
+
+  const getColumnWidthsForRender = (ratio: string) => {
+    switch (ratio) {
+      case '50-50': return ['50%', '50%'];
+      case '60-40': return ['60%', '40%'];
+      case '40-60': return ['40%', '60%'];
+      case '33-33-33': return ['33.33%', '33.33%', '33.33%'];
+      case '25-25-25-25': return ['25%', '25%', '25%', '25%'];
+      default: return ['100%'];
     }
   };
 
@@ -231,6 +247,11 @@ const createBlockFromType = (type: string): EmailBlock => {
     id: generateUniqueId(),
     position: { x: 0, y: 0 },
     styling: createDefaultStyling(),
+    displayOptions: {
+      showOnDesktop: true,
+      showOnTablet: true,
+      showOnMobile: true
+    }
   };
 
   switch (type) {
@@ -240,6 +261,7 @@ const createBlockFromType = (type: string): EmailBlock => {
         type: 'text',
         content: {
           html: '<p>Your text content here...</p>',
+          textStyle: 'normal',
           placeholder: 'Click to add text...',
         },
       } as EmailBlock;
@@ -252,6 +274,9 @@ const createBlockFromType = (type: string): EmailBlock => {
           src: 'https://via.placeholder.com/400x200',
           alt: 'Placeholder image',
           link: '',
+          alignment: 'center',
+          width: '100%',
+          isDynamic: false
         },
       } as EmailBlock;
       
@@ -263,6 +288,22 @@ const createBlockFromType = (type: string): EmailBlock => {
           text: 'Click Here',
           link: '#',
           style: 'solid',
+          size: 'medium'
+        },
+      } as EmailBlock;
+
+    case 'columns':
+      return {
+        ...baseBlock,
+        type: 'columns',
+        content: {
+          columnCount: 2,
+          columnRatio: '50-50',
+          columns: [
+            { id: generateUniqueId(), blocks: [], width: '50%' },
+            { id: generateUniqueId(), blocks: [], width: '50%' }
+          ],
+          gap: '16px'
         },
       } as EmailBlock;
       
@@ -272,6 +313,7 @@ const createBlockFromType = (type: string): EmailBlock => {
         type: 'spacer',
         content: {
           height: '40px',
+          mobileHeight: '20px'
         },
       } as EmailBlock;
       
@@ -283,6 +325,8 @@ const createBlockFromType = (type: string): EmailBlock => {
           style: 'solid',
           thickness: '1px',
           color: '#e0e0e0',
+          width: '100%',
+          alignment: 'center'
         },
       } as EmailBlock;
       
@@ -292,6 +336,7 @@ const createBlockFromType = (type: string): EmailBlock => {
         type: 'text',
         content: {
           html: '<p>Unknown block type</p>',
+          textStyle: 'normal'
         },
       } as EmailBlock;
   }
