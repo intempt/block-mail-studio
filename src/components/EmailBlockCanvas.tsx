@@ -34,7 +34,6 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     console.log('Inserting block:', blockType, layoutData);
     
     if (blockType === 'columns' && layoutData) {
-      // Create columns block with the provided layout configuration
       const newBlock = createColumnsBlock(layoutData);
       setBlocks(prev => [...prev, newBlock]);
       generateHTML([...blocks, newBlock]);
@@ -59,7 +58,11 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
       content: {
         columnCount: layoutData.columns,
         columnRatio: layoutData.ratio,
-        columns: layoutData.columns,
+        columns: Array.from({ length: layoutData.columns }, () => ({
+          id: generateUniqueId(),
+          blocks: [],
+          width: layoutData.preview[0]
+        })),
         gap: '16px'
       }
     } as EmailBlock;
