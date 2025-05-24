@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -15,6 +14,7 @@ import Underline from '@tiptap/extension-underline';
 import FontFamily from '@tiptap/extension-font-family';
 import Placeholder from '@tiptap/extension-placeholder';
 import Gapcursor from '@tiptap/extension-gapcursor';
+import { Users, MessageSquare, Image as ImageIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -32,7 +32,6 @@ import {
   Layers, 
   Sparkles, 
   Edit3,
-  MessageSquare,
   Wrench,
   Mail,
   Zap,
@@ -55,6 +54,8 @@ import { ImageUploader } from './ImageUploader';
 import { EmailCodeEditor } from './EmailCodeEditor';
 import { EmailPromptEditor } from './EmailPromptEditor';
 import { EmailBlockEditor } from './EmailBlockEditor';
+import { CollaborativeEmailEditor } from './CollaborativeEmailEditor';
+import { AdvancedBlockLibrary } from './AdvancedBlockLibrary';
 
 type ViewMode = 'chat' | 'build';
 type EditorMode = 'visual' | 'code' | 'prompt' | 'blocks';
@@ -67,6 +68,10 @@ const EmailEditor = () => {
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [collaborationMode, setCollaborationMode] = useState(false);
+  const [documentId] = useState(`email-${Date.now()}`);
+  const [userId] = useState(`user-${Math.random().toString(36).substr(2, 9)}`);
+  const [userName] = useState('Email Editor User');
 
   const editor = useEditor({
     extensions: [
@@ -201,6 +206,16 @@ const EmailEditor = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            variant={collaborationMode ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setCollaborationMode(!collaborationMode)}
+            className="flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            {collaborationMode ? 'Collaborative' : 'Solo'}
+          </Button>
+          
           <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
             Ready
@@ -267,14 +282,14 @@ const EmailEditor = () => {
                   
                   <Tabs value={editorMode} onValueChange={(value) => setEditorMode(value as EditorMode)}>
                     <TabsList className="grid w-full grid-cols-2 text-xs">
-                      <TabsTrigger value="visual">Visual</TabsTrigger>
-                      <TabsTrigger value="blocks">Blocks</TabsTrigger>
+                      <TabsTrigger value="visual">Blocks</TabsTrigger>
+                      <TabsTrigger value="blocks">Advanced</TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
                 
                 <div className="flex-1 overflow-hidden">
-                  {editorMode === 'visual' && <EmailBlockLibrary editor={editor} />}
+                  {editorMode === 'visual' && <AdvancedBlockLibrary editor={editor} />}
                   {editorMode === 'blocks' && <EmailBlockEditor editor={editor} />}
                 </div>
               </>
@@ -368,7 +383,20 @@ const EmailEditor = () => {
           {/* Editor Content */}
           <div className="flex-1 flex overflow-hidden">
             <div className="flex-1 overflow-hidden">
-              {viewMode === 'chat' ? (
+              {collaborationMode ? (
+                <div className="h-full p-8 overflow-y-auto">
+                  <Card className={`mx-auto transition-all duration-300 shadow-lg ${
+                    previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
+                  }`}>
+                    <CollaborativeEmailEditor
+                      documentId={documentId}
+                      userId={userId}
+                      userName={userName}
+                      onContentChange={setEmailHTML}
+                    />
+                  </Card>
+                </div>
+              ) : viewMode === 'chat' ? (
                 <div className="h-full p-8 overflow-y-auto">
                   <Card className={`mx-auto transition-all duration-300 shadow-lg ${
                     previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
