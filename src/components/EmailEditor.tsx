@@ -19,7 +19,28 @@ import Gapcursor from '@tiptap/extension-gapcursor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Monitor, Smartphone, Code, Eye, Download, Upload, Settings, Layers, Sparkles, Edit3 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Monitor, 
+  Smartphone, 
+  Code, 
+  Eye, 
+  Download, 
+  Upload, 
+  Settings, 
+  Layers, 
+  Sparkles, 
+  Edit3,
+  MessageSquare,
+  Wrench,
+  Mail,
+  Zap,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2
+} from 'lucide-react';
 
 import { EmailBlockLibrary } from './EmailBlockLibrary';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
@@ -35,11 +56,15 @@ import { EmailCodeEditor } from './EmailCodeEditor';
 import { EmailPromptEditor } from './EmailPromptEditor';
 import { EmailBlockEditor } from './EmailBlockEditor';
 
+type ViewMode = 'chat' | 'build';
+type EditorMode = 'visual' | 'code' | 'prompt' | 'blocks';
+
 const EmailEditor = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('chat');
+  const [editorMode, setEditorMode] = useState<EditorMode>('visual');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [viewMode, setViewMode] = useState<'visual' | 'code' | 'prompt' | 'blocks'>('visual');
-  const [sidebarTab, setSidebarTab] = useState<'ai' | 'prompts' | 'blocks' | 'templates' | 'manager'>('ai');
-  const [showProperties, setShowProperties] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
 
@@ -80,13 +105,13 @@ const EmailEditor = () => {
     content: `
       <div class="email-container">
         <div class="email-block header-block">
-          <h1 style="font-family: Arial, sans-serif; color: #333; margin: 0; padding: 20px; text-align: center; background-color: #f8f9fa;">
-            Professional Email Template
+          <h1 style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; margin: 0; padding: 32px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px 8px 0 0;">
+            Welcome to Email Builder Pro
           </h1>
         </div>
         <div class="email-block paragraph-block">
-          <p style="font-family: Arial, sans-serif; color: #666; line-height: 1.6; margin: 0; padding: 20px;">
-            Create stunning, responsive email campaigns with our AI-powered editor. Drag and drop components, customize styling, and preview across devices.
+          <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #374151; line-height: 1.7; margin: 0; padding: 24px; font-size: 16px;">
+            Create stunning, responsive email campaigns with our AI-powered editor. Chat with AI to generate content, then refine using our visual, code, or block editors.
           </p>
         </div>
       </div>
@@ -98,46 +123,7 @@ const EmailEditor = () => {
   });
 
   const handlePromptSelect = (prompt: EmailPrompt) => {
-    setSidebarTab('ai');
-    // The AI chat component will handle the prompt
-  };
-
-  const handleSaveTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    const newTemplate: EmailTemplate = {
-      ...template,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      usageCount: 0
-    };
-    setTemplates(prev => [...prev, newTemplate]);
-  };
-
-  const handleLoadTemplate = (template: EmailTemplate) => {
-    if (editor) {
-      editor.commands.setContent(template.html);
-      setTemplates(prev => 
-        prev.map(t => 
-          t.id === template.id 
-            ? { ...t, usageCount: t.usageCount + 1 }
-            : t
-        )
-      );
-    }
-  };
-
-  const handleDeleteTemplate = (id: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== id));
-  };
-
-  const handleToggleFavorite = (id: string) => {
-    setTemplates(prev => 
-      prev.map(t => 
-        t.id === id 
-          ? { ...t, isFavorite: !t.isFavorite }
-          : t
-      )
-    );
+    setViewMode('chat');
   };
 
   const exportHTML = () => {
@@ -153,18 +139,6 @@ const EmailEditor = () => {
     }
   };
 
-  const importHTML = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target?.result as string;
-        editor?.commands.setContent(content);
-      };
-      reader.readAsText(file);
-    }
-  };
-
   const generateEmailHTML = (content: string) => {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -174,46 +148,18 @@ const EmailEditor = () => {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Email Template</title>
     <style>
-        /* Reset styles */
+        /* Reset and base styles */
         body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
         img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
         
-        /* Base styles */
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; }
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .email-block { display: block; width: 100%; }
         
-        /* Typography */
-        .email-link { color: #007bff; text-decoration: none; }
-        .email-link:hover { text-decoration: underline; }
-        
-        /* Lists */
-        .email-bullet-list { margin: 0; padding-left: 20px; }
-        .email-ordered-list { margin: 0; padding-left: 20px; }
-        
-        /* Images */
-        .email-image { max-width: 100%; height: auto; display: block; }
-        
-        /* Tables */
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        
-        /* Responsive design */
         @media only screen and (max-width: 600px) {
-            .email-container { width: 100% !important; }
-            .email-block { padding: 10px !important; }
-            h1 { font-size: 24px !important; }
-            h2 { font-size: 20px !important; }
-            h3 { font-size: 18px !important; }
-            p { font-size: 16px !important; }
-        }
-        
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            .email-container { background-color: #1a1a1a !important; }
-            h1, h2, h3, p { color: #ffffff !important; }
+            .email-container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
+            .email-block { padding: 16px !important; }
         }
     </style>
 </head>
@@ -224,187 +170,267 @@ const EmailEditor = () => {
   };
 
   return (
-    <div className="h-screen flex bg-gray-50">
-      {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Email Builder Pro</h2>
-          <p className="text-sm text-gray-600 mt-1">AI-powered email campaign editor</p>
-        </div>
-        
-        <div className="border-b border-gray-200">
-          <Tabs value={sidebarTab} onValueChange={(value) => setSidebarTab(value as any)}>
-            <TabsList className="grid w-full grid-cols-5 text-xs">
-              <TabsTrigger value="ai" className="flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                AI
+    <div className="h-screen bg-slate-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Mail className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">Email Builder Pro</h1>
+              <p className="text-xs text-slate-500">AI-powered email campaigns</p>
+            </div>
+          </div>
+          
+          <Separator orientation="vertical" className="h-6" />
+          
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as ViewMode)}>
+            <TabsList className="bg-slate-100">
+              <TabsTrigger value="chat" className="flex items-center gap-2 data-[state=active]:bg-white">
+                <MessageSquare className="w-4 h-4" />
+                Chat
               </TabsTrigger>
-              <TabsTrigger value="prompts" className="flex items-center gap-1">
-                <Layers className="w-3 h-3" />
-                Prompts
-              </TabsTrigger>
-              <TabsTrigger value="blocks" className="flex items-center gap-1">
-                <Layers className="w-3 h-3" />
-                Blocks
-              </TabsTrigger>
-              <TabsTrigger value="templates" className="flex items-center gap-1">
-                <Settings className="w-3 h-3" />
-                Library
-              </TabsTrigger>
-              <TabsTrigger value="manager" className="flex items-center gap-1">
-                <Settings className="w-3 h-3" />
-                Saved
+              <TabsTrigger value="build" className="flex items-center gap-2 data-[state=active]:bg-white">
+                <Wrench className="w-4 h-4" />
+                Build
               </TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
-        
-        <div className="flex-1 overflow-hidden">
-          {sidebarTab === 'ai' ? (
-            <EmailAIChat editor={editor} />
-          ) : sidebarTab === 'prompts' ? (
-            <EmailPromptLibrary onSelectPrompt={handlePromptSelect} />
-          ) : sidebarTab === 'blocks' ? (
-            <EmailBlockLibrary editor={editor} />
-          ) : sidebarTab === 'templates' ? (
-            <EmailTemplateLibrary editor={editor} />
-          ) : (
-            <TemplateManager
-              editor={editor}
-              templates={templates}
-              onSaveTemplate={handleSaveTemplate}
-              onLoadTemplate={handleLoadTemplate}
-              onDeleteTemplate={handleDeleteTemplate}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          )}
+
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
+            Ready
+          </Badge>
+          
+          <Button variant="outline" size="sm" onClick={exportHTML}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          
+          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+            <Zap className="w-4 h-4 mr-2" />
+            Publish
+          </Button>
         </div>
+      </header>
 
-        {!['ai', 'prompts', 'manager'].includes(sidebarTab) && (
-          <div className="p-4 border-t border-gray-200 space-y-2">
-            <div className="flex gap-2">
-              <Button 
-                onClick={exportHTML} 
-                size="sm" 
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              <label className="flex-1">
-                <Button size="sm" variant="outline" className="w-full">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Import
-                </Button>
-                <input
-                  type="file"
-                  accept=".html,.htm"
-                  onChange={importHTML}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Main Editor Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Enhanced Toolbar */}
-        <EmailEditorToolbar editor={editor} />
-        
-        {/* View Controls */}
-        <div className="bg-white border-b border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as any)}>
-                <TabsList>
-                  <TabsTrigger value="visual" className="flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    Visual
-                  </TabsTrigger>
-                  <TabsTrigger value="code" className="flex items-center gap-2">
-                    <Code className="w-4 h-4" />
-                    Code
-                  </TabsTrigger>
-                  <TabsTrigger value="prompt" className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Prompt
-                  </TabsTrigger>
-                  <TabsTrigger value="blocks" className="flex items-center gap-2">
-                    <Edit3 className="w-4 h-4" />
-                    Blocks
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant={previewMode === 'desktop' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPreviewMode('desktop')}
-              >
-                <Monitor className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={previewMode === 'mobile' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPreviewMode('mobile')}
-              >
-                <Smartphone className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={showProperties ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setShowProperties(!showProperties)}
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Editor Content */}
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 overflow-hidden">
-            {viewMode === 'visual' ? (
-              <div className="h-full p-8 overflow-y-auto">
-                <Card className={`mx-auto transition-all duration-300 ${
-                  previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
-                }`}>
-                  <div className="p-4">
-                    <EditorContent 
-                      editor={editor} 
-                      className="prose max-w-none focus:outline-none min-h-[600px]"
-                    />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Chat Mode */}
+        {viewMode === 'chat' && (
+          <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
+            sidebarCollapsed ? 'w-0' : 'w-80'
+          } flex flex-col`}>
+            {!sidebarCollapsed && (
+              <>
+                <div className="p-4 border-b border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-medium text-slate-900">AI Assistant</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setSidebarCollapsed(true)}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
                   </div>
-                </Card>
-              </div>
-            ) : viewMode === 'code' ? (
-              <div className="h-full p-4">
-                <EmailCodeEditor editor={editor} />
-              </div>
-            ) : viewMode === 'prompt' ? (
-              <div className="h-full p-4">
-                <EmailPromptEditor editor={editor} />
-              </div>
-            ) : viewMode === 'blocks' ? (
-              <div className="h-full p-4">
-                <EmailBlockEditor editor={editor} />
-              </div>
-            ) : (
-              <EmailPreview 
-                html={generateEmailHTML(emailHTML)} 
-                previewMode={previewMode}
-              />
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <EmailAIChat editor={editor} />
+                </div>
+              </>
             )}
           </div>
+        )}
+
+        {/* Left Sidebar - Build Mode */}
+        {viewMode === 'build' && (
+          <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${
+            sidebarCollapsed ? 'w-0' : 'w-72'
+          } flex flex-col`}>
+            {!sidebarCollapsed && (
+              <>
+                <div className="p-4 border-b border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-slate-900">Tools</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setSidebarCollapsed(true)}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <Tabs value={editorMode} onValueChange={(value) => setEditorMode(value as EditorMode)}>
+                    <TabsList className="grid w-full grid-cols-2 text-xs">
+                      <TabsTrigger value="visual">Visual</TabsTrigger>
+                      <TabsTrigger value="blocks">Blocks</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+                
+                <div className="flex-1 overflow-hidden">
+                  {editorMode === 'visual' && <EmailBlockLibrary editor={editor} />}
+                  {editorMode === 'blocks' && <EmailBlockEditor editor={editor} />}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Collapsed Sidebar Toggle */}
+        {sidebarCollapsed && (
+          <div className="w-12 bg-white border-r border-slate-200 flex flex-col items-center py-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setSidebarCollapsed(false)}
+              className="mb-4"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            
+            {viewMode === 'chat' ? (
+              <MessageSquare className="w-5 h-5 text-slate-400" />
+            ) : (
+              <Layers className="w-5 h-5 text-slate-400" />
+            )}
+          </div>
+        )}
+
+        {/* Main Editor Area */}
+        <div className="flex-1 flex flex-col bg-slate-50">
+          {/* Editor Toolbar */}
+          {viewMode === 'build' && <EmailEditorToolbar editor={editor} />}
           
-          {/* Properties Panel */}
-          {showProperties && (
-            <EmailPropertiesPanel editor={editor} />
-          )}
+          {/* View Controls */}
+          <div className="bg-white border-b border-slate-200 px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {viewMode === 'build' && (
+                  <Tabs value={editorMode} onValueChange={(value) => setEditorMode(value as EditorMode)}>
+                    <TabsList className="bg-slate-100">
+                      <TabsTrigger value="visual" className="flex items-center gap-2">
+                        <Eye className="w-4 h-4" />
+                        Visual
+                      </TabsTrigger>
+                      <TabsTrigger value="code" className="flex items-center gap-2">
+                        <Code className="w-4 h-4" />
+                        Code
+                      </TabsTrigger>
+                      <TabsTrigger value="prompt" className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Prompt
+                      </TabsTrigger>
+                      <TabsTrigger value="blocks" className="flex items-center gap-2">
+                        <Edit3 className="w-4 h-4" />
+                        Blocks
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={previewMode === 'desktop' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPreviewMode('desktop')}
+                  className="h-8"
+                >
+                  <Monitor className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={previewMode === 'mobile' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setPreviewMode('mobile')}
+                  className="h-8"
+                >
+                  <Smartphone className="w-4 h-4" />
+                </Button>
+                <Separator orientation="vertical" className="h-6" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRightPanelCollapsed(!rightPanelCollapsed)}
+                  className="h-8"
+                >
+                  {rightPanelCollapsed ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Editor Content */}
+          <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 overflow-hidden">
+              {viewMode === 'chat' ? (
+                <div className="h-full p-8 overflow-y-auto">
+                  <Card className={`mx-auto transition-all duration-300 shadow-lg ${
+                    previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
+                  }`}>
+                    <div className="bg-slate-50 px-4 py-2 border-b border-slate-200">
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+                          <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                          <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                        </div>
+                        <span className="text-xs text-slate-500 ml-2">Email Preview</span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white">
+                      <EditorContent 
+                        editor={editor} 
+                        className="prose max-w-none focus:outline-none min-h-[600px]"
+                      />
+                    </div>
+                  </Card>
+                </div>
+              ) : viewMode === 'build' && editorMode === 'visual' ? (
+                <div className="h-full p-8 overflow-y-auto">
+                  <Card className={`mx-auto transition-all duration-300 shadow-lg ${
+                    previewMode === 'desktop' ? 'max-w-4xl' : 'max-w-sm'
+                  }`}>
+                    <div className="p-6 bg-white rounded-lg">
+                      <EditorContent 
+                        editor={editor} 
+                        className="prose max-w-none focus:outline-none min-h-[600px]"
+                      />
+                    </div>
+                  </Card>
+                </div>
+              ) : viewMode === 'build' && editorMode === 'code' ? (
+                <div className="h-full p-6">
+                  <EmailCodeEditor editor={editor} />
+                </div>
+              ) : viewMode === 'build' && editorMode === 'prompt' ? (
+                <div className="h-full p-6">
+                  <EmailPromptEditor editor={editor} />
+                </div>
+              ) : viewMode === 'build' && editorMode === 'blocks' ? (
+                <div className="h-full p-6">
+                  <EmailBlockEditor editor={editor} />
+                </div>
+              ) : (
+                <EmailPreview 
+                  html={generateEmailHTML(emailHTML)} 
+                  previewMode={previewMode}
+                />
+              )}
+            </div>
+            
+            {/* Right Properties Panel */}
+            {!rightPanelCollapsed && viewMode === 'build' && (
+              <div className="w-80 border-l border-slate-200 bg-white">
+                <EmailPropertiesPanel editor={editor} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
