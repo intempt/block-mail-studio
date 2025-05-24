@@ -1,4 +1,3 @@
-
 import { EmailSnippet, SnippetLibrary } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 
@@ -13,7 +12,7 @@ export class SnippetService {
       description,
       category: category as any,
       tags,
-      blockData: { ...block, id: `block_${Date.now()}` }, // Create new ID for reused blocks
+      blockData: { ...block, id: `block_${Date.now()}` },
       blockType: block.type,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -110,7 +109,6 @@ export class SnippetService {
       const importedSnippets = JSON.parse(jsonData);
       const existingSnippets = this.getAllSnippets();
       
-      // Merge with existing snippets, avoiding duplicates
       const allSnippets = [...existingSnippets];
       
       importedSnippets.forEach((snippet: EmailSnippet) => {

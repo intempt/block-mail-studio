@@ -25,16 +25,16 @@ export interface ImageGenerationResponse {
 }
 
 export interface PerformanceAnalysisResult {
-  overallScore: number;
-  deliverabilityScore: number;
-  accessibilityScore: number;
-  mobileScore: number;
-  spamScore: number;
+  overallScore: number | null;
+  deliverabilityScore: number | null;
+  accessibilityScore: number | null;
+  mobileScore: number | null;
+  spamScore: number | null;
   metrics: {
-    emailSize: { value: number; status: 'good' | 'warning' | 'poor'; recommendation?: string };
-    imageCount: { value: number; status: 'good' | 'warning' | 'poor'; recommendation?: string };
-    loadTime: { value: number; status: 'good' | 'warning' | 'poor'; recommendation?: string };
-    linkCount: { value: number; status: 'good' | 'warning' | 'poor'; recommendation?: string };
+    emailSize: { value: number | null; status: 'good' | 'warning' | 'poor' | 'unavailable'; recommendation?: string };
+    imageCount: { value: number | null; status: 'good' | 'warning' | 'poor' | 'unavailable'; recommendation?: string };
+    loadTime: { value: number | null; status: 'good' | 'warning' | 'poor' | 'unavailable'; recommendation?: string };
+    linkCount: { value: number | null; status: 'good' | 'warning' | 'poor' | 'unavailable'; recommendation?: string };
   };
   accessibilityIssues: Array<{
     type: 'contrast' | 'alt-text' | 'font-size' | 'structure';
@@ -47,14 +47,14 @@ export interface PerformanceAnalysisResult {
 }
 
 export interface BrandVoiceAnalysisResult {
-  brandVoiceScore: number;
-  engagementScore: number;
-  toneConsistency: number;
-  readabilityScore: number;
+  brandVoiceScore: number | null;
+  engagementScore: number | null;
+  toneConsistency: number | null;
+  readabilityScore: number | null;
   performancePrediction: {
-    openRate: number;
-    clickRate: number;
-    conversionRate: number;
+    openRate: number | null;
+    clickRate: number | null;
+    conversionRate: number | null;
   };
   suggestions: Array<{
     type: 'subject' | 'copy' | 'cta' | 'tone';
@@ -68,18 +68,18 @@ export interface BrandVoiceAnalysisResult {
 }
 
 export interface SubjectLineAnalysisResult {
-  score: number;
+  score: number | null;
   length: number;
-  spamRisk: 'low' | 'medium' | 'high';
-  emotionalImpact: number;
-  urgencyLevel: number;
+  spamRisk: 'low' | 'medium' | 'high' | 'unknown';
+  emotionalImpact: number | null;
+  urgencyLevel: number | null;
   personalizedElements: string[];
   recommendations: string[];
   abTestSuggestions: string[];
   benchmarkComparison: {
     industry: string;
-    averageOpenRate: number;
-    predictedOpenRate: number;
+    averageOpenRate: number | null;
+    predictedOpenRate: number | null;
   };
 }
 
@@ -154,21 +154,21 @@ export class EmailAIService {
       return JSON.parse(response);
     } catch (error) {
       console.error('Error analyzing email performance:', error);
-      // Return fallback analysis
+      // Return proper fallback with null values
       return {
-        overallScore: 75,
-        deliverabilityScore: 80,
-        accessibilityScore: 70,
-        mobileScore: 85,
-        spamScore: 25,
+        overallScore: null,
+        deliverabilityScore: null,
+        accessibilityScore: null,
+        mobileScore: null,
+        spamScore: null,
         metrics: {
-          emailSize: { value: Math.floor(emailHTML.length / 1024), status: 'good' },
-          imageCount: { value: (emailHTML.match(/<img/g) || []).length, status: 'good' },
-          loadTime: { value: 2.1, status: 'good' },
-          linkCount: { value: (emailHTML.match(/<a /g) || []).length, status: 'good' }
+          emailSize: { value: null, status: 'unavailable', recommendation: 'Analysis unavailable' },
+          imageCount: { value: null, status: 'unavailable', recommendation: 'Analysis unavailable' },
+          loadTime: { value: null, status: 'unavailable', recommendation: 'Analysis unavailable' },
+          linkCount: { value: null, status: 'unavailable', recommendation: 'Analysis unavailable' }
         },
         accessibilityIssues: [],
-        optimizationSuggestions: ['Analysis temporarily unavailable. Please try again.']
+        optimizationSuggestions: ['AI analysis is currently unavailable. Please check your connection and try again.']
       };
     }
   }
@@ -221,26 +221,18 @@ export class EmailAIService {
       return JSON.parse(response);
     } catch (error) {
       console.error('Error analyzing brand voice:', error);
-      // Return fallback analysis
+      // Return proper fallback with null values
       return {
-        brandVoiceScore: 85,
-        engagementScore: 78,
-        toneConsistency: 82,
-        readabilityScore: 88,
+        brandVoiceScore: null,
+        engagementScore: null,
+        toneConsistency: null,
+        readabilityScore: null,
         performancePrediction: {
-          openRate: 24.5,
-          clickRate: 3.2,
-          conversionRate: 2.1
+          openRate: null,
+          clickRate: null,
+          conversionRate: null
         },
-        suggestions: [{
-          type: 'copy',
-          title: 'Analysis Unavailable',
-          current: 'Current content',
-          suggested: 'Analysis temporarily unavailable',
-          reason: 'Please try again in a moment',
-          impact: 'medium',
-          confidence: 0
-        }]
+        suggestions: []
       };
     }
   }
@@ -286,20 +278,20 @@ export class EmailAIService {
       return JSON.parse(response);
     } catch (error) {
       console.error('Error analyzing subject line:', error);
-      // Return fallback analysis
+      // Return proper fallback with null values
       return {
-        score: 75,
+        score: null,
         length: subjectLine.length,
-        spamRisk: 'low',
-        emotionalImpact: 60,
-        urgencyLevel: 40,
+        spamRisk: 'unknown',
+        emotionalImpact: null,
+        urgencyLevel: null,
         personalizedElements: [],
-        recommendations: ['Analysis temporarily unavailable. Please try again.'],
-        abTestSuggestions: ['Analysis temporarily unavailable. Please try again.'],
+        recommendations: ['AI analysis is currently unavailable. Please check your connection and try again.'],
+        abTestSuggestions: [],
         benchmarkComparison: {
-          industry: industry || 'General',
-          averageOpenRate: 21.5,
-          predictedOpenRate: 22.0
+          industry: industry || 'Unknown',
+          averageOpenRate: null,
+          predictedOpenRate: null
         }
       };
     }
@@ -340,7 +332,6 @@ ${request.images && request.images.length > 0 ?
       return JSON.parse(response);
     } catch (error) {
       console.error('Error generating email:', error);
-      // Return a fallback response instead of throwing
       return {
         subject: 'Your Email Subject',
         html: `<div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; padding: 20px;">
