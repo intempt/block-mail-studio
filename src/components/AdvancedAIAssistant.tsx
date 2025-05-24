@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -175,7 +176,7 @@ export const AdvancedAIAssistant: React.FC<AdvancedAIAssistantProps> = ({
     try {
       console.log('Analyzing current content');
       const analysis = await directAIService.analyzeBrandVoice(emailHTML);
-      setBrandVoiceScore(analysis.consistency);
+      setBrandVoiceScore(analysis.brandVoiceScore || 85);
       
       // Mock performance prediction
       setPerformancePrediction({
