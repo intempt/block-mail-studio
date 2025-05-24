@@ -36,7 +36,7 @@ interface BlockItem {
 }
 
 interface EnhancedEmailBlockPaletteProps {
-  onBlockAdd: (blockType: string) => void;
+  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
   universalContent: UniversalContent[];
   onUniversalContentAdd: (content: UniversalContent) => void;
   compactMode?: boolean;
@@ -89,8 +89,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const handleLayoutSelect = (layout: any) => {
-    // Create a columns block with the selected layout ratio
-    onBlockAdd('columns');
+    // Create a columns block with the selected layout configuration
+    onBlockAdd('columns', layout);
   };
 
   const renderBlockItem = (block: BlockItem) => {

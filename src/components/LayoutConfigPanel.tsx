@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Layout, ChevronDown, ChevronRight } from 'lucide-react';
+import { generateUniqueId } from '@/utils/blockUtils';
 
 interface LayoutOption {
   id: string;
@@ -115,6 +116,22 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   const spacing = compactMode ? 'gap-2' : 'gap-3';
   const padding = compactMode ? 'p-2' : 'p-3';
 
+  const handleLayoutClick = (layout: LayoutOption) => {
+    // Create the columns structure for the layout
+    const columns = Array.from({ length: layout.columns }, () => ({
+      id: generateUniqueId(),
+      blocks: [],
+      width: layout.preview[0] // This will be overridden by the column renderer
+    }));
+
+    const layoutWithColumns = {
+      ...layout,
+      columns
+    };
+
+    onLayoutSelect(layoutWithColumns);
+  };
+
   const renderLayoutPreview = (layout: LayoutOption) => (
     <div className={`flex gap-1 h-6 ${compactMode ? 'h-4' : 'h-6'}`}>
       {layout.preview.map((width, index) => (
@@ -133,7 +150,7 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
         <Card
           key={layout.id}
           className={`${padding} cursor-pointer hover:bg-slate-50 border-2 hover:border-blue-200 transition-all duration-200`}
-          onClick={() => onLayoutSelect(layout)}
+          onClick={() => handleLayoutClick(layout)}
         >
           <div className="space-y-2">
             <div className={`text-xs font-medium text-slate-700 ${compactMode ? 'text-xs' : 'text-sm'}`}>

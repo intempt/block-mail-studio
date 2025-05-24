@@ -1,15 +1,20 @@
+
 import React from 'react';
-import { ColumnsBlock } from '@/types/emailBlocks';
+import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
+import { BlockRenderer } from '../BlockRenderer';
 
 interface ColumnsBlockRendererProps {
   block: ColumnsBlock;
   isSelected: boolean;
   onUpdate: (block: ColumnsBlock) => void;
+  onBlockAdd?: (blockType: string, columnId: string) => void;
 }
 
 export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({ 
   block, 
-  isSelected 
+  isSelected,
+  onUpdate,
+  onBlockAdd
 }) => {
   const styling = block.styling.desktop;
   
@@ -53,6 +58,45 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
 
   const columnWidths = getColumnWidths();
 
+  const handleDrop = (e: React.DragEvent, columnId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.blockType && onBlockAdd) {
+        onBlockAdd(data.blockType, columnId);
+      }
+    } catch (error) {
+      console.error('Error handling drop in column:', error);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleBlockUpdate = (updatedBlock: EmailBlock, columnId: string) => {
+    const updatedColumns = block.content.columns.map(column => {
+      if (column.id === columnId) {
+        return {
+          ...column,
+          blocks: column.blocks.map(b => b.id === updatedBlock.id ? updatedBlock : b)
+        };
+      }
+      return column;
+    });
+
+    onUpdate({
+      ...block,
+      content: {
+        ...block.content,
+        columns: updatedColumns
+      }
+    });
+  };
+
   return (
     <div
       className="columns-block-renderer"
@@ -77,18 +121,32 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
               }}
             >
               <div 
-                className="min-h-24 bg-slate-100 rounded-lg p-4 text-center text-slate-500 text-sm border-2 border-dashed border-slate-300"
+                className="min-h-24 rounded-lg border-2 border-dashed transition-all duration-200 hover:border-blue-300"
                 style={{
-                  backgroundColor: isSelected ? '#f1f5f9' : '#f8fafc'
+                  backgroundColor: isSelected ? '#f1f5f9' : '#f8fafc',
+                  borderColor: column.blocks.length > 0 ? '#e2e8f0' : '#cbd5e1'
                 }}
+                onDrop={(e) => handleDrop(e, column.id)}
+                onDragOver={handleDragOver}
               >
-                <div className="text-xs text-slate-400 mb-2">Column {index + 1}</div>
-                <div className="text-xs text-slate-500">
-                  Drop blocks here ({columnWidths[index]})
-                </div>
-                {column.blocks.length > 0 && (
-                  <div className="mt-2 text-xs text-blue-600">
-                    {column.blocks.length} block{column.blocks.length !== 1 ? 's' : ''}
+                {column.blocks.length === 0 ? (
+                  <div className="p-4 text-center text-slate-500 text-sm">
+                    <div className="text-xs text-slate-400 mb-2">Column {index + 1}</div>
+                    <div className="text-xs text-slate-500">
+                      Drop blocks here ({columnWidths[index]})
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-2 space-y-2">
+                    {column.blocks.map((innerBlock) => (
+                      <div key={innerBlock.id} className="block-in-column">
+                        <BlockRenderer 
+                          block={innerBlock}
+                          isSelected={false}
+                          onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, column.id)}
+                        />
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

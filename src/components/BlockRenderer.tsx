@@ -18,9 +18,10 @@ interface BlockRendererProps {
   block: EmailBlock;
   isSelected: boolean;
   onUpdate: (block: EmailBlock) => void;
+  onBlockAdd?: (blockType: string, columnId: string) => void;
 }
 
-export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected, onUpdate }) => {
+export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected, onUpdate, onBlockAdd }) => {
   const getBlockComponent = () => {
     switch (block.type) {
       case 'text':
@@ -32,7 +33,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({ block, isSelected,
       case 'split':
         return <SplitBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'columns':
-        return <ColumnsBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <ColumnsBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} onBlockAdd={onBlockAdd} />;
       case 'spacer':
         return <SpacerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'divider':

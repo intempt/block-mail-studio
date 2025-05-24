@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, SpacerBlock, DividerBlock } from '@/types/emailBlocks';
+import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, SpacerBlock, DividerBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ContextualEditor } from './ContextualEditor';
 import { Card } from '@/components/ui/card';
 import { generateUniqueId, createDefaultStyling } from '@/utils/blockUtils';
@@ -34,6 +34,38 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     const newBlock = createBlockFromType(blockType);
     setBlocks(prev => [...prev, newBlock]);
     generateHTML([...blocks, newBlock]);
+  };
+
+  const insertBlockIntoColumn = (blockType: string, columnId: string) => {
+    const newBlock = createBlockFromType(blockType);
+    
+    setBlocks(prev => {
+      const updated = prev.map(block => {
+        if (block.type === 'columns') {
+          const columnsBlock = block as ColumnsBlock;
+          const updatedColumns = columnsBlock.content.columns.map(column => {
+            if (column.id === columnId) {
+              return {
+                ...column,
+                blocks: [...column.blocks, newBlock]
+              };
+            }
+            return column;
+          });
+          
+          return {
+            ...columnsBlock,
+            content: {
+              ...columnsBlock.content,
+              columns: updatedColumns
+            }
+          };
+        }
+        return block;
+      });
+      generateHTML(updated);
+      return updated;
+    });
   };
 
   const handleBlockClick = (blockId: string) => {
@@ -94,7 +126,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
         const buttonBlock = block as ButtonBlock;
         return `<div style="${baseStyles} text-align: center;"><a href="${buttonBlock.content.link || '#'}" style="display: inline-block; padding: 12px 24px; background-color: #3B82F6; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;">${buttonBlock.content.text || 'Button'}</a></div>`;
       case 'columns':
-        const columnsBlock = block as any; // ColumnsBlock type
+        const columnsBlock = block as ColumnsBlock;
         const columnWidths = getColumnWidthsForRender(columnsBlock.content.columnRatio);
         return `<div style="${baseStyles}"><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>${columnsBlock.content.columns.map((column: any, index: number) => 
           `<td style="width: ${columnWidths[index]}; vertical-align: top; ${index > 0 ? 'padding-left: 8px;' : ''} ${index < columnsBlock.content.columns.length - 1 ? 'padding-right: 8px;' : ''}">${column.blocks.map((innerBlock: EmailBlock) => renderBlockToHTML(innerBlock)).join('')}</td>`
@@ -113,9 +145,16 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
   const getColumnWidthsForRender = (ratio: string) => {
     switch (ratio) {
       case '50-50': return ['50%', '50%'];
+      case '33-67': return ['33%', '67%'];
+      case '67-33': return ['67%', '33%'];
+      case '25-75': return ['25%', '75%'];
+      case '75-25': return ['75%', '25%'];
       case '60-40': return ['60%', '40%'];
       case '40-60': return ['40%', '60%'];
       case '33-33-33': return ['33.33%', '33.33%', '33.33%'];
+      case '25-50-25': return ['25%', '50%', '25%'];
+      case '25-25-50': return ['25%', '25%', '50%'];
+      case '50-25-25': return ['50%', '25%', '25%'];
       case '25-25-25-25': return ['25%', '25%', '25%', '25%'];
       default: return ['100%'];
     }
@@ -211,6 +250,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
                 block={block}
                 isSelected={selectedBlockId === block.id}
                 onUpdate={handleBlockUpdate}
+                {...(block.type === 'columns' ? { onBlockAdd: insertBlockIntoColumn } : {})}
               />
             </div>
           ))}
