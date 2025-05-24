@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -157,9 +158,6 @@ const EmailEditor = () => {
     };
   }, [documentId, userName, userColor, ydoc]);
 
-  // Remove the old editor creation and replace with simpler state management
-  const [emailHTML, setEmailHTML] = useState('');
-
   useEffect(() => {
     const initCollaboration = async () => {
       try {
@@ -214,16 +212,14 @@ const EmailEditor = () => {
   };
 
   const exportHTML = () => {
-    if (editor) {
-      const htmlContent = generateEmailHTML(editor.getHTML());
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'email-template.html';
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+    const htmlContent = generateEmailHTML(emailHTML);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'email-template.html';
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const generateEmailHTML = (content: string) => {
@@ -276,12 +272,10 @@ const EmailEditor = () => {
   };
 
   const handleLoadTemplate = (template: EmailTemplate) => {
-    if (editor) {
-      editor.commands.setContent(template.html);
-      setTemplates(prev => prev.map(t => 
-        t.id === template.id ? { ...t, usageCount: t.usageCount + 1 } : t
-      ));
-    }
+    setEmailHTML(template.html);
+    setTemplates(prev => prev.map(t => 
+      t.id === template.id ? { ...t, usageCount: t.usageCount + 1 } : t
+    ));
   };
 
   const handleDeleteTemplate = (id: string) => {
@@ -369,11 +363,11 @@ const EmailEditor = () => {
   const renderRightPanel = () => {
     switch (rightPanelTab) {
       case 'properties':
-        return <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />;
+        return <SmartDesignAssistant editor={null} emailHTML={emailHTML} />;
       case 'analytics':
-        return <PerformanceAnalyzer editor={editor} emailHTML={emailHTML} />;
+        return <PerformanceAnalyzer editor={null} emailHTML={emailHTML} />;
       case 'optimization':
-        return <BrandVoiceOptimizer editor={editor} emailHTML={emailHTML} />;
+        return <BrandVoiceOptimizer editor={null} emailHTML={emailHTML} />;
       case 'code':
         return (
           <div className="p-4">
@@ -384,7 +378,7 @@ const EmailEditor = () => {
           </div>
         );
       default:
-        return <SmartDesignAssistant editor={editor} emailHTML={emailHTML} />;
+        return <SmartDesignAssistant editor={null} emailHTML={emailHTML} />;
     }
   };
 
