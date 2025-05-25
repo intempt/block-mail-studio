@@ -101,12 +101,12 @@ export const AuthenticIntemptLayout: React.FC<AuthenticIntemptLayoutProps> = ({ 
         <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              {/* Breadcrumbs */}
+              {/* Breadcrumbs - Fixed the > characters */}
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <span>Trollu namas</span>
-                <span>></span>
+                <span>{'>'}</span>
                 <span>Production</span>
-                <span>></span>
+                <span>{'>'}</span>
                 <span className="text-gray-900 font-medium">Messages</span>
               </div>
 
