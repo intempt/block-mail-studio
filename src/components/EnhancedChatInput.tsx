@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { 
   Send, 
   MessageSquare, 
-  ArrowRight,
+  Zap,
   Sparkles
 } from 'lucide-react';
 
 interface EnhancedChatInputProps {
-  onSendMessage: (message: string, mode: 'ask' | 'message') => void;
+  onSendMessage: (message: string, mode: 'ask' | 'do') => void;
   isLoading?: boolean;
   placeholder?: string;
 }
@@ -18,10 +18,10 @@ interface EnhancedChatInputProps {
 export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
   onSendMessage,
   isLoading = false,
-  placeholder = "Describe your message needs..."
+  placeholder = "Describe your needs..."
 }) => {
   const [inputMessage, setInputMessage] = useState('');
-  const [selectedMode, setSelectedMode] = useState<'ask' | 'message'>('ask');
+  const [selectedMode, setSelectedMode] = useState<'ask' | 'do'>('ask');
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
@@ -57,23 +57,23 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
               Ask
             </Button>
             <Button
-              variant={selectedMode === 'message' ? 'default' : 'ghost'}
+              variant={selectedMode === 'do' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setSelectedMode('message')}
+              onClick={() => setSelectedMode('do')}
               className={`h-8 px-3 rounded-l-none border-l ${
-                selectedMode === 'message' 
+                selectedMode === 'do' 
                   ? 'bg-blue-600 text-white hover:bg-blue-700' 
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
-              <ArrowRight className="w-3 h-3 mr-1" />
-              Message
+              <Zap className="w-3 h-3 mr-1" />
+              Do
             </Button>
           </div>
         </div>
         
         <div className="text-xs text-gray-500">
-          {selectedMode === 'ask' ? 'Plan and discuss' : 'Direct creation'}
+          {selectedMode === 'ask' ? 'Plan and discuss' : 'Create when possible'}
         </div>
       </div>
 

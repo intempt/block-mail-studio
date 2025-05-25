@@ -12,7 +12,7 @@ interface Message {
   type: 'user' | 'ai' | 'system';
   content: string;
   timestamp: Date;
-  mode?: 'ask' | 'message';
+  mode?: 'ask' | 'do';
 }
 
 interface ConversationalChip {
@@ -30,24 +30,24 @@ const getStarterChips = (context: 'journeys' | 'messages' | 'snippets'): Convers
   switch (context) {
     case 'journeys':
       return [
-        { id: 'welcome-sequence', label: 'Create welcome sequence', type: 'starter' },
-        { id: 'cart-abandonment', label: 'Build cart abandonment flow', type: 'starter' },
-        { id: 're-engagement', label: 'Design re-engagement campaign', type: 'starter' },
-        { id: 'onboarding-journey', label: 'Setup user onboarding', type: 'starter' }
+        { id: 'welcome-sequence', label: 'Welcome sequence', type: 'starter' },
+        { id: 'cart-abandonment', label: 'Cart abandonment flow', type: 'starter' },
+        { id: 're-engagement', label: 'Re-engagement campaign', type: 'starter' },
+        { id: 'onboarding-journey', label: 'User onboarding', type: 'starter' }
       ];
     case 'messages':
       return [
-        { id: 'sms-campaign', label: 'Send an SMS campaign', type: 'starter' },
-        { id: 'push-notification', label: 'Create a push notification', type: 'starter' },
-        { id: 'marketing-email', label: 'Build a marketing email', type: 'starter' },
-        { id: 'html-email', label: 'Design an HTML email', type: 'starter' }
+        { id: 'html-email', label: 'HTML email', type: 'starter' },
+        { id: 'marketing-email', label: 'Marketing email', type: 'starter' },
+        { id: 'sms-campaign', label: 'SMS campaign', type: 'starter' },
+        { id: 'push-notification', label: 'Push notification', type: 'starter' }
       ];
     case 'snippets':
       return [
-        { id: 'email-header', label: 'Create email header', type: 'starter' },
-        { id: 'cta-snippet', label: 'Build CTA snippet', type: 'starter' },
-        { id: 'footer-template', label: 'Design footer template', type: 'starter' },
-        { id: 'social-links', label: 'Add social media links', type: 'starter' }
+        { id: 'email-header', label: 'Email header', type: 'starter' },
+        { id: 'cta-snippet', label: 'CTA snippet', type: 'starter' },
+        { id: 'footer-template', label: 'Footer template', type: 'starter' },
+        { id: 'social-links', label: 'Social media links', type: 'starter' }
       ];
     default:
       return [];
@@ -57,14 +57,18 @@ const getStarterChips = (context: 'journeys' | 'messages' | 'snippets'): Convers
 const getWelcomeMessage = (context: 'journeys' | 'messages' | 'snippets'): string => {
   switch (context) {
     case 'journeys':
-      return 'What kind of customer journey would you like to create today? I can help you build automated workflows, onboarding sequences, and engagement campaigns.';
+      return 'What kind of customer journey would you like to create? Select a journey type below or describe your workflow needs.';
     case 'messages':
-      return 'What kind of message would you like to create today? I can help you build SMS campaigns, push notifications, or email campaigns.';
+      return 'What kind of message would you like to create? Select a message type below or describe your campaign needs.';
     case 'snippets':
-      return 'What content snippet would you like to create today? I can help you build reusable headers, CTAs, footers, and other content blocks.';
+      return 'What content snippet would you like to create? Select a snippet type below or describe your content needs.';
     default:
       return 'How can I help you today?';
   }
+};
+
+const canCreateInDoMode = (messageType: string): boolean => {
+  return ['html-email', 'marketing-email'].includes(messageType);
 };
 
 export const UniversalConversationalInterface: React.FC<UniversalConversationalInterfaceProps> = ({
@@ -75,6 +79,8 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const [chips, setChips] = useState<ConversationalChip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingChips, setIsGeneratingChips] = useState(false);
+  const [selectedMessageType, setSelectedMessageType] = useState<string | null>(null);
+  const [conversationContext, setConversationContext] = useState<string[]>([]);
 
   // Reset interface when context changes
   useEffect(() => {
@@ -86,28 +92,28 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     };
     setMessages([welcomeMessage]);
     setChips(getStarterChips(context));
+    setSelectedMessageType(null);
+    setConversationContext([]);
   }, [context]);
 
   const generateContextualChips = async (userMessage: string, aiResponse: string) => {
+    if (!selectedMessageType) return;
+    
     setIsGeneratingChips(true);
     try {
-      const conversationContext = messages.slice(-4).map(m => 
-        `${m.type}: ${m.content}`
-      ).join('\n');
-
       const contextPrompts = {
         journeys: 'customer journey and workflow',
         messages: 'message campaign',
         snippets: 'content snippet'
       };
 
-      const prompt = `Based on this conversation about creating a ${contextPrompts[context]}:
+      const prompt = `Based on this conversation about creating a ${selectedMessageType}:
 
 User latest: "${userMessage}"
 AI response: "${aiResponse}"
-Context: ${conversationContext}
+Context: ${conversationContext.join(' ')}
 
-Generate 5 conversational next-step suggestions that would help the user refine their ${contextPrompts[context]}. Make them natural and specific to what they're trying to build. Return as JSON array of strings:
+Generate 5 contextual follow-up questions or suggestions that would help gather more details for creating this ${selectedMessageType}. Make them specific and actionable. Return as JSON array of strings:
 
 {"suggestions": ["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4", "suggestion 5"]}`;
 
@@ -129,7 +135,11 @@ Generate 5 conversational next-step suggestions that would help the user refine 
     }
   };
 
-  const handleSendMessage = async (message: string, mode: 'ask' | 'message') => {
+  const hasEnoughContextForEmail = (): boolean => {
+    return conversationContext.length >= 3 && selectedMessageType && canCreateInDoMode(selectedMessageType);
+  };
+
+  const handleSendMessage = async (message: string, mode: 'ask' | 'do') => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -139,13 +149,77 @@ Generate 5 conversational next-step suggestions that would help the user refine 
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setConversationContext(prev => [...prev, message]);
     setIsLoading(true);
 
     try {
-      const contextualPrompt = `User is working on ${context}. ${message}`;
+      let contextualPrompt = `User is working on ${context}. ${selectedMessageType ? `They are creating a ${selectedMessageType}. ` : ''}${message}`;
+      
+      // Handle Do mode logic
+      if (mode === 'do') {
+        if (!selectedMessageType) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: 'Please first select a message type from the options above, then I can help you create it.',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, aiResponse]);
+          setIsLoading(false);
+          return;
+        }
+
+        if (!canCreateInDoMode(selectedMessageType)) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I can help you plan and discuss ${selectedMessageType} creation, but I can only generate HTML emails and Marketing emails in "Do" mode currently. Other message types are coming soon! Switch to "Ask" mode for planning assistance.`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, aiResponse]);
+          setIsLoading(false);
+          return;
+        }
+
+        if (hasEnoughContextForEmail()) {
+          // Generate email and open editor
+          const emailGenerationPrompt = `Generate a complete ${selectedMessageType} based on this conversation:
+          
+Context: ${conversationContext.join(' ')}
+Latest request: ${message}
+
+Create a professional email with proper HTML structure and compelling content.`;
+
+          const emailResponse = await OpenAIEmailService.generateEmailContent({
+            prompt: emailGenerationPrompt,
+            emailType: 'promotional',
+            tone: 'professional'
+          });
+
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `Perfect! I've generated your ${selectedMessageType} based on our conversation. Opening the email editor now...`,
+            timestamp: new Date()
+          };
+
+          setMessages(prev => [...prev, aiResponse]);
+          
+          // Open email builder with generated content
+          setTimeout(() => {
+            if (onEmailBuilderOpen) {
+              onEmailBuilderOpen(emailResponse.html, emailResponse.subject);
+            }
+          }, 1000);
+          
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const response = await OpenAIEmailService.conversationalResponse({
         userMessage: contextualPrompt,
-        conversationContext: messages.slice(-3).map(m => m.content),
+        conversationContext: conversationContext.slice(-3),
         currentEmailContent: ''
       });
 
@@ -157,15 +231,9 @@ Generate 5 conversational next-step suggestions that would help the user refine 
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      await generateContextualChips(message, response);
-
-      // Trigger email builder for messages context
-      if (context === 'messages' && message.toLowerCase().includes('html email') && mode === 'message') {
-        setTimeout(() => {
-          if (onEmailBuilderOpen) {
-            onEmailBuilderOpen();
-          }
-        }, 1000);
+      
+      if (selectedMessageType) {
+        await generateContextualChips(message, response);
       }
 
     } catch (error) {
@@ -183,6 +251,12 @@ Generate 5 conversational next-step suggestions that would help the user refine 
   };
 
   const handleChipSelect = async (chip: ConversationalChip) => {
+    // If it's a starter chip, set the message type
+    if (chip.type === 'starter') {
+      setSelectedMessageType(chip.id);
+      setConversationContext([chip.label]);
+    }
+
     const chipMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -194,10 +268,10 @@ Generate 5 conversational next-step suggestions that would help the user refine 
     setIsLoading(true);
 
     try {
-      const contextualPrompt = `User is working on ${context}. ${chip.label}`;
+      const contextualPrompt = `User is working on ${context}. They selected: ${chip.label}`;
       const response = await OpenAIEmailService.conversationalResponse({
         userMessage: contextualPrompt,
-        conversationContext: messages.slice(-3).map(m => m.content),
+        conversationContext: conversationContext.slice(-3),
         currentEmailContent: ''
       });
 
@@ -209,7 +283,14 @@ Generate 5 conversational next-step suggestions that would help the user refine 
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      await generateContextualChips(chip.label, response);
+      
+      if (chip.type === 'contextual') {
+        setConversationContext(prev => [...prev, chip.label]);
+        await generateContextualChips(chip.label, response);
+      } else {
+        // For starter chips, generate initial contextual chips
+        await generateContextualChips(chip.label, response);
+      }
 
     } catch (error) {
       console.error('Error processing chip selection:', error);
@@ -231,6 +312,8 @@ Generate 5 conversational next-step suggestions that would help the user refine 
 
   const resetToStarterChips = () => {
     setChips(getStarterChips(context));
+    setSelectedMessageType(null);
+    setConversationContext([]);
   };
 
   const placeholderText = {

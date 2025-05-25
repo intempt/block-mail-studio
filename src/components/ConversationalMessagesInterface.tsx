@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,7 +11,7 @@ interface Message {
   type: 'user' | 'ai' | 'system';
   content: string;
   timestamp: Date;
-  mode?: 'ask' | 'message';
+  mode?: 'ask' | 'do';
 }
 
 interface ConversationalChip {
@@ -26,10 +25,10 @@ interface ConversationalMessagesInterfaceProps {
 }
 
 const STARTER_CHIPS: ConversationalChip[] = [
-  { id: 'sms-campaign', label: 'Send an SMS campaign', type: 'starter' },
-  { id: 'push-notification', label: 'Create a push notification', type: 'starter' },
-  { id: 'marketing-email', label: 'Build a marketing email', type: 'starter' },
-  { id: 'html-email', label: 'Design an HTML email', type: 'starter' }
+  { id: 'html-email', label: 'HTML email', type: 'starter' },
+  { id: 'marketing-email', label: 'Marketing email', type: 'starter' },
+  { id: 'sms-campaign', label: 'SMS campaign', type: 'starter' },
+  { id: 'push-notification', label: 'Push notification', type: 'starter' }
 ];
 
 export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInterfaceProps> = ({
@@ -85,7 +84,7 @@ Generate 5 conversational next-step suggestions that would help the user refine 
     }
   };
 
-  const handleSendMessage = async (message: string, mode: 'ask' | 'message') => {
+  const handleSendMessage = async (message: string, mode: 'ask' | 'do') => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -114,7 +113,7 @@ Generate 5 conversational next-step suggestions that would help the user refine 
       setMessages(prev => [...prev, aiResponse]);
       await generateContextualChips(message, response);
 
-      if (message.toLowerCase().includes('html email') && mode === 'message') {
+      if (message.toLowerCase().includes('html email') && mode === 'do') {
         setTimeout(() => {
           if (onEmailBuilderOpen) {
             onEmailBuilderOpen();
