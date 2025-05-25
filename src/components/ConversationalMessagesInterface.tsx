@@ -24,48 +24,87 @@ interface ConversationalMessagesInterfaceProps {
   onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
 }
 
-const STARTER_CHIPS: ConversationalChip[] = [
-  { id: 'understand-customers', label: 'Who are my best customers and why?', type: 'starter' },
-  { id: 'personalize-experience', label: 'What if I could personalize every interaction?', type: 'starter' },
-  { id: 'automate-journey', label: 'How can I automate my customer experience?', type: 'starter' },
-  { id: 'data-insights', label: 'What story is my data telling me?', type: 'starter' },
-  { id: 'engagement-strategy', label: 'How do I keep customers coming back?', type: 'starter' }
+const MESSAGE_FOCUSED_STARTER_CHIPS: ConversationalChip[] = [
+  { id: 'email-customers', label: 'Email my customers about something important', type: 'starter' },
+  { id: 'welcome-new-users', label: 'Welcome new users to our platform', type: 'starter' },
+  { id: 'promote-product', label: 'Promote a product or service', type: 'starter' },
+  { id: 'send-newsletter', label: 'Create a newsletter or update', type: 'starter' },
+  { id: 'urgent-announcement', label: 'Send an urgent announcement', type: 'starter' }
 ];
 
 export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInterfaceProps> = ({
   onEmailBuilderOpen
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chips, setChips] = useState<ConversationalChip[]>(STARTER_CHIPS);
+  const [chips, setChips] = useState<ConversationalChip[]>(MESSAGE_FOCUSED_STARTER_CHIPS);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingChips, setIsGeneratingChips] = useState(false);
+  const [selectedMessageType, setSelectedMessageType] = useState<string | null>(null);
+  const [conversationDepth, setConversationDepth] = useState(0);
 
   useEffect(() => {
     const welcomeMessage: Message = {
       id: '1',
       type: 'ai',
-      content: 'What would you like to explore? Ask me anything about your customers, campaigns, or growth strategy.',
+      content: 'What kind of message would you like to create? Select a message type below or describe your campaign needs.',
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
   }, []);
 
-  const generateContextualChips = async (userMessage: string, aiResponse: string) => {
+  const generateProgressiveChips = async (userMessage: string, aiResponse: string, depth: number) => {
     setIsGeneratingChips(true);
     try {
-      const conversationContext = messages.slice(-4).map(m => 
-        `${m.type}: ${m.content}`
-      ).join('\n');
+      let prompt = '';
+      
+      if (depth <= 1) {
+        // Early conversation - gather basic details
+        prompt = `Based on this message creation conversation:
 
-      const prompt = `Based on this conversation about marketing and customer engagement:
+User: "${userMessage}"
+AI: "${aiResponse}"
+
+Generate 5 follow-up questions to gather essential details for creating their message. Focus on:
+- Target audience
+- Main goal/purpose
+- Message type (email, SMS, etc.)
+- Tone and urgency
+- Key content points
+
+Return as JSON: {"suggestions": ["question 1", "question 2", "question 3", "question 4", "question 5"]}`;
+      } else if (depth <= 3) {
+        // Mid conversation - get specific requirements
+        prompt = `Based on this ongoing message creation conversation:
 
 User latest: "${userMessage}"
 AI response: "${aiResponse}"
-Context: ${conversationContext}
+Conversation depth: ${depth}
 
-Generate 5 natural follow-up questions that would help explore their marketing strategy deeper. Make them conversational and exploratory. Return as JSON array of strings:
+Generate 5 specific follow-up questions to finalize message details. Focus on:
+- Specific content requirements
+- Call-to-action needs
+- Design preferences
+- Timing and scheduling
+- Ready to create options
 
-{"suggestions": ["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4", "suggestion 5"]}`;
+Return as JSON: {"suggestions": ["question 1", "question 2", "question 3", "question 4", "question 5"]}`;
+      } else {
+        // Deep conversation - push toward creation
+        prompt = `Based on this detailed message creation conversation:
+
+User latest: "${userMessage}"
+AI response: "${aiResponse}"
+Conversation depth: ${depth}
+
+Generate 5 action-oriented suggestions to move toward message creation:
+- "Ready to create this message"
+- "Generate email content now"
+- "Open the email builder"
+- Refinement options
+- Alternative approaches
+
+Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4", "action 5"]}`;
+      }
 
       const response = await OpenAIEmailService.callOpenAI(prompt, 2, true);
       
@@ -76,12 +115,42 @@ Generate 5 natural follow-up questions that would help explore their marketing s
           type: 'contextual' as const
         }));
 
-        setChips([...STARTER_CHIPS, ...contextualChips]);
+        setChips([...MESSAGE_FOCUSED_STARTER_CHIPS, ...contextualChips]);
+      } else {
+        // Fallback chips based on conversation depth
+        setChips([...MESSAGE_FOCUSED_STARTER_CHIPS, ...getFallbackChips(depth)]);
       }
     } catch (error) {
       console.error('Error generating contextual chips:', error);
+      // Use fallback chips on error
+      setChips([...MESSAGE_FOCUSED_STARTER_CHIPS, ...getFallbackChips(depth)]);
     } finally {
       setIsGeneratingChips(false);
+    }
+  };
+
+  const getFallbackChips = (depth: number): ConversationalChip[] => {
+    if (depth <= 1) {
+      return [
+        { id: 'fb-audience', label: 'Who is the target audience?', type: 'contextual' },
+        { id: 'fb-goal', label: 'What\'s the main goal?', type: 'contextual' },
+        { id: 'fb-tone', label: 'What tone should it have?', type: 'contextual' },
+        { id: 'fb-urgent', label: 'Is this time-sensitive?', type: 'contextual' }
+      ];
+    } else if (depth <= 3) {
+      return [
+        { id: 'fb-content', label: 'What specific content to include?', type: 'contextual' },
+        { id: 'fb-cta', label: 'What action should recipients take?', type: 'contextual' },
+        { id: 'fb-design', label: 'Any design preferences?', type: 'contextual' },
+        { id: 'fb-timing', label: 'When should this be sent?', type: 'contextual' }
+      ];
+    } else {
+      return [
+        { id: 'fb-create', label: 'Ready to create this message', type: 'contextual' },
+        { id: 'fb-generate', label: 'Generate email content now', type: 'contextual' },
+        { id: 'fb-builder', label: 'Open the email builder', type: 'contextual' },
+        { id: 'fb-refine', label: 'Refine the requirements', type: 'contextual' }
+      ];
     }
   };
 
@@ -95,9 +164,40 @@ Generate 5 natural follow-up questions that would help explore their marketing s
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setConversationDepth(prev => prev + 1);
     setIsLoading(true);
 
     try {
+      // Handle Do mode for email creation
+      if (mode === 'do' && conversationDepth >= 2) {
+        if (message.toLowerCase().includes('email') || selectedMessageType) {
+          // Generate email and open builder
+          const response = await OpenAIEmailService.generateEmailContent({
+            prompt: `Create an email based on this conversation: ${message}`,
+            emailType: 'promotional',
+            tone: 'professional'
+          });
+
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: 'Perfect! I\'ve generated your email content. Opening the email builder now...',
+            timestamp: new Date()
+          };
+
+          setMessages(prev => [...prev, aiResponse]);
+
+          setTimeout(() => {
+            if (onEmailBuilderOpen) {
+              onEmailBuilderOpen(response.html, response.subject);
+            }
+          }, 1000);
+
+          setIsLoading(false);
+          return;
+        }
+      }
+
       const response = await OpenAIEmailService.conversationalResponse({
         userMessage: message,
         conversationContext: messages.slice(-3).map(m => m.content),
@@ -112,22 +212,14 @@ Generate 5 natural follow-up questions that would help explore their marketing s
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      await generateContextualChips(message, response);
-
-      if (message.toLowerCase().includes('html email') && mode === 'do') {
-        setTimeout(() => {
-          if (onEmailBuilderOpen) {
-            onEmailBuilderOpen();
-          }
-        }, 1000);
-      }
+      await generateProgressiveChips(message, response, conversationDepth);
 
     } catch (error) {
       console.error('Error processing message:', error);
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: 'I had trouble processing that. Could you tell me more about what you want to create?',
+        content: 'I had trouble processing that. Could you tell me more about the message you want to create?',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -137,6 +229,11 @@ Generate 5 natural follow-up questions that would help explore their marketing s
   };
 
   const handleChipSelect = async (chip: ConversationalChip) => {
+    // Track message type from starter chips
+    if (chip.type === 'starter') {
+      setSelectedMessageType(chip.id);
+    }
+
     const chipMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -145,6 +242,7 @@ Generate 5 natural follow-up questions that would help explore their marketing s
     };
 
     setMessages(prev => [...prev, chipMessage]);
+    setConversationDepth(prev => prev + 1);
     setIsLoading(true);
 
     try {
@@ -162,7 +260,7 @@ Generate 5 natural follow-up questions that would help explore their marketing s
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      await generateContextualChips(chip.label, response);
+      await generateProgressiveChips(chip.label, response, conversationDepth);
 
     } catch (error) {
       console.error('Error processing chip selection:', error);
@@ -178,12 +276,14 @@ Generate 5 natural follow-up questions that would help explore their marketing s
     const lastAiMessage = messages.slice().reverse().find(m => m.type === 'ai');
     
     if (lastUserMessage && lastAiMessage) {
-      await generateContextualChips(lastUserMessage.content, lastAiMessage.content);
+      await generateProgressiveChips(lastUserMessage.content, lastAiMessage.content, conversationDepth);
     }
   };
 
   const resetToStarterChips = () => {
-    setChips(STARTER_CHIPS);
+    setChips(MESSAGE_FOCUSED_STARTER_CHIPS);
+    setSelectedMessageType(null);
+    setConversationDepth(0);
   };
 
   return (
@@ -262,6 +362,7 @@ Generate 5 natural follow-up questions that would help explore their marketing s
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
         placeholder="your message needs..."
+        context="messages"
       />
     </div>
   );

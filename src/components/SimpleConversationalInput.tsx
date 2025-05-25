@@ -9,20 +9,18 @@ import {
   Sparkles
 } from 'lucide-react';
 
-interface EnhancedChatInputProps {
+interface SimpleConversationalInputProps {
   onSendMessage: (message: string, mode: 'ask' | 'do') => void;
   isLoading?: boolean;
   placeholder?: string;
-  disableDoMode?: boolean;
-  context?: 'messages' | 'journeys' | 'snippets';
+  context?: 'journeys' | 'snippets';
 }
 
-export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
+export const SimpleConversationalInput: React.FC<SimpleConversationalInputProps> = ({
   onSendMessage,
   isLoading = false,
   placeholder = "Describe your needs...",
-  disableDoMode = false,
-  context = 'messages'
+  context = 'journeys'
 }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [selectedMode, setSelectedMode] = useState<'ask' | 'do'>('ask');
@@ -41,10 +39,9 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
   };
 
   const getDoTooltip = () => {
-    if (disableDoMode) {
-      return 'Do mode available for email creation only';
-    }
-    return undefined;
+    return context === 'journeys' 
+      ? 'Do mode available for email creation only'
+      : 'Do mode available for email creation only';
   };
 
   return (
@@ -66,23 +63,18 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
               <MessageSquare className="w-3 h-3 mr-1" />
               Ask
             </Button>
-            <Button
-              variant={selectedMode === 'do' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => !disableDoMode && setSelectedMode('do')}
-              disabled={disableDoMode}
-              title={getDoTooltip()}
-              className={`h-8 px-3 rounded-l-none border-l ${
-                disableDoMode 
-                  ? 'text-gray-400 cursor-not-allowed opacity-50'
-                  : selectedMode === 'do' 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Zap className="w-3 h-3 mr-1" />
-              Do
-            </Button>
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={true}
+                title={getDoTooltip()}
+                className="h-8 px-3 rounded-l-none border-l text-gray-400 cursor-not-allowed opacity-50"
+              >
+                <Zap className="w-3 h-3 mr-1" />
+                Do
+              </Button>
+            </div>
           </div>
         </div>
         
@@ -96,7 +88,7 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
         <Input
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={`${selectedMode === 'ask' ? 'Ask about' : 'Create'} ${placeholder.toLowerCase()}`}
+          placeholder={`Ask about ${placeholder.toLowerCase()}`}
           onKeyPress={handleKeyPress}
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           disabled={isLoading}
