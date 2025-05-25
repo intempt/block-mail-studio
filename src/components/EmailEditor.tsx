@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -39,6 +40,8 @@ import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { AIBlockGenerator } from '@/services/AIBlockGenerator';
 import { EmailContentAnalyzer } from '@/services/EmailContentAnalyzer';
+import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
 
 import 'highlight.js/styles/atom-one-dark.css';
 import { lowlight } from 'lowlight';
@@ -80,14 +83,12 @@ export default function EmailEditor({
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
+  const [universalContent] = useState<UniversalContent[]>([]);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        history: true,
-        // menuBar: {
-        //   items: ['undo', 'redo', 'bold', 'italic', 'link', 'image']
-        // }
+        history: false, // Fix the history configuration issue
       }),
       Underline,
       Link,
@@ -100,12 +101,8 @@ export default function EmailEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
-      CodeBlockLowlight.extend({
-        addOptions() {
-          return {
-            lowlight
-          }
-        },
+      CodeBlockLowlight.configure({
+        lowlight
       }),
     ],
     content: emailHTML,
@@ -131,7 +128,7 @@ export default function EmailEditor({
     setTemplates(initialTemplates);
   }, []);
 
-  const handleBlockSelect = (blockType: string) => {
+  const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
     if (!editor) return;
 
     const newBlock: Block = {
@@ -228,8 +225,14 @@ export default function EmailEditor({
         emailHTML
       );
 
+      // Convert EmailBlocks to Blocks by ensuring they have the required styles property
+      const convertedBlocks: Block[] = result.blocks.map(block => ({
+        ...block,
+        styles: block.styles || {}
+      }));
+
       // Load into editor
-      setBlocks(result.blocks);
+      setBlocks(convertedBlocks);
       setLayoutConfig(result.layoutConfig);
 
     } catch (error) {
@@ -237,21 +240,32 @@ export default function EmailEditor({
     }
   };
 
+  const handleSnippetAdd = (snippet: EmailSnippet) => {
+    // Handle snippet addition
+    console.log('Adding snippet:', snippet);
+  };
+
+  const handleUniversalContentAdd = (content: UniversalContent) => {
+    // Handle universal content addition
+    console.log('Adding universal content:', content);
+  };
+
   const renderLeftPanel = () => {
     switch (leftPanel) {
       case 'blocks':
         return (
           <EnhancedEmailBlockPalette
-            onBlockSelect={handleBlockSelect}
-            onLoadTemplate={handleTemplateLoad}
-            onSaveAsTemplate={handleSaveAsTemplate}
-            templates={templates}
+            onBlockAdd={handleBlockAdd}
+            onSnippetAdd={handleSnippetAdd}
+            universalContent={universalContent}
+            onUniversalContentAdd={handleUniversalContentAdd}
+            compactMode={false}
+            snippetRefreshTrigger={0}
           />
         );
       case 'design':
         return (
           <GlobalStylesPanel
-            emailHTML={emailHTML}
             onStyleUpdate={handleGlobalStyleUpdate}
           />
         );
@@ -430,9 +444,8 @@ export default function EmailEditor({
             
             <div className="flex-1 overflow-hidden">
               <EmailCodeEditor
-                value={emailHTML}
-                onChange={setEmailHTML}
-                language="html"
+                editor={editor}
+                initialHtml={emailHTML}
               />
             </div>
           </div>
@@ -442,15 +455,12 @@ export default function EmailEditor({
       {/* Modals */}
       {showPreview && (
         <EmailPreview
-          emailHTML={emailHTML}
-          subjectLine={subjectLine}
           onClose={() => setShowPreview(false)}
         />
       )}
 
       {showTemplateLibrary && (
         <EmailTemplateLibrary
-          onClose={() => setShowTemplateLibrary(false)}
           onSelectTemplate={handleTemplateLoad}
           onSaveTemplate={handleSaveAsTemplate}
           currentEmailHTML={emailHTML}
