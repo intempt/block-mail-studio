@@ -38,7 +38,8 @@ import {
   Brain,
   Minimize2,
   Maximize2,
-  RefreshCw
+  RefreshCw,
+  Lightbulb
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
@@ -71,10 +72,12 @@ import { SimplePropertyEditor } from './SimplePropertyEditor';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { AITestingSuite } from './AITestingSuite';
 import { EnhancedAIAssistant } from './EnhancedAIAssistant';
+import { PerformanceBrandPanel } from './PerformanceBrandPanel';
+import { AISuggestionsPanel } from './AISuggestionsPanel';
 
 type PreviewMode = 'desktop' | 'mobile' | 'tablet';
 type LeftPanelTab = 'ai' | 'design' | 'blocks';
-type RightPanelTab = 'properties' | 'analytics' | 'optimization';
+type RightPanelTab = 'performance' | 'suggestions';
 type ViewDensity = 'comfortable' | 'normal' | 'compact';
 
 const EmailEditor = () => {
@@ -84,7 +87,7 @@ const EmailEditor = () => {
   const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('blocks');
-  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('properties');
+  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('suggestions');
   const [emailHTML, setEmailHTML] = useState('');
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -422,44 +425,41 @@ const EmailEditor = () => {
 
   const renderRightPanel = () => {
     switch (rightPanelTab) {
-      case 'properties':
+      case 'performance':
         return (
-          <div className="p-4">
-            <SimplePropertyEditor
-              block={selectedBlock}
-              onUpdate={handleBlockUpdate}
-            />
-          </div>
-        );
-      case 'analytics':
-        return (
-          <EnhancedPerformanceAnalyzer 
+          <PerformanceBrandPanel
             emailHTML={emailHTML}
             subjectLine={subjectLine}
-            onOptimize={(suggestion) => {
-              console.log('Applying optimization:', suggestion);
+            editor={null}
+          />
+        );
+      case 'suggestions':
+        return (
+          <AISuggestionsPanel
+            emailHTML={emailHTML}
+            subjectLine={subjectLine}
+            onApplySuggestion={(suggestion) => {
+              console.log('Applying suggestion:', suggestion);
               toast({
-                title: "Optimization Applied",
-                description: suggestion
+                title: "Suggestion Applied",
+                description: suggestion.title
               });
             }}
           />
         );
-      case 'optimization':
-        return (
-          <BrandVoiceOptimizer 
-            editor={null} 
-            emailHTML={emailHTML}
-          />
-        );
       default:
         return (
-          <div className="p-4">
-            <SimplePropertyEditor
-              block={selectedBlock}
-              onUpdate={handleBlockUpdate}
-            />
-          </div>
+          <AISuggestionsPanel
+            emailHTML={emailHTML}
+            subjectLine={subjectLine}
+            onApplySuggestion={(suggestion) => {
+              console.log('Applying suggestion:', suggestion);
+              toast({
+                title: "Suggestion Applied",
+                description: suggestion.title
+              });
+            }}
+          />
         );
     }
   };
@@ -683,7 +683,7 @@ const EmailEditor = () => {
           <div className={`border-l border-slate-200 bg-white ${getRightPanelWidth()}`}>
             <div className="p-4 border-b border-slate-200">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-slate-900 text-base">Properties & Tools</h3>
+                <h3 className="font-semibold text-slate-900 text-base">Tools & Insights</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -696,28 +696,20 @@ const EmailEditor = () => {
               
               <div className="flex gap-1">
                 <Button
-                  variant={rightPanelTab === 'properties' ? 'default' : 'outline'}
+                  variant={rightPanelTab === 'performance' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setRightPanelTab('properties')}
-                  className="flex-1 h-8"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={rightPanelTab === 'analytics' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRightPanelTab('analytics')}
+                  onClick={() => setRightPanelTab('performance')}
                   className="flex-1 h-8"
                 >
                   <BarChart3 className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={rightPanelTab === 'optimization' ? 'default' : 'outline'}
+                  variant={rightPanelTab === 'suggestions' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setRightPanelTab('optimization')}
+                  onClick={() => setRightPanelTab('suggestions')}
                   className="flex-1 h-8"
                 >
-                  <Target className="w-4 h-4" />
+                  <Lightbulb className="w-4 h-4" />
                 </Button>
               </div>
             </div>
