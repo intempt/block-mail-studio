@@ -1,13 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, User } from 'lucide-react';
+import { Bot, User, Zap } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
 import { SimpleConversationalInput } from './SimpleConversationalInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
 import { GrowthOSService, GrowthOSChip } from '@/services/growthOSService';
-import { OpenAIEmailService } from '@/services/openAIEmailService';
 
 interface Message {
   id: string;
@@ -15,6 +13,11 @@ interface Message {
   content: string;
   timestamp: Date;
   mode?: 'ask' | 'do';
+  emailData?: {
+    subject: string;
+    html: string;
+    previewText: string;
+  };
 }
 
 interface ConversationalChip {
@@ -143,47 +146,29 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     setIsLoading(true);
 
     try {
-      if (mode === 'do' && context === 'messages') {
-        if (conversationDepth >= 2 && (message.toLowerCase().includes('email') || message.toLowerCase().includes('campaign'))) {
-          const emailGenerationPrompt = `Generate a growth-optimized email based on this ${currentTopic || 'email marketing'} conversation: ${message}`;
+      let aiResponse: Message;
 
-          const emailResponse = await OpenAIEmailService.generateEmailContent({
-            prompt: emailGenerationPrompt,
-            emailType: 'promotional',
-            tone: 'professional'
-          });
-
-          const aiResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'ai',
-            content: `Perfect! I've created a ${currentTopic || 'growth-focused'} email campaign based on our conversation. Opening the email builder now...`,
-            timestamp: new Date()
-          };
-
-          setMessages(prev => [...prev, aiResponse]);
-          
-          setTimeout(() => {
-            if (onEmailBuilderOpen) {
-              onEmailBuilderOpen(emailResponse.html, emailResponse.subject);
-            }
-          }, 1000);
-          
-          setIsLoading(false);
-          return;
-        }
+      if (mode === 'ask') {
+        const response = await GrowthOSService.getAskModeResponse(message, context);
+        aiResponse = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: response,
+          timestamp: new Date()
+        };
+      } else { // mode === 'do'
+        const doResponse = await GrowthOSService.getDoModeResponse(message, context);
+        aiResponse = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: doResponse.content,
+          timestamp: new Date(),
+          emailData: doResponse.emailData
+        };
       }
 
-      const response = await GrowthOSService.getContextSpecificResponse(message, context);
-
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: response,
-        timestamp: new Date()
-      };
-
       setMessages(prev => [...prev, aiResponse]);
-      await generateProgressiveChips(message, response);
+      await generateProgressiveChips(message, aiResponse.content);
 
     } catch (error) {
       console.error('Error processing message:', error);
@@ -210,7 +195,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     setMessages(prev => [...prev, chipMessage]);
     setConversationDepth(prev => prev + 1);
     
-    // Update topic when selecting a chip
     if (chip.topic) {
       setCurrentTopic(chip.topic);
     }
@@ -219,7 +203,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     setIsLoading(true);
 
     try {
-      const response = await GrowthOSService.getContextSpecificResponse(chip.label, context);
+      const response = await GrowthOSService.getAskModeResponse(chip.label, context);
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -256,6 +240,12 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     generateInitialChips();
   };
 
+  const handleLoadIntoEditor = (emailData: any) => {
+    if (onEmailBuilderOpen && emailData) {
+      onEmailBuilderOpen(emailData.html, emailData.subject);
+    }
+  };
+
   const placeholderText = {
     journeys: 'your customer journey challenge...',
     messages: 'your email marketing challenge...',
@@ -288,11 +278,22 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
                     <p className="text-xs opacity-70">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
-                    {message.mode && (
-                      <span className="text-xs opacity-70 ml-2">
-                        {message.mode === 'ask' ? '💭' : '⚡'}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {message.mode && (
+                        <span className="text-xs opacity-70">
+                          {message.mode === 'ask' ? '💭' : '⚡'}
+                        </span>
+                      )}
+                      {message.emailData && (
+                        <button
+                          onClick={() => handleLoadIntoEditor(message.emailData)}
+                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center gap-1"
+                        >
+                          <Zap className="w-3 h-3" />
+                          Load in Editor
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
@@ -356,6 +357,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           isLoading={isLoading}
           placeholder={placeholderText[context]}
           context={context}
+          disableDoMode={true}
         />
       )}
     </div>

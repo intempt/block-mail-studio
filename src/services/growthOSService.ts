@@ -1,4 +1,3 @@
-
 import { OpenAIEmailService } from './openAIEmailService';
 
 export interface MarketingContext {
@@ -316,52 +315,108 @@ Return as JSON with chips that refine the ${currentTopic || 'content optimizatio
     }
   }
 
-  static async getContextSpecificResponse(
+  static async getAskModeResponse(
     userMessage: string,
     context: 'messages' | 'journeys' | 'snippets'
   ): Promise<string> {
-    const contextDescriptions = {
-      messages: 'email marketing specialist focusing on campaigns, automation, and conversion optimization',
-      journeys: 'customer journey architect designing automated flows and lifecycle optimization',
-      snippets: 'content optimization expert crafting high-converting copy and CTAs'
+    const askPrompts = {
+      messages: `You are GrowthOS, an AI email marketing specialist providing expert guidance. The user is asking for advice, not requesting you to build anything.
+
+User question: "${userMessage}"
+Context: Email marketing guidance
+Current topic: ${this.marketingContext.currentTopic || 'general email marketing'}
+
+Provide helpful, strategic advice about email marketing. Focus on:
+- Campaign strategy and planning
+- Audience segmentation techniques
+- Email automation best practices
+- Performance optimization tips
+- Industry insights and trends
+
+Respond as a knowledgeable consultant would - give actionable guidance without building anything.`,
+
+      journeys: `You are GrowthOS, an AI customer journey architect providing expert guidance. The user is asking for advice, not requesting you to build anything.
+
+User question: "${userMessage}"
+Context: Customer journey design guidance
+Current topic: ${this.marketingContext.currentTopic || 'general customer journeys'}
+
+Provide helpful, strategic advice about customer journey design. Focus on:
+- Journey mapping methodologies
+- Touchpoint identification and optimization
+- Automation trigger strategies
+- Customer lifecycle stages
+- Cross-channel orchestration
+
+Respond as a journey design expert would - give actionable guidance without building anything.`,
+
+      snippets: `You are GrowthOS, an AI content optimization expert providing expert guidance. The user is asking for advice, not requesting you to build anything.
+
+User question: "${userMessage}"
+Context: Content optimization guidance
+Current topic: ${this.marketingContext.currentTopic || 'general content optimization'}
+
+Provide helpful, strategic advice about content optimization. Focus on:
+- Copywriting best practices
+- Subject line optimization strategies
+- CTA design and placement
+- Personalization techniques
+- A/B testing methodologies
+
+Respond as a content optimization expert would - give actionable guidance without building anything.`
     };
-
-    const contextInstructions = {
-      messages: 'Provide specific email marketing advice. Focus on campaigns, segmentation, automation, and measurable results.',
-      journeys: 'Design customer journey solutions. Focus on touchpoint mapping, automation triggers, and lifecycle optimization.',
-      snippets: 'Create and optimize content. Focus on copywriting, personalization, A/B testing, and conversion optimization.'
-    };
-
-    const prompt = `You are GrowthOS, an AI ${contextDescriptions[context]}.
-
-${contextInstructions[context]}
-
-User message: "${userMessage}"
-Current topic: ${this.marketingContext.currentTopic || 'general'}
-Marketing context: ${JSON.stringify(this.marketingContext)}
-
-Respond with:
-1. Specific, actionable insights for ${context}
-2. Clear next steps
-3. Growth-focused recommendations
-4. Context-relevant expertise
-
-Keep responses conversational but expert-level. Focus on ${context}-specific outcomes.`;
 
     try {
       return await OpenAIEmailService.conversationalResponse({
-        userMessage: prompt,
+        userMessage: askPrompts[context],
         conversationContext: this.marketingContext.previousInteractions.slice(-3),
         currentEmailContent: ''
       });
     } catch (error) {
-      console.error('GrowthOS response error:', error);
+      console.error('Ask mode response error:', error);
       const fallbackResponses = {
-        messages: "I'm here to help you create high-converting email campaigns. What specific email marketing challenge are you facing?",
-        journeys: "I'm ready to design customer journeys that maximize engagement and lifetime value. What customer experience are we optimizing?",
-        snippets: "I can help you craft compelling copy that drives action. What content needs optimization for better performance?"
+        messages: "I'm here to provide email marketing guidance. What specific aspect of email campaigns would you like strategic advice on?",
+        journeys: "I'm ready to share customer journey insights. What part of the customer experience design process needs expert guidance?",
+        snippets: "I can provide content optimization expertise. What specific copywriting or content challenge would you like strategic advice on?"
       };
       return fallbackResponses[context];
+    }
+  }
+
+  static async getDoModeResponse(
+    userMessage: string,
+    context: 'messages' | 'journeys' | 'snippets'
+  ): Promise<{ content: string; emailData?: any }> {
+    if (context !== 'messages') {
+      return {
+        content: `Do mode is currently only available for email creation in Messages. For ${context}, I can provide expert guidance and strategic advice using Ask mode. Would you like me to help you plan your ${context === 'journeys' ? 'customer journey' : 'content optimization'} strategy instead?`
+      };
+    }
+
+    // Only generate emails in Messages context with Do mode
+    try {
+      const emailGenerationPrompt = `Create a professional email based on this request: ${userMessage}
+
+Current topic context: ${this.marketingContext.currentTopic || 'email marketing'}
+User goals: ${this.marketingContext.goals.join(', ') || 'email creation'}
+
+Generate an email with proper email-block structure for the email builder.`;
+
+      const emailResponse = await OpenAIEmailService.generateEmailContent({
+        prompt: emailGenerationPrompt,
+        emailType: 'promotional',
+        tone: 'professional'
+      });
+
+      return {
+        content: `Perfect! I've created a ${this.marketingContext.currentTopic || 'professional'} email based on your request. You can load it into the email builder to customize the design and content further.`,
+        emailData: emailResponse
+      };
+    } catch (error) {
+      console.error('Do mode email generation error:', error);
+      return {
+        content: "I had trouble generating the email. Let me help you plan the email strategy first, then we can create it together."
+      };
     }
   }
 
@@ -372,13 +427,16 @@ Keep responses conversational but expert-level. Focus on ${context}-specific out
     };
   }
 
-  // Legacy method for backward compatibility
+  // Legacy methods for backward compatibility
   static async generateMarketingChips(userMessage: string, context: 'messages' | 'journeys' | 'snippets', conversationDepth: number): Promise<GrowthOSChip[]> {
     return this.generateContextSpecificChips(userMessage, context, conversationDepth, this.marketingContext.currentTopic);
   }
 
-  // Legacy method for backward compatibility  
   static async getGrowthOSResponse(userMessage: string, context: 'messages' | 'journeys' | 'snippets'): Promise<string> {
-    return this.getContextSpecificResponse(userMessage, context);
+    return this.getAskModeResponse(userMessage, context);
+  }
+
+  static async getContextSpecificResponse(userMessage: string, context: 'messages' | 'journeys' | 'snippets'): Promise<string> {
+    return this.getAskModeResponse(userMessage, context);
   }
 }
