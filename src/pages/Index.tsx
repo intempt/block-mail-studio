@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import MessagesPage from './Messages';
+import WorkspacePage from './WorkspacePage';
 import EmailEditor from '@/components/EmailEditor';
 
 const Index = () => {
@@ -18,7 +18,7 @@ const Index = () => {
     setShowEditor(true);
   };
 
-  const handleBackToMessages = () => {
+  const handleBackToWorkspace = () => {
     setShowEditor(false);
     setInitialEmailHTML('');
     setInitialSubjectLine('');
@@ -29,13 +29,13 @@ const Index = () => {
       <EmailEditor 
         initialHTML={initialEmailHTML}
         initialSubject={initialSubjectLine}
-        onBack={handleBackToMessages}
+        onBack={handleBackToWorkspace}
       />
     );
   }
 
   return (
-    <MessagesPage onEmailBuilderOpen={handleEmailBuilderOpen} />
+    <WorkspacePage onEmailBuilderOpen={handleEmailBuilderOpen} />
   );
 };
 

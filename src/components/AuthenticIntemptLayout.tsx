@@ -21,14 +21,18 @@ import {
 
 interface AuthenticIntemptLayoutProps {
   children: React.ReactNode;
+  activeContext?: string;
 }
 
-export const AuthenticIntemptLayout: React.FC<AuthenticIntemptLayoutProps> = ({ children }) => {
+export const AuthenticIntemptLayout: React.FC<AuthenticIntemptLayoutProps> = ({ 
+  children, 
+  activeContext = 'Journeys' 
+}) => {
   const navigationItems = [
     { icon: Home, label: 'Home', active: false },
     { icon: Users, label: 'Users', active: false },
     { icon: CreditCard, label: 'Accounts', active: false },
-    { icon: GitBranch, label: 'Journeys', active: false },
+    { icon: GitBranch, label: 'Journeys', active: true },
     { icon: Target, label: 'Recommendations', active: false },
     { icon: Eye, label: 'Experiences', active: false },
     { icon: BarChart3, label: 'Analytics', active: false },
@@ -61,7 +65,7 @@ export const AuthenticIntemptLayout: React.FC<AuthenticIntemptLayoutProps> = ({ 
                 key={item.label}
                 variant="ghost"
                 className={`w-full justify-start text-left ${
-                  item.label === 'Messages' || item.label === 'Agents' 
+                  item.label === 'Journeys'
                     ? 'bg-blue-50 text-blue-700 border border-blue-200' 
                     : 'text-gray-600 hover:bg-gray-50'
                 }`}
@@ -70,14 +74,6 @@ export const AuthenticIntemptLayout: React.FC<AuthenticIntemptLayoutProps> = ({ 
                 {item.label}
               </Button>
             ))}
-            {/* Messages item - special highlighting */}
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-left bg-blue-50 text-blue-700 border border-blue-200"
-            >
-              <Zap className="w-4 h-4 mr-3" />
-              Messages
-            </Button>
           </div>
         </nav>
 
@@ -101,13 +97,13 @@ export const AuthenticIntemptLayout: React.FC<AuthenticIntemptLayoutProps> = ({ 
         <div className="bg-white border-b border-gray-200">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
-              {/* Breadcrumbs - Fixed the > characters */}
+              {/* Breadcrumbs - Dynamic context */}
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <span>Trollu namas</span>
                 <span>{'>'}</span>
                 <span>Production</span>
                 <span>{'>'}</span>
-                <span className="text-gray-900 font-medium">Messages</span>
+                <span className="text-gray-900 font-medium">{activeContext}</span>
               </div>
 
               {/* Right side */}
