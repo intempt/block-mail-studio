@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, User } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
-import { MessagesTable } from './MessagesTable';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
 
 interface Message {
@@ -80,7 +80,6 @@ Generate 5 conversational next-step suggestions that would help the user refine 
       }
     } catch (error) {
       console.error('Error generating contextual chips:', error);
-      // Keep current chips on error
     } finally {
       setIsGeneratingChips(false);
     }
@@ -113,11 +112,8 @@ Generate 5 conversational next-step suggestions that would help the user refine 
       };
 
       setMessages(prev => [...prev, aiResponse]);
-
-      // Generate contextual chips based on the conversation
       await generateContextualChips(message, response);
 
-      // If HTML email in message mode, transition to builder
       if (message.toLowerCase().includes('html email') && mode === 'message') {
         setTimeout(() => {
           if (onEmailBuilderOpen) {
@@ -166,8 +162,6 @@ Generate 5 conversational next-step suggestions that would help the user refine 
       };
 
       setMessages(prev => [...prev, aiResponse]);
-
-      // Generate new contextual chips
       await generateContextualChips(chip.label, response);
 
     } catch (error) {
@@ -194,89 +188,81 @@ Generate 5 conversational next-step suggestions that would help the user refine 
 
   return (
     <div className="space-y-6">
-      {/* Chat Interface */}
-      <Card className="bg-white shadow-sm">
-        <div className="p-6">
-          {/* Chat Messages */}
-          <ScrollArea className="h-64 mb-6">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div key={message.id}>
-                  <div className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {(message.type === 'ai' || message.type === 'system') && (
-                      <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Bot className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                    
-                    <div className={`max-w-[70%] rounded-xl p-4 ${
-                      message.type === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : message.type === 'system'
-                        ? 'bg-gray-100 text-gray-700'
-                        : 'bg-gray-50 border border-gray-200 text-gray-900'
-                    }`}>
-                      <div className="whitespace-pre-wrap">{message.content}</div>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs opacity-70">
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                        {message.mode && (
-                          <span className="text-xs opacity-70 ml-2">
-                            {message.mode === 'ask' ? '💭' : '⚡'}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {message.type === 'user' && (
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-gray-600" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {isLoading && (
-                <div className="flex gap-4 justify-start">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+      {/* Chat Messages */}
+      <ScrollArea className="h-64 mb-6">
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div key={message.id}>
+              <div className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {(message.type === 'ai' || message.type === 'system') && (
+                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
-                  <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
+                )}
+                
+                <div className={`max-w-[70%] rounded-xl p-4 ${
+                  message.type === 'user'
+                    ? 'bg-blue-600 text-white'
+                    : message.type === 'system'
+                    ? 'bg-gray-100 text-gray-700'
+                    : 'bg-gray-50 border border-gray-200 text-gray-900'
+                }`}>
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="flex items-center justify-between mt-2">
+                    <p className="text-xs opacity-70">
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    {message.mode && (
+                      <span className="text-xs opacity-70 ml-2">
+                        {message.mode === 'ask' ? '💭' : '⚡'}
+                      </span>
+                    )}
                   </div>
                 </div>
-              )}
+                
+                {message.type === 'user' && (
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-gray-600" />
+                  </div>
+                )}
+              </div>
             </div>
-          </ScrollArea>
-
-          {/* Conversational Chips */}
-          <div className="mb-6">
-            <ConversationalChipGenerator
-              chips={chips}
-              onChipSelect={handleChipSelect}
-              onRefreshChips={handleRefreshChips}
-              onResetToStarter={resetToStarterChips}
-              isLoading={isLoading || isGeneratingChips}
-            />
-          </div>
-
-          {/* Enhanced Input */}
-          <EnhancedChatInput
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            placeholder="your message needs..."
-          />
+          ))}
+          
+          {isLoading && (
+            <div className="flex gap-4 justify-start">
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </Card>
+      </ScrollArea>
 
-      {/* Messages Table */}
-      <MessagesTable />
+      {/* Conversational Chips */}
+      <div className="mb-6">
+        <ConversationalChipGenerator
+          chips={chips}
+          onChipSelect={handleChipSelect}
+          onRefreshChips={handleRefreshChips}
+          onResetToStarter={resetToStarterChips}
+          isLoading={isLoading || isGeneratingChips}
+        />
+      </div>
+
+      {/* Enhanced Input */}
+      <EnhancedChatInput
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        placeholder="your message needs..."
+      />
     </div>
   );
 };
