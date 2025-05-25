@@ -25,10 +25,11 @@ interface ConversationalMessagesInterfaceProps {
 }
 
 const STARTER_CHIPS: ConversationalChip[] = [
-  { id: 'html-email', label: 'HTML email', type: 'starter' },
-  { id: 'marketing-email', label: 'Marketing email', type: 'starter' },
-  { id: 'sms-campaign', label: 'SMS campaign', type: 'starter' },
-  { id: 'push-notification', label: 'Push notification', type: 'starter' }
+  { id: 'understand-customers', label: 'Who are my best customers and why?', type: 'starter' },
+  { id: 'personalize-experience', label: 'What if I could personalize every interaction?', type: 'starter' },
+  { id: 'automate-journey', label: 'How can I automate my customer experience?', type: 'starter' },
+  { id: 'data-insights', label: 'What story is my data telling me?', type: 'starter' },
+  { id: 'engagement-strategy', label: 'How do I keep customers coming back?', type: 'starter' }
 ];
 
 export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInterfaceProps> = ({
@@ -43,7 +44,7 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
     const welcomeMessage: Message = {
       id: '1',
       type: 'ai',
-      content: 'What kind of message would you like to create today? I can help you build SMS campaigns, push notifications, or email campaigns.',
+      content: 'What would you like to explore? Ask me anything about your customers, campaigns, or growth strategy.',
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -56,13 +57,13 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
         `${m.type}: ${m.content}`
       ).join('\n');
 
-      const prompt = `Based on this conversation about creating a message campaign:
+      const prompt = `Based on this conversation about marketing and customer engagement:
 
 User latest: "${userMessage}"
 AI response: "${aiResponse}"
 Context: ${conversationContext}
 
-Generate 5 conversational next-step suggestions that would help the user refine their message campaign. Make them natural and specific to what they're trying to build. Return as JSON array of strings:
+Generate 5 natural follow-up questions that would help explore their marketing strategy deeper. Make them conversational and exploratory. Return as JSON array of strings:
 
 {"suggestions": ["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4", "suggestion 5"]}`;
 

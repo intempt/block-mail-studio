@@ -25,38 +25,13 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
   onRefreshChips,
   isLoading = false
 }) => {
-  const starterChips = chips.filter(chip => chip.type === 'starter');
-  const contextualChips = chips.filter(chip => chip.type === 'contextual');
-
   return (
     <div className="space-y-4">
-      {/* Starter Chips */}
-      {starterChips.length > 0 && (
+      {/* All chips in one simple grid */}
+      {chips.length > 0 && (
         <div>
-          <div className="flex flex-wrap gap-2">
-            {starterChips.map((chip) => (
-              <Button
-                key={chip.id}
-                variant="outline"
-                size="sm"
-                onClick={() => onChipSelect(chip)}
-                className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all"
-                disabled={isLoading}
-              >
-                <Sparkles className="w-3 h-3 mr-2" />
-                <span>{chip.label}</span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Contextual Chips */}
-      {contextualChips.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-700">Next Steps</h4>
-            {onRefreshChips && (
+          {onRefreshChips && chips.some(chip => chip.type === 'contextual') && (
+            <div className="flex justify-end mb-3">
               <Button
                 variant="ghost"
                 size="sm"
@@ -67,18 +42,23 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
                 <RefreshCw className={`w-3 h-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-            )}
-          </div>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
-            {contextualChips.map((chip) => (
+            {chips.map((chip) => (
               <Button
                 key={chip.id}
                 variant="outline"
                 size="sm"
                 onClick={() => onChipSelect(chip)}
-                className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all"
+                className={`transition-all ${
+                  chip.type === 'starter' 
+                    ? 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300'
+                    : 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                }`}
                 disabled={isLoading}
               >
+                {chip.type === 'starter' && <Sparkles className="w-3 h-3 mr-2" />}
                 <span>{chip.label}</span>
               </Button>
             ))}
@@ -95,26 +75,31 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
   );
 };
 
-// Natural conversational starter chips
+// Natural conversational starter chips - more question-based and exploratory
 export const getStarterChips = (): Chip[] => [
   {
-    id: 'email-customers',
-    label: 'Email my customers',
+    id: 'understand-customers',
+    label: 'Who are my best customers and why?',
     type: 'starter'
   },
   {
-    id: 'send-sms',
-    label: 'Send SMS updates',
+    id: 'personalize-experience',
+    label: 'What if I could personalize every interaction?',
     type: 'starter'
   },
   {
-    id: 'app-notifications',
-    label: 'App notifications',
+    id: 'automate-journey',
+    label: 'How can I automate my customer experience?',
     type: 'starter'
   },
   {
-    id: 'rich-email',
-    label: 'Rich email design',
+    id: 'data-insights',
+    label: 'What story is my data telling me?',
+    type: 'starter'
+  },
+  {
+    id: 'engagement-strategy',
+    label: 'How do I keep customers coming back?',
     type: 'starter'
   }
 ];
