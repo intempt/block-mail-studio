@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { AgenticHomepage } from '@/components/AgenticHomepage';
+import { IntemptMessagesInterface } from '@/components/IntemptMessagesInterface';
 import EmailEditor from '@/components/EmailEditor';
 import { EmailTemplate } from '@/components/TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
@@ -12,7 +12,7 @@ const Index = () => {
 
   const templates = DirectTemplateService.getAllTemplates();
 
-  const handleEnterEditor = (emailHTML?: string, subjectLine?: string) => {
+  const handleEmailBuilderOpen = (emailHTML?: string, subjectLine?: string) => {
     if (emailHTML) {
       setInitialEmailHTML(emailHTML);
     }
@@ -22,7 +22,7 @@ const Index = () => {
     setShowEditor(true);
   };
 
-  const handleBackToHomepage = () => {
+  const handleBackToMessages = () => {
     setShowEditor(false);
     setInitialEmailHTML('');
     setInitialSubjectLine('');
@@ -33,15 +33,14 @@ const Index = () => {
       <EmailEditor 
         initialHTML={initialEmailHTML}
         initialSubject={initialSubjectLine}
-        onBack={handleBackToHomepage}
+        onBack={handleBackToMessages}
       />
     );
   }
 
   return (
-    <AgenticHomepage 
-      templates={templates}
-      onEnterEditor={handleEnterEditor}
+    <IntemptMessagesInterface 
+      onEmailBuilderOpen={handleEmailBuilderOpen}
     />
   );
 };

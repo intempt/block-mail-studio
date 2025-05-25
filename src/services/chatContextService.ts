@@ -1,3 +1,4 @@
+
 interface ChatContext {
   emailType: string;
   currentSubject: string;
@@ -10,6 +11,13 @@ interface ChatContext {
   }>;
   uploadedImages: string[];
   mode: 'chat' | 'agentic';
+  channelType?: 'email' | 'sms' | 'push';
+  messageFormat?: 'html' | 'rich-text';
+  conversationFlow?: {
+    stage: 'initial' | 'channel-selected' | 'mode-selected' | 'building' | 'complete';
+    selectedChips: string[];
+    requirements: Record<string, any>;
+  };
 }
 
 export class ChatContextService {
@@ -20,7 +28,12 @@ export class ChatContextService {
     userGoals: [],
     conversationHistory: [],
     uploadedImages: [],
-    mode: 'agentic'  // Changed default to agentic
+    mode: 'agentic',
+    conversationFlow: {
+      stage: 'initial',
+      selectedChips: [],
+      requirements: {}
+    }
   };
 
   static updateContext(updates: Partial<ChatContext>): void {
@@ -52,6 +65,27 @@ export class ChatContextService {
     return this.context.mode;
   }
 
+  static setChannelType(channelType: 'email' | 'sms' | 'push'): void {
+    this.context.channelType = channelType;
+  }
+
+  static getChannelType(): 'email' | 'sms' | 'push' | undefined {
+    return this.context.channelType;
+  }
+
+  static updateConversationFlow(updates: Partial<ChatContext['conversationFlow']>): void {
+    this.context.conversationFlow = {
+      ...this.context.conversationFlow,
+      ...updates
+    };
+  }
+
+  static addSelectedChip(chip: string): void {
+    if (!this.context.conversationFlow?.selectedChips.includes(chip)) {
+      this.context.conversationFlow?.selectedChips.push(chip);
+    }
+  }
+
   static clearContext(): void {
     this.context = {
       emailType: 'unknown',
@@ -60,7 +94,12 @@ export class ChatContextService {
       userGoals: [],
       conversationHistory: [],
       uploadedImages: [],
-      mode: 'chat'
+      mode: 'chat',
+      conversationFlow: {
+        stage: 'initial',
+        selectedChips: [],
+        requirements: {}
+      }
     };
   }
 
@@ -74,9 +113,13 @@ export class ChatContextService {
     
     return `
 Current Context:
+- Channel Type: ${ctx.channelType || 'Not selected'}
+- Message Format: ${ctx.messageFormat || 'Not specified'}
 - Email Type: ${ctx.emailType}
 - Subject: ${ctx.currentSubject || 'Not set'}
 - Mode: ${ctx.mode}
+- Conversation Stage: ${ctx.conversationFlow?.stage || 'initial'}
+- Selected Chips: ${ctx.conversationFlow?.selectedChips.join(', ') || 'None'}
 - User Goals: ${ctx.userGoals.join(', ') || 'None specified'}
 - Recent Conversation: ${this.getRecentContext(3)}
 - Images Available: ${ctx.uploadedImages.length}
@@ -91,11 +134,17 @@ Current Email Content Preview: ${ctx.emailContent.slice(0, 200)}...
     this.context.userGoals = [task];
     this.context.mode = 'agentic';
     this.addToHistory('user', task);
+    this.updateConversationFlow({ stage: 'initial' });
   }
 
   // Method to track email creation progress
   static updateEmailProgress(emailHTML: string, subject: string): void {
     this.context.emailContent = emailHTML;
     this.context.currentSubject = subject;
+  }
+
+  // Method to track conversation progress
+  static advanceConversationStage(stage: ChatContext['conversationFlow']['stage']): void {
+    this.updateConversationFlow({ stage });
   }
 }
