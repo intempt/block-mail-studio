@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { IntegratedMessagesInterface } from '@/components/IntegratedMessagesInterface';
-import { IntemptLayout } from '@/components/IntemptLayout';
+import MessagesPage from './Messages';
 import EmailEditor from '@/components/EmailEditor';
 
 const Index = () => {
@@ -36,11 +35,7 @@ const Index = () => {
   }
 
   return (
-    <IntemptLayout>
-      <IntegratedMessagesInterface 
-        onEmailBuilderOpen={handleEmailBuilderOpen}
-      />
-    </IntemptLayout>
+    <MessagesPage onEmailBuilderOpen={handleEmailBuilderOpen} />
   );
 };
 
