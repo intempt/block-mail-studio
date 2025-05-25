@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -165,7 +164,7 @@ export default function EmailEditor({
     setSelectedBlockId(null);
   };
 
-  const handleGlobalStylesChange = (styles: Record<string, string>) => {
+  const handleGlobalStylesChange = (styles: any) => {
     // Apply styles to all blocks or the canvas
     console.log('Applying global styles:', styles);
   };
@@ -426,10 +425,7 @@ export default function EmailEditor({
 
       {showTemplateLibrary && (
         <EmailTemplateLibrary
-          onSelectTemplate={handleTemplateLoad}
-          onSaveTemplate={handleSaveAsTemplate}
-          currentEmailHTML={emailHTML}
-          currentSubject={subjectLine}
+          editor={editor}
         />
       )}
     </div>
