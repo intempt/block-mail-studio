@@ -1,16 +1,13 @@
 
 import React, { useState } from 'react';
-import { IntemptMessagesInterface } from '@/components/IntemptMessagesInterface';
+import { IntegratedMessagesInterface } from '@/components/IntegratedMessagesInterface';
+import { IntemptLayout } from '@/components/IntemptLayout';
 import EmailEditor from '@/components/EmailEditor';
-import { EmailTemplate } from '@/components/TemplateManager';
-import { DirectTemplateService } from '@/services/directTemplateService';
 
 const Index = () => {
   const [showEditor, setShowEditor] = useState(false);
   const [initialEmailHTML, setInitialEmailHTML] = useState<string>('');
   const [initialSubjectLine, setInitialSubjectLine] = useState<string>('');
-
-  const templates = DirectTemplateService.getAllTemplates();
 
   const handleEmailBuilderOpen = (emailHTML?: string, subjectLine?: string) => {
     if (emailHTML) {
@@ -39,9 +36,11 @@ const Index = () => {
   }
 
   return (
-    <IntemptMessagesInterface 
-      onEmailBuilderOpen={handleEmailBuilderOpen}
-    />
+    <IntemptLayout>
+      <IntegratedMessagesInterface 
+        onEmailBuilderOpen={handleEmailBuilderOpen}
+      />
+    </IntemptLayout>
   );
 };
 
