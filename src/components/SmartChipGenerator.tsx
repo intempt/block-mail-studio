@@ -2,10 +2,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { 
-  Mail, 
-  MessageSquare, 
-  Bell, 
-  FileText,
   Sparkles,
   RefreshCw
 } from 'lucide-react';
@@ -14,8 +10,6 @@ interface Chip {
   id: string;
   label: string;
   type: 'starter' | 'contextual';
-  campaignType?: 'sms' | 'push' | 'marketing-email' | 'html-email';
-  icon?: React.ReactNode;
 }
 
 interface SmartChipGeneratorProps {
@@ -31,26 +25,6 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
   onRefreshChips,
   isLoading = false
 }) => {
-  const getChipIcon = (campaignType?: string) => {
-    switch (campaignType) {
-      case 'sms': return <MessageSquare className="w-3 h-3" />;
-      case 'push': return <Bell className="w-3 h-3" />;
-      case 'marketing-email': return <Mail className="w-3 h-3" />;
-      case 'html-email': return <FileText className="w-3 h-3" />;
-      default: return <Sparkles className="w-3 h-3" />;
-    }
-  };
-
-  const getChipStyle = (campaignType?: string) => {
-    switch (campaignType) {
-      case 'sms': return 'border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300';
-      case 'push': return 'border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300';
-      case 'marketing-email': return 'border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300';
-      case 'html-email': return 'border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300';
-      default: return 'border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300';
-    }
-  };
-
   const starterChips = chips.filter(chip => chip.type === 'starter');
   const contextualChips = chips.filter(chip => chip.type === 'contextual');
 
@@ -59,9 +33,6 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
       {/* Starter Chips */}
       {starterChips.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-700">Campaign Types</h4>
-          </div>
           <div className="flex flex-wrap gap-2">
             {starterChips.map((chip) => (
               <Button
@@ -69,11 +40,11 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => onChipSelect(chip)}
-                className={`${getChipStyle(chip.campaignType)} transition-all`}
+                className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all"
                 disabled={isLoading}
               >
-                {chip.icon || getChipIcon(chip.campaignType)}
-                <span className="ml-2">{chip.label}</span>
+                <Sparkles className="w-3 h-3 mr-2" />
+                <span>{chip.label}</span>
               </Button>
             ))}
           </div>
@@ -105,11 +76,10 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => onChipSelect(chip)}
-                className={`${getChipStyle(chip.campaignType)} transition-all`}
+                className="border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all"
                 disabled={isLoading}
               >
-                {chip.icon || getChipIcon(chip.campaignType)}
-                <span className="ml-2">{chip.label}</span>
+                <span>{chip.label}</span>
               </Button>
             ))}
           </div>
@@ -125,34 +95,26 @@ export const SmartChipGenerator: React.FC<SmartChipGeneratorProps> = ({
   );
 };
 
-// Updated starter chips function
+// Natural conversational starter chips
 export const getStarterChips = (): Chip[] => [
   {
-    id: 'sms',
-    label: 'SMS Campaign',
-    type: 'starter',
-    campaignType: 'sms',
-    icon: <MessageSquare className="w-3 h-3" />
+    id: 'email-customers',
+    label: 'Email my customers',
+    type: 'starter'
   },
   {
-    id: 'push',
-    label: 'Push Notification',
-    type: 'starter',
-    campaignType: 'push',
-    icon: <Bell className="w-3 h-3" />
+    id: 'send-sms',
+    label: 'Send SMS updates',
+    type: 'starter'
   },
   {
-    id: 'marketing-email',
-    label: 'Marketing Email',
-    type: 'starter',
-    campaignType: 'marketing-email',
-    icon: <Mail className="w-3 h-3" />
+    id: 'app-notifications',
+    label: 'App notifications',
+    type: 'starter'
   },
   {
-    id: 'html-email',
-    label: 'HTML Email',
-    type: 'starter',
-    campaignType: 'html-email',
-    icon: <FileText className="w-3 h-3" />
+    id: 'rich-email',
+    label: 'Rich email design',
+    type: 'starter'
   }
 ];

@@ -6,13 +6,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Bot, 
   User, 
-  Plus,
-  Sparkles
+  Plus
 } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
-import { SmartChipGenerator } from './SmartChipGenerator';
+import { SmartChipGenerator, getStarterChips } from './SmartChipGenerator';
 import { MessagesTable } from './MessagesTable';
-import { ContextualChipService, CampaignContext } from '@/services/contextualChipService';
+import { ConversationalChipService } from '@/services/conversationalChipService';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
 
 interface Message {
@@ -27,41 +26,11 @@ interface Chip {
   id: string;
   label: string;
   type: 'starter' | 'contextual';
-  campaignType?: 'sms' | 'push' | 'marketing-email' | 'html-email';
-  icon?: React.ReactNode;
 }
 
 interface IntegratedMessagesInterfaceProps {
   onEmailBuilderOpen: (emailHTML?: string, subjectLine?: string) => void;
 }
-
-// Simplified starter chips - direct campaign types
-const getStarterChips = (): Chip[] => [
-  {
-    id: 'sms',
-    label: 'SMS Campaign',
-    type: 'starter',
-    campaignType: 'sms'
-  },
-  {
-    id: 'push',
-    label: 'Push Notification',
-    type: 'starter',
-    campaignType: 'push'
-  },
-  {
-    id: 'marketing-email',
-    label: 'Marketing Email',
-    type: 'starter',
-    campaignType: 'marketing-email'
-  },
-  {
-    id: 'html-email',
-    label: 'HTML Email',
-    type: 'starter',
-    campaignType: 'html-email'
-  }
-];
 
 export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfaceProps> = ({
   onEmailBuilderOpen
@@ -69,14 +38,13 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
   const [messages, setMessages] = useState<Message[]>([]);
   const [chips, setChips] = useState<Chip[]>(getStarterChips());
   const [isLoading, setIsLoading] = useState(false);
-  const [campaignContext, setCampaignContext] = useState<CampaignContext | null>(null);
+  const [conversationHistory, setConversationHistory] = useState<string[]>([]);
 
   useEffect(() => {
-    // Initialize with welcome message
     const welcomeMessage: Message = {
       id: '1',
       type: 'ai',
-      content: 'What kind of campaign would you like to create? Select a campaign type below to get started.',
+      content: 'What would you like to create? Select one of the options below or describe what you need.',
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
@@ -92,28 +60,18 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const newHistory = [...conversationHistory, message];
+    setConversationHistory(newHistory);
     setIsLoading(true);
 
     try {
-      // Handle Do mode for email campaigns
-      if (mode === 'do' && campaignContext) {
-        if (!ContextualChipService.canUseDoMode(campaignContext.campaignType)) {
+      // Handle Do mode for email creation
+      if (mode === 'do') {
+        if (!ConversationalChipService.canCreateEmail(newHistory)) {
           const errorResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: `"Do" mode is currently available for Marketing Email and HTML Email campaigns only. Other campaign types are coming soon! Switch to "Ask" mode for planning assistance.`,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, errorResponse]);
-          setIsLoading(false);
-          return;
-        }
-
-        if (!ContextualChipService.hasEnoughContext(campaignContext)) {
-          const errorResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'ai',
-            content: `I need a bit more context to create your ${campaignContext.campaignType}. Please select a few more options or provide more details about your campaign goals.`,
+            content: 'I need a bit more context to create your email. Please provide more details about what you want to create.',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, errorResponse]);
@@ -122,7 +80,7 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
         }
 
         // Generate email content and open builder
-        const emailGenerationPrompt = `Create a ${campaignContext.campaignType} based on this conversation context: ${campaignContext.conversationHistory.join(' ')}. Latest request: ${message}`;
+        const emailGenerationPrompt = `Create an email based on this conversation: ${newHistory.join(' ')}. Latest request: ${message}`;
         
         const emailResponse = await OpenAIEmailService.generateEmailContent({
           prompt: emailGenerationPrompt,
@@ -133,7 +91,7 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
         const successResponse: Message = {
           id: (Date.now() + 1).toString(),
           type: 'ai',
-          content: `Perfect! I've created your ${campaignContext.campaignType} based on our conversation. Opening the email builder now...`,
+          content: 'Perfect! I\'ve created your email based on our conversation. Opening the email builder now...',
           timestamp: new Date()
         };
 
@@ -148,13 +106,9 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
       }
 
       // Regular conversational response
-      const contextualPrompt = campaignContext 
-        ? `User is creating a ${campaignContext.campaignType}. Context: ${campaignContext.conversationHistory.join(' ')}. Latest: ${message}`
-        : `User message: ${message}`;
-
       const response = await OpenAIEmailService.conversationalResponse({
-        userMessage: contextualPrompt,
-        conversationContext: campaignContext?.conversationHistory.slice(-3) || [],
+        userMessage: message,
+        conversationContext: newHistory.slice(-3),
         currentEmailContent: ''
       });
 
@@ -167,25 +121,15 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
 
       setMessages(prev => [...prev, aiResponse]);
 
-      // Update context and generate new chips
-      if (campaignContext) {
-        const updatedContext: CampaignContext = {
-          ...campaignContext,
-          conversationHistory: [...campaignContext.conversationHistory, message],
-          currentDepth: campaignContext.currentDepth + 1
-        };
-        setCampaignContext(updatedContext);
+      // Generate new contextual chips
+      const contextualChips = await ConversationalChipService.generateContextualChips(newHistory, message);
+      const newChips: Chip[] = contextualChips.map((chip, index) => ({
+        id: `contextual-${Date.now()}-${index}`,
+        label: chip,
+        type: 'contextual'
+      }));
 
-        const contextualChips = await ContextualChipService.generateContextualChips(updatedContext);
-        const newChips: Chip[] = contextualChips.map((chip, index) => ({
-          id: `contextual-${Date.now()}-${index}`,
-          label: chip,
-          type: 'contextual',
-          campaignType: updatedContext.campaignType
-        }));
-
-        setChips([...getStarterChips(), ...newChips]);
-      }
+      setChips([...getStarterChips(), ...newChips]);
 
     } catch (error) {
       console.error('Error processing message:', error);
@@ -210,74 +154,35 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
     };
 
     setMessages(prev => [...prev, chipMessage]);
+    const newHistory = [...conversationHistory, chip.label];
+    setConversationHistory(newHistory);
     setIsLoading(true);
 
     try {
-      // If starter chip, initialize campaign context
-      if (chip.type === 'starter' && chip.campaignType) {
-        const newContext: CampaignContext = {
-          campaignType: chip.campaignType,
-          conversationHistory: [chip.label],
-          currentDepth: 1
-        };
-        setCampaignContext(newContext);
+      const response = await OpenAIEmailService.conversationalResponse({
+        userMessage: chip.label,
+        conversationContext: newHistory.slice(-3),
+        currentEmailContent: ''
+      });
 
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: `Great choice! Let's create your ${chip.label}. I'll help you gather the details needed to build an effective campaign. What's your primary goal for this campaign?`,
-          timestamp: new Date()
-        };
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: response,
+        timestamp: new Date()
+      };
 
-        setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev, aiResponse]);
 
-        // Generate initial contextual chips
-        const contextualChips = await ContextualChipService.generateContextualChips(newContext);
-        const newChips: Chip[] = contextualChips.map((contextChip, index) => ({
-          id: `contextual-${Date.now()}-${index}`,
-          label: contextChip,
-          type: 'contextual',
-          campaignType: chip.campaignType
-        }));
+      // Generate new contextual chips
+      const contextualChips = await ConversationalChipService.generateContextualChips(newHistory, chip.label);
+      const newChips: Chip[] = contextualChips.map((contextChip, index) => ({
+        id: `contextual-${Date.now()}-${index}`,
+        label: contextChip,
+        type: 'contextual'
+      }));
 
-        setChips([...getStarterChips(), ...newChips]);
-      } else {
-        // Handle contextual chip selection
-        const response = await OpenAIEmailService.conversationalResponse({
-          userMessage: `User selected: ${chip.label}`,
-          conversationContext: campaignContext?.conversationHistory.slice(-3) || [],
-          currentEmailContent: ''
-        });
-
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: response,
-          timestamp: new Date()
-        };
-
-        setMessages(prev => [...prev, aiResponse]);
-
-        // Update context if we have one
-        if (campaignContext) {
-          const updatedContext: CampaignContext = {
-            ...campaignContext,
-            conversationHistory: [...campaignContext.conversationHistory, chip.label],
-            currentDepth: campaignContext.currentDepth + 1
-          };
-          setCampaignContext(updatedContext);
-
-          const contextualChips = await ContextualChipService.generateContextualChips(updatedContext);
-          const newChips: Chip[] = contextualChips.map((contextChip, index) => ({
-            id: `contextual-${Date.now()}-${index}`,
-            label: contextChip,
-            type: 'contextual',
-            campaignType: updatedContext.campaignType
-          }));
-
-          setChips([...getStarterChips(), ...newChips]);
-        }
-      }
+      setChips([...getStarterChips(), ...newChips]);
     } catch (error) {
       console.error('Error processing chip selection:', error);
     } finally {
@@ -286,16 +191,18 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
   };
 
   const handleRefreshChips = async () => {
-    if (!campaignContext) return;
+    if (conversationHistory.length === 0) return;
     
     setIsLoading(true);
     try {
-      const refreshedChips = await ContextualChipService.generateContextualChips(campaignContext);
+      const refreshedChips = await ConversationalChipService.generateContextualChips(
+        conversationHistory, 
+        conversationHistory[conversationHistory.length - 1]
+      );
       const newChips: Chip[] = refreshedChips.map((chip, index) => ({
         id: `refresh-${Date.now()}-${index}`,
         label: chip,
-        type: 'contextual',
-        campaignType: campaignContext.campaignType
+        type: 'contextual'
       }));
 
       setChips([...getStarterChips(), ...newChips]);
@@ -307,12 +214,12 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
   };
 
   const resetConversation = () => {
-    setCampaignContext(null);
+    setConversationHistory([]);
     setChips(getStarterChips());
     const resetMessage: Message = {
       id: Date.now().toString(),
       type: 'system',
-      content: 'Conversation reset. Select a campaign type to start fresh.',
+      content: 'Conversation reset. What would you like to create?',
       timestamp: new Date()
     };
     setMessages(prev => [...prev, resetMessage]);
@@ -327,7 +234,7 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
           <p className="text-gray-600">Create and manage your email, SMS, and push campaigns</p>
         </div>
         <div className="flex gap-3">
-          {campaignContext && (
+          {conversationHistory.length > 0 && (
             <Button 
               variant="outline" 
               onClick={resetConversation}
@@ -346,20 +253,14 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
       {/* Chat Interface */}
       <Card className="bg-white shadow-sm">
         <div className="p-6">
-          {/* Campaign Context Indicator */}
-          {campaignContext && (
+          {/* Conversation Progress Indicator */}
+          {conversationHistory.length > 0 && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-sm font-medium text-blue-900">
-                    Creating: {campaignContext.campaignType.replace('-', ' ').toUpperCase()}
-                  </span>
-                  <span className="text-xs text-blue-700 ml-2">
-                    Context depth: {campaignContext.currentDepth}/4
-                  </span>
-                </div>
-                {ContextualChipService.hasEnoughContext(campaignContext) && 
-                 ContextualChipService.canUseDoMode(campaignContext.campaignType) && (
+                <span className="text-sm font-medium text-blue-900">
+                  Conversation depth: {conversationHistory.length} messages
+                </span>
+                {ConversationalChipService.canCreateEmail(conversationHistory) && (
                   <span className="text-xs text-green-700 font-medium">
                     ✓ Ready for "Do" mode
                   </span>
@@ -440,7 +341,7 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
           <EnhancedChatInput
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
-            placeholder={campaignContext ? `your ${campaignContext.campaignType} needs...` : "your campaign needs..."}
+            placeholder="what you need..."
           />
         </div>
       </Card>
