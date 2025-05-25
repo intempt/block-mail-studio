@@ -21,6 +21,7 @@ interface ConversationalChip {
   id: string;
   label: string;
   type: 'starter' | 'contextual';
+  topic?: string;
 }
 
 interface UniversalConversationalInterfaceProps {
@@ -37,8 +38,8 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingChips, setIsGeneratingChips] = useState(false);
   const [conversationDepth, setConversationDepth] = useState(0);
+  const [currentTopic, setCurrentTopic] = useState<string | undefined>();
 
-  // Reset interface when context changes
   useEffect(() => {
     const welcomeMessage: Message = {
       id: `welcome-${context}`,
@@ -48,6 +49,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     };
     setMessages([welcomeMessage]);
     setConversationDepth(0);
+    setCurrentTopic(undefined);
     GrowthOSService.resetContext();
     generateInitialChips();
   }, [context]);
@@ -55,7 +57,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const generateInitialChips = async () => {
     setIsGeneratingChips(true);
     try {
-      const growthChips = await GrowthOSService.generateMarketingChips(
+      const growthChips = await GrowthOSService.generateContextSpecificChips(
         'initial conversation',
         context,
         0
@@ -64,7 +66,8 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
       const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
         id: chip.id,
         label: chip.label,
-        type: 'starter' as const
+        type: 'starter' as const,
+        topic: chip.topic
       }));
       
       setChips(conversationalChips);
@@ -79,22 +82,22 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const getFallbackChips = (context: string): ConversationalChip[] => {
     const fallbacks = {
       journeys: [
-        { id: 'welcome-journey', label: 'Design a customer onboarding journey', type: 'starter' as const },
-        { id: 'retention-flow', label: 'Create a retention automation flow', type: 'starter' as const },
-        { id: 'lifecycle-mapping', label: 'Map customer lifecycle stages', type: 'starter' as const },
-        { id: 'engagement-triggers', label: 'Set up behavioral triggers', type: 'starter' as const }
+        { id: 'saas-onboarding', label: 'Design SaaS user onboarding journey', type: 'starter' as const, topic: 'saas-onboarding' },
+        { id: 'ecommerce-lifecycle', label: 'Map ecommerce customer lifecycle', type: 'starter' as const, topic: 'ecommerce-lifecycle' },
+        { id: 'trial-conversion', label: 'Create trial-to-paid conversion flow', type: 'starter' as const, topic: 'trial-conversion' },
+        { id: 'reactivation-journey', label: 'Build customer reactivation journey', type: 'starter' as const, topic: 'customer-reactivation' }
       ],
       messages: [
-        { id: 'conversion-email', label: 'Create a high-converting email campaign', type: 'starter' as const },
-        { id: 'customer-segmentation', label: 'Segment customers for personalized messaging', type: 'starter' as const },
-        { id: 'retention-strategy', label: 'Design a customer retention email series', type: 'starter' as const },
-        { id: 'growth-metrics', label: 'Set up growth tracking and analytics', type: 'starter' as const }
+        { id: 'welcome-series', label: 'Create welcome email sequence', type: 'starter' as const, topic: 'welcome-series' },
+        { id: 'segment-audience', label: 'Segment audience for personalized campaigns', type: 'starter' as const, topic: 'audience-segmentation' },
+        { id: 'cart-abandonment', label: 'Build cart abandonment email flow', type: 'starter' as const, topic: 'cart-recovery' },
+        { id: 'newsletter-optimize', label: 'Optimize newsletter engagement', type: 'starter' as const, topic: 'newsletter-optimization' }
       ],
       snippets: [
-        { id: 'cta-optimization', label: 'Optimize call-to-action copy', type: 'starter' as const },
-        { id: 'subject-lines', label: 'Write high-open-rate subject lines', type: 'starter' as const },
-        { id: 'personalization', label: 'Create personalized content templates', type: 'starter' as const },
-        { id: 'ab-test-content', label: 'Generate A/B test variations', type: 'starter' as const }
+        { id: 'subject-lines', label: 'Write high-converting subject lines', type: 'starter' as const, topic: 'subject-lines' },
+        { id: 'cta-optimization', label: 'Optimize call-to-action copy', type: 'starter' as const, topic: 'cta-optimization' },
+        { id: 'personalization-tokens', label: 'Create personalization templates', type: 'starter' as const, topic: 'personalization' },
+        { id: 'ab-test-copy', label: 'Generate A/B test variations', type: 'starter' as const, topic: 'ab-testing' }
       ]
     };
     return fallbacks[context] || fallbacks.messages;
@@ -103,16 +106,18 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const generateProgressiveChips = async (userMessage: string, aiResponse: string) => {
     setIsGeneratingChips(true);
     try {
-      const growthChips = await GrowthOSService.generateMarketingChips(
+      const growthChips = await GrowthOSService.generateContextSpecificChips(
         userMessage,
         context,
-        conversationDepth
+        conversationDepth,
+        currentTopic
       );
       
       const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
         id: chip.id,
         label: chip.label,
-        type: 'contextual' as const
+        type: 'contextual' as const,
+        topic: chip.topic
       }));
       
       setChips(conversationalChips);
@@ -134,14 +139,13 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
     setMessages(prev => [...prev, userMessage]);
     setConversationDepth(prev => prev + 1);
-    GrowthOSService.updateMarketingContext(message);
+    GrowthOSService.updateMarketingContext(message, undefined, currentTopic);
     setIsLoading(true);
 
     try {
-      // Handle Do mode logic - only for messages context
       if (mode === 'do' && context === 'messages') {
         if (conversationDepth >= 2 && (message.toLowerCase().includes('email') || message.toLowerCase().includes('campaign'))) {
-          const emailGenerationPrompt = `Generate a growth-optimized email based on this marketing conversation: ${message}`;
+          const emailGenerationPrompt = `Generate a growth-optimized email based on this ${currentTopic || 'email marketing'} conversation: ${message}`;
 
           const emailResponse = await OpenAIEmailService.generateEmailContent({
             prompt: emailGenerationPrompt,
@@ -152,7 +156,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           const aiResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: `Perfect! I've created a growth-focused email campaign based on our conversation. Opening the email builder now...`,
+            content: `Perfect! I've created a ${currentTopic || 'growth-focused'} email campaign based on our conversation. Opening the email builder now...`,
             timestamp: new Date()
           };
 
@@ -169,7 +173,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         }
       }
 
-      const response = await GrowthOSService.getGrowthOSResponse(message, context);
+      const response = await GrowthOSService.getContextSpecificResponse(message, context);
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -186,7 +190,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: `I had trouble processing that. Let's focus on your growth marketing goals - what specific ${context} challenge can I help you solve?`,
+        content: `I had trouble processing that. Let's focus on your ${context} goals - what specific challenge can I help you solve?`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -205,11 +209,17 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
     setMessages(prev => [...prev, chipMessage]);
     setConversationDepth(prev => prev + 1);
-    GrowthOSService.updateMarketingContext(chip.label);
+    
+    // Update topic when selecting a chip
+    if (chip.topic) {
+      setCurrentTopic(chip.topic);
+    }
+    
+    GrowthOSService.updateMarketingContext(chip.label, undefined, chip.topic);
     setIsLoading(true);
 
     try {
-      const response = await GrowthOSService.getGrowthOSResponse(chip.label, context);
+      const response = await GrowthOSService.getContextSpecificResponse(chip.label, context);
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -242,12 +252,13 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const resetToFreshStart = () => {
     GrowthOSService.resetContext();
     setConversationDepth(0);
+    setCurrentTopic(undefined);
     generateInitialChips();
   };
 
   const placeholderText = {
     journeys: 'your customer journey challenge...',
-    messages: 'your growth marketing challenge...',
+    messages: 'your email marketing challenge...',
     snippets: 'your content optimization need...'
   };
 
@@ -310,6 +321,15 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           )}
         </div>
       </ScrollArea>
+
+      {/* Current Topic Display */}
+      {currentTopic && (
+        <div className="text-center">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            Topic: {currentTopic.replace('-', ' ')}
+          </span>
+        </div>
+      )}
 
       {/* Conversational Chips */}
       <div className="mb-6">

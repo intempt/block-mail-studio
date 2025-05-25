@@ -33,9 +33,9 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingChips, setIsGeneratingChips] = useState(false);
   const [conversationDepth, setConversationDepth] = useState(0);
+  const [currentTopic, setCurrentTopic] = useState<string | undefined>();
 
   useEffect(() => {
-    // Initialize with GrowthOS welcome
     const welcomeMessage: Message = {
       id: '1',
       type: 'ai',
@@ -44,14 +44,13 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
     };
     setMessages([welcomeMessage]);
     
-    // Generate initial marketing-focused chips
     generateInitialChips();
   }, []);
 
   const generateInitialChips = async () => {
     setIsGeneratingChips(true);
     try {
-      const growthChips = await GrowthOSService.generateMarketingChips(
+      const growthChips = await GrowthOSService.generateContextSpecificChips(
         'initial conversation',
         'messages',
         0
@@ -66,12 +65,11 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
       setChips(conversationalChips);
     } catch (error) {
       console.error('Error generating initial chips:', error);
-      // Fallback chips
       setChips([
-        { id: 'conversion-email', label: 'Create a high-converting email campaign', type: 'starter' },
-        { id: 'customer-segmentation', label: 'Segment customers for personalized messaging', type: 'starter' },
-        { id: 'retention-strategy', label: 'Design a customer retention email series', type: 'starter' },
-        { id: 'growth-metrics', label: 'Set up growth tracking and analytics', type: 'starter' }
+        { id: 'welcome-series', label: 'Create welcome email sequence', type: 'starter' },
+        { id: 'segment-audience', label: 'Segment audience for personalized campaigns', type: 'starter' },
+        { id: 'cart-abandonment', label: 'Build cart abandonment email flow', type: 'starter' },
+        { id: 'newsletter-optimize', label: 'Optimize newsletter engagement', type: 'starter' }
       ]);
     } finally {
       setIsGeneratingChips(false);
@@ -81,10 +79,11 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
   const generateProgressiveChips = async (userMessage: string, aiResponse: string) => {
     setIsGeneratingChips(true);
     try {
-      const growthChips = await GrowthOSService.generateMarketingChips(
+      const growthChips = await GrowthOSService.generateContextSpecificChips(
         userMessage,
         'messages',
-        conversationDepth
+        conversationDepth,
+        currentTopic
       );
       
       const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
@@ -96,7 +95,6 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
       setChips(conversationalChips);
     } catch (error) {
       console.error('Error generating progressive chips:', error);
-      // Keep existing chips on error
     } finally {
       setIsGeneratingChips(false);
     }
@@ -113,15 +111,14 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
 
     setMessages(prev => [...prev, userMessage]);
     setConversationDepth(prev => prev + 1);
-    GrowthOSService.updateMarketingContext(message);
+    GrowthOSService.updateMarketingContext(message, undefined, currentTopic);
     setIsLoading(true);
 
     try {
-      // Handle Do mode for email creation
       if (mode === 'do' && conversationDepth >= 2) {
         if (message.toLowerCase().includes('email') || message.toLowerCase().includes('campaign')) {
           const response = await OpenAIEmailService.generateEmailContent({
-            prompt: `Create a growth-focused email based on this marketing conversation: ${message}`,
+            prompt: `Create a growth-focused email based on this ${currentTopic || 'email marketing'} conversation: ${message}`,
             emailType: 'promotional',
             tone: 'professional'
           });
@@ -129,7 +126,7 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
           const aiResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: 'Excellent! I\'ve created a growth-optimized email campaign for you. Opening the email builder now...',
+            content: `Excellent! I've created a ${currentTopic || 'growth-optimized'} email campaign for you. Opening the email builder now...`,
             timestamp: new Date()
           };
 
@@ -146,7 +143,7 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
         }
       }
 
-      const response = await GrowthOSService.getGrowthOSResponse(message, 'messages');
+      const response = await GrowthOSService.getContextSpecificResponse(message, 'messages');
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -163,7 +160,7 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: 'I had trouble processing that. Let\'s focus on your growth marketing goals - what specific campaign challenge can I help you solve?',
+        content: 'I had trouble processing that. Let\'s focus on your email marketing goals - what specific campaign challenge can I help you solve?',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -182,11 +179,23 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
 
     setMessages(prev => [...prev, chipMessage]);
     setConversationDepth(prev => prev + 1);
-    GrowthOSService.updateMarketingContext(chip.label);
+    
+    // Extract topic from chip if it's a starter chip
+    if (chip.type === 'starter') {
+      const topicMap: { [key: string]: string } = {
+        'Create welcome email sequence': 'welcome-series',
+        'Segment audience for personalized campaigns': 'audience-segmentation',
+        'Build cart abandonment email flow': 'cart-recovery',
+        'Optimize newsletter engagement': 'newsletter-optimization'
+      };
+      setCurrentTopic(topicMap[chip.label]);
+    }
+    
+    GrowthOSService.updateMarketingContext(chip.label, undefined, currentTopic);
     setIsLoading(true);
 
     try {
-      const response = await GrowthOSService.getGrowthOSResponse(chip.label, 'messages');
+      const response = await GrowthOSService.getContextSpecificResponse(chip.label, 'messages');
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -219,6 +228,7 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
   const resetToFreshStart = () => {
     GrowthOSService.resetContext();
     setConversationDepth(0);
+    setCurrentTopic(undefined);
     generateInitialChips();
   };
 
@@ -282,6 +292,15 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
         </div>
       </ScrollArea>
 
+      {/* Current Topic Display */}
+      {currentTopic && (
+        <div className="text-center">
+          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            Topic: {currentTopic.replace('-', ' ')}
+          </span>
+        </div>
+      )}
+
       {/* Conversational Chips */}
       <div className="mb-6">
         <ConversationalChipGenerator
@@ -297,7 +316,7 @@ export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInt
       <EnhancedChatInput
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
-        placeholder="your growth marketing challenge..."
+        placeholder="your email marketing challenge..."
         context="messages"
       />
     </div>
