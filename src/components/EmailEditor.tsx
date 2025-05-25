@@ -33,7 +33,6 @@ import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { PropertyEditorPanel } from './PropertyEditorPanel';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
-import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -421,6 +420,7 @@ export default function EmailEditor({
             
             <div className="flex-1 overflow-hidden">
               <EmailCodeEditor
+                editor={editor}
                 initialHtml={emailHTML}
               />
             </div>
