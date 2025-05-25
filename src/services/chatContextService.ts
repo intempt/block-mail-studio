@@ -20,7 +20,7 @@ export class ChatContextService {
     userGoals: [],
     conversationHistory: [],
     uploadedImages: [],
-    mode: 'chat'
+    mode: 'agentic'  // Changed default to agentic
   };
 
   static updateContext(updates: Partial<ChatContext>): void {
@@ -44,11 +44,6 @@ export class ChatContextService {
     }
   }
 
-  static getRecentContext(messageCount: number = 5): string {
-    const recent = this.context.conversationHistory.slice(-messageCount);
-    return recent.map(msg => `${msg.role}: ${msg.content}`).join('\n');
-  }
-
   static setMode(mode: 'chat' | 'agentic'): void {
     this.context.mode = mode;
   }
@@ -69,6 +64,11 @@ export class ChatContextService {
     };
   }
 
+  static getRecentContext(messageCount: number = 5): string {
+    const recent = this.context.conversationHistory.slice(-messageCount);
+    return recent.map(msg => `${msg.role}: ${msg.content}`).join('\n');
+  }
+
   static buildContextPrompt(): string {
     const ctx = this.getContext();
     
@@ -83,5 +83,19 @@ Current Context:
 
 Current Email Content Preview: ${ctx.emailContent.slice(0, 200)}...
     `.trim();
+  }
+
+  // New method for agentic workflow
+  static setInitialTask(task: string, taskType: 'ask' | 'mail'): void {
+    this.context.emailType = taskType === 'mail' ? 'email-creation' : 'general';
+    this.context.userGoals = [task];
+    this.context.mode = 'agentic';
+    this.addToHistory('user', task);
+  }
+
+  // Method to track email creation progress
+  static updateEmailProgress(emailHTML: string, subject: string): void {
+    this.context.emailContent = emailHTML;
+    this.context.currentSubject = subject;
   }
 }

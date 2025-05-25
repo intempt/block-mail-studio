@@ -1,774 +1,462 @@
-import React, { useState, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback
+} from 'react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Link } from '@tiptap/extension-link';
+import { Image } from '@tiptap/extension-image';
+import { Underline } from '@tiptap/extension-underline';
+import { Placeholder } from '@tiptap/extension-placeholder';
+import { Color } from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
+import TextAlign from '@tiptap/extension-text-align';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Slider } from '@/components/ui/slider';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { 
-  Monitor, 
-  Smartphone, 
-  Eye, 
-  Download, 
-  Settings, 
-  Sparkles, 
-  Edit3,
-  Mail,
-  Zap,
-  ChevronLeft,
-  ChevronRight,
-  Layout,
-  PanelLeftClose,
-  PanelRightClose,
-  Users,
-  BarChart3,
-  Palette,
-  FileText,
-  Code2,
-  Target,
-  Sun,
-  Moon,
-  Keyboard,
-  UserPlus,
-  Share2,
-  Wifi,
-  WifiOff,
-  Blocks,
-  Brain,
-  Minimize2,
-  Maximize2,
+import {
+  ArrowLeft,
+  Eye,
+  Send,
+  Copy,
   RefreshCw,
-  Lightbulb
+  Layers,
+  Palette,
+  Settings,
+  BarChart3
 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-
-import { WelcomeScreen } from './WelcomeScreen';
-import { CompactAIChat } from './CompactAIChat';
-import { EmailAIChat } from './EmailAIChat';
-import { ProfessionalToolPalette } from './ProfessionalToolPalette';
-import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
-import { SmartDesignAssistant } from './SmartDesignAssistant';
-import { PerformanceAnalyzer } from './PerformanceAnalyzer';
-import { TemplateManager, EmailTemplate } from './TemplateManager';
-import { EmailAIChatWithTemplates } from './EmailAIChatWithTemplates';
-import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
-import { EmailBlockPalette } from './EmailBlockPalette';
-import { EmailPropertiesPanel } from './EmailPropertiesPanel';
+import { EmailCodeEditor } from './EmailCodeEditor';
+import { EmailPreview } from './EmailPreview';
+import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
-import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
-import { EmailSubjectLine } from './EmailSubjectLine';
-import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
-import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
+import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { PropertyEditorPanel } from './PropertyEditorPanel';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useToast } from '@/hooks/use-toast';
-import { directAIService } from '@/services/directAIService';
-import { EmailSnippet } from '@/types/snippets';
-import { EmailBlock } from '@/types/emailBlocks';
-import { SimplePropertyEditor } from './SimplePropertyEditor';
-import { DirectTemplateService } from '@/services/directTemplateService';
-import { AITestingSuite } from './AITestingSuite';
-import { EnhancedAIAssistant } from './EnhancedAIAssistant';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
-import { AISuggestionsPanel } from './AISuggestionsPanel';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
+import { EmailTemplate } from './TemplateManager';
+import { DirectTemplateService } from '@/services/directTemplateService';
+import { AIBlockGenerator } from '@/services/AIBlockGenerator';
+import { EmailContentAnalyzer } from '@/services/EmailContentAnalyzer';
 
-type PreviewMode = 'desktop' | 'mobile' | 'tablet';
-type LeftPanelTab = 'ai' | 'design' | 'blocks';
-type RightPanelTab = 'performance' | 'suggestions';
-type ViewDensity = 'comfortable' | 'normal' | 'compact';
+import 'highlight.js/styles/atom-one-dark.css';
+import { lowlight } from 'lowlight';
 
-const EmailEditor = () => {
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('desktop');
-  const [previewWidth, setPreviewWidth] = useState(1200);
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState(false);
-  const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('blocks');
-  const [rightPanelTab, setRightPanelTab] = useState<RightPanelTab>('suggestions');
-  const [emailHTML, setEmailHTML] = useState('');
+interface Block {
+  id: string;
+  type: string;
+  content: string;
+  styles: Record<string, string>;
+}
+
+interface LayoutConfig {
+  direction: 'row' | 'column';
+  alignItems: 'start' | 'center' | 'end';
+  justifyContent: 'start' | 'center' | 'space-between';
+}
+
+type LeftPanelTab = 'blocks' | 'design' | 'properties' | 'performance';
+
+export default function EmailEditor({ 
+  initialHTML = '', 
+  initialSubject = '', 
+  onBack 
+}: { 
+  initialHTML?: string; 
+  initialSubject?: string; 
+  onBack?: () => void;
+}) {
+  const [emailHTML, setEmailHTML] = useState(initialHTML);
+  const [subjectLine, setSubjectLine] = useState(initialSubject);
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({
+    direction: 'column',
+    alignItems: 'center',
+    justifyContent: 'start'
+  });
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [viewDensity, setViewDensity] = useState<ViewDensity>('normal');
-  const [compactMode, setCompactMode] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<any>(null);
-  const canvasRef = useRef<EmailBlockCanvasRef>(null);
-  const [fullscreenMode, setFullscreenMode] = useState(false);
-  const [subjectLine, setSubjectLine] = useState('Welcome to Email Builder Pro');
-  const [subjectLineScore, setSubjectLineScore] = useState(75);
-  const { toast } = useToast();
-  const [showAITesting, setShowAITesting] = useState(false);
-  
-  const handleEmailContentChange = (newContent: string) => {
-    setEmailHTML(newContent);
-  };
+  const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
 
-  const handleExport = () => {
-    const htmlContent = generateEmailHTML(emailHTML);
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `email-template-${Date.now()}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handlePublish = () => {
-    // Quick save as template using subject line as name
-    const templateName = subjectLine.trim() || 'Untitled Email Template';
-    
-    // Check for duplicate names and append number if needed
-    const existingNames = templates.map(t => t.name);
-    let finalName = templateName;
-    let counter = 2;
-    while (existingNames.includes(finalName)) {
-      finalName = `${templateName} (${counter})`;
-      counter++;
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        history: true,
+        // menuBar: {
+        //   items: ['undo', 'redo', 'bold', 'italic', 'link', 'image']
+        // }
+      }),
+      Underline,
+      Link,
+      Image,
+      Placeholder.configure({
+        placeholder: 'Write something here...'
+      }),
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+      CodeBlockLowlight.extend({
+        addOptions() {
+          return {
+            lowlight
+          }
+        },
+      }),
+    ],
+    content: emailHTML,
+    onUpdate: ({ editor }) => {
+      setEmailHTML(editor.getHTML());
     }
-    
-    const newTemplate: EmailTemplate = {
-      id: `template-${Date.now()}`,
-      name: finalName,
-      description: `Saved from canvas on ${new Date().toLocaleDateString()}`,
-      html: emailHTML,
-      subject: subjectLine,
-      category: 'Published',
-      tags: ['canvas-created', 'published'],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isFavorite: false,
-      usageCount: 0
-    };
-    
-    // Save template to state
-    setTemplates(prev => [...prev, newTemplate]);
-    
-    // Show success toast
-    toast({
-      title: "Template Saved & Exported",
-      description: `"${finalName}" has been saved to your templates and exported as HTML.`,
-    });
-    
-    // Export HTML file
-    handleExport();
-  };
-
-  const handleSave = () => {
-    const templateName = prompt('Enter template name:');
-    if (!templateName) return;
-    
-    const newTemplate: EmailTemplate = {
-      id: `template-${Date.now()}`,
-      name: templateName,
-      description: 'Created from email canvas',
-      html: emailHTML,
-      subject: subjectLine,
-      category: 'Custom',
-      tags: ['canvas-created'],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      isFavorite: false,
-      usageCount: 0
-    };
-    
-    setTemplates(prev => [...prev, newTemplate]);
-    
-    toast({
-      title: "Template Saved",
-      description: `"${templateName}" has been saved to your templates.`,
-    });
-    
-    handleExport();
-  };
-
-  const handleToggleFullscreen = () => {
-    setFullscreenMode(prev => !prev);
-  };
-
-  const getLeftPanelWidth = () => {
-    if (leftPanelCollapsed) return 'w-12';
-    // Industry standard: 320-360px for left panel
-    return 'w-80 xl:w-96';
-  };
-
-  const getRightPanelWidth = () => {
-    if (rightPanelCollapsed) return 'w-12';
-    // Industry standard: 300-320px for right panel
-    return 'w-80 xl:w-88';
-  };
-
-  const getCanvasPadding = () => {
-    // Reduced padding to maximize canvas space within allocated area
-    return 'p-3 lg:p-4';
-  };
-
-  const getCanvasMaxWidth = () => {
-    // Constrain canvas to email-appropriate width (industry standard: 600-800px max)
-    return 'max-w-4xl mx-auto';
-  };
-
-  useKeyboardShortcuts({
-    editor: null,
-    canvasRef,
-    onToggleLeftPanel: () => setLeftPanelCollapsed(prev => !prev),
-    onToggleRightPanel: () => setRightPanelCollapsed(prev => !prev),
-    onToggleFullscreen: handleToggleFullscreen,
-    onSave: handlePublish
   });
 
-  const keyboardShortcuts = [
-    { key: 'Ctrl + S', action: 'Save email', status: 'active' },
-    { key: 'F11', action: 'Toggle fullscreen', status: 'active' },
-    { key: 'Ctrl + [', action: 'Toggle left panel', status: 'active' },
-    { key: 'Ctrl + ]', action: 'Toggle right panel', status: 'active' }
-  ];
+  useEffect(() => {
+    if (initialHTML) {
+      setEmailHTML(initialHTML);
+      if (editor) {
+        editor.commands.setContent(initialHTML);
+      }
+    }
+    if (initialSubject) {
+      setSubjectLine(initialSubject);
+    }
+  }, [initialHTML, initialSubject, editor]);
 
-  const getHeaderHeight = () => {
-    return compactMode ? 'h-10' : 'h-12';
-  };
+  useEffect(() => {
+    const initialTemplates = DirectTemplateService.getAllTemplates();
+    setTemplates(initialTemplates);
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  const handleBlockSelect = (blockType: string) => {
+    if (!editor) return;
 
-  const exportHTML = () => {
-    const htmlContent = generateEmailHTML(emailHTML);
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'email-template.html';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const generateEmailHTML = (content: string) => {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>${subjectLine}</title>
-    <style>
-        /* Reset and base styles */
-        body, table, td, p, a, li, blockquote { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
-        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
-        
-        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; }
-        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .email-block { display: block; width: 100%; }
-        
-        @media only screen and (max-width: 600px) {
-            .email-container { width: 100% !important; margin: 0 !important; border-radius: 0 !important; }
-            .email-block { padding: 16px !important; }
-        }
-    </style>
-</head>
-<body>
-    ${content}
-</body>
-</html>`;
-  };
-
-  const handleSaveTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    const newTemplate: EmailTemplate = {
-      ...template,
-      id: `template-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      usageCount: 0
+    const newBlock: Block = {
+      id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: blockType,
+      content: `New ${blockType} block`,
+      styles: {}
     };
+
+    setBlocks(prev => [...prev, newBlock]);
+  };
+
+  const handleBlocksChange = (newBlocks: Block[]) => {
+    setBlocks(newBlocks);
+  };
+
+  const handleBlockUpdate = (blockId: string, updatedBlock: Partial<Block>) => {
+    setBlocks(prev =>
+      prev.map(block =>
+        block.id === blockId ? { ...block, ...updatedBlock } : block
+      )
+    );
+  };
+
+  const handleBlockDelete = (blockId: string) => {
+    setBlocks(prev => prev.filter(block => block.id !== blockId));
+    setSelectedBlockId(null);
+  };
+
+  const handleGlobalStyleUpdate = (styles: Record<string, string>) => {
+    // Apply styles to all blocks or the canvas
+    console.log('Applying global styles:', styles);
+  };
+
+  const handlePreview = () => {
+    setShowPreview(true);
+  };
+
+  const handlePublish = async () => {
+    // Save template on publish
+    const existingTemplateNames = templates.map(t => t.name);
+    const newTemplate = DirectTemplateService.savePublishedTemplate(
+      emailHTML,
+      subjectLine,
+      existingTemplateNames
+    );
     setTemplates(prev => [...prev, newTemplate]);
+    setShowTemplateLibrary(false);
   };
 
-  const handleLoadTemplate = (template: EmailTemplate) => {
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(emailHTML);
+  };
+
+  const handleSyncFromCode = () => {
+    if (editor) {
+      editor.commands.setContent(emailHTML);
+    }
+  };
+
+  const handleTemplateLoad = (template: EmailTemplate) => {
     setEmailHTML(template.html);
-    if (template.subject) {
-      setSubjectLine(template.subject);
-    }
-    setTemplates(prev => prev.map(t => 
-      t.id === template.id ? { ...t, usageCount: t.usageCount + 1 } : t
-    ));
-  };
-
-  const handleDeleteTemplate = (id: string) => {
-    setTemplates(prev => prev.filter(t => t.id !== id));
-  };
-
-  const handleToggleFavorite = (id: string) => {
-    setTemplates(prev => prev.map(t => 
-      t.id === id ? { ...t, isFavorite: !t.isFavorite } : t
-    ));
-  };
-
-  const handleBlockAdd = (blockType: string) => {
-    canvasRef.current?.insertBlock(blockType);
-  };
-
-  const handleSnippetAdd = (snippet: EmailSnippet) => {
-    canvasRef.current?.insertSnippet(snippet);
-  };
-
-  const handleQuickStart = (type: string) => {
-    setShowWelcome(false);
-    setLeftPanelTab('ai');
-    setLeftPanelCollapsed(false);
-    
-    // Set different starting states based on quick start type
-    switch (type) {
-      case 'template':
-        setLeftPanelTab('design');
-        break;
-      case 'ai':
-        setLeftPanelTab('ai');
-        break;
-      case 'import':
-        // Trigger file upload
-        break;
-      default:
-        setLeftPanelTab('blocks');
+    setSubjectLine(template.subject);
+    if (editor) {
+      editor.commands.setContent(template.html);
     }
   };
 
-  const handleEnterEditor = () => {
-    setShowWelcome(false);
+  const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
+    const newTemplate = DirectTemplateService.saveTemplate(template);
+    setTemplates(prev => [...prev, newTemplate]);
+    setShowTemplateLibrary(false);
+  };
+
+  const handleTemplateLibraryOpen = () => {
+    setShowTemplateLibrary(true);
+  };
+
+  const handleTemplateLibraryClose = () => {
+    setShowTemplateLibrary(false);
+  };
+
+  const handleLoadToEditor = async (emailHTML: string, subjectLine: string) => {
+    try {
+      // Analyze the email content
+      const analysis = await EmailContentAnalyzer.analyzeEmailContent(
+        subjectLine,
+        emailHTML
+      );
+
+      // Generate blocks from analysis
+      const result = AIBlockGenerator.generateBlocksFromAnalysis(
+        analysis,
+        emailHTML
+      );
+
+      // Load into editor
+      setBlocks(result.blocks);
+      setLayoutConfig(result.layoutConfig);
+
+    } catch (error) {
+      console.error('Failed to load to editor:', error);
+    }
   };
 
   const renderLeftPanel = () => {
-    if (leftPanelCollapsed) {
-      return (
-        <div className="flex flex-col items-center py-4 gap-4">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setLeftPanelCollapsed(false)}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-          <Blocks className="w-5 h-5 text-slate-400" />
-        </div>
-      );
-    }
-
-    if (showAITesting) {
-      return <AITestingSuite />;
-    }
-
-    switch (leftPanelTab) {
-      case 'ai':
-        return <CompactAIChat onMessage={(message) => console.log('AI message:', message)} />;
-      case 'design':
-        return <ProfessionalToolPalette editor={null} />;
+    switch (leftPanel) {
       case 'blocks':
         return (
-          <EnhancedEmailBlockPalette 
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={[]}
-            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
-            compactMode={compactMode}
+          <EnhancedEmailBlockPalette
+            onBlockSelect={handleBlockSelect}
+            onLoadTemplate={handleTemplateLoad}
+            onSaveAsTemplate={handleSaveAsTemplate}
+            templates={templates}
           />
         );
-      default:
+      case 'design':
         return (
-          <EnhancedEmailBlockPalette 
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={[]}
-            onUniversalContentAdd={(content) => console.log('Universal content:', content)}
-            compactMode={compactMode}
+          <GlobalStylesPanel
+            emailHTML={emailHTML}
+            onStyleUpdate={handleGlobalStyleUpdate}
           />
         );
-    }
-  };
-
-  const handlePreviewModeChange = (mode: PreviewMode) => {
-    setPreviewMode(mode);
-    switch (mode) {
-      case 'desktop':
-        setPreviewWidth(1200);
-        break;
-      case 'tablet':
-        setPreviewWidth(768);
-        break;
-      case 'mobile':
-        setPreviewWidth(375);
-        break;
-    }
-  };
-
-  const handleWidthChange = (value: number[]) => {
-    setPreviewWidth(value[0]);
-    if (value[0] <= 480) {
-      setPreviewMode('mobile');
-    } else if (value[0] <= 1024) {
-      setPreviewMode('tablet');
-    } else {
-      setPreviewMode('desktop');
-    }
-  };
-
-  const handleBlockSelect = (block: any) => {
-    setSelectedBlock(block);
-  };
-
-  const handleBlockUpdate = (updatedBlock: any) => {
-    setSelectedBlock(updatedBlock);
-    // Update the block in the canvas
-    canvasRef.current?.updateBlockContent(updatedBlock.id, updatedBlock.content);
-  };
-
-  const renderRightPanel = () => {
-    switch (rightPanelTab) {
+      case 'properties':
+        return selectedBlockId ? (
+          <PropertyEditorPanel
+            blockId={selectedBlockId}
+            blocks={blocks}
+            onBlockUpdate={handleBlockUpdate}
+            onBlockDelete={handleBlockDelete}
+          />
+        ) : (
+          <div className="p-4 text-center text-gray-500">
+            <p>Select a block to edit its properties</p>
+          </div>
+        );
       case 'performance':
         return (
           <PerformanceBrandPanel
             emailHTML={emailHTML}
             subjectLine={subjectLine}
-            editor={null}
-          />
-        );
-      case 'suggestions':
-        return (
-          <AISuggestionsPanel
-            emailHTML={emailHTML}
-            subjectLine={subjectLine}
-            onApplySuggestion={(suggestion) => {
-              console.log('Applying suggestion:', suggestion);
-              toast({
-                title: "Suggestion Applied",
-                description: suggestion.title
-              });
-            }}
+            editor={editor}
           />
         );
       default:
-        return (
-          <AISuggestionsPanel
-            emailHTML={emailHTML}
-            subjectLine={subjectLine}
-            onApplySuggestion={(suggestion) => {
-              console.log('Applying suggestion:', suggestion);
-              toast({
-                title: "Suggestion Applied",
-                description: suggestion.title
-              });
-            }}
-          />
-        );
+        return null;
     }
   };
 
-  const renderHeaderActions = () => (
-    <div className="flex items-center gap-2 lg:gap-3">
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => setShowAITesting(!showAITesting)}
-        className="h-6 lg:h-8 hidden sm:flex"
-      >
-        <Brain className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
-        <span className="hidden lg:inline">Test AI</span>
-      </Button>
-      
-      <Button variant="outline" size="sm" onClick={handleExport} className="h-6 lg:h-8 hidden sm:flex">
-        <Download className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
-        <span className="hidden lg:inline">Export</span>
-      </Button>
-      
-      <Button size="sm" onClick={handlePublish} className="h-6 lg:h-8 bg-blue-600 hover:bg-blue-700">
-        <Zap className="w-3 h-3 lg:w-4 lg:h-4 lg:mr-2" />
-        <span className="hidden lg:inline">Publish</span>
-      </Button>
-    </div>
-  );
-
-  if (showWelcome) {
-    return (
-      <WelcomeScreen 
-        onEnterEditor={handleEnterEditor}
-        onQuickStart={handleQuickStart}
-      />
-    );
-  }
-
   return (
-    <div className={`h-screen bg-slate-50 flex flex-col ${theme === 'dark' ? 'dark' : ''} ${fullscreenMode ? 'fullscreen-mode' : ''}`}>
-      {!fullscreenMode && (
-        <header className={`bg-white border-b border-slate-200 ${getHeaderHeight()} flex items-center justify-between px-4 lg:px-6`}>
-          <div className="flex items-center gap-2 lg:gap-3">
-            <div className="w-6 h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Mail className="w-3 h-3 lg:w-4 lg:h-4 text-white" />
-            </div>
-            <div className="hidden sm:block">
-              <h1 className="text-xs lg:text-sm font-semibold text-slate-900">Email Builder Pro</h1>
-              <p className="text-xs text-slate-500 hidden lg:block">
-                {showAITesting ? 'AI Testing Mode' : 'Canvas Edition'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 lg:gap-4">
-            {!showAITesting && (
-              <>
-                <div className="flex items-center bg-slate-100 rounded-lg p-1">
-                  <Button
-                    variant={previewMode === 'desktop' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handlePreviewModeChange('desktop')}
-                    className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
-                  >
-                    <Monitor className="w-3 h-3 lg:w-4 lg:h-4" />
-                  </Button>
-                  <Button
-                    variant={previewMode === 'tablet' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handlePreviewModeChange('tablet')}
-                    className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
-                  >
-                    <Layout className="w-3 h-3 lg:w-4 lg:h-4" />
-                  </Button>
-                  <Button
-                    variant={previewMode === 'mobile' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => handlePreviewModeChange('mobile')}
-                    className="h-6 px-2 lg:h-8 lg:px-3 rounded-md"
-                  >
-                    <Smartphone className="w-3 h-3 lg:w-4 lg:h-4" />
-                  </Button>
-                </div>
-                
-                <div className="hidden lg:flex items-center gap-3 min-w-[150px] xl:min-w-[200px]">
-                  <span className="text-xs text-slate-500 font-mono">Width:</span>
-                  <div className="flex-1">
-                    <Slider
-                      value={[previewWidth]}
-                      onValueChange={handleWidthChange}
-                      max={1440}
-                      min={320}
-                      step={10}
-                      className="w-full"
-                    />
-                  </div>
-                  <Badge variant="secondary" className="text-xs font-mono min-w-[60px] justify-center">
-                    {previewWidth}px
-                  </Badge>
-                </div>
-              </>
-            )}
-          </div>
-
-          {renderHeaderActions()}
-        </header>
-      )}
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Industry standard width */}
-        {!(fullscreenMode || leftPanelCollapsed) && (
-          <div className={`bg-white border-r border-slate-200 transition-all duration-300 ${getLeftPanelWidth()} flex flex-col`}>
-            {leftPanelCollapsed ? (
-              renderLeftPanel()
-            ) : (
-              <>
-                <div className="p-4 border-b border-slate-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-slate-900 text-base">
-                      {showAITesting ? 'AI Testing' : 'Tools'}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      {showAITesting && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => setShowAITesting(false)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                      )}
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setLeftPanelCollapsed(true)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <PanelLeftClose className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {!showAITesting && (
-                    <div className="flex gap-1">
-                      <Button
-                        variant={leftPanelTab === 'ai' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setLeftPanelTab('ai')}
-                        className="flex-1 h-8"
-                      >
-                        <Brain className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant={leftPanelTab === 'design' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setLeftPanelTab('design')}
-                        className="flex-1 h-8"
-                      >
-                        <Palette className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant={leftPanelTab === 'blocks' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setLeftPanelTab('blocks')}
-                        className="flex-1 h-8"
-                      >
-                        <Blocks className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex-1 overflow-hidden">
-                  {renderLeftPanel()}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {leftPanelCollapsed && !fullscreenMode && (
-          <div className="w-12 bg-white border-r border-slate-200 flex flex-col items-center py-4 gap-4">
-            <Button 
-              variant="ghost" 
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
               size="sm"
-              onClick={() => setLeftPanelCollapsed(false)}
+              onClick={onBack}
+              className="text-gray-600 hover:text-gray-900"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
             </Button>
-            <Blocks className="w-5 h-5 text-slate-400" />
-          </div>
-        )}
-
-        {/* Center Canvas - Optimized width */}
-        <div className="flex-1 flex flex-col bg-slate-50 min-w-0">
-          <div className={`flex-1 ${getCanvasPadding()} overflow-y-auto`}>
-            <div className={getCanvasMaxWidth()}>
-              <EnhancedEmailSubjectLine
-                value={subjectLine}
-                onChange={setSubjectLine}
-                emailContent={emailHTML}
-                onAnalysisComplete={(analysis) => {
-                  console.log('Subject line analysis completed:', analysis);
-                }}
-              />
-              
-              <EmailBlockCanvas 
-                ref={canvasRef}
-                onContentChange={handleEmailContentChange}
-                onBlockSelect={handleBlockSelect}
-                previewWidth={Math.min(previewWidth, 800)} // Cap canvas width
-                previewMode={previewMode}
-                compactMode={compactMode}
-              />
-            </div>
-          </div>
+          )}
+          <h1 className="text-xl font-semibold text-gray-900">Email Builder</h1>
         </div>
         
-        {/* Right Panel - Industry standard width */}
-        {!(fullscreenMode || rightPanelCollapsed) && (
-          <div className={`border-l border-slate-200 bg-white ${getRightPanelWidth()}`}>
-            <div className="p-4 border-b border-slate-200">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-slate-900 text-base">Tools & Insights</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setRightPanelCollapsed(true)}
-                  className="h-8 w-8 p-0"
-                >
-                  <PanelRightClose className="w-4 h-4" />
-                </Button>
-              </div>
-              
-              <div className="flex gap-1">
-                <Button
-                  variant={rightPanelTab === 'performance' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRightPanelTab('performance')}
-                  className="flex-1 h-8"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={rightPanelTab === 'suggestions' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setRightPanelTab('suggestions')}
-                  className="flex-1 h-8"
-                >
-                  <Lightbulb className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              {renderRightPanel()}
-            </div>
-          </div>
-        )}
-
-        {rightPanelCollapsed && !fullscreenMode && (
-          <div className="w-12 bg-white border-l border-slate-200 flex flex-col items-center py-4">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setRightPanelCollapsed(false)}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Settings className="w-5 h-5 text-slate-400 mt-4" />
-          </div>
-        )}
-      </div>
-
-      {!fullscreenMode && (
-        <div className={`bg-white border-t border-slate-200 px-4 lg:px-6 ${compactMode ? 'py-1' : 'py-2'} text-xs text-slate-600 flex items-center justify-between`}>
-          <div className="flex items-center gap-4 lg:gap-6">
-            <span>Characters: {emailHTML.replace(/<[^>]*>/g, '').length}</span>
-            <span className="hidden sm:inline">Templates: {templates.length}</span>
-            <span className="hidden lg:flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Enhanced AI-powered editor
-            </span>
-          </div>
-          <div className="flex items-center gap-2 lg:gap-4">
-            <span className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Enhanced auto-save
-            </span>
-            <span className="text-slate-400 hidden lg:inline">Email Builder Pro v4.0</span>
-          </div>
-        </div>
-      )}
-
-      {fullscreenMode && (
-        <div className="fixed top-4 right-4 z-50">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleToggleFullscreen}
-            className="bg-white/90 backdrop-blur-sm"
-          >
-            <Minimize2 className="w-4 h-4 mr-2" />
-            Exit Fullscreen
+        <div className="flex items-center gap-3">
+          <EnhancedEmailSubjectLine
+            value={subjectLine}
+            onChange={setSubjectLine}
+            emailContent={emailHTML}
+          />
+          <Button onClick={handlePreview} variant="outline" size="sm">
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button onClick={handlePublish} className="bg-blue-600 hover:bg-blue-700" size="sm">
+            <Send className="w-4 h-4 mr-2" />
+            Publish
           </Button>
         </div>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+          <div className="border-b border-gray-200">
+            <div className="flex">
+              <button
+                onClick={() => setLeftPanel('blocks')}
+                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'blocks'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Layers className="w-4 h-4" />
+                  Blocks
+                </div>
+              </button>
+              <button
+                onClick={() => setLeftPanel('design')}
+                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'design'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Palette className="w-4 h-4" />
+                  Design
+                </div>
+              </button>
+            </div>
+            <div className="flex">
+              <button
+                onClick={() => setLeftPanel('properties')}
+                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'properties'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Properties
+                </div>
+              </button>
+              <button
+                onClick={() => setLeftPanel('performance')}
+                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'performance'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  Analytics
+                </div>
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-hidden">
+            {renderLeftPanel()}
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Canvas */}
+          <div className="flex-1 overflow-auto bg-gray-100 p-6">
+            <div className="max-w-2xl mx-auto">
+              <EmailBlockCanvas
+                blocks={blocks}
+                onBlocksChange={handleBlocksChange}
+                onBlockSelect={setSelectedBlockId}
+                selectedBlockId={selectedBlockId}
+                layoutConfig={layoutConfig}
+                onLayoutConfigChange={setLayoutConfig}
+              />
+            </div>
+          </div>
+
+          {/* Right Panel - Code Editor */}
+          <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+            <div className="border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900">HTML Code</h3>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSyncFromCode}
+                    className="text-xs"
+                  >
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Sync
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyCode}
+                    className="text-xs"
+                  >
+                    <Copy className="w-3 h-3 mr-1" />
+                    Copy
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-hidden">
+              <EmailCodeEditor
+                value={emailHTML}
+                onChange={setEmailHTML}
+                language="html"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showPreview && (
+        <EmailPreview
+          emailHTML={emailHTML}
+          subjectLine={subjectLine}
+          onClose={() => setShowPreview(false)}
+        />
+      )}
+
+      {showTemplateLibrary && (
+        <EmailTemplateLibrary
+          onClose={() => setShowTemplateLibrary(false)}
+          onSelectTemplate={handleTemplateLoad}
+          onSaveTemplate={handleSaveAsTemplate}
+          currentEmailHTML={emailHTML}
+          currentSubject={subjectLine}
+        />
       )}
     </div>
   );
-};
-
-export default EmailEditor;
+}
