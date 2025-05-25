@@ -7,11 +7,18 @@ interface ConversationMessage {
   timestamp: Date;
 }
 
+interface CampaignContext {
+  type?: 'email' | 'sms' | 'push';
+  purpose?: 'welcome' | 'newsletter' | 'promotional' | 'announcement' | 'followup';
+  specific?: string;
+  stage: 'type' | 'purpose' | 'specific' | 'generation';
+}
+
 interface ChatContext {
   area: 'messages' | 'journeys' | 'snippets';
   mode: 'ask' | 'do';
   conversationHistory: ConversationMessage[];
-  currentTopic?: string;
+  campaign?: CampaignContext;
   userIntent?: 'question' | 'action' | 'exploration';
 }
 
@@ -25,6 +32,7 @@ interface ChatCompletionResponse {
     html: string;
     previewText: string;
   };
+  campaignContext?: CampaignContext;
 }
 
 export class ChatCompletionService {
@@ -35,7 +43,7 @@ export class ChatCompletionService {
       area,
       mode: 'ask',
       conversationHistory: [],
-      currentTopic: undefined,
+      campaign: area === 'messages' ? { stage: 'type' } : undefined,
       userIntent: 'exploration'
     });
   }
@@ -56,6 +64,7 @@ export class ChatCompletionService {
       area: 'messages',
       mode: 'ask',
       conversationHistory: [],
+      campaign: { stage: 'type' },
       userIntent: 'exploration'
     };
 
@@ -67,6 +76,11 @@ export class ChatCompletionService {
       content: userMessage,
       timestamp: new Date()
     });
+
+    // Update campaign context based on user input
+    if (context.area === 'messages') {
+      this.updateCampaignContext(userMessage, context);
+    }
 
     // Detect user intent
     const intent = await this.detectUserIntent(userMessage, context);
@@ -94,40 +108,74 @@ export class ChatCompletionService {
     return response;
   }
 
+  private static updateCampaignContext(userMessage: string, context: ChatContext): void {
+    if (!context.campaign) return;
+
+    const message = userMessage.toLowerCase();
+
+    // Detect campaign type
+    if (context.campaign.stage === 'type') {
+      if (message.includes('email')) {
+        context.campaign.type = 'email';
+        context.campaign.stage = 'purpose';
+      } else if (message.includes('sms')) {
+        context.campaign.type = 'sms';
+        context.campaign.stage = 'purpose';
+      } else if (message.includes('push')) {
+        context.campaign.type = 'push';
+        context.campaign.stage = 'purpose';
+      }
+    }
+
+    // Detect campaign purpose
+    if (context.campaign.stage === 'purpose') {
+      if (message.includes('welcome') || message.includes('onboard')) {
+        context.campaign.purpose = 'welcome';
+        context.campaign.stage = 'specific';
+      } else if (message.includes('newsletter')) {
+        context.campaign.purpose = 'newsletter';
+        context.campaign.stage = 'specific';
+      } else if (message.includes('promotional') || message.includes('sale') || message.includes('discount')) {
+        context.campaign.purpose = 'promotional';
+        context.campaign.stage = 'specific';
+      } else if (message.includes('announcement') || message.includes('news')) {
+        context.campaign.purpose = 'announcement';
+        context.campaign.stage = 'specific';
+      }
+    }
+
+    // Move to generation stage when user wants to create
+    if (message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft')) {
+      context.campaign.stage = 'generation';
+    }
+  }
+
   private static async detectUserIntent(
     userMessage: string, 
     context: ChatContext
   ): Promise<'question' | 'action' | 'exploration'> {
-    const intentPrompt = `
-Analyze this user message and classify their intent:
-- "question": They're asking for advice, guidance, or information
-- "action": They want to create, build, or generate something specific
-- "exploration": They're exploring ideas or not sure what they want
-
-User message: "${userMessage}"
-Context: ${context.area} area, ${context.conversationHistory.length} messages in conversation
-
-Return only: question, action, or exploration`;
-
-    try {
-      const response = await OpenAIEmailService.callOpenAI(intentPrompt, 1, false);
-      const intent = response.toLowerCase().trim();
-      
-      if (['question', 'action', 'exploration'].includes(intent)) {
-        return intent as 'question' | 'action' | 'exploration';
-      }
-      
-      return 'exploration';
-    } catch (error) {
-      console.error('Intent detection failed:', error);
-      return 'exploration';
+    const message = userMessage.toLowerCase();
+    
+    // Quick intent detection for campaign building
+    if (message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft')) {
+      return 'action';
     }
+    
+    if (message.includes('how') || message.includes('what') || message.includes('why') || message.includes('best practice')) {
+      return 'question';
+    }
+
+    return 'exploration';
   }
 
   private static async generateAskResponse(
     userMessage: string, 
     context: ChatContext
   ): Promise<ChatCompletionResponse> {
+    if (context.area === 'messages' && context.campaign) {
+      return this.generateCampaignAskResponse(userMessage, context);
+    }
+
     const systemPrompt = this.getSystemPrompt(context.area, 'ask');
     const conversationContext = this.buildConversationContext(context);
 
@@ -137,7 +185,7 @@ Conversation context: ${conversationContext}
 
 User message: "${userMessage}"
 
-Provide helpful guidance and advice. Do NOT generate email content. Focus on strategic advice, best practices, and actionable insights for ${context.area}.
+Provide helpful guidance and advice. Focus on strategic advice, best practices, and actionable insights for ${context.area}.
 
 Also suggest 3-4 relevant follow-up topics or questions as comma-separated values after your response, prefixed with "CHIPS:"`;
 
@@ -166,6 +214,58 @@ Also suggest 3-4 relevant follow-up topics or questions as comma-separated value
     }
   }
 
+  private static async generateCampaignAskResponse(
+    userMessage: string,
+    context: ChatContext
+  ): Promise<ChatCompletionResponse> {
+    const campaign = context.campaign!;
+    
+    const systemPrompt = `You are GrowthOS, an expert email marketing campaign strategist. You help users build specific email campaigns step by step.
+
+Current campaign context:
+- Stage: ${campaign.stage}
+- Type: ${campaign.type || 'not selected'}
+- Purpose: ${campaign.purpose || 'not selected'}
+- Mode: Ask (provide guidance and best practices)
+
+Guide the user through the campaign building process progressively.`;
+
+    const conversationContext = this.buildConversationContext(context);
+    
+    const prompt = `${systemPrompt}
+
+Conversation: ${conversationContext}
+User message: "${userMessage}"
+
+Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your response, prefixed with "CHIPS:"`;
+
+    try {
+      const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
+      const [content, chipsSection] = response.split('CHIPS:');
+      
+      const suggestedChips = chipsSection 
+        ? chipsSection.split(',').map(chip => chip.trim()).slice(0, 4)
+        : this.getCampaignChips(campaign);
+
+      return {
+        content: content.trim(),
+        intent: context.userIntent || 'exploration',
+        suggestedChips,
+        shouldGenerateEmail: false,
+        campaignContext: campaign
+      };
+    } catch (error) {
+      console.error('Campaign ask response failed:', error);
+      return {
+        content: 'Let me help you plan your campaign. What type of campaign are you looking to create?',
+        intent: 'exploration',
+        suggestedChips: this.getCampaignChips(campaign),
+        shouldGenerateEmail: false,
+        campaignContext: campaign
+      };
+    }
+  }
+
   private static async generateDoResponse(
     userMessage: string, 
     context: ChatContext
@@ -179,46 +279,50 @@ Also suggest 3-4 relevant follow-up topics or questions as comma-separated value
       };
     }
 
-    const systemPrompt = this.getSystemPrompt(context.area, 'do');
-    const conversationContext = this.buildConversationContext(context);
+    // Check if we should generate an email based on campaign context
+    const shouldGenerate = context.campaign?.stage === 'generation' || 
+                          context.campaign?.type && context.campaign?.purpose ||
+                          await this.shouldGenerateEmail(userMessage, context);
 
-    // Check if we should generate an email
-    const shouldGenerateEmail = await this.shouldGenerateEmail(userMessage, context);
-
-    if (shouldGenerateEmail) {
+    if (shouldGenerate && context.campaign?.type === 'email') {
       try {
+        const campaignPrompt = this.buildCampaignPrompt(context.campaign, userMessage);
+        
         const emailData = await OpenAIEmailService.generateEmailContent({
-          prompt: `Based on this conversation context: ${conversationContext}\n\nUser request: ${userMessage}`,
-          emailType: 'promotional',
+          prompt: campaignPrompt,
+          emailType: context.campaign.purpose || 'promotional',
           tone: 'professional'
         });
 
         return {
-          content: `Perfect! I've created an email based on our conversation. The email focuses on ${this.extractKeyTopic(userMessage)} and is ready for you to review and customize.`,
+          content: `Perfect! I've created your ${context.campaign.purpose || 'email'} campaign. The email is ready for you to review and customize in the editor.`,
           intent: 'action',
           suggestedChips: ['Load in Editor', 'Refine Copy', 'Change Tone', 'Add More Sections'],
           shouldGenerateEmail: true,
-          emailData
+          emailData,
+          campaignContext: context.campaign
         };
       } catch (error) {
         console.error('Email generation failed:', error);
         return {
-          content: 'I had trouble generating the email. Let me help you plan it instead. What specific type of email are you looking to create?',
+          content: 'I had trouble generating the email. Let me help you refine the campaign details first. What specific aspects would you like to focus on?',
           intent: 'question',
-          suggestedChips: ['Welcome Email', 'Newsletter', 'Promotional', 'Announcement'],
-          shouldGenerateEmail: false
+          suggestedChips: ['Subject Line Ideas', 'Content Structure', 'Call-to-Action', 'Personalization'],
+          shouldGenerateEmail: false,
+          campaignContext: context.campaign
         };
       }
     } else {
-      const prompt = `${systemPrompt}
+      // Guide user to provide more campaign details
+      const prompt = `You are GrowthOS helping build an email campaign in DO mode.
 
-Conversation context: ${conversationContext}
-
+Campaign context: ${JSON.stringify(context.campaign)}
+Conversation: ${this.buildConversationContext(context)}
 User message: "${userMessage}"
 
-The user is in DO mode but their request isn't ready for email generation yet. Help them refine their requirements and gather the information needed to create a great email.
+The user wants to create but needs more specific campaign details. Guide them to provide the information needed for email generation.
 
-Suggest 3-4 next steps or clarifying questions as comma-separated values after your response, prefixed with "CHIPS:"`;
+Suggest 3-4 clarifying questions or next steps as chips after your response, prefixed with "CHIPS:"`;
 
       try {
         const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
@@ -226,54 +330,83 @@ Suggest 3-4 next steps or clarifying questions as comma-separated values after y
         
         const suggestedChips = chipsSection 
           ? chipsSection.split(',').map(chip => chip.trim()).slice(0, 4)
-          : this.getDefaultChips(context.area, 'do');
+          : this.getCampaignChips(context.campaign!);
 
         return {
           content: content.trim(),
           intent: 'action',
           suggestedChips,
-          shouldGenerateEmail: false
+          shouldGenerateEmail: false,
+          campaignContext: context.campaign
         };
       } catch (error) {
         console.error('Do response generation failed:', error);
         return {
-          content: this.getFallbackResponse(context.area, 'do'),
+          content: 'Let\'s build your campaign step by step. What type of email campaign would you like to create?',
           intent: 'action',
-          suggestedChips: this.getDefaultChips(context.area, 'do'),
-          shouldGenerateEmail: false
+          suggestedChips: this.getCampaignChips(context.campaign!),
+          shouldGenerateEmail: false,
+          campaignContext: context.campaign
         };
       }
     }
   }
 
-  private static async shouldGenerateEmail(userMessage: string, context: ChatContext): Promise<boolean> {
-    const prompt = `
-Analyze if this user message indicates they're ready for email generation:
-
-User message: "${userMessage}"
-Conversation length: ${context.conversationHistory.length} messages
-Context: ${context.area} area
-
-Return "true" if:
-- They explicitly ask to create/generate/build an email
-- They provide specific requirements for an email
-- They seem ready to move from planning to creation
-- The conversation has enough context for email generation
-
-Return "false" if:
-- They're still asking questions or exploring
-- They need more information or clarification
-- The request is too vague for email generation
-
-Return only: true or false`;
-
-    try {
-      const response = await OpenAIEmailService.callOpenAI(prompt, 1, false);
-      return response.toLowerCase().trim() === 'true';
-    } catch (error) {
-      console.error('Email generation check failed:', error);
-      return false;
+  private static buildCampaignPrompt(campaign: CampaignContext, userMessage: string): string {
+    let prompt = `Create a ${campaign.type} campaign`;
+    
+    if (campaign.purpose) {
+      prompt += ` for ${campaign.purpose}`;
     }
+    
+    if (campaign.specific) {
+      prompt += ` focusing on ${campaign.specific}`;
+    }
+    
+    prompt += `. User request: ${userMessage}`;
+    
+    return prompt;
+  }
+
+  private static getCampaignChips(campaign: CampaignContext): string[] {
+    switch (campaign.stage) {
+      case 'type':
+        return ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'];
+      
+      case 'purpose':
+        if (campaign.type === 'email') {
+          return ['Welcome Series', 'Newsletter', 'Promotional Email', 'Product Announcement'];
+        }
+        return ['Welcome Message', 'Promotional', 'Alert', 'Reminder'];
+      
+      case 'specific':
+        if (campaign.purpose === 'welcome') {
+          return ['Onboarding Email 1', 'Account Setup Guide', 'Welcome + First Steps', 'Feature Introduction'];
+        }
+        if (campaign.purpose === 'newsletter') {
+          return ['Monthly Update', 'Weekly Digest', 'Industry News', 'Product Updates'];
+        }
+        if (campaign.purpose === 'promotional') {
+          return ['Limited Time Sale', 'New Product Launch', 'Seasonal Promotion', 'Exclusive Discount'];
+        }
+        return ['Generate Email', 'Add Details', 'Set Tone', 'Choose Template'];
+      
+      case 'generation':
+        return ['Generate Email', 'Refine Details', 'Change Approach', 'Start Over'];
+      
+      default:
+        return ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'];
+    }
+  }
+
+  private static async shouldGenerateEmail(userMessage: string, context: ChatContext): Promise<boolean> {
+    const message = userMessage.toLowerCase();
+    const hasContent = context.conversationHistory.length >= 3;
+    const hasType = context.campaign?.type;
+    const hasPurpose = context.campaign?.purpose;
+    const isCreateRequest = message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft');
+    
+    return hasContent && hasType && hasPurpose && isCreateRequest;
   }
 
   private static getSystemPrompt(area: 'messages' | 'journeys' | 'snippets', mode: 'ask' | 'do'): string {
@@ -299,21 +432,10 @@ Be conversational, helpful, and growth-focused. Provide specific, actionable adv
     return recentMessages.map(msg => `${msg.role}: ${msg.content}`).join('\n');
   }
 
-  private static extractKeyTopic(userMessage: string): string {
-    const topics = ['welcome', 'newsletter', 'promotional', 'announcement', 'follow-up', 'cart abandonment'];
-    const message = userMessage.toLowerCase();
-    
-    for (const topic of topics) {
-      if (message.includes(topic)) return topic;
-    }
-    
-    return 'marketing campaign';
-  }
-
   private static getDefaultChips(area: string, mode: string): string[] {
     const chips = {
       messages: {
-        ask: ['Email Strategy', 'Audience Segmentation', 'Campaign Planning', 'Best Practices'],
+        ask: ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'],
         do: ['Create Welcome Email', 'Build Newsletter', 'Design Promotion', 'Generate Campaign']
       },
       journeys: {
@@ -343,5 +465,9 @@ Be conversational, helpful, and growth-focused. Provide specific, actionable adv
 
   static getConversationHistory(sessionId: string): ConversationMessage[] {
     return this.contexts.get(sessionId)?.conversationHistory || [];
+  }
+
+  static getCampaignContext(sessionId: string): CampaignContext | undefined {
+    return this.contexts.get(sessionId)?.campaign;
   }
 }
