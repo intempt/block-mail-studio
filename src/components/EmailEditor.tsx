@@ -219,6 +219,10 @@ export default function EmailEditor({
     console.log('Adding universal content:', content);
   };
 
+  const handleBlockSelect = (block: any) => {
+    setSelectedBlockId(block.id);
+  };
+
   const renderLeftPanel = () => {
     switch (leftPanel) {
       case 'blocks':
@@ -369,7 +373,7 @@ export default function EmailEditor({
               <EmailBlockCanvas
                 blocks={blocks}
                 onBlocksChange={handleBlocksChange}
-                onBlockSelect={setSelectedBlockId}
+                onBlockSelect={handleBlockSelect}
                 selectedBlockId={selectedBlockId}
                 layoutConfig={layoutConfig}
                 onLayoutConfigChange={setLayoutConfig}
