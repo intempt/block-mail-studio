@@ -39,6 +39,7 @@ import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
+import { EmailBlock } from '@/types/emailBlocks';
 
 interface Block {
   id: string;
@@ -67,13 +68,16 @@ export default function EmailEditor({
   const [emailHTML, setEmailHTML] = useState(initialHTML);
   const [subjectLine, setSubjectLine] = useState(initialSubject);
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
   const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({
     direction: 'column',
     alignItems: 'center',
     justifyContent: 'start'
   });
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
@@ -119,6 +123,16 @@ export default function EmailEditor({
     setTemplates(initialTemplates);
   }, []);
 
+  // Update selected block when selectedBlockId changes
+  useEffect(() => {
+    if (selectedBlockId) {
+      const block = emailBlocks.find(b => b.id === selectedBlockId);
+      setSelectedBlock(block || null);
+    } else {
+      setSelectedBlock(null);
+    }
+  }, [selectedBlockId, emailBlocks]);
+
   const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
     if (!editor) return;
 
@@ -136,20 +150,22 @@ export default function EmailEditor({
     setBlocks(newBlocks);
   };
 
-  const handleBlockUpdate = (blockId: string, updatedBlock: Partial<Block>) => {
-    setBlocks(prev =>
-      prev.map(block =>
-        block.id === blockId ? { ...block, ...updatedBlock } : block
-      )
+  const handleBlockUpdate = (block: EmailBlock) => {
+    setEmailBlocks(prev => 
+      prev.map(b => b.id === block.id ? block : b)
     );
+    if (selectedBlock && selectedBlock.id === block.id) {
+      setSelectedBlock(block);
+    }
   };
 
   const handleBlockDelete = (blockId: string) => {
     setBlocks(prev => prev.filter(block => block.id !== blockId));
+    setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
     setSelectedBlockId(null);
   };
 
-  const handleGlobalStyleUpdate = (styles: Record<string, string>) => {
+  const handleGlobalStylesChange = (styles: Record<string, string>) => {
     // Apply styles to all blocks or the canvas
     console.log('Applying global styles:', styles);
   };
@@ -220,21 +236,15 @@ export default function EmailEditor({
       case 'design':
         return (
           <GlobalStylesPanel
-            onStyleUpdate={handleGlobalStyleUpdate}
+            onStylesChange={handleGlobalStylesChange}
           />
         );
       case 'properties':
-        return selectedBlockId ? (
+        return (
           <PropertyEditorPanel
-            blockId={selectedBlockId}
-            blocks={blocks}
+            selectedBlock={selectedBlock}
             onBlockUpdate={handleBlockUpdate}
-            onBlockDelete={handleBlockDelete}
           />
-        ) : (
-          <div className="p-4 text-center text-gray-500">
-            <p>Select a block to edit its properties</p>
-          </div>
         );
       case 'performance':
         return (
@@ -409,7 +419,8 @@ export default function EmailEditor({
       {/* Modals */}
       {showPreview && (
         <EmailPreview
-          onClose={() => setShowPreview(false)}
+          html={emailHTML}
+          previewMode={previewMode}
         />
       )}
 
