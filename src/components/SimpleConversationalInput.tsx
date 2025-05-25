@@ -40,9 +40,18 @@ export const SimpleConversationalInput: React.FC<SimpleConversationalInputProps>
 
   const getDoModeTooltip = () => {
     if (disableDoMode) {
-      return `Do mode coming soon for ${context}. Use Ask mode for expert guidance.`;
+      return `Do mode creates actionable content. Coming soon for ${context} - use Ask mode for expert guidance.`;
     }
-    return undefined;
+    return "Create and build specific content based on your input";
+  };
+
+  const getAskPlaceholder = () => {
+    const placeholders = {
+      messages: "Ask about email marketing strategy...",
+      journeys: "Ask about customer journey design...",
+      snippets: "Ask about content optimization..."
+    };
+    return placeholders[context] || placeholder;
   };
 
   return (
@@ -52,7 +61,7 @@ export const SimpleConversationalInput: React.FC<SimpleConversationalInputProps>
         <Input
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={`Ask about ${placeholder.toLowerCase()}`}
+          placeholder={getAskPlaceholder()}
           onKeyPress={handleKeyPress}
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           disabled={isLoading}
@@ -81,6 +90,7 @@ export const SimpleConversationalInput: React.FC<SimpleConversationalInputProps>
               disabled={!inputMessage.trim() || isLoading}
               size="sm"
               variant="outline"
+              title={getDoModeTooltip()}
               className="border-gray-300 text-gray-700 hover:bg-gray-50"
             >
               <Send className="w-4 h-4 mr-1" />
@@ -106,7 +116,7 @@ export const SimpleConversationalInput: React.FC<SimpleConversationalInputProps>
       {disableDoMode && (
         <div className="px-3 pb-2">
           <p className="text-xs text-gray-500">
-            💡 Do mode coming soon for {context}. Use Ask mode for expert guidance and strategic advice.
+            💡 Do mode creates actionable content and comes soon for {context}. Use Ask mode for expert guidance and strategic advice.
           </p>
         </div>
       )}
