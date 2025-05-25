@@ -14,7 +14,6 @@ import { Placeholder } from '@tiptap/extension-placeholder';
 import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
-import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
@@ -38,13 +37,8 @@ import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
-import { AIBlockGenerator } from '@/services/AIBlockGenerator';
-import { EmailContentAnalyzer } from '@/services/EmailContentAnalyzer';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-
-import 'highlight.js/styles/atom-one-dark.css';
-import { lowlight } from 'lowlight';
 
 interface Block {
   id: string;
@@ -88,7 +82,7 @@ export default function EmailEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        history: false, // Fix the history configuration issue
+        history: false,
       }),
       Underline,
       Link,
@@ -100,9 +94,6 @@ export default function EmailEditor({
       Color,
       TextAlign.configure({
         types: ['heading', 'paragraph']
-      }),
-      CodeBlockLowlight.configure({
-        lowlight
       }),
     ],
     content: emailHTML,
@@ -201,43 +192,6 @@ export default function EmailEditor({
     const newTemplate = DirectTemplateService.saveTemplate(template);
     setTemplates(prev => [...prev, newTemplate]);
     setShowTemplateLibrary(false);
-  };
-
-  const handleTemplateLibraryOpen = () => {
-    setShowTemplateLibrary(true);
-  };
-
-  const handleTemplateLibraryClose = () => {
-    setShowTemplateLibrary(false);
-  };
-
-  const handleLoadToEditor = async (emailHTML: string, subjectLine: string) => {
-    try {
-      // Analyze the email content
-      const analysis = await EmailContentAnalyzer.analyzeEmailContent(
-        subjectLine,
-        emailHTML
-      );
-
-      // Generate blocks from analysis
-      const result = AIBlockGenerator.generateBlocksFromAnalysis(
-        analysis,
-        emailHTML
-      );
-
-      // Convert EmailBlocks to Blocks by ensuring they have the required styles property
-      const convertedBlocks: Block[] = result.blocks.map(block => ({
-        ...block,
-        styles: block.styles || {}
-      }));
-
-      // Load into editor
-      setBlocks(convertedBlocks);
-      setLayoutConfig(result.layoutConfig);
-
-    } catch (error) {
-      console.error('Failed to load to editor:', error);
-    }
   };
 
   const handleSnippetAdd = (snippet: EmailSnippet) => {
