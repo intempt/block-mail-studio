@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ interface Message {
   type: 'user' | 'ai' | 'system';
   content: string;
   timestamp: Date;
-  mode?: 'ask' | 'message';
+  mode?: 'ask' | 'do';
 }
 
 interface Chip {
@@ -54,7 +53,7 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
     setMessages([welcomeMessage]);
   }, []);
 
-  const handleSendMessage = async (message: string, mode: 'ask' | 'message') => {
+  const handleSendMessage = async (message: string, mode: 'ask' | 'do') => {
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -103,7 +102,7 @@ export const IntegratedMessagesInterface: React.FC<IntegratedMessagesInterfacePr
       // If HTML email in message mode, transition to builder
       if (channelDetection.channel === 'email' && 
           channelDetection.format === 'html' && 
-          mode === 'message') {
+          mode === 'do') {
         setTimeout(() => {
           onEmailBuilderOpen();
         }, 1000);
