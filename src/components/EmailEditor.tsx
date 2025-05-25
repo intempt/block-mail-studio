@@ -220,7 +220,18 @@ export default function EmailEditor({
   };
 
   const handleBlockSelect = (block: any) => {
-    setSelectedBlockId(block.id);
+    if (block) {
+      setSelectedBlockId(block.id);
+    } else {
+      setSelectedBlockId(null);
+    }
+  };
+
+  const handleContentChange = (content: string) => {
+    setEmailHTML(content);
+    if (editor) {
+      editor.commands.setContent(content);
+    }
   };
 
   const renderLeftPanel = () => {
@@ -371,12 +382,11 @@ export default function EmailEditor({
           <div className="flex-1 overflow-auto bg-gray-100 p-6">
             <div className="max-w-2xl mx-auto">
               <EmailBlockCanvas
-                blocks={blocks}
-                onBlocksChange={handleBlocksChange}
+                onContentChange={handleContentChange}
                 onBlockSelect={handleBlockSelect}
-                selectedBlockId={selectedBlockId}
-                layoutConfig={layoutConfig}
-                onLayoutConfigChange={setLayoutConfig}
+                previewWidth={600}
+                previewMode="desktop"
+                compactMode={false}
               />
             </div>
           </div>
@@ -411,7 +421,6 @@ export default function EmailEditor({
             
             <div className="flex-1 overflow-hidden">
               <EmailCodeEditor
-                editor={editor}
                 initialHtml={emailHTML}
               />
             </div>
