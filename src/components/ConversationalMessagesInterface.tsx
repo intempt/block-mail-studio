@@ -4,6 +4,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, User } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
+import { GrowthOSService, GrowthOSChip } from '@/services/growthOSService';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
 
 interface Message {
@@ -24,133 +25,80 @@ interface ConversationalMessagesInterfaceProps {
   onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
 }
 
-const MESSAGE_FOCUSED_STARTER_CHIPS: ConversationalChip[] = [
-  { id: 'email-customers', label: 'Email my customers about something important', type: 'starter' },
-  { id: 'welcome-new-users', label: 'Welcome new users to our platform', type: 'starter' },
-  { id: 'promote-product', label: 'Promote a product or service', type: 'starter' },
-  { id: 'send-newsletter', label: 'Create a newsletter or update', type: 'starter' },
-  { id: 'urgent-announcement', label: 'Send an urgent announcement', type: 'starter' }
-];
-
 export const ConversationalMessagesInterface: React.FC<ConversationalMessagesInterfaceProps> = ({
   onEmailBuilderOpen
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [chips, setChips] = useState<ConversationalChip[]>(MESSAGE_FOCUSED_STARTER_CHIPS);
+  const [chips, setChips] = useState<ConversationalChip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingChips, setIsGeneratingChips] = useState(false);
-  const [selectedMessageType, setSelectedMessageType] = useState<string | null>(null);
   const [conversationDepth, setConversationDepth] = useState(0);
 
   useEffect(() => {
+    // Initialize with GrowthOS welcome
     const welcomeMessage: Message = {
       id: '1',
       type: 'ai',
-      content: 'What kind of message would you like to create? Select a message type below or describe your campaign needs.',
+      content: GrowthOSService.getGrowthOSWelcome('messages'),
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
+    
+    // Generate initial marketing-focused chips
+    generateInitialChips();
   }, []);
 
-  const generateProgressiveChips = async (userMessage: string, aiResponse: string, depth: number) => {
+  const generateInitialChips = async () => {
     setIsGeneratingChips(true);
     try {
-      let prompt = '';
+      const growthChips = await GrowthOSService.generateMarketingChips(
+        'initial conversation',
+        'messages',
+        0
+      );
       
-      if (depth <= 1) {
-        // Early conversation - gather basic details
-        prompt = `Based on this message creation conversation:
-
-User: "${userMessage}"
-AI: "${aiResponse}"
-
-Generate 5 follow-up questions to gather essential details for creating their message. Focus on:
-- Target audience
-- Main goal/purpose
-- Message type (email, SMS, etc.)
-- Tone and urgency
-- Key content points
-
-Return as JSON: {"suggestions": ["question 1", "question 2", "question 3", "question 4", "question 5"]}`;
-      } else if (depth <= 3) {
-        // Mid conversation - get specific requirements
-        prompt = `Based on this ongoing message creation conversation:
-
-User latest: "${userMessage}"
-AI response: "${aiResponse}"
-Conversation depth: ${depth}
-
-Generate 5 specific follow-up questions to finalize message details. Focus on:
-- Specific content requirements
-- Call-to-action needs
-- Design preferences
-- Timing and scheduling
-- Ready to create options
-
-Return as JSON: {"suggestions": ["question 1", "question 2", "question 3", "question 4", "question 5"]}`;
-      } else {
-        // Deep conversation - push toward creation
-        prompt = `Based on this detailed message creation conversation:
-
-User latest: "${userMessage}"
-AI response: "${aiResponse}"
-Conversation depth: ${depth}
-
-Generate 5 action-oriented suggestions to move toward message creation:
-- "Ready to create this message"
-- "Generate email content now"
-- "Open the email builder"
-- Refinement options
-- Alternative approaches
-
-Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4", "action 5"]}`;
-      }
-
-      const response = await OpenAIEmailService.callOpenAI(prompt, 2, true);
+      const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
+        id: chip.id,
+        label: chip.label,
+        type: 'starter' as const
+      }));
       
-      if (response.suggestions && Array.isArray(response.suggestions)) {
-        const contextualChips: ConversationalChip[] = response.suggestions.map((suggestion: string, index: number) => ({
-          id: `contextual-${Date.now()}-${index}`,
-          label: suggestion,
-          type: 'contextual' as const
-        }));
-
-        setChips([...MESSAGE_FOCUSED_STARTER_CHIPS, ...contextualChips]);
-      } else {
-        // Fallback chips based on conversation depth
-        setChips([...MESSAGE_FOCUSED_STARTER_CHIPS, ...getFallbackChips(depth)]);
-      }
+      setChips(conversationalChips);
     } catch (error) {
-      console.error('Error generating contextual chips:', error);
-      // Use fallback chips on error
-      setChips([...MESSAGE_FOCUSED_STARTER_CHIPS, ...getFallbackChips(depth)]);
+      console.error('Error generating initial chips:', error);
+      // Fallback chips
+      setChips([
+        { id: 'conversion-email', label: 'Create a high-converting email campaign', type: 'starter' },
+        { id: 'customer-segmentation', label: 'Segment customers for personalized messaging', type: 'starter' },
+        { id: 'retention-strategy', label: 'Design a customer retention email series', type: 'starter' },
+        { id: 'growth-metrics', label: 'Set up growth tracking and analytics', type: 'starter' }
+      ]);
     } finally {
       setIsGeneratingChips(false);
     }
   };
 
-  const getFallbackChips = (depth: number): ConversationalChip[] => {
-    if (depth <= 1) {
-      return [
-        { id: 'fb-audience', label: 'Who is the target audience?', type: 'contextual' },
-        { id: 'fb-goal', label: 'What\'s the main goal?', type: 'contextual' },
-        { id: 'fb-tone', label: 'What tone should it have?', type: 'contextual' },
-        { id: 'fb-urgent', label: 'Is this time-sensitive?', type: 'contextual' }
-      ];
-    } else if (depth <= 3) {
-      return [
-        { id: 'fb-content', label: 'What specific content to include?', type: 'contextual' },
-        { id: 'fb-cta', label: 'What action should recipients take?', type: 'contextual' },
-        { id: 'fb-design', label: 'Any design preferences?', type: 'contextual' },
-        { id: 'fb-timing', label: 'When should this be sent?', type: 'contextual' }
-      ];
-    } else {
-      return [
-        { id: 'fb-create', label: 'Ready to create this message', type: 'contextual' },
-        { id: 'fb-generate', label: 'Generate email content now', type: 'contextual' },
-        { id: 'fb-builder', label: 'Open the email builder', type: 'contextual' },
-        { id: 'fb-refine', label: 'Refine the requirements', type: 'contextual' }
-      ];
+  const generateProgressiveChips = async (userMessage: string, aiResponse: string) => {
+    setIsGeneratingChips(true);
+    try {
+      const growthChips = await GrowthOSService.generateMarketingChips(
+        userMessage,
+        'messages',
+        conversationDepth
+      );
+      
+      const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
+        id: chip.id,
+        label: chip.label,
+        type: 'contextual' as const
+      }));
+      
+      setChips(conversationalChips);
+    } catch (error) {
+      console.error('Error generating progressive chips:', error);
+      // Keep existing chips on error
+    } finally {
+      setIsGeneratingChips(false);
     }
   };
 
@@ -165,15 +113,15 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
 
     setMessages(prev => [...prev, userMessage]);
     setConversationDepth(prev => prev + 1);
+    GrowthOSService.updateMarketingContext(message);
     setIsLoading(true);
 
     try {
       // Handle Do mode for email creation
       if (mode === 'do' && conversationDepth >= 2) {
-        if (message.toLowerCase().includes('email') || selectedMessageType) {
-          // Generate email and open builder
+        if (message.toLowerCase().includes('email') || message.toLowerCase().includes('campaign')) {
           const response = await OpenAIEmailService.generateEmailContent({
-            prompt: `Create an email based on this conversation: ${message}`,
+            prompt: `Create a growth-focused email based on this marketing conversation: ${message}`,
             emailType: 'promotional',
             tone: 'professional'
           });
@@ -181,7 +129,7 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
           const aiResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: 'Perfect! I\'ve generated your email content. Opening the email builder now...',
+            content: 'Excellent! I\'ve created a growth-optimized email campaign for you. Opening the email builder now...',
             timestamp: new Date()
           };
 
@@ -198,11 +146,7 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
         }
       }
 
-      const response = await OpenAIEmailService.conversationalResponse({
-        userMessage: message,
-        conversationContext: messages.slice(-3).map(m => m.content),
-        currentEmailContent: ''
-      });
+      const response = await GrowthOSService.getGrowthOSResponse(message, 'messages');
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -212,14 +156,14 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      await generateProgressiveChips(message, response, conversationDepth);
+      await generateProgressiveChips(message, response);
 
     } catch (error) {
       console.error('Error processing message:', error);
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: 'I had trouble processing that. Could you tell me more about the message you want to create?',
+        content: 'I had trouble processing that. Let\'s focus on your growth marketing goals - what specific campaign challenge can I help you solve?',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -229,11 +173,6 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
   };
 
   const handleChipSelect = async (chip: ConversationalChip) => {
-    // Track message type from starter chips
-    if (chip.type === 'starter') {
-      setSelectedMessageType(chip.id);
-    }
-
     const chipMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -243,14 +182,11 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
 
     setMessages(prev => [...prev, chipMessage]);
     setConversationDepth(prev => prev + 1);
+    GrowthOSService.updateMarketingContext(chip.label);
     setIsLoading(true);
 
     try {
-      const response = await OpenAIEmailService.conversationalResponse({
-        userMessage: chip.label,
-        conversationContext: messages.slice(-3).map(m => m.content),
-        currentEmailContent: ''
-      });
+      const response = await GrowthOSService.getGrowthOSResponse(chip.label, 'messages');
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -260,7 +196,7 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      await generateProgressiveChips(chip.label, response, conversationDepth);
+      await generateProgressiveChips(chip.label, response);
 
     } catch (error) {
       console.error('Error processing chip selection:', error);
@@ -276,14 +212,14 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
     const lastAiMessage = messages.slice().reverse().find(m => m.type === 'ai');
     
     if (lastUserMessage && lastAiMessage) {
-      await generateProgressiveChips(lastUserMessage.content, lastAiMessage.content, conversationDepth);
+      await generateProgressiveChips(lastUserMessage.content, lastAiMessage.content);
     }
   };
 
-  const resetToStarterChips = () => {
-    setChips(MESSAGE_FOCUSED_STARTER_CHIPS);
-    setSelectedMessageType(null);
+  const resetToFreshStart = () => {
+    GrowthOSService.resetContext();
     setConversationDepth(0);
+    generateInitialChips();
   };
 
   return (
@@ -295,7 +231,7 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
             <div key={message.id}>
               <div className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {(message.type === 'ai' || message.type === 'system') && (
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -331,14 +267,14 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
           
           {isLoading && (
             <div className="flex gap-4 justify-start">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                 <Bot className="w-4 h-4 text-white" />
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
@@ -352,7 +288,7 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
           chips={chips}
           onChipSelect={handleChipSelect}
           onRefreshChips={handleRefreshChips}
-          onResetToStarter={resetToStarterChips}
+          onResetToStarter={resetToFreshStart}
           isLoading={isLoading || isGeneratingChips}
         />
       </div>
@@ -361,7 +297,7 @@ Return as JSON: {"suggestions": ["action 1", "action 2", "action 3", "action 4",
       <EnhancedChatInput
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
-        placeholder="your message needs..."
+        placeholder="your growth marketing challenge..."
         context="messages"
       />
     </div>

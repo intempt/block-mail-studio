@@ -1,9 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, User } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
+import { SimpleConversationalInput } from './SimpleConversationalInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
+import { GrowthOSService, GrowthOSChip } from '@/services/growthOSService';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
 
 interface Message {
@@ -25,47 +28,6 @@ interface UniversalConversationalInterfaceProps {
   onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
 }
 
-const getStarterChips = (context: 'journeys' | 'messages' | 'snippets'): ConversationalChip[] => {
-  switch (context) {
-    case 'journeys':
-      return [
-        { id: 'welcome-sequence', label: 'Plan a welcome sequence for new users', type: 'starter' },
-        { id: 'cart-abandonment', label: 'Design a cart abandonment flow', type: 'starter' },
-        { id: 're-engagement', label: 'Create a re-engagement campaign', type: 'starter' },
-        { id: 'onboarding-journey', label: 'Build a user onboarding journey', type: 'starter' }
-      ];
-    case 'messages':
-      return [
-        { id: 'html-email', label: 'Create an HTML email campaign', type: 'starter' },
-        { id: 'marketing-email', label: 'Build a marketing email', type: 'starter' },
-        { id: 'sms-campaign', label: 'Design an SMS campaign', type: 'starter' },
-        { id: 'push-notification', label: 'Create a push notification', type: 'starter' }
-      ];
-    case 'snippets':
-      return [
-        { id: 'email-header', label: 'Create an email header template', type: 'starter' },
-        { id: 'cta-snippet', label: 'Write compelling CTA copy', type: 'starter' },
-        { id: 'footer-template', label: 'Design a footer template', type: 'starter' },
-        { id: 'social-links', label: 'Create social media links section', type: 'starter' }
-      ];
-    default:
-      return [];
-  }
-};
-
-const getWelcomeMessage = (context: 'journeys' | 'messages' | 'snippets'): string => {
-  switch (context) {
-    case 'journeys':
-      return 'What kind of customer journey would you like to create? Select a journey type below or describe your workflow needs.';
-    case 'messages':
-      return 'What kind of message would you like to create? Select a message type below or describe your campaign needs.';
-    case 'snippets':
-      return 'What content snippet would you like to create? Select a snippet type below or describe your content needs.';
-    default:
-      return 'How can I help you today?';
-  }
-};
-
 export const UniversalConversationalInterface: React.FC<UniversalConversationalInterfaceProps> = ({
   context,
   onEmailBuilderOpen
@@ -74,61 +36,41 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const [chips, setChips] = useState<ConversationalChip[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingChips, setIsGeneratingChips] = useState(false);
-  const [selectedMessageType, setSelectedMessageType] = useState<string | null>(null);
-  const [conversationContext, setConversationContext] = useState<string[]>([]);
+  const [conversationDepth, setConversationDepth] = useState(0);
 
   // Reset interface when context changes
   useEffect(() => {
     const welcomeMessage: Message = {
       id: `welcome-${context}`,
       type: 'ai',
-      content: getWelcomeMessage(context),
+      content: GrowthOSService.getGrowthOSWelcome(context),
       timestamp: new Date()
     };
     setMessages([welcomeMessage]);
-    setChips(getStarterChips(context));
-    setSelectedMessageType(null);
-    setConversationContext([]);
+    setConversationDepth(0);
+    GrowthOSService.resetContext();
+    generateInitialChips();
   }, [context]);
 
-  const generateContextualChips = async (userMessage: string, aiResponse: string) => {
-    if (!selectedMessageType) return;
-    
+  const generateInitialChips = async () => {
     setIsGeneratingChips(true);
     try {
-      const contextPrompts = {
-        journeys: 'customer journey and workflow automation',
-        messages: 'message campaign creation',
-        snippets: 'content snippet development'
-      };
-
-      const prompt = `Based on this conversation about ${contextPrompts[context]}:
-
-User latest: "${userMessage}"
-AI response: "${aiResponse}"
-Context: ${conversationContext.join(' ')}
-Selected type: ${selectedMessageType}
-
-Generate 5 contextual follow-up questions that would help gather more specific details for ${context}. Make them actionable and progressive. Return as JSON array of strings:
-
-{"suggestions": ["suggestion 1", "suggestion 2", "suggestion 3", "suggestion 4", "suggestion 5"]}`;
-
-      const response = await OpenAIEmailService.callOpenAI(prompt, 2, true);
+      const growthChips = await GrowthOSService.generateMarketingChips(
+        'initial conversation',
+        context,
+        0
+      );
       
-      if (response.suggestions && Array.isArray(response.suggestions)) {
-        const contextualChips: ConversationalChip[] = response.suggestions.map((suggestion: string, index: number) => ({
-          id: `contextual-${Date.now()}-${index}`,
-          label: suggestion,
-          type: 'contextual' as const
-        }));
-
-        setChips([...getStarterChips(context), ...contextualChips]);
-      }
+      const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
+        id: chip.id,
+        label: chip.label,
+        type: 'starter' as const
+      }));
+      
+      setChips(conversationalChips);
     } catch (error) {
-      console.error('Error generating contextual chips:', error);
-      // Add fallback chips
-      const fallbackChips = getFallbackChips(context);
-      setChips([...getStarterChips(context), ...fallbackChips]);
+      console.error('Error generating initial chips:', error);
+      setChips(getFallbackChips(context));
     } finally {
       setIsGeneratingChips(false);
     }
@@ -137,22 +79,48 @@ Generate 5 contextual follow-up questions that would help gather more specific d
   const getFallbackChips = (context: string): ConversationalChip[] => {
     const fallbacks = {
       journeys: [
-        { id: 'fb-trigger', label: 'What triggers this journey?', type: 'contextual' as const },
-        { id: 'fb-steps', label: 'How many steps should it have?', type: 'contextual' as const },
-        { id: 'fb-timing', label: 'What\'s the timing between steps?', type: 'contextual' as const }
+        { id: 'welcome-journey', label: 'Design a customer onboarding journey', type: 'starter' as const },
+        { id: 'retention-flow', label: 'Create a retention automation flow', type: 'starter' as const },
+        { id: 'lifecycle-mapping', label: 'Map customer lifecycle stages', type: 'starter' as const },
+        { id: 'engagement-triggers', label: 'Set up behavioral triggers', type: 'starter' as const }
       ],
       messages: [
-        { id: 'fb-audience', label: 'Who is the target audience?', type: 'contextual' as const },
-        { id: 'fb-goal', label: 'What\'s the main goal?', type: 'contextual' as const },
-        { id: 'fb-tone', label: 'What tone should it have?', type: 'contextual' as const }
+        { id: 'conversion-email', label: 'Create a high-converting email campaign', type: 'starter' as const },
+        { id: 'customer-segmentation', label: 'Segment customers for personalized messaging', type: 'starter' as const },
+        { id: 'retention-strategy', label: 'Design a customer retention email series', type: 'starter' as const },
+        { id: 'growth-metrics', label: 'Set up growth tracking and analytics', type: 'starter' as const }
       ],
       snippets: [
-        { id: 'fb-purpose', label: 'What\'s the snippet\'s purpose?', type: 'contextual' as const },
-        { id: 'fb-style', label: 'What style should it have?', type: 'contextual' as const },
-        { id: 'fb-placement', label: 'Where will this be used?', type: 'contextual' as const }
+        { id: 'cta-optimization', label: 'Optimize call-to-action copy', type: 'starter' as const },
+        { id: 'subject-lines', label: 'Write high-open-rate subject lines', type: 'starter' as const },
+        { id: 'personalization', label: 'Create personalized content templates', type: 'starter' as const },
+        { id: 'ab-test-content', label: 'Generate A/B test variations', type: 'starter' as const }
       ]
     };
-    return fallbacks[context] || [];
+    return fallbacks[context] || fallbacks.messages;
+  };
+
+  const generateProgressiveChips = async (userMessage: string, aiResponse: string) => {
+    setIsGeneratingChips(true);
+    try {
+      const growthChips = await GrowthOSService.generateMarketingChips(
+        userMessage,
+        context,
+        conversationDepth
+      );
+      
+      const conversationalChips: ConversationalChip[] = growthChips.map(chip => ({
+        id: chip.id,
+        label: chip.label,
+        type: 'contextual' as const
+      }));
+      
+      setChips(conversationalChips);
+    } catch (error) {
+      console.error('Error generating progressive chips:', error);
+    } finally {
+      setIsGeneratingChips(false);
+    }
   };
 
   const handleSendMessage = async (message: string, mode: 'ask' | 'do') => {
@@ -165,34 +133,15 @@ Generate 5 contextual follow-up questions that would help gather more specific d
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setConversationContext(prev => [...prev, message]);
+    setConversationDepth(prev => prev + 1);
+    GrowthOSService.updateMarketingContext(message);
     setIsLoading(true);
 
     try {
-      let contextualPrompt = `User is working on ${context}. ${selectedMessageType ? `They are creating a ${selectedMessageType}. ` : ''}${message}`;
-      
       // Handle Do mode logic - only for messages context
       if (mode === 'do' && context === 'messages') {
-        if (!selectedMessageType) {
-          const aiResponse: Message = {
-            id: (Date.now() + 1).toString(),
-            type: 'ai',
-            content: 'Please first select a message type from the options above, then I can help you create it.',
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, aiResponse]);
-          setIsLoading(false);
-          return;
-        }
-
-        if (conversationContext.length >= 2 && (selectedMessageType.includes('email') || selectedMessageType.includes('html'))) {
-          const emailGenerationPrompt = `Generate a complete email based on this conversation:
-          
-Context: ${conversationContext.join(' ')}
-Latest request: ${message}
-Message type: ${selectedMessageType}
-
-Create a professional email with proper HTML structure and compelling content.`;
+        if (conversationDepth >= 2 && (message.toLowerCase().includes('email') || message.toLowerCase().includes('campaign'))) {
+          const emailGenerationPrompt = `Generate a growth-optimized email based on this marketing conversation: ${message}`;
 
           const emailResponse = await OpenAIEmailService.generateEmailContent({
             prompt: emailGenerationPrompt,
@@ -203,7 +152,7 @@ Create a professional email with proper HTML structure and compelling content.`;
           const aiResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: `Perfect! I've generated your email based on our conversation. Opening the email editor now...`,
+            content: `Perfect! I've created a growth-focused email campaign based on our conversation. Opening the email builder now...`,
             timestamp: new Date()
           };
 
@@ -220,11 +169,7 @@ Create a professional email with proper HTML structure and compelling content.`;
         }
       }
 
-      const response = await OpenAIEmailService.conversationalResponse({
-        userMessage: contextualPrompt,
-        conversationContext: conversationContext.slice(-3),
-        currentEmailContent: ''
-      });
+      const response = await GrowthOSService.getGrowthOSResponse(message, context);
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -234,17 +179,14 @@ Create a professional email with proper HTML structure and compelling content.`;
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      
-      if (selectedMessageType) {
-        await generateContextualChips(message, response);
-      }
+      await generateProgressiveChips(message, response);
 
     } catch (error) {
       console.error('Error processing message:', error);
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: `I had trouble processing that. Could you tell me more about the ${context} you want to create?`,
+        content: `I had trouble processing that. Let's focus on your growth marketing goals - what specific ${context} challenge can I help you solve?`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
@@ -254,11 +196,6 @@ Create a professional email with proper HTML structure and compelling content.`;
   };
 
   const handleChipSelect = async (chip: ConversationalChip) => {
-    if (chip.type === 'starter') {
-      setSelectedMessageType(chip.id);
-      setConversationContext([chip.label]);
-    }
-
     const chipMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -267,15 +204,12 @@ Create a professional email with proper HTML structure and compelling content.`;
     };
 
     setMessages(prev => [...prev, chipMessage]);
+    setConversationDepth(prev => prev + 1);
+    GrowthOSService.updateMarketingContext(chip.label);
     setIsLoading(true);
 
     try {
-      const contextualPrompt = `User is working on ${context}. They selected: ${chip.label}`;
-      const response = await OpenAIEmailService.conversationalResponse({
-        userMessage: contextualPrompt,
-        conversationContext: conversationContext.slice(-3),
-        currentEmailContent: ''
-      });
+      const response = await GrowthOSService.getGrowthOSResponse(chip.label, context);
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -285,13 +219,7 @@ Create a professional email with proper HTML structure and compelling content.`;
       };
 
       setMessages(prev => [...prev, aiResponse]);
-      
-      if (chip.type === 'contextual') {
-        setConversationContext(prev => [...prev, chip.label]);
-        await generateContextualChips(chip.label, response);
-      } else {
-        await generateContextualChips(chip.label, response);
-      }
+      await generateProgressiveChips(chip.label, response);
 
     } catch (error) {
       console.error('Error processing chip selection:', error);
@@ -307,20 +235,20 @@ Create a professional email with proper HTML structure and compelling content.`;
     const lastAiMessage = messages.slice().reverse().find(m => m.type === 'ai');
     
     if (lastUserMessage && lastAiMessage) {
-      await generateContextualChips(lastUserMessage.content, lastAiMessage.content);
+      await generateProgressiveChips(lastUserMessage.content, lastAiMessage.content);
     }
   };
 
-  const resetToStarterChips = () => {
-    setChips(getStarterChips(context));
-    setSelectedMessageType(null);
-    setConversationContext([]);
+  const resetToFreshStart = () => {
+    GrowthOSService.resetContext();
+    setConversationDepth(0);
+    generateInitialChips();
   };
 
   const placeholderText = {
-    journeys: 'your journey needs...',
-    messages: 'your message needs...',
-    snippets: 'your content needs...'
+    journeys: 'your customer journey challenge...',
+    messages: 'your growth marketing challenge...',
+    snippets: 'your content optimization need...'
   };
 
   return (
@@ -332,7 +260,7 @@ Create a professional email with proper HTML structure and compelling content.`;
             <div key={message.id}>
               <div className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                 {(message.type === 'ai' || message.type === 'system') && (
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -368,14 +296,14 @@ Create a professional email with proper HTML structure and compelling content.`;
           
           {isLoading && (
             <div className="flex gap-4 justify-start">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                 <Bot className="w-4 h-4 text-white" />
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
                 <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                 </div>
               </div>
             </div>
@@ -389,19 +317,27 @@ Create a professional email with proper HTML structure and compelling content.`;
           chips={chips}
           onChipSelect={handleChipSelect}
           onRefreshChips={handleRefreshChips}
-          onResetToStarter={resetToStarterChips}
+          onResetToStarter={resetToFreshStart}
           isLoading={isLoading || isGeneratingChips}
         />
       </div>
 
-      {/* Input Component - Different based on context */}
-      <EnhancedChatInput
-        onSendMessage={handleSendMessage}
-        isLoading={isLoading}
-        placeholder={placeholderText[context]}
-        disableDoMode={context !== 'messages'}
-        context={context}
-      />
+      {/* Context-Specific Input */}
+      {context === 'messages' ? (
+        <EnhancedChatInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          placeholder={placeholderText[context]}
+          context={context}
+        />
+      ) : (
+        <SimpleConversationalInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          placeholder={placeholderText[context]}
+          context={context}
+        />
+      )}
     </div>
   );
 };
