@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -33,6 +34,7 @@ import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { PropertyEditorPanel } from './PropertyEditorPanel';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
