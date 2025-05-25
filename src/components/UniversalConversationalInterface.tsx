@@ -177,8 +177,18 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
   const handleLoadIntoEditor = (emailData: any) => {
     console.log('Loading email into editor:', emailData);
+    
     if (onEmailBuilderOpen && emailData) {
-      onEmailBuilderOpen(emailData.html, emailData.subject);
+      // Properly map the email data structure to the expected parameters
+      const emailHTML = emailData.html || emailData.emailHTML || '';
+      const subjectLine = emailData.subject || emailData.subjectLine || '';
+      
+      console.log('Mapped data - HTML:', emailHTML.substring(0, 100) + '...', 'Subject:', subjectLine);
+      
+      // Call the email builder with proper parameters
+      onEmailBuilderOpen(emailHTML, subjectLine);
+    } else {
+      console.error('Missing email data or callback:', { emailData, onEmailBuilderOpen });
     }
   };
 
@@ -232,10 +242,10 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
                           {message.mode === 'ask' ? '💭' : '⚡'}
                         </span>
                       )}
-                      {message.emailData && (
+                      {message.emailData && message.emailData.html && (
                         <button
                           onClick={() => handleLoadIntoEditor(message.emailData)}
-                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center gap-1"
+                          className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center gap-1 transition-colors"
                         >
                           <Zap className="w-3 h-3" />
                           Load in Editor

@@ -1,4 +1,3 @@
-
 import { OpenAIEmailService } from './openAIEmailService';
 
 interface ConversationMessage {
@@ -279,10 +278,8 @@ Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your r
       };
     }
 
-    // Check if we should generate an email based on campaign context
-    const shouldGenerate = context.campaign?.stage === 'generation' || 
-                          context.campaign?.type && context.campaign?.purpose ||
-                          await this.shouldGenerateEmail(userMessage, context);
+    // Enhanced logic to determine when to generate email
+    const shouldGenerate = this.shouldGenerateEmailNow(userMessage, context);
 
     if (shouldGenerate && context.campaign?.type === 'email') {
       try {
@@ -294,12 +291,19 @@ Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your r
           tone: 'professional'
         });
 
+        // Ensure proper structure for email data
+        const formattedEmailData = {
+          subject: emailData.subject || 'Your Campaign Email',
+          html: this.wrapEmailWithBlocks(emailData.html || ''),
+          previewText: emailData.previewText || 'Email preview text'
+        };
+
         return {
           content: `Perfect! I've created your ${context.campaign.purpose || 'email'} campaign. The email is ready for you to review and customize in the editor.`,
           intent: 'action',
           suggestedChips: ['Load in Editor', 'Refine Copy', 'Change Tone', 'Add More Sections'],
           shouldGenerateEmail: true,
-          emailData,
+          emailData: formattedEmailData,
           campaignContext: context.campaign
         };
       } catch (error) {
@@ -352,6 +356,31 @@ Suggest 3-4 clarifying questions or next steps as chips after your response, pre
     }
   }
 
+  private static shouldGenerateEmailNow(userMessage: string, context: ChatContext): boolean {
+    const message = userMessage.toLowerCase();
+    const hasType = context.campaign?.type === 'email';
+    const hasPurpose = !!context.campaign?.purpose;
+    const hasConversationContext = context.conversationHistory.length >= 3;
+    const isCreateRequest = message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft');
+    const isGenerationStage = context.campaign?.stage === 'generation';
+    
+    return hasType && (hasPurpose || hasConversationContext) && (isCreateRequest || isGenerationStage);
+  }
+
+  private static wrapEmailWithBlocks(html: string): string {
+    // If HTML already has email-block structure, return as is
+    if (html.includes('email-block')) {
+      return html;
+    }
+
+    // Wrap basic HTML with proper email block structure
+    return `<div class="email-container" style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+      <div class="email-block paragraph-block" style="padding: 24px;">
+        ${html}
+      </div>
+    </div>`;
+  }
+
   private static buildCampaignPrompt(campaign: CampaignContext, userMessage: string): string {
     let prompt = `Create a ${campaign.type} campaign`;
     
@@ -397,16 +426,6 @@ Suggest 3-4 clarifying questions or next steps as chips after your response, pre
       default:
         return ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'];
     }
-  }
-
-  private static async shouldGenerateEmail(userMessage: string, context: ChatContext): Promise<boolean> {
-    const message = userMessage.toLowerCase();
-    const hasContent = context.conversationHistory.length >= 3;
-    const hasType = context.campaign?.type;
-    const hasPurpose = context.campaign?.purpose;
-    const isCreateRequest = message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft');
-    
-    return hasContent && hasType && hasPurpose && isCreateRequest;
   }
 
   private static getSystemPrompt(area: 'messages' | 'journeys' | 'snippets', mode: 'ask' | 'do'): string {
