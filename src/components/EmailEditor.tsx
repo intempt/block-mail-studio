@@ -123,7 +123,7 @@ export default function EmailEditor({
     content: initialHTML,
     onUpdate: handleEditorUpdate,
     immediatelyRender: false,
-  }, [extensions]);
+  });
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
