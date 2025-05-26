@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,8 +14,8 @@ import {
   TrendingUp,
   Brain
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { directAIService } from '@/services/directAIService';
+import { toast } from 'sonner';
+import { directAIService } from '@/services/directSnippetService';
 
 interface Suggestion {
   id: string;
@@ -41,7 +40,6 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
 }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const generateSuggestions = async () => {
     if (!emailHTML.trim()) return;
@@ -100,11 +98,7 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
       setSuggestions(mockSuggestions);
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate suggestions. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to generate suggestions. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -120,18 +114,12 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
   const applySuggestion = (suggestion: Suggestion) => {
     onApplySuggestion?.(suggestion);
     setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    toast({
-      title: "Suggestion Applied",
-      description: suggestion.title,
-    });
+    toast.success(`Applied: ${suggestion.title}`);
   };
 
   const copySuggestion = (suggestion: Suggestion) => {
     navigator.clipboard.writeText(suggestion.suggestion);
-    toast({
-      title: "Copied to Clipboard",
-      description: suggestion.title,
-    });
+    toast.success(`Copied: ${suggestion.title}`);
   };
 
   const getImpactColor = (impact: string) => {

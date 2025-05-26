@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, Target, TrendingUp } from 'lucide-react';
 import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface PerformanceBrandPanelProps {
   emailHTML: string;
@@ -20,14 +19,10 @@ export const PerformanceBrandPanel: React.FC<PerformanceBrandPanelProps> = ({
   editor
 }) => {
   const [activeTab, setActiveTab] = useState('performance');
-  const { toast } = useToast();
 
   const handleOptimize = (suggestion: string) => {
     console.log('Applying optimization:', suggestion);
-    toast({
-      title: "Optimization Applied",
-      description: suggestion
-    });
+    toast.success(`Optimization Applied: ${suggestion}`);
   };
 
   return (

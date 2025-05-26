@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ import {
 import { EmailTemplate } from './TemplateManager';
 import { emailAIService } from '@/services/EmailAIService';
 import { ChatContextService } from '@/services/chatContextService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -53,7 +52,6 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     // Initialize conversation with user's task
