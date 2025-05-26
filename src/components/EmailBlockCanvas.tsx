@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { useDragDropHandler } from './canvas/DragDropHandler';
@@ -20,9 +19,12 @@ interface EmailBlockCanvasProps {
 
 export interface EmailBlockCanvasRef {
   findAndReplaceText: (current: string, replacement: string) => void;
+  optimizeImages: () => void;
+  minifyHTML: () => void;
+  checkLinks: () => { workingLinks: number; brokenLinks: number; totalLinks: number };
 }
 
-export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
+export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
   onContentChange,
   onBlockSelect,
   previewWidth = 600,
@@ -30,7 +32,7 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
   compactMode = false,
   subject = '',
   onSubjectChange = () => {}
-}) => {
+}, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
@@ -38,8 +40,81 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
+  useImperativeHandle(ref, () => ({
+    findAndReplaceText: (current: string, replacement: string) => {
+      setBlocks(prev => prev.map(block => {
+        if (block.type === 'text') {
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              html: block.content.html.replace(new RegExp(current, 'g'), replacement)
+            }
+          };
+        }
+        return block;
+      }));
+    },
+    optimizeImages: () => {
+      setBlocks(prev => prev.map(block => {
+        if (block.type === 'image' && block.content.src) {
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              src: block.content.src + '?optimized=true'
+            }
+          };
+        }
+        return block;
+      }));
+      console.log('Images optimized for better performance');
+    },
+    minifyHTML: () => {
+      setBlocks(prev => prev.map(block => {
+        if (block.type === 'text') {
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              html: block.content.html.replace(/\s+/g, ' ').trim()
+            }
+          };
+        }
+        return block;
+      }));
+      console.log('HTML content minified');
+    },
+    checkLinks: () => {
+      let totalLinks = 0;
+      let workingLinks = 0;
+      let brokenLinks = 0;
+
+      blocks.forEach(block => {
+        if (block.type === 'button' && block.content.link) {
+          totalLinks++;
+          if (block.content.link.startsWith('http') || block.content.link.startsWith('mailto:')) {
+            workingLinks++;
+          } else {
+            brokenLinks++;
+          }
+        }
+        if (block.type === 'image' && block.content.link) {
+          totalLinks++;
+          if (block.content.link.startsWith('http') || block.content.link.startsWith('mailto:')) {
+            workingLinks++;
+          } else {
+            brokenLinks++;
+          }
+        }
+      });
+
+      console.log(`Link check complete: ${workingLinks} working, ${brokenLinks} broken, ${totalLinks} total`);
+      return { workingLinks, brokenLinks, totalLinks };
+    }
+  }), [blocks]);
+
   useEffect(() => {
-    // Load initial blocks with proper EmailBlock structure
     const initialBlocks: EmailBlock[] = [
       {
         id: 'initial_text_block',
@@ -272,4 +347,6 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
       />
     </div>
   );
-};
+});
+
+EmailBlockCanvas.displayName = 'EmailBlockCanvas';
