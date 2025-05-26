@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
-import { DragDropHandler } from './canvas/DragDropHandler';
+import { useDragDropHandler } from './canvas/DragDropHandler';
 import { CanvasStatus } from './canvas/CanvasStatus';
-import { directSnippetService } from '@/services/directSnippetService';
+import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
 
@@ -15,6 +16,10 @@ interface EmailBlockCanvasProps {
   compactMode?: boolean;
   subject?: string;
   onSubjectChange?: (subject: string) => void;
+}
+
+export interface EmailBlockCanvasRef {
+  findAndReplaceText: (current: string, replacement: string) => void;
 }
 
 export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
@@ -34,15 +39,26 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
   useEffect(() => {
-    // Load initial blocks or fetch from API
+    // Load initial blocks with proper EmailBlock structure
     const initialBlocks: EmailBlock[] = [
       {
         id: 'initial_text_block',
         type: 'text',
         content: {
-          text: '<h1>Welcome to your email!</h1><p>Start building your email content here.</p>'
+          html: '<h1>Welcome to your email!</h1><p>Start building your email content here.</p>',
+          textStyle: 'normal'
         },
-        styles: {}
+        styling: {
+          desktop: { width: '100%', height: 'auto' },
+          tablet: { width: '100%', height: 'auto' },
+          mobile: { width: '100%', height: 'auto' }
+        },
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        }
       }
     ];
     setBlocks(initialBlocks);
@@ -58,7 +74,7 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
       const blockElements = blocks.map(block => {
         switch (block.type) {
           case 'text':
-            return `<div style="margin: 20px 0;">${block.content.text || ''}</div>`;
+            return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
           case 'button':
             return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.link || '#'}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">${block.content.text || 'Button'}</a></div>`;
           case 'image':
@@ -123,12 +139,14 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
       const snippet: Omit<EmailSnippet, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'> = {
         name: `${block.type} snippet`,
         description: `Saved ${block.type} block`,
-        content: block,
+        blockData: block,
+        blockType: block.type,
         category: 'custom',
-        tags: [block.type]
+        tags: [block.type],
+        isFavorite: false
       };
 
-      await directSnippetService.saveSnippet(snippet);
+      DirectSnippetService.createSnippet(block, snippet.name, snippet.description);
       setSnippetRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error('Error saving snippet:', error);
@@ -137,12 +155,12 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
 
   const handleTipTapChange = useCallback((blockId: string, html: string) => {
     setBlocks(prev => prev.map(block => {
-      if (block.id === blockId) {
+      if (block.id === blockId && block.type === 'text') {
         return {
           ...block,
           content: {
             ...block.content,
-            text: html
+            html: html
           }
         };
       }
@@ -154,14 +172,41 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
     setEditingBlockId(null);
   }, []);
 
-  const dragDropHandler = useMemo(() => 
-    new DragDropHandler(
-      blocks,
-      setBlocks,
-      setIsDraggingOver,
-      setDragOverIndex
-    ), [blocks]
-  );
+  const getDefaultContent = useCallback((blockType: string) => {
+    switch (blockType) {
+      case 'text':
+        return { html: '<p>Enter your text here...</p>', textStyle: 'normal' };
+      case 'button':
+        return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
+      case 'image':
+        return { src: '', alt: '', alignment: 'center', width: '100%', isDynamic: false };
+      case 'spacer':
+        return { height: '20px', mobileHeight: '20px' };
+      case 'divider':
+        return { style: 'solid', thickness: '1px', color: '#ddd', width: '100%', alignment: 'center' };
+      default:
+        return {};
+    }
+  }, []);
+
+  const getDefaultStyles = useCallback((blockType: string) => {
+    return {
+      desktop: { width: '100%', height: 'auto' },
+      tablet: { width: '100%', height: 'auto' },
+      mobile: { width: '100%', height: 'auto' }
+    };
+  }, []);
+
+  const dragDropHandler = useDragDropHandler({
+    blocks,
+    setBlocks,
+    getDefaultContent,
+    getDefaultStyles,
+    dragOverIndex,
+    setDragOverIndex,
+    isDraggingOver,
+    setIsDraggingOver
+  });
 
   const canvasWidth = useMemo(() => {
     if (compactMode) return previewMode === 'mobile' ? 320 : 480;
@@ -185,9 +230,9 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
       <div
         style={canvasStyle}
         className="email-canvas"
-        onDrop={dragDropHandler.handleDrop}
-        onDragOver={dragDropHandler.handleDragOver}
-        onDragLeave={dragDropHandler.handleDragLeave}
+        onDrop={dragDropHandler.handleCanvasDrop}
+        onDragOver={dragDropHandler.handleCanvasDragOver}
+        onDragLeave={dragDropHandler.handleCanvasDragLeave}
       >
         {/* Subject Line Section */}
         <div className="border-b border-gray-100 bg-white">
@@ -221,7 +266,6 @@ export const EmailBlockCanvas: React.FC<EmailBlockCanvasProps> = ({
       </div>
 
       <CanvasStatus 
-        totalBlocks={blocks.length}
         selectedBlockId={selectedBlockId}
         canvasWidth={canvasWidth}
         previewMode={previewMode}

@@ -1,19 +1,13 @@
 
 import React from 'react';
-import { createDragData, parseDragData, isValidDropTarget } from '@/utils/dragDropUtils';
-
-interface SimpleBlock {
-  id: string;
-  type: string;
-  content: any;
-  styles?: Record<string, string>;
-}
+import { createDragData, parseDragData } from '@/utils/dragDropUtils';
+import { EmailBlock } from '@/types/emailBlocks';
 
 interface DragDropHandlerProps {
-  blocks: SimpleBlock[];
-  setBlocks: React.Dispatch<React.SetStateAction<SimpleBlock[]>>;
+  blocks: EmailBlock[];
+  setBlocks: React.Dispatch<React.SetStateAction<EmailBlock[]>>;
   getDefaultContent: (blockType: string) => any;
-  getDefaultStyles: (blockType: string) => Record<string, string>;
+  getDefaultStyles: (blockType: string) => any;
   dragOverIndex: number | null;
   setDragOverIndex: React.Dispatch<React.SetStateAction<number | null>>;
   isDraggingOver: boolean;
@@ -41,15 +35,26 @@ export const useDragDropHandler = ({
       if (!data) return;
       
       if (data.blockType === 'columns' && data.layoutData) {
-        const newBlock: SimpleBlock = {
+        const newBlock: EmailBlock = {
           id: `layout-${Date.now()}`,
           type: 'columns',
           content: {
-            columns: data.layoutData.columns,
+            columnCount: data.layoutData.columns as 1 | 2 | 3 | 4,
             columnRatio: data.layoutData.ratio,
+            columns: Array.from({ length: data.layoutData.columns }, (_, i) => ({
+              id: `col-${i}`,
+              blocks: [],
+              width: `${100 / data.layoutData.columns}%`
+            })),
             gap: '16px'
           },
-          styles: { margin: '20px 0' }
+          styling: getDefaultStyles('columns'),
+          position: { x: 0, y: 0 },
+          displayOptions: {
+            showOnDesktop: true,
+            showOnTablet: true,
+            showOnMobile: true
+          }
         };
         
         const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
@@ -59,11 +64,17 @@ export const useDragDropHandler = ({
           return newBlocks;
         });
       } else if (data.blockType) {
-        const newBlock: SimpleBlock = {
+        const newBlock: EmailBlock = {
           id: `block-${Date.now()}`,
-          type: data.blockType,
+          type: data.blockType as any,
           content: getDefaultContent(data.blockType),
-          styles: getDefaultStyles(data.blockType)
+          styling: getDefaultStyles(data.blockType),
+          position: { x: 0, y: 0 },
+          displayOptions: {
+            showOnDesktop: true,
+            showOnTablet: true,
+            showOnMobile: true
+          }
         };
         
         const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
@@ -146,18 +157,24 @@ export const useDragDropHandler = ({
       const data = parseDragData(e.dataTransfer.getData('application/json'));
       if (!data?.blockType) return;
       
-      const newBlock: SimpleBlock = {
+      const newBlock: EmailBlock = {
         id: `block-${Date.now()}`,
-        type: data.blockType,
+        type: data.blockType as any,
         content: getDefaultContent(data.blockType),
-        styles: getDefaultStyles(data.blockType)
+        styling: getDefaultStyles(data.blockType),
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        }
       };
       
       setBlocks(prev => prev.map(block => {
         if (block.id === layoutBlockId && block.type === 'columns') {
           const updatedColumns = [...(block.content.columns || [])];
           if (!updatedColumns[columnIndex]) {
-            updatedColumns[columnIndex] = { id: `col-${columnIndex}`, blocks: [] };
+            updatedColumns[columnIndex] = { id: `col-${columnIndex}`, blocks: [], width: '50%' };
           }
           if (!updatedColumns[columnIndex].blocks) {
             updatedColumns[columnIndex].blocks = [];

@@ -1,32 +1,40 @@
 
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Monitor, Smartphone } from 'lucide-react';
 
 interface CanvasStatusProps {
-  blocksCount: number;
-  canvasWidth: number;
   selectedBlockId: string | null;
-  isDraggingOver: boolean;
-  previewMode: 'desktop' | 'mobile' | 'tablet';
+  canvasWidth: number;
+  previewMode: 'desktop' | 'mobile';
 }
 
 export const CanvasStatus: React.FC<CanvasStatusProps> = ({
-  blocksCount,
-  canvasWidth,
   selectedBlockId,
-  isDraggingOver,
+  canvasWidth,
   previewMode
 }) => {
   return (
-    <div className="bg-white border-t p-2 text-xs text-gray-600 flex items-center justify-between">
-      <div>
-        Blocks: {blocksCount} | Width: {canvasWidth}px
-        {selectedBlockId && <span className="ml-2 text-blue-600">• Block selected</span>}
-        {isDraggingOver && <span className="ml-2 text-green-600">• Drop zone active</span>}
+    <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          {previewMode === 'desktop' ? 
+            <Monitor className="w-3 h-3" /> : 
+            <Smartphone className="w-3 h-3" />
+          }
+          <span>{canvasWidth}px</span>
+        </div>
+        
+        {selectedBlockId && (
+          <Badge variant="outline" className="text-xs">
+            Block: {selectedBlockId}
+          </Badge>
+        )}
       </div>
-      <Badge variant="outline" className="text-xs">
-        {previewMode}
-      </Badge>
+      
+      <div className="text-right">
+        <span className="text-gray-400">Email Canvas</span>
+      </div>
     </div>
   );
 };

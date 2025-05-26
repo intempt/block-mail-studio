@@ -1,17 +1,12 @@
+
 import React, { useState } from 'react';
 import { UniversalTipTapEditor } from '../UniversalTipTapEditor';
 import { BlockControls } from './BlockControls';
 import { ColumnRenderer } from './ColumnRenderer';
-
-interface SimpleBlock {
-  id: string;
-  type: string;
-  content: any;
-  styles?: Record<string, string>;
-}
+import { EmailBlock } from '@/types/emailBlocks';
 
 interface CanvasRendererProps {
-  blocks: SimpleBlock[];
+  blocks: EmailBlock[];
   selectedBlockId: string | null;
   editingBlockId: string | null;
   isDraggingOver: boolean;
@@ -79,40 +74,25 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     onTipTapBlur();
   };
 
-  const getContentForProperty = (block: SimpleBlock, property: string): string => {
-    const parts = property.split('-');
-    if (parts[0] === 'platform' && parts.length === 2) {
-      const index = parseInt(parts[1]);
-      return block.content.platforms?.[index]?.name || '';
-    }
-    if (parts[0] === 'platformUrl' && parts.length === 2) {
-      const index = parseInt(parts[1]);
-      return block.content.platforms?.[index]?.url || '';
-    }
-    if (parts[0] === 'platformIcon' && parts.length === 2) {
-      const index = parseInt(parts[1]);
-      return block.content.platforms?.[index]?.icon || '';
-    }
-    if (parts[0] === 'cell' && parts.length === 3) {
-      const row = parseInt(parts[1]);
-      const col = parseInt(parts[2]);
-      return block.content.cells?.[row]?.[col]?.content || '';
-    }
-    
+  const getContentForProperty = (block: EmailBlock, property: string): string => {
     switch (property) {
-      case 'text': return block.content.text || '';
-      case 'alt': return block.content.alt || '';
-      case 'src': return block.content.src || '';
-      case 'link': return block.content.link || '';
-      case 'html': return block.content.html || '';
-      case 'videoUrl': return block.content.videoUrl || '';
-      case 'thumbnail': return block.content.thumbnail || '';
+      case 'html':
+        return block.type === 'text' ? block.content.html || '' : '';
+      case 'text':
+        return block.type === 'button' ? block.content.text || '' : '';
+      case 'alt':
+        return block.type === 'image' ? block.content.alt || '' : '';
+      case 'src':
+        return block.type === 'image' ? block.content.src || '' : '';
+      case 'link':
+        return block.type === 'button' ? block.content.link || '' : 
+               block.type === 'image' ? block.content.link || '' : '';
       default: return '';
     }
   };
 
   const renderEditableContent = (
-    block: SimpleBlock, 
+    block: EmailBlock, 
     content: string, 
     contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video', 
     property: string,
@@ -147,7 +127,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     );
   };
 
-  const renderBlock = (block: SimpleBlock): React.ReactNode => {
+  const renderBlock = (block: EmailBlock): React.ReactNode => {
     if (block.type === 'columns') {
       return (
         <ColumnRenderer
@@ -162,7 +142,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       case 'text':
         return (
           <div className="min-h-[20px]">
-            {renderEditableContent(block, block.content.text, 'text', 'text', 'Enter your text...')}
+            {renderEditableContent(block, block.content.html, 'html', 'html', 'Enter your text...')}
           </div>
         );
       
@@ -172,49 +152,31 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             <a
               href={block.content.link}
               style={{
-                ...block.styles,
+                background: '#007bff',
+                color: 'white',
+                padding: '12px 24px',
                 textDecoration: 'none',
+                borderRadius: '6px',
                 display: 'inline-block',
                 position: 'relative'
               }}
               onClick={(e) => e.preventDefault()}
             >
-              {renderEditableContent(block, block.content.text, 'button', 'text', 'Button text')}
-              <div 
-                className="absolute -top-1 -right-1 opacity-0 hover:opacity-100 transition-opacity"
-                onClick={(e) => handleContentClick(e, block.id, 'url', 'link')}
-                title="Edit button URL"
-              >
-                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs cursor-pointer">
-                  🔗
-                </div>
-              </div>
+              {renderEditableContent(block, block.content.text, 'text', 'text', 'Button text')}
             </a>
           </div>
         );
       
       case 'image':
-        const isEditingImage = editingContent?.blockId === block.id && editingContent?.property === 'src';
         return (
-          <div className="relative">
-            {isEditingImage ? (
-              <UniversalTipTapEditor
-                content={block.content.src}
-                contentType="url"
-                onChange={handleUniversalEditorChange}
-                onBlur={handleUniversalEditorBlur}
-                placeholder="Enter image URL..."
-                position={editingContent.position}
-              />
-            ) : (
-              <img
-                src={block.content.src}
-                alt={block.content.alt}
-                style={block.styles}
-                onClick={(e) => handleContentClick(e, block.id, 'url', 'src')}
-                className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-              />
-            )}
+          <div className="relative text-center">
+            <img
+              src={block.content.src || 'https://via.placeholder.com/400x200?text=Click+to+add+image'}
+              alt={block.content.alt}
+              style={{ maxWidth: '100%', height: 'auto' }}
+              onClick={(e) => handleContentClick(e, block.id, 'url', 'src')}
+              className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
+            />
             <div className="mt-2">
               {renderEditableContent(block, block.content.alt, 'text', 'alt', 'Image description...')}
             </div>
@@ -228,95 +190,11 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         return (
           <hr 
             style={{
-              ...block.styles,
               border: 'none',
-              borderTop: `${block.content.thickness || '1px'} ${block.content.style || 'solid'} ${block.content.color || '#ddd'}`
+              borderTop: `${block.content.thickness || '1px'} ${block.content.style || 'solid'} ${block.content.color || '#ddd'}`,
+              margin: '20px 0'
             }} 
           />
-        );
-
-      case 'video':
-        return (
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <div className="relative inline-block">
-              <div 
-                className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-                onClick={(e) => handleContentClick(e, block.id, 'url', 'thumbnail')}
-              >
-                {renderEditableContent(block, block.content.thumbnail, 'url', 'thumbnail', 'Video thumbnail URL...')}
-              </div>
-            </div>
-            <p style={{ marginTop: '10px' }}>
-              <span 
-                className="cursor-pointer hover:underline text-blue-600"
-                onClick={(e) => handleContentClick(e, block.id, 'video', 'videoUrl')}
-              >
-                {renderEditableContent(block, block.content.videoUrl || 'Watch Video', 'video', 'videoUrl', 'Video URL...')}
-              </span>
-            </p>
-          </div>
-        );
-
-      case 'social':
-        return (
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            {block.content.platforms?.map((platform: any, index: number) => (
-              <div key={index} className="inline-block m-2 p-2 border rounded hover:bg-gray-50 transition-colors">
-                <div className="flex flex-col items-center gap-2">
-                  <div 
-                    className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all rounded"
-                    onClick={(e) => handleContentClick(e, block.id, 'url', `platformIcon-${index}`)}
-                  >
-                    <img 
-                      src={platform.icon || 'https://via.placeholder.com/32x32?text=S'} 
-                      alt={platform.name}
-                      className="w-8 h-8"
-                    />
-                  </div>
-                  <div className="text-sm">
-                    {renderEditableContent(block, platform.name, 'text', `platform-${index}`, 'Platform name')}
-                  </div>
-                  <div 
-                    className="text-xs text-blue-600 cursor-pointer hover:underline"
-                    onClick={(e) => handleContentClick(e, block.id, 'url', `platformUrl-${index}`)}
-                  >
-                    {renderEditableContent(block, platform.url, 'url', `platformUrl-${index}`, 'Platform URL')}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'html':
-        return renderEditableContent(block, block.content.html, 'html', 'html', 'Enter HTML...');
-
-      case 'table':
-        const tableRows = block.content.rows || 2;
-        const tableCols = block.content.columns || 2;
-        return (
-          <table style={{ width: '100%', borderCollapse: 'collapse', margin: '20px 0' }}>
-            <tbody>
-              {Array.from({ length: tableRows }, (_, i) => (
-                <tr key={i}>
-                  {Array.from({ length: tableCols }, (_, j) => (
-                    <td 
-                      key={j}
-                      style={{ border: '1px solid #ddd', padding: '8px' }}
-                    >
-                      {renderEditableContent(
-                        block, 
-                        block.content.cells?.[i]?.[j]?.content || '',
-                        'text',
-                        `cell-${i}-${j}`,
-                        `Cell ${i + 1},${j + 1}`
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
         );
 
       default:
@@ -341,7 +219,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onDragStart={(e) => onBlockDragStart(e, block.id)}
             onDrop={(e) => onBlockDrop(e, index)}
             onDragOver={(e) => e.preventDefault()}
-            style={block.styles}
           >
             <BlockControls
               blockId={block.id}

@@ -2,27 +2,20 @@
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 
-interface SimpleBlock {
-  id: string;
-  type: string;
-  content: any;
-  styles?: Record<string, string>;
-}
-
 export class DirectSnippetService {
   private static snippetCounter = 0;
   private static sessionSnippets: EmailSnippet[] = [];
 
-  // Create snippet from a simple block configuration
-  static createSnippetFromBlock(block: SimpleBlock): EmailSnippet {
+  // Create snippet from EmailBlock
+  static createSnippet(block: EmailBlock, name: string, description: string): EmailSnippet {
     this.snippetCounter++;
     
-    console.log('Creating snippet from block:', { block });
+    console.log('Creating snippet from block:', { block, name, description });
     
     const snippet: EmailSnippet = {
       id: `snippet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: `Untitled-${this.snippetCounter} Snippet`,
-      description: `Saved ${block.type} block`,
+      name: name || `${block.type} snippet`,
+      description: description || `Saved ${block.type} block`,
       category: 'custom',
       tags: [block.type],
       blockData: { ...block, id: `block_${Date.now()}` },
@@ -40,26 +33,18 @@ export class DirectSnippetService {
     return snippet;
   }
 
-  // Legacy method for creating snippets from EmailBlocks
-  static createSnippet(block: EmailBlock, name: string, description: string): EmailSnippet {
-    console.log('Creating in-memory snippet:', { block, name, description });
-    
-    const snippet: EmailSnippet = {
+  // Save snippet method for backward compatibility
+  static async saveSnippet(snippet: Omit<EmailSnippet, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>): Promise<EmailSnippet> {
+    const newSnippet: EmailSnippet = {
+      ...snippet,
       id: `snippet_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name,
-      description,
-      category: 'custom',
-      tags: [block.type],
-      blockData: { ...block, id: `block_${Date.now()}` },
-      blockType: block.type,
       createdAt: new Date(),
       updatedAt: new Date(),
-      usageCount: 0,
-      isFavorite: false
+      usageCount: 0
     };
 
-    this.sessionSnippets.push(snippet);
-    return snippet;
+    this.sessionSnippets.push(newSnippet);
+    return newSnippet;
   }
 
   // Get all snippets including session snippets
@@ -98,8 +83,23 @@ export class DirectSnippetService {
         description: 'Simple header with logo and title',
         category: 'layout',
         tags: ['header', 'branding'],
-        blockData: { type: 'header', content: 'Default Header' },
-        blockType: 'header',
+        blockData: { 
+          id: 'default_header_block',
+          type: 'text', 
+          content: { html: '<h1>Default Header</h1>', textStyle: 'heading1' },
+          styling: {
+            desktop: { width: '100%', height: 'auto' },
+            tablet: { width: '100%', height: 'auto' },
+            mobile: { width: '100%', height: 'auto' }
+          },
+          position: { x: 0, y: 0 },
+          displayOptions: {
+            showOnDesktop: true,
+            showOnTablet: true,
+            showOnMobile: true
+          }
+        },
+        blockType: 'text',
         createdAt: new Date(),
         updatedAt: new Date(),
         usageCount: 0,
@@ -111,7 +111,22 @@ export class DirectSnippetService {
         description: 'Button with call to action',
         category: 'content',
         tags: ['button', 'cta'],
-        blockData: { type: 'button', content: 'Click Here' },
+        blockData: { 
+          id: 'default_cta_block',
+          type: 'button', 
+          content: { text: 'Click Here', link: '#', style: 'solid', size: 'medium' },
+          styling: {
+            desktop: { width: '100%', height: 'auto' },
+            tablet: { width: '100%', height: 'auto' },
+            mobile: { width: '100%', height: 'auto' }
+          },
+          position: { x: 0, y: 0 },
+          displayOptions: {
+            showOnDesktop: true,
+            showOnTablet: true,
+            showOnMobile: true
+          }
+        },
         blockType: 'button',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -121,3 +136,6 @@ export class DirectSnippetService {
     ];
   }
 }
+
+// Export the service instance for backward compatibility
+export const directSnippetService = DirectSnippetService;
