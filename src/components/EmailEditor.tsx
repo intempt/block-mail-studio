@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -19,19 +20,14 @@ import {
   ArrowLeft,
   Eye,
   Send,
-  Copy,
-  RefreshCw,
   Layers,
   Palette,
-  Settings,
   BarChart3
 } from 'lucide-react';
-import { EmailCodeEditor } from './EmailCodeEditor';
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { GlobalStylesPanel } from './GlobalStylesPanel';
-import { PropertyEditorPanel } from './PropertyEditorPanel';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
@@ -54,7 +50,7 @@ interface LayoutConfig {
   justifyContent: 'start' | 'center' | 'space-between';
 }
 
-type LeftPanelTab = 'blocks' | 'design' | 'properties' | 'performance';
+type LeftPanelTab = 'blocks' | 'design' | 'performance';
 
 interface EmailEditorProps {
   content: string;
@@ -76,8 +72,6 @@ export default function EmailEditor({
   // Local UI state only - no content state
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
@@ -148,16 +142,6 @@ export default function EmailEditor({
     setTemplates(initialTemplates);
   }, []);
 
-  // Update selected block when selectedBlockId changes
-  useEffect(() => {
-    if (selectedBlockId) {
-      const block = emailBlocks.find(b => b.id === selectedBlockId);
-      setSelectedBlock(block || null);
-    } else {
-      setSelectedBlock(null);
-    }
-  }, [selectedBlockId, emailBlocks]);
-
   const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
     if (!editor) return;
 
@@ -179,15 +163,11 @@ export default function EmailEditor({
     setEmailBlocks(prev => 
       prev.map(b => b.id === block.id ? block : b)
     );
-    if (selectedBlock && selectedBlock.id === block.id) {
-      setSelectedBlock(block);
-    }
   };
 
   const handleBlockDelete = (blockId: string) => {
     setBlocks(prev => prev.filter(block => block.id !== blockId));
     setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
-    setSelectedBlockId(null);
   };
 
   const handleGlobalStylesChange = (styles: any) => {
@@ -211,16 +191,6 @@ export default function EmailEditor({
     setShowTemplateLibrary(false);
   };
 
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(content);
-  };
-
-  const handleSyncFromCode = () => {
-    if (editor) {
-      editor.commands.setContent(content);
-    }
-  };
-
   const handleTemplateLoad = (template: EmailTemplate) => {
     onContentChange(template.html);
     onSubjectChange(template.subject);
@@ -240,14 +210,6 @@ export default function EmailEditor({
   const handleUniversalContentAdd = (content: UniversalContent) => {
     // Handle universal content addition
     console.log('Adding universal content:', content);
-  };
-
-  const handleBlockSelect = (block: any) => {
-    if (block) {
-      setSelectedBlockId(block.id);
-    } else {
-      setSelectedBlockId(null);
-    }
   };
 
   const handleContentChangeFromCanvas = (newContent: string) => {
@@ -275,14 +237,6 @@ export default function EmailEditor({
           return (
             <GlobalStylesPanel
               onStylesChange={handleGlobalStylesChange}
-            />
-          );
-        case 'properties':
-          console.log('EmailEditor: Rendering properties panel');
-          return (
-            <PropertyEditorPanel
-              selectedBlock={selectedBlock}
-              onBlockUpdate={handleBlockUpdate}
             />
           );
         case 'performance':
@@ -345,7 +299,7 @@ export default function EmailEditor({
         {/* Left Sidebar */}
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
           <div className="border-b border-gray-200 flex-shrink-0">
-            <div className="grid grid-cols-2">
+            <div className="grid grid-cols-3">
               <button
                 onClick={() => setLeftPanel('blocks')}
                 className={`px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
@@ -373,19 +327,6 @@ export default function EmailEditor({
                 </div>
               </button>
               <button
-                onClick={() => setLeftPanel('properties')}
-                className={`px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  leftPanel === 'properties'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-1">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-xs">Props</span>
-                </div>
-              </button>
-              <button
                 onClick={() => setLeftPanel('performance')}
                 className={`px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
                   leftPanel === 'performance'
@@ -409,54 +350,15 @@ export default function EmailEditor({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden min-h-0">
-          {/* Canvas */}
-          <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
-            <div className="max-w-2xl mx-auto">
-              <EmailBlockCanvas
-                onContentChange={handleContentChangeFromCanvas}
-                onBlockSelect={handleBlockSelect}
-                previewWidth={600}
-                previewMode="desktop"
-                compactMode={false}
-              />
-            </div>
-          </div>
-
-          {/* Right Panel - Code Editor */}
-          <div className="w-96 bg-white border-l border-gray-200 flex flex-col flex-shrink-0 min-h-0">
-            <div className="border-b border-gray-200 p-4 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">HTML Code</h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSyncFromCode}
-                    className="text-xs"
-                  >
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                    Sync
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyCode}
-                    className="text-xs"
-                  >
-                    <Copy className="w-3 h-3 mr-1" />
-                    Copy
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-hidden min-h-0">
-              <EmailCodeEditor
-                editor={editor}
-                initialHtml={content}
-              />
-            </div>
+        <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
+          <div className="max-w-4xl mx-auto">
+            <EmailBlockCanvas
+              onContentChange={handleContentChangeFromCanvas}
+              onBlockSelect={() => {}}
+              previewWidth={600}
+              previewMode="desktop"
+              compactMode={false}
+            />
           </div>
         </div>
       </div>
