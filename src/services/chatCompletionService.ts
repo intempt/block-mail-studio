@@ -186,7 +186,12 @@ User message: "${userMessage}"
 
 Provide helpful guidance and advice. Focus on strategic advice, best practices, and actionable insights for ${context.area}.
 
-Also suggest 3-4 relevant follow-up topics or questions as comma-separated values after your response, prefixed with "CHIPS:"`;
+Also suggest 3-4 relevant follow-up topics or questions as comma-separated values after your response, prefixed with "CHIPS:"
+
+Important: Phrase chips as natural user responses without emojis. Examples:
+- "I want to create an email campaign"
+- "Help me improve my open rates"
+- "Show me how to write better subject lines"`;
 
     try {
       const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
@@ -236,7 +241,12 @@ Guide the user through the campaign building process progressively.`;
 Conversation: ${conversationContext}
 User message: "${userMessage}"
 
-Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your response, prefixed with "CHIPS:"`;
+Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your response, prefixed with "CHIPS:"
+
+Important: Phrase chips as natural user responses without emojis. Examples:
+- "Let's create a welcome email"
+- "I want to build a promotional campaign"
+- "Help me set up the email content"`;
 
     try {
       const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
@@ -291,7 +301,7 @@ Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your r
           tone: 'professional'
         });
 
-        // Ensure proper structure for email data
+        // Ensure proper structure for email data with correct email-block classes
         const formattedEmailData = {
           subject: emailData.subject || 'Your Campaign Email',
           html: this.wrapEmailWithBlocks(emailData.html || ''),
@@ -299,9 +309,11 @@ Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your r
         };
 
         return {
-          content: `Perfect! I've created your ${context.campaign.purpose || 'email'} campaign. The email is ready for you to review and customize in the editor.`,
+          content: `**Perfect! I've created your ${context.campaign.purpose || 'email'} campaign.**
+
+The email is ready for you to review and customize in the editor. Click the lightning bolt below to load it.`,
           intent: 'action',
-          suggestedChips: ['Load in Editor', 'Refine Copy', 'Change Tone', 'Add More Sections'],
+          suggestedChips: ['Load it in the editor', 'Let me refine the copy', 'Change the tone to be more casual', 'Add more sections to this email'],
           shouldGenerateEmail: true,
           emailData: formattedEmailData,
           campaignContext: context.campaign
@@ -311,7 +323,7 @@ Provide campaign-specific guidance. Suggest 3-4 next steps as chips after your r
         return {
           content: 'I had trouble generating the email. Let me help you refine the campaign details first. What specific aspects would you like to focus on?',
           intent: 'question',
-          suggestedChips: ['Subject Line Ideas', 'Content Structure', 'Call-to-Action', 'Personalization'],
+          suggestedChips: ['Help me write subject line ideas', 'Show me content structure options', 'I want to focus on the call-to-action', 'Let me add personalization'],
           shouldGenerateEmail: false,
           campaignContext: context.campaign
         };
@@ -326,7 +338,9 @@ User message: "${userMessage}"
 
 The user wants to create but needs more specific campaign details. Guide them to provide the information needed for email generation.
 
-Suggest 3-4 clarifying questions or next steps as chips after your response, prefixed with "CHIPS:"`;
+Suggest 3-4 clarifying questions or next steps as chips after your response, prefixed with "CHIPS:"
+
+Important: Phrase chips as natural user responses without emojis.`;
 
       try {
         const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
@@ -360,14 +374,15 @@ Suggest 3-4 clarifying questions or next steps as chips after your response, pre
     const message = userMessage.toLowerCase();
     const hasType = context.campaign?.type === 'email';
     const hasPurpose = !!context.campaign?.purpose;
-    const hasConversationContext = context.conversationHistory.length >= 3;
-    const isCreateRequest = message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft');
+    const hasConversationContext = context.conversationHistory.length >= 2;
+    const isCreateRequest = message.includes('create') || message.includes('generate') || message.includes('build') || message.includes('draft') || message.includes('make');
     const isGenerationStage = context.campaign?.stage === 'generation';
     
+    // More lenient generation logic - if they have type and are asking to create something
     return hasType && (hasPurpose || hasConversationContext) && (isCreateRequest || isGenerationStage);
   }
 
-  private static wrapEmailWithBlocks(html: string): string {
+  private static wrapEmailWithBlocks(html: string): string => {
     // If HTML already has email-block structure, return as is
     if (html.includes('email-block')) {
       return html;
@@ -400,31 +415,31 @@ Suggest 3-4 clarifying questions or next steps as chips after your response, pre
   private static getCampaignChips(campaign: CampaignContext): string[] {
     switch (campaign.stage) {
       case 'type':
-        return ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'];
+        return ['I want to create an email campaign', 'Help me build an SMS campaign', 'I need push notifications', 'Let me design a rich text email'];
       
       case 'purpose':
         if (campaign.type === 'email') {
-          return ['Welcome Series', 'Newsletter', 'Promotional Email', 'Product Announcement'];
+          return ['I want to create a welcome series', 'Help me build a newsletter', 'I need a promotional email', 'Let me announce a new product'];
         }
-        return ['Welcome Message', 'Promotional', 'Alert', 'Reminder'];
+        return ['I want a welcome message', 'Help me create a promotional message', 'I need an alert message', 'Let me send a reminder'];
       
       case 'specific':
         if (campaign.purpose === 'welcome') {
-          return ['Onboarding Email 1', 'Account Setup Guide', 'Welcome + First Steps', 'Feature Introduction'];
+          return ['Create the first onboarding email', 'Help me with account setup guidance', 'I want a welcome plus first steps email', 'Let me introduce key features'];
         }
         if (campaign.purpose === 'newsletter') {
-          return ['Monthly Update', 'Weekly Digest', 'Industry News', 'Product Updates'];
+          return ['Create a monthly update', 'Help me build a weekly digest', 'I want to share industry news', 'Let me announce product updates'];
         }
         if (campaign.purpose === 'promotional') {
-          return ['Limited Time Sale', 'New Product Launch', 'Seasonal Promotion', 'Exclusive Discount'];
+          return ['Create a limited time sale email', 'Help me launch a new product', 'I want a seasonal promotion', 'Let me offer an exclusive discount'];
         }
-        return ['Generate Email', 'Add Details', 'Set Tone', 'Choose Template'];
+        return ['Generate the email now', 'Let me add more details', 'Help me set the tone', 'I want to choose a template'];
       
       case 'generation':
-        return ['Generate Email', 'Refine Details', 'Change Approach', 'Start Over'];
+        return ['Generate the email now', 'Let me refine the details', 'I want to change the approach', 'Help me start over'];
       
       default:
-        return ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'];
+        return ['I want to create an email campaign', 'Help me build an SMS campaign', 'I need push notifications', 'Let me design a rich text email'];
     }
   }
 
@@ -454,20 +469,20 @@ Be conversational, helpful, and growth-focused. Provide specific, actionable adv
   private static getDefaultChips(area: string, mode: string): string[] {
     const chips = {
       messages: {
-        ask: ['📧 Email Campaign', '📱 SMS Campaign', '🔔 Push Notification', '📝 Rich Text Email'],
-        do: ['Create Welcome Email', 'Build Newsletter', 'Design Promotion', 'Generate Campaign']
+        ask: ['I want to create an email campaign', 'Help me build an SMS campaign', 'I need push notifications', 'Let me design a rich text email'],
+        do: ['Create a welcome email for me', 'Help me build a newsletter', 'I want to design a promotion', 'Let me generate a campaign']
       },
       journeys: {
-        ask: ['Journey Mapping', 'Touchpoint Strategy', 'Automation Planning', 'Flow Optimization'],
-        do: ['Map Customer Journey', 'Design Onboarding', 'Build Automation', 'Create Workflow']
+        ask: ['Help me with journey mapping', 'I need a touchpoint strategy', 'Show me automation planning', 'Let me optimize my flow'],
+        do: ['Map my customer journey', 'Design an onboarding flow', 'Help me build automation', 'Let me create a workflow']
       },
       snippets: {
-        ask: ['Copy Optimization', 'A/B Testing', 'Personalization', 'Conversion Tips'],
-        do: ['Write Subject Lines', 'Create CTAs', 'Generate Copy', 'Build Templates']
+        ask: ['Help me optimize copy', 'I want to plan A/B testing', 'Show me personalization tips', 'Let me improve conversions'],
+        do: ['Write subject lines for me', 'Help me create CTAs', 'Let me generate copy', 'I want to build templates']
       }
     };
 
-    return chips[area]?.[mode] || ['Continue', 'Tell me more', 'Get examples', 'Start over'];
+    return chips[area]?.[mode] || ['Let me continue', 'Tell me more', 'Show me examples', 'Help me start over'];
   }
 
   private static getFallbackResponse(area: string, mode: string): string {

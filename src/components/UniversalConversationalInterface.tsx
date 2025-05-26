@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +6,7 @@ import { EnhancedChatInput } from './EnhancedChatInput';
 import { SimpleConversationalInput } from './SimpleConversationalInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
 import { ChatCompletionService } from '@/services/chatCompletionService';
+import { MarkdownFormatter } from './MarkdownFormatter';
 
 interface Message {
   id: string;
@@ -70,22 +70,22 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const getInitialChips = (context: string): ConversationalChip[] => {
     const chipSets = {
       messages: [
-        { id: 'email-campaign', label: '📧 Email Campaign', type: 'starter' as const },
-        { id: 'sms-campaign', label: '📱 SMS Campaign', type: 'starter' as const },
-        { id: 'push-notification', label: '🔔 Push Notification', type: 'starter' as const },
-        { id: 'rich-text-email', label: '📝 Rich Text Email', type: 'starter' as const }
+        { id: 'email-campaign', label: 'I want to create an email campaign', type: 'starter' as const },
+        { id: 'sms-campaign', label: 'I need to build an SMS campaign', type: 'starter' as const },
+        { id: 'push-notification', label: 'Help me create push notifications', type: 'starter' as const },
+        { id: 'rich-text-email', label: 'I want to design a rich text email', type: 'starter' as const }
       ],
       journeys: [
-        { id: 'map-journey', label: 'Map customer journey', type: 'starter' as const },
-        { id: 'onboarding-flow', label: 'Design onboarding flow', type: 'starter' as const },
-        { id: 'retention-strategy', label: 'Build retention strategy', type: 'starter' as const },
-        { id: 'conversion-optimization', label: 'Optimize conversions', type: 'starter' as const }
+        { id: 'map-journey', label: 'I need to map a customer journey', type: 'starter' as const },
+        { id: 'onboarding-flow', label: 'Help me design an onboarding flow', type: 'starter' as const },
+        { id: 'retention-strategy', label: 'I want to build a retention strategy', type: 'starter' as const },
+        { id: 'conversion-optimization', label: 'Show me how to optimize conversions', type: 'starter' as const }
       ],
       snippets: [
-        { id: 'subject-lines', label: 'Write better subject lines', type: 'starter' as const },
-        { id: 'cta-optimization', label: 'Optimize call-to-actions', type: 'starter' as const },
-        { id: 'personalization', label: 'Add personalization', type: 'starter' as const },
-        { id: 'ab-testing', label: 'Plan A/B tests', type: 'starter' as const }
+        { id: 'subject-lines', label: 'I need help writing better subject lines', type: 'starter' as const },
+        { id: 'cta-optimization', label: 'Help me optimize my call-to-actions', type: 'starter' as const },
+        { id: 'personalization', label: 'I want to add more personalization', type: 'starter' as const },
+        { id: 'ab-testing', label: 'Show me how to plan A/B tests', type: 'starter' as const }
       ]
     };
     return chipSets[context] || chipSets.messages;
@@ -231,7 +231,10 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
                     ? 'bg-gray-100 text-gray-700'
                     : 'bg-gray-50 border border-gray-200 text-gray-900'
                 }`}>
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <MarkdownFormatter 
+                    content={message.content} 
+                    className={message.type === 'user' ? 'text-white' : 'text-gray-900'} 
+                  />
                   <div className="flex items-center justify-between mt-2">
                     <p className="text-xs opacity-70">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
