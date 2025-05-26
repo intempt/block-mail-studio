@@ -109,19 +109,24 @@ export default function EmailEditor({
     ];
   }, []);
 
+  // Stabilize onUpdate function to prevent editor recreation
+  const handleEditorUpdate = useCallback(({ editor }) => {
+    setEmailHTML(editor.getHTML());
+  }, []);
+
   console.log('EmailEditor: About to create TipTap editor');
 
   const editor = useEditor({
     extensions,
     content: initialHTML,
-    onUpdate: ({ editor }) => setEmailHTML(editor.getHTML()),
+    onUpdate: handleEditorUpdate,
     immediatelyRender: false,
   });
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
   useEffect(() => {
-    console.log('EmailEditor: useEffect for editor ready', { editor: !!editor, editorReady, initialHTML });
+    console.log('EmailEditor: useEffect for editor ready', { editor: !!editor, editorReady });
     if (editor && !editorReady) {
       if (initialHTML) {
         console.log('EmailEditor: Setting initial content');
@@ -129,7 +134,7 @@ export default function EmailEditor({
       }
       setEditorReady(true);
     }
-  }, [editor, initialHTML, editorReady]);
+  }, [editor, editorReady]);
 
   useEffect(() => {
     console.log('EmailEditor: useEffect for initial subject', { initialSubject, subjectLine });
