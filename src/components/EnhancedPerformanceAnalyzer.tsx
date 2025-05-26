@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { directAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
-import { toast } from 'sonner';
 
 interface EnhancedPerformanceAnalyzerProps {
   emailHTML: string;
@@ -46,7 +45,6 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
     try {
       console.log('Direct performance analysis...');
       
-      // Direct API call - no caching
       const result = await directAIService.analyzePerformance(emailHTML);
       console.log('Direct performance analysis completed:', result);
       
@@ -54,13 +52,13 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
       
       // Show toast for critical issues
       if (result.overallScore !== null && result.overallScore < 60) {
-        toast.error(`Performance Issues Detected. Overall score: ${result.overallScore}/100. Check recommendations for improvements.`);
+        console.log(`Performance Issues Detected. Overall score: ${result.overallScore}/100. Check recommendations for improvements.`);
       } else if (result.overallScore !== null && result.overallScore > 85) {
-        toast.success(`Excellent Performance! Your email scored ${result.overallScore}/100!`);
+        console.log(`Excellent Performance! Your email scored ${result.overallScore}/100!`);
       }
     } catch (error) {
       console.error('Error analyzing performance:', error);
-      toast.error("Analysis Failed. Unable to analyze email performance. Please try again.");
+      console.log("Analysis Failed. Unable to analyze email performance. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }

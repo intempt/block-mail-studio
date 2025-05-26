@@ -14,7 +14,6 @@ import {
   TrendingUp,
   Brain
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface Suggestion {
   id: string;
@@ -97,7 +96,7 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
       setSuggestions(mockSuggestions);
     } catch (error) {
       console.error('Error generating suggestions:', error);
-      toast.error("Failed to generate suggestions. Please try again.");
+      console.log("Failed to generate suggestions. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -113,12 +112,12 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
   const applySuggestion = (suggestion: Suggestion) => {
     onApplySuggestion?.(suggestion);
     setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    toast.success(`Applied: ${suggestion.title}`);
+    console.log(`Applied: ${suggestion.title}`);
   };
 
   const copySuggestion = (suggestion: Suggestion) => {
     navigator.clipboard.writeText(suggestion.suggestion);
-    toast.success(`Copied: ${suggestion.title}`);
+    console.log(`Copied: ${suggestion.title}`);
   };
 
   const getImpactColor = (impact: string) => {

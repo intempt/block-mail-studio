@@ -2,7 +2,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
 import Index from '@/pages/Index';
 import Messages from '@/pages/Messages';
 import WorkspacePage from '@/pages/WorkspacePage';
@@ -23,7 +22,6 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-        <Toaster />
       </Router>
     </QueryClientProvider>
   );

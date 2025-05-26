@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BarChart3, Target, TrendingUp } from 'lucide-react';
 import { EnhancedPerformanceAnalyzer } from './EnhancedPerformanceAnalyzer';
 import { BrandVoiceOptimizer } from './BrandVoiceOptimizer';
-import { toast } from 'sonner';
 
 interface PerformanceBrandPanelProps {
   emailHTML: string;
@@ -22,7 +21,7 @@ export const PerformanceBrandPanel: React.FC<PerformanceBrandPanelProps> = ({
 
   const handleOptimize = (suggestion: string) => {
     console.log('Applying optimization:', suggestion);
-    toast.success(`Optimization Applied: ${suggestion}`);
+    console.log(`Optimization Applied: ${suggestion}`);
   };
 
   return (
