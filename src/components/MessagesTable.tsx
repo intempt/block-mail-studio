@@ -86,6 +86,21 @@ const getStatusColor = (status: string) => {
 };
 
 export const MessagesTable: React.FC<MessagesTableProps> = ({ onEmailBuilderOpen }) => {
+  const handleEditMessage = (message: Message) => {
+    console.log('Edit button clicked for message:', message.name);
+    console.log('onEmailBuilderOpen callback:', onEmailBuilderOpen);
+    
+    if (onEmailBuilderOpen && message.type === 'email') {
+      console.log('Opening email editor for:', message.name);
+      // For now, we'll open with empty content, but this could be enhanced to load actual message content
+      onEmailBuilderOpen('', message.name);
+    } else if (!onEmailBuilderOpen) {
+      console.error('onEmailBuilderOpen callback not provided to MessagesTable');
+    } else {
+      console.log('Message type is not email, cannot open email editor');
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -141,7 +156,12 @@ export const MessagesTable: React.FC<MessagesTableProps> = ({ onEmailBuilderOpen
                   <Button variant="ghost" size="sm">
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEditMessage(message)}
+                    disabled={message.type !== 'email'}
+                  >
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="sm">

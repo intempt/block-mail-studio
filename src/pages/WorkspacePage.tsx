@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -166,7 +165,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
             <div className="bg-white rounded-lg border border-gray-200">
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Messages</h3>
-                <MessagesTable />
+                <MessagesTable onEmailBuilderOpen={onEmailBuilderOpen} />
               </div>
             </div>
             
