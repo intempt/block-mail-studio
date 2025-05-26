@@ -37,7 +37,6 @@ interface SimpleBlock {
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   ({ onContentChange, onBlockSelect, onSnippetSaved, previewWidth = 600, previewMode = 'desktop', compactMode = false }, ref) => {
-    const { toast } = useToast();
     
     const [blocks, setBlocks] = useState<SimpleBlock[]>([
       {
