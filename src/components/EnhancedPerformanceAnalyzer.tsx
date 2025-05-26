@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { directAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface EnhancedPerformanceAnalyzerProps {
   emailHTML: string;
@@ -35,7 +35,6 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
   const [analysis, setAnalysis] = useState<PerformanceAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [autoAnalyze, setAutoAnalyze] = useState(true);
-  const { toast } = useToast();
 
   const runAnalysis = useCallback(async () => {
     if (!emailHTML.trim()) {
@@ -55,28 +54,17 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
       
       // Show toast for critical issues
       if (result.overallScore !== null && result.overallScore < 60) {
-        toast({
-          title: "Performance Issues Detected",
-          description: `Overall score: ${result.overallScore}/100. Check recommendations for improvements.`,
-          variant: "destructive"
-        });
+        toast.error(`Performance Issues Detected. Overall score: ${result.overallScore}/100. Check recommendations for improvements.`);
       } else if (result.overallScore !== null && result.overallScore > 85) {
-        toast({
-          title: "Excellent Performance",
-          description: `Your email scored ${result.overallScore}/100!`,
-        });
+        toast.success(`Excellent Performance! Your email scored ${result.overallScore}/100!`);
       }
     } catch (error) {
       console.error('Error analyzing performance:', error);
-      toast({
-        title: "Analysis Failed",
-        description: "Unable to analyze email performance. Please try again.",
-        variant: "destructive"
-      });
+      toast.error("Analysis Failed. Unable to analyze email performance. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }
-  }, [emailHTML, toast]);
+  }, [emailHTML]);
 
   // Auto-analyze when content changes
   useEffect(() => {

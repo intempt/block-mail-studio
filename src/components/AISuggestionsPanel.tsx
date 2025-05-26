@@ -15,7 +15,6 @@ import {
   Brain
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { directAIService } from '@/services/directSnippetService';
 
 interface Suggestion {
   id: string;
