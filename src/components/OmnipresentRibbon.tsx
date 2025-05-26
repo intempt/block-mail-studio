@@ -252,6 +252,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   return (
     <div className="bg-white border-b border-gray-200 relative">
+      {/* AI Suggestions Bar - Always visible when showAISuggestions is true */}
+      <EnhancedAISuggestionsWidget
+        isOpen={showAISuggestions}
+        onToggle={handleAISuggestionsToggle}
+        emailHTML={emailHTML}
+        subjectLine={subjectLine}
+        canvasRef={canvasRef}
+        onSubjectLineChange={onSubjectLineChange}
+        onApplySuggestion={(suggestion) => {
+          console.log('Applied suggestion:', suggestion);
+        }}
+      />
+
       {/* Top Bar */}
       <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
         {/* Left Section - Editable Campaign Title */}
@@ -480,7 +493,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* AI Suggestions Section */}
+          {/* AI Suggestions Section - Updated to show compact state */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
@@ -496,7 +509,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Configuration Cards */}
+      {/* Configuration Cards - keep existing cards but remove the old AI suggestions widget */}
       <EmailSettingsCard
         isOpen={showEmailSettings}
         onToggle={handleEmailSettingsToggle}
@@ -515,7 +528,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         onStylesChange={onGlobalStylesChange}
       />
 
-      {/* Links Card placeholder - will create a separate component for links only */}
+      {/* Links Card placeholder */}
       {showLinks && (
         <div className="absolute top-full left-0 right-0 z-50 mt-2 mx-6 shadow-lg border border-gray-200 bg-white rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
@@ -537,18 +550,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
       )}
-
-      <EnhancedAISuggestionsWidget
-        isOpen={showAISuggestions}
-        onToggle={handleAISuggestionsToggle}
-        emailHTML={emailHTML}
-        subjectLine={subjectLine}
-        canvasRef={canvasRef}
-        onSubjectLineChange={onSubjectLineChange}
-        onApplySuggestion={(suggestion) => {
-          console.log('Applied suggestion:', suggestion);
-        }}
-      />
     </div>
   );
 };
