@@ -4,7 +4,7 @@ import { RibbonGroup } from '../RibbonGroup';
 import { Button } from '@/components/ui/button';
 import { 
   Copy, 
-  Cut, 
+  Scissors, 
   Clipboard, 
   Bold, 
   Italic, 
@@ -69,7 +69,7 @@ export const HomeTab: React.FC<HomeTabProps> = ({
           </Button>
           <div className="flex gap-1">
             <Button variant="ghost" size="sm" className="h-6 px-2" title="Cut (Ctrl+X)">
-              <Cut className="w-3 h-3" />
+              <Scissors className="w-3 h-3" />
             </Button>
             <Button variant="ghost" size="sm" className="h-6 px-2" title="Copy (Ctrl+C)">
               <Copy className="w-3 h-3" />

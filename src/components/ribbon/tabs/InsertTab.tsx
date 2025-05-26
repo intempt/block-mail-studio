@@ -28,6 +28,10 @@ export const InsertTab: React.FC<InsertTabProps> = ({
     onBlockAdd(blockType);
   };
 
+  const handleColumnsAdd = () => {
+    onBlockAdd('columns', { columns: 2, ratio: '1:1' });
+  };
+
   return (
     <div className="insert-tab flex items-stretch bg-white border-b border-gray-100">
       {/* Blocks Group */}
@@ -73,7 +77,7 @@ export const InsertTab: React.FC<InsertTabProps> = ({
             variant="ghost" 
             size="sm" 
             className="h-8 px-3"
-            onClick={() => handleBlockAdd('columns', { columns: 2, ratio: '1:1' })}
+            onClick={handleColumnsAdd}
             title="Two Columns"
           >
             <Columns className="w-4 h-4 mr-1" />
