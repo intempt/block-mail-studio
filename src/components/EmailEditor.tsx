@@ -23,7 +23,6 @@ import {
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
-import { MarketersTopBar } from './MarketersTopBar';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
@@ -74,9 +73,6 @@ export default function EmailEditor({
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
-  const [lastSaved, setLastSaved] = useState<Date>(new Date());
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const layoutConfig = useMemo<LayoutConfig>(() => ({
     direction: 'column',
@@ -134,20 +130,6 @@ export default function EmailEditor({
     const initialTemplates = DirectTemplateService.getAllTemplates();
     setTemplates(initialTemplates);
   }, []);
-
-  useEffect(() => {
-    setHasUnsavedChanges(true);
-  }, [content, subject]);
-
-  const handleSave = () => {
-    setLastSaved(new Date());
-    setHasUnsavedChanges(false);
-    console.log('Campaign saved');
-  };
-
-  const handleSendTestEmail = (recipients: string[], deviceMode: string) => {
-    console.log('Sending test email to:', recipients, 'optimized for:', deviceMode);
-  };
 
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
@@ -258,23 +240,6 @@ export default function EmailEditor({
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <MarketersTopBar
-        campaignTitle={campaignTitle}
-        onCampaignTitleChange={setCampaignTitle}
-        onBack={onBack}
-        canvasWidth={canvasWidth}
-        deviceMode={deviceMode}
-        onDeviceChange={handleDeviceChange}
-        onWidthChange={handleWidthChange}
-        onPreview={handlePreview}
-        onSaveTemplate={handleSaveAsTemplate}
-        onSendTestEmail={handleSendTestEmail}
-        emailHTML={content}
-        subjectLine={subject}
-        lastSaved={lastSaved}
-        hasUnsavedChanges={hasUnsavedChanges}
-      />
-
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
