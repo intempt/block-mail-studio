@@ -4,6 +4,7 @@ export interface DragData {
   blockId?: string;
   isReorder?: boolean;
   layoutData?: any;
+  isLayout?: boolean;
 }
 
 export const createDragData = (data: DragData): string => {
@@ -32,7 +33,7 @@ export const isValidDropTarget = (
 ): boolean => {
   switch (targetType) {
     case 'canvas':
-      return !!(dragData.blockType || dragData.layoutData);
+      return !!(dragData.blockType || dragData.layoutData || dragData.isLayout);
     case 'column':
       return !!dragData.blockType && dragData.blockType !== 'columns';
     case 'block':

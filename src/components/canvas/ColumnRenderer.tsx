@@ -1,17 +1,11 @@
 
 import React from 'react';
-
-interface SimpleBlock {
-  id: string;
-  type: string;
-  content: any;
-  styles?: Record<string, string>;
-}
+import { EmailBlock } from '@/types/emailBlocks';
 
 interface ColumnRendererProps {
-  block: SimpleBlock;
+  block: EmailBlock;
   onColumnDrop: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
-  renderBlock: (block: SimpleBlock) => React.ReactNode;
+  renderBlock: (block: EmailBlock) => React.ReactNode;
 }
 
 export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
@@ -39,26 +33,29 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
   const columnWidths = getColumnWidths(block.content.columnRatio);
   
   return (
-    <div className="columns-block" style={block.styles}>
-      <div className="flex gap-4">
+    <div className="columns-block border border-gray-200 rounded-lg p-2" style={block.styling?.desktop}>
+      <div className="flex gap-2">
         {block.content.columns?.map((column: any, index: number) => (
           <div
             key={column.id || index}
-            className="column-drop-zone border-2 border-dashed border-gray-300 rounded-lg p-4 transition-colors hover:border-blue-400"
+            className="column-drop-zone border-2 border-dashed border-gray-300 rounded-lg p-4 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 min-h-[100px]"
             style={{ width: columnWidths[index] }}
             onDrop={(e) => onColumnDrop(e, block.id, index)}
             onDragOver={(e) => e.preventDefault()}
           >
-            <div className="text-center text-gray-500 text-sm">
-              Column {index + 1} ({columnWidths[index]})
-              <br />
-              <span className="text-xs">Drop blocks here</span>
+            <div className="text-center text-gray-500 text-sm mb-2">
+              <div className="font-medium">Column {index + 1}</div>
+              <div className="text-xs opacity-75">{columnWidths[index]}</div>
+              <div className="text-xs opacity-60">Drop blocks here</div>
             </div>
-            {column.blocks?.map((innerBlock: SimpleBlock) => (
-              <div key={innerBlock.id} className="mt-2">
-                {renderBlock(innerBlock)}
-              </div>
-            ))}
+            
+            <div className="space-y-2">
+              {column.blocks?.map((innerBlock: EmailBlock) => (
+                <div key={innerBlock.id} className="border border-gray-100 rounded p-2 hover:border-gray-300 transition-colors">
+                  {renderBlock(innerBlock)}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>

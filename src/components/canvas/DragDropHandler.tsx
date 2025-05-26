@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createDragData, parseDragData } from '@/utils/dragDropUtils';
 import { EmailBlock } from '@/types/emailBlocks';
@@ -34,7 +33,35 @@ export const useDragDropHandler = ({
       const data = parseDragData(e.dataTransfer.getData('application/json'));
       if (!data) return;
       
-      if (data.blockType === 'columns' && data.layoutData) {
+      console.log('Canvas drop data:', data);
+      
+      if (data.isLayout && data.layoutData) {
+        const newBlock: EmailBlock = {
+          id: `layout-${Date.now()}`,
+          type: 'columns',
+          content: {
+            columnCount: data.layoutData.columns as 1 | 2 | 3 | 4,
+            columnRatio: data.layoutData.ratio,
+            columns: data.layoutData.columns,
+            gap: '16px'
+          },
+          styling: getDefaultStyles('columns'),
+          position: { x: 0, y: 0 },
+          displayOptions: {
+            showOnDesktop: true,
+            showOnTablet: true,
+            showOnMobile: true
+          }
+        };
+        
+        const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
+        setBlocks(prev => {
+          const newBlocks = [...prev];
+          newBlocks.splice(insertIndex, 0, newBlock);
+          return newBlocks;
+        });
+        console.log('Layout block added:', newBlock);
+      } else if (data.blockType === 'columns' && data.layoutData) {
         const newBlock: EmailBlock = {
           id: `layout-${Date.now()}`,
           type: 'columns',

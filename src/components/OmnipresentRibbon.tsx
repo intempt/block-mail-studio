@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 import { 
   Type, 
   Image, 
@@ -234,7 +235,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <h1 className="text-xl font-semibold text-gray-900">Email Builder</h1>
         </div>
         
-        {/* Center Section - Device Controls */}
+        {/* Center Section - Device Controls with Icons and Width Slider */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
             {Object.entries(deviceConfig).map(([device, config]) => {
@@ -252,14 +253,22 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   }`}
                 >
                   <IconComponent className="w-4 h-4" />
-                  <span className="text-xs font-medium">{config.label}</span>
                 </Button>
               );
             })}
           </div>
-          <Badge variant="outline" className="text-xs font-mono">
-            {canvasWidth}px
-          </Badge>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 min-w-[60px]">{canvasWidth}px</span>
+            <Slider
+              value={[canvasWidth]}
+              onValueChange={(value) => onWidthChange(value[0])}
+              min={320}
+              max={1200}
+              step={10}
+              className="w-32"
+            />
+          </div>
         </div>
         
         {/* Right Section */}

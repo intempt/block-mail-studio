@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Layout, ChevronDown, ChevronRight } from 'lucide-react';
 import { generateUniqueId } from '@/utils/blockUtils';
+import { createDragData } from '@/utils/dragDropUtils';
 
 interface LayoutOption {
   id: string;
@@ -22,7 +23,6 @@ interface LayoutConfigPanelProps {
 }
 
 const layoutOptions: LayoutOption[] = [
-  // 1 Column
   {
     id: '1-column',
     name: '1 Column',
@@ -30,7 +30,6 @@ const layoutOptions: LayoutOption[] = [
     ratio: '100',
     preview: ['100%']
   },
-  // 2 Column layouts (5 variants)
   {
     id: '2-column-50-50',
     name: '50/50',
@@ -66,7 +65,6 @@ const layoutOptions: LayoutOption[] = [
     ratio: '75-25',
     preview: ['75%', '25%']
   },
-  // 3 Column layouts (4 variants)
   {
     id: '3-column-equal',
     name: '33/33/33',
@@ -95,7 +93,6 @@ const layoutOptions: LayoutOption[] = [
     ratio: '50-25-25',
     preview: ['50%', '25%', '25%']
   },
-  // 4 Column layout (1 variant)
   {
     id: '4-column-equal',
     name: '25/25/25/25',
@@ -117,7 +114,6 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
 
   const handleLayoutClick = (layout: LayoutOption) => {
     console.log('Layout clicked:', layout.name);
-    // Create the columns structure for the layout
     const columns = Array.from({ length: layout.columns }, (_, index) => ({
       id: generateUniqueId(),
       blocks: [],
@@ -142,14 +138,17 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
     }));
 
     const layoutConfig = {
-      blockType: 'columns',
-      layoutData: {
-        ...layout,
-        columns
-      }
+      ...layout,
+      columns
     };
 
-    e.dataTransfer.setData('application/json', JSON.stringify(layoutConfig));
+    const dragData = createDragData({
+      blockType: 'columns',
+      isLayout: true,
+      layoutData: layoutConfig
+    });
+
+    e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'copy';
   };
 
