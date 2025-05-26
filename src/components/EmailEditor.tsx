@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -24,6 +25,9 @@ import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { RibbonInterface } from './RibbonInterface';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
+import { GlobalStylesPanel } from './GlobalStylesPanel';
+import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
