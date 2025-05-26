@@ -8,7 +8,7 @@ import { UniversalConversationalInterface } from '@/components/UniversalConversa
 import { JourneysTab } from '@/components/JourneysTab';
 import { SnippetsTab } from '@/components/SnippetsTab';
 import { MessagesTable } from '@/components/MessagesTable';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Zap } from 'lucide-react';
 
 interface WorkspacePageProps {
   onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
@@ -18,7 +18,9 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
   const [activeTab, setActiveTab] = useState('journeys');
 
   useEffect(() => {
-    console.log('WorkspacePage: Rendered with onEmailBuilderOpen:', !!onEmailBuilderOpen);
+    console.log('=== WorkspacePage: Component mounted/updated ===');
+    console.log('WorkspacePage: onEmailBuilderOpen callback provided:', !!onEmailBuilderOpen);
+    console.log('WorkspacePage: onEmailBuilderOpen type:', typeof onEmailBuilderOpen);
   }, [onEmailBuilderOpen]);
 
   const getContextConfig = () => {
@@ -43,14 +45,39 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
   };
 
   const handleCreateMessage = () => {
-    console.log('WorkspacePage: Create Message button clicked');
+    console.log('=== WorkspacePage: Create Message button clicked ===');
     console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
+    console.log('WorkspacePage: onEmailBuilderOpen function:', onEmailBuilderOpen);
     
     if (onEmailBuilderOpen) {
       console.log('WorkspacePage: Calling onEmailBuilderOpen from Create Message button');
-      onEmailBuilderOpen();
+      try {
+        onEmailBuilderOpen();
+        console.log('WorkspacePage: onEmailBuilderOpen call completed successfully');
+      } catch (error) {
+        console.error('WorkspacePage: Error calling onEmailBuilderOpen:', error);
+      }
     } else {
       console.error('WorkspacePage: onEmailBuilderOpen callback not provided');
+      alert('Error: Email editor callback not available. Please refresh the page.');
+    }
+  };
+
+  const handleForceLoadEditor = () => {
+    console.log('=== WorkspacePage: Force Load Editor button clicked ===');
+    console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
+    
+    if (onEmailBuilderOpen) {
+      console.log('WorkspacePage: Force loading editor with empty content');
+      try {
+        onEmailBuilderOpen('', 'New Email Campaign');
+        console.log('WorkspacePage: Force load completed successfully');
+      } catch (error) {
+        console.error('WorkspacePage: Error force loading editor:', error);
+      }
+    } else {
+      console.error('WorkspacePage: onEmailBuilderOpen callback not provided for force load');
+      alert('Error: Email editor callback not available. Please refresh the page.');
     }
   };
 
@@ -64,9 +91,30 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
   const config = getContextConfig();
 
+  console.log('=== WorkspacePage: Rendering ===');
+  console.log('WorkspacePage: activeTab:', activeTab);
+
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
       <div className="space-y-8 max-w-4xl mx-auto">
+        {/* Force Load Editor Button - Emergency Access */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Quick Access</h3>
+              <p className="text-xs text-red-600">Direct access to email editor (debugging)</p>
+            </div>
+            <Button 
+              onClick={handleForceLoadEditor}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Force Load Editor
+            </Button>
+          </div>
+        </div>
+
         {/* Universal Chat Interface */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="p-6">

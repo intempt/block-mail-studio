@@ -86,18 +86,30 @@ const getStatusColor = (status: string) => {
 };
 
 export const MessagesTable: React.FC<MessagesTableProps> = ({ onEmailBuilderOpen }) => {
+  console.log('=== MessagesTable: Component rendered ===');
+  console.log('MessagesTable: onEmailBuilderOpen callback provided:', !!onEmailBuilderOpen);
+
   const handleEditMessage = (message: Message) => {
-    console.log('Edit button clicked for message:', message.name);
-    console.log('onEmailBuilderOpen callback:', onEmailBuilderOpen);
+    console.log('=== MessagesTable: Edit button clicked ===');
+    console.log('MessagesTable: message:', message.name, 'type:', message.type);
+    console.log('MessagesTable: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
     
     if (onEmailBuilderOpen && message.type === 'email') {
-      console.log('Opening email editor for:', message.name);
-      // For now, we'll open with empty content, but this could be enhanced to load actual message content
-      onEmailBuilderOpen('', message.name);
+      console.log('MessagesTable: Opening email editor for:', message.name);
+      try {
+        // For demo purposes, we'll load with some sample content
+        const sampleHTML = `<h1>Edit: ${message.name}</h1><p>This is a sample email content for editing.</p>`;
+        onEmailBuilderOpen(sampleHTML, message.name);
+        console.log('MessagesTable: onEmailBuilderOpen call completed successfully');
+      } catch (error) {
+        console.error('MessagesTable: Error calling onEmailBuilderOpen:', error);
+      }
     } else if (!onEmailBuilderOpen) {
-      console.error('onEmailBuilderOpen callback not provided to MessagesTable');
+      console.error('MessagesTable: onEmailBuilderOpen callback not provided');
+      alert('Error: Email editor callback not available. Please refresh the page.');
     } else {
-      console.log('Message type is not email, cannot open email editor');
+      console.log('MessagesTable: Message type is not email, cannot open email editor');
+      alert('Only email messages can be edited in the email editor.');
     }
   };
 
@@ -161,6 +173,7 @@ export const MessagesTable: React.FC<MessagesTableProps> = ({ onEmailBuilderOpen
                     size="sm" 
                     onClick={() => handleEditMessage(message)}
                     disabled={message.type !== 'email'}
+                    className={message.type === 'email' ? 'hover:bg-blue-50 hover:text-blue-600' : ''}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
