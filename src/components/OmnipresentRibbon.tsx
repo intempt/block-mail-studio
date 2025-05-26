@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -19,16 +20,13 @@ import {
   Monitor,
   Tablet,
   Smartphone,
-  Save,
   ChevronDown,
   ChevronUp,
   Settings,
-  Palette,
   Lightbulb
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-import { GlobalStylesCard } from './GlobalStylesCard';
 import { ButtonsLinksCard } from './ButtonsLinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
 import { TextHeadingsCard } from './TextHeadingsCard';
@@ -67,20 +65,19 @@ interface OmnipresentRibbonProps {
   onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => void;
   onWidthChange: (width: number) => void;
   onPreview: () => void;
-  onSaveTemplate: (template: any) => void;
   onPublish: () => void;
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-4 h-4" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-4 h-4" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-4 h-4" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Minus className="w-4 h-4" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-4 h-4" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-4 h-4" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-4 h-4" /> },
-  { id: 'html', name: 'HTML', icon: <Table className="w-4 h-4" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-4 h-4" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-3 h-3" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-3 h-3" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-3 h-3" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Minus className="w-3 h-3" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-3 h-3" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-3 h-3" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-3 h-3" /> },
+  { id: 'html', name: 'HTML', icon: <Table className="w-3 h-3" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-3 h-3" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -88,13 +85,7 @@ const layoutOptions: LayoutOption[] = [
   { id: '2-column-50-50', name: '50/50', columns: 2, ratio: '50-50', preview: ['50%', '50%'] },
   { id: '2-column-33-67', name: '33/67', columns: 2, ratio: '33-67', preview: ['33%', '67%'] },
   { id: '2-column-67-33', name: '67/33', columns: 2, ratio: '67-33', preview: ['67%', '33%'] },
-  { id: '2-column-25-75', name: '25/75', columns: 2, ratio: '25-75', preview: ['25%', '75%'] },
-  { id: '2-column-75-25', name: '75/25', columns: 2, ratio: '75-25', preview: ['75%', '25%'] },
-  { id: '3-column-equal', name: '33/33/33', columns: 3, ratio: '33-33-33', preview: ['33%', '33%', '33%'] },
-  { id: '3-column-25-50-25', name: '25/50/25', columns: 3, ratio: '25-50-25', preview: ['25%', '50%', '25%'] },
-  { id: '3-column-25-25-50', name: '25/25/50', columns: 3, ratio: '25-25-50', preview: ['25%', '25%', '50%'] },
-  { id: '3-column-50-25-25', name: '50/25/25', columns: 3, ratio: '50-25-25', preview: ['50%', '25%', '25%'] },
-  { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
+  { id: '3-column-equal', name: '33/33/33', columns: 3, ratio: '33-33-33', preview: ['33%', '33%', '33%'] }
 ];
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -116,11 +107,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onDeviceChange,
   onWidthChange,
   onPreview,
-  onSaveTemplate,
   onPublish
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showGlobalStyles, setShowGlobalStyles] = useState(false);
   const [showButtonsLinks, setShowButtonsLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
@@ -153,7 +142,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const renderLayoutPreview = (layout: LayoutOption) => (
-    <div className="flex gap-1 h-4 mb-1">
+    <div className="flex gap-0.5 h-3 mb-1">
       {layout.preview.map((width, index) => (
         <div
           key={index}
@@ -165,16 +154,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   );
 
   const closeAllPanels = () => {
-    setShowGlobalStyles(false);
     setShowButtonsLinks(false);
     setShowEmailSettings(false);
     setShowTextHeadings(false);
     setShowAISuggestions(false);
-  };
-
-  const handleGlobalStylesToggle = () => {
-    if (!showGlobalStyles) closeAllPanels();
-    setShowGlobalStyles(!showGlobalStyles);
   };
 
   const handleButtonsLinksToggle = () => {
@@ -277,10 +260,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>
-          <Button onClick={() => onSaveTemplate({})} variant="outline" size="sm">
-            <Save className="w-4 h-4 mr-2" />
-            Save Template
-          </Button>
           <Button onClick={onPublish} className="bg-blue-600 hover:bg-blue-700" size="sm">
             <Send className="w-4 h-4 mr-2" />
             Publish
@@ -297,171 +276,151 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       </div>
 
       {/* Ribbon Content */}
-      <div className="px-6 py-4">
-        <div className="flex items-center gap-8 overflow-x-auto">
+      <div className="px-4 py-3">
+        <div className="flex items-center gap-4 overflow-x-auto">
           {/* Blocks Section */}
           <div className="flex-shrink-0">
             <div className="text-xs font-medium text-gray-600 mb-2">Blocks</div>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="outline"
                   size="sm"
-                  className="flex flex-col items-center p-2 h-16 w-16 cursor-grab active:cursor-grabbing"
+                  className="flex flex-col items-center p-1.5 h-12 w-12 cursor-grab active:cursor-grabbing text-xs"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                 >
                   {block.icon}
-                  <span className="text-xs mt-1">{block.name}</span>
+                  <span className="text-xs mt-0.5 leading-none">{block.name}</span>
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Layouts Section */}
           <div className="flex-shrink-0">
             <div className="text-xs font-medium text-gray-600 mb-2">Layouts</div>
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="outline"
                   size="sm"
-                  className="flex flex-col items-center p-2 h-16 w-16 cursor-pointer"
+                  className="flex flex-col items-center p-1.5 h-12 w-12 cursor-pointer text-xs"
                   onClick={() => handleLayoutSelect(layout)}
                 >
                   {renderLayoutPreview(layout)}
-                  <span className="text-xs">{layout.name}</span>
+                  <span className="text-xs leading-none">{layout.name}</span>
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
-
-          {/* Global Styles Section */}
-          <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Global Styles</div>
-            <div className="flex gap-2">
-              <Button
-                variant={showGlobalStyles ? 'default' : 'outline'}
-                size="sm"
-                className="h-16 px-3"
-                onClick={handleGlobalStylesToggle}
-              >
-                <div className="flex flex-col items-center">
-                  <Palette className="w-4 h-4" />
-                  <span className="text-xs mt-1">Styles</span>
-                </div>
-              </Button>
-            </div>
-          </div>
-
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Email Settings Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Email Settings</div>
-            <div className="flex gap-2">
+            <div className="text-xs font-medium text-gray-600 mb-2">Settings</div>
+            <div className="flex gap-1">
               <Button
                 variant={showEmailSettings ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2 text-xs"
                 onClick={handleEmailSettingsToggle}
               >
                 <div className="flex flex-col items-center">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-xs mt-1">Settings</span>
+                  <Settings className="w-3 h-3" />
+                  <span className="text-xs mt-0.5 leading-none">Email</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Text & Headings Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Text & Headings</div>
-            <div className="flex gap-2">
+            <div className="text-xs font-medium text-gray-600 mb-2">Text</div>
+            <div className="flex gap-1">
               <Button
                 variant={showTextHeadings ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2 text-xs"
                 onClick={handleTextHeadingsToggle}
               >
                 <div className="flex flex-col items-center">
-                  <Type className="w-4 h-4" />
-                  <span className="text-xs mt-1">Configure</span>
+                  <Type className="w-3 h-3" />
+                  <span className="text-xs mt-0.5 leading-none">Style</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Buttons & Links Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Buttons & Links</div>
-            <div className="flex gap-2">
+            <div className="text-xs font-medium text-gray-600 mb-2">Actions</div>
+            <div className="flex gap-1">
               <Button
                 variant={showButtonsLinks ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2 text-xs"
                 onClick={handleButtonsLinksToggle}
               >
                 <div className="flex flex-col items-center">
-                  <MousePointer className="w-4 h-4" />
-                  <span className="text-xs mt-1">Configure</span>
+                  <MousePointer className="w-3 h-3" />
+                  <span className="text-xs mt-0.5 leading-none">Config</span>
                 </div>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2 text-xs"
                 onClick={() => {
                   if (editor) {
-                    editor.commands.insertContent('<a href="#">Link text</a>');
+                    editor.commands.insertContent('<a href="#">Link</a>');
                   }
                 }}
               >
                 <div className="flex flex-col items-center">
-                  <Link className="w-4 h-4" />
-                  <span className="text-xs mt-1">Link</span>
+                  <Link className="w-3 h-3" />
+                  <span className="text-xs mt-0.5 leading-none">Link</span>
                 </div>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2 text-xs"
                 onClick={() => onBlockAdd('button')}
               >
                 <div className="flex flex-col items-center">
-                  <MousePointer className="w-4 h-4" />
-                  <span className="text-xs mt-1">Button</span>
+                  <MousePointer className="w-3 h-3" />
+                  <span className="text-xs mt-0.5 leading-none">Button</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* AI Suggestions Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">AI Suggestions</div>
-            <div className="flex gap-2">
+            <div className="text-xs font-medium text-gray-600 mb-2">AI</div>
+            <div className="flex gap-1">
               <Button
                 variant={showAISuggestions ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2 text-xs"
                 onClick={handleAISuggestionsToggle}
               >
                 <div className="flex flex-col items-center">
-                  <Lightbulb className="w-4 h-4" />
-                  <span className="text-xs mt-1">Suggestions</span>
+                  <Lightbulb className="w-3 h-3" />
+                  <span className="text-xs mt-0.5 leading-none">Help</span>
                 </div>
               </Button>
             </div>
@@ -470,13 +429,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       </div>
 
       {/* Configuration Cards */}
-      <GlobalStylesCard
-        isOpen={showGlobalStyles}
-        onToggle={handleGlobalStylesToggle}
-        onStylesChange={onGlobalStylesChange}
-        onOpenAdvanced={() => {}}
-      />
-
       <EmailSettingsCard
         isOpen={showEmailSettings}
         onToggle={handleEmailSettingsToggle}
