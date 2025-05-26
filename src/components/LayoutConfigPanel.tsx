@@ -114,7 +114,7 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
 
   const handleLayoutClick = (layout: LayoutOption) => {
     console.log('Layout clicked:', layout.name);
-    const columns = Array.from({ length: layout.columns }, (_, index) => ({
+    const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
       id: generateUniqueId(),
       blocks: [],
       width: layout.preview[index] || '100%'
@@ -122,7 +122,7 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
 
     const layoutConfig = {
       ...layout,
-      columns
+      columnElements // Use different property name to avoid confusion
     };
 
     onLayoutSelect(layoutConfig);
@@ -131,15 +131,16 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
     console.log('Starting layout drag:', layout.name);
     
-    const columns = Array.from({ length: layout.columns }, (_, index) => ({
+    const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
       id: generateUniqueId(),
       blocks: [],
       width: layout.preview[index] || '100%'
     }));
 
     const layoutConfig = {
-      ...layout,
-      columns
+      columnCount: layout.columns,
+      columnRatio: layout.ratio,
+      columnElements // Clear separation between count and elements
     };
 
     const dragData = createDragData({

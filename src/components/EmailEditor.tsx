@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -63,7 +62,6 @@ export default function EmailEditor({
 }: EmailEditorProps) {
   console.log('EmailEditor: Component starting to render');
 
-  // Local UI state only - no content state
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -72,12 +70,10 @@ export default function EmailEditor({
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
-  // Responsive state
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
-  // Stable layout config
   const layoutConfig = useMemo<LayoutConfig>(() => ({
     direction: 'column',
     alignItems: 'center',
@@ -86,7 +82,6 @@ export default function EmailEditor({
 
   console.log('EmailEditor: State initialized, creating extensions');
 
-  // Stable extensions array
   const extensions = useMemo(() => {
     console.log('EmailEditor: Creating TipTap extensions');
     return [
@@ -107,7 +102,6 @@ export default function EmailEditor({
     ];
   }, []);
 
-  // Stable update handler
   const handleEditorUpdate = useCallback(({ editor }) => {
     const newContent = editor.getHTML();
     onContentChange(newContent);
@@ -115,17 +109,15 @@ export default function EmailEditor({
 
   console.log('EmailEditor: About to create TipTap editor');
 
-  // Create editor once with stable configuration
   const editor = useEditor({
     extensions,
-    content: '', // Start with empty content
+    content: '',
     onUpdate: handleEditorUpdate,
     immediatelyRender: false,
   });
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
-  // Update editor content when prop changes
   useEffect(() => {
     if (editor && editor.getHTML() !== content) {
       console.log('EmailEditor: Updating editor content from prop');
@@ -133,14 +125,12 @@ export default function EmailEditor({
     }
   }, [editor, content]);
 
-  // Load templates once
   useEffect(() => {
     console.log('EmailEditor: Loading templates');
     const initialTemplates = DirectTemplateService.getAllTemplates();
     setTemplates(initialTemplates);
   }, []);
 
-  // Responsive handlers
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
     const widthMap = {
@@ -161,7 +151,14 @@ export default function EmailEditor({
   };
 
   const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
+    console.log('EmailEditor: handleBlockAdd called with:', { blockType, layoutConfig });
+    
     if (!editor) return;
+
+    if (blockType === 'columns' && layoutConfig) {
+      console.log('EmailEditor: Processing layout configuration:', layoutConfig);
+      return;
+    }
 
     const newBlock: Block = {
       id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -189,7 +186,6 @@ export default function EmailEditor({
   };
 
   const handleGlobalStylesChange = (styles: any) => {
-    // Apply styles to all blocks or the canvas
     console.log('Applying global styles:', styles);
   };
 
@@ -198,7 +194,6 @@ export default function EmailEditor({
   };
 
   const handlePublish = async () => {
-    // Save template on publish
     const existingTemplateNames = templates.map(t => t.name);
     const newTemplate = DirectTemplateService.savePublishedTemplate(
       content,
@@ -221,13 +216,11 @@ export default function EmailEditor({
   };
 
   const handleSnippetAdd = (snippet: EmailSnippet) => {
-    // Handle snippet addition
     console.log('Adding snippet:', snippet);
     setSnippetRefreshTrigger(prev => prev + 1);
   };
 
   const handleUniversalContentAdd = (content: UniversalContent) => {
-    // Handle universal content addition
     console.log('Adding universal content:', content);
   };
 
@@ -247,7 +240,6 @@ export default function EmailEditor({
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Omnipresent Ribbon Interface */}
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
@@ -271,7 +263,6 @@ export default function EmailEditor({
         onPublish={handlePublish}
       />
 
-      {/* Main Content */}
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
         <div className="max-w-4xl mx-auto">
           <EmailBlockCanvas
@@ -286,7 +277,6 @@ export default function EmailEditor({
         </div>
       </div>
 
-      {/* Modals */}
       {showPreview && (
         <EmailPreview
           html={content}

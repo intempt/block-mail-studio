@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createDragData, parseDragData } from '@/utils/dragDropUtils';
 import { EmailBlock } from '@/types/emailBlocks';
@@ -37,13 +36,23 @@ export const useDragDropHandler = ({
       console.log('Canvas drop data:', data);
       
       if (data.isLayout && data.layoutData) {
+        console.log('Creating layout block with data:', data.layoutData);
+        
+        const columnCount = data.layoutData.columnCount || data.layoutData.columns || 2;
+        const columnRatio = data.layoutData.columnRatio || data.layoutData.ratio || '50-50';
+        const columnElements = data.layoutData.columnElements || [];
+
         const newBlock: EmailBlock = {
           id: `layout-${Date.now()}`,
           type: 'columns',
           content: {
-            columnCount: data.layoutData.columns as 1 | 2 | 3 | 4,
-            columnRatio: data.layoutData.ratio,
-            columns: data.layoutData.columns,
+            columnCount: columnCount as 1 | 2 | 3 | 4,
+            columnRatio: columnRatio,
+            columns: columnElements.length > 0 ? columnElements : Array.from({ length: columnCount }, (_, i) => ({
+              id: `col-${i}-${Date.now()}`,
+              blocks: [],
+              width: `${100 / columnCount}%`
+            })),
             gap: '16px'
           },
           styling: getDefaultStyles('columns'),
@@ -63,16 +72,19 @@ export const useDragDropHandler = ({
         });
         console.log('Layout block added:', newBlock);
       } else if (data.blockType === 'columns' && data.layoutData) {
+        const columnCount = data.layoutData.columnCount || data.layoutData.columns || 2;
+        const columnRatio = data.layoutData.columnRatio || data.layoutData.ratio || '50-50';
+
         const newBlock: EmailBlock = {
           id: `layout-${Date.now()}`,
           type: 'columns',
           content: {
-            columnCount: data.layoutData.columns as 1 | 2 | 3 | 4,
-            columnRatio: data.layoutData.ratio,
-            columns: Array.from({ length: data.layoutData.columns }, (_, i) => ({
+            columnCount: columnCount as 1 | 2 | 3 | 4,
+            columnRatio: columnRatio,
+            columns: Array.from({ length: columnCount }, (_, i) => ({
               id: `col-${i}-${Date.now()}`,
               blocks: [],
-              width: `${100 / data.layoutData.columns}%`
+              width: `${100 / columnCount}%`
             })),
             gap: '16px'
           },
