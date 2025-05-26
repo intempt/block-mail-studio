@@ -8,7 +8,6 @@ import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
 import { mjmlService } from '@/services/MJMLService';
 import { createMJMLTemplate, compileMJMLToHTML } from '@/utils/emailUtils';
-import { ErrorBoundary } from './ErrorBoundary';
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -467,25 +466,23 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         </div>
 
         <div className="p-6">
-          <ErrorBoundary fallback={<div className="text-center py-8 text-gray-500">Error loading canvas content</div>}>
-            <CanvasRenderer
-              blocks={blocks}
-              selectedBlockId={selectedBlockId}
-              editingBlockId={editingBlockId}
-              isDraggingOver={isDraggingOver}
-              dragOverIndex={dragOverIndex}
-              onBlockClick={handleBlockClick}
-              onBlockDoubleClick={handleBlockDoubleClick}
-              onBlockDragStart={dragDropHandler.handleBlockDragStart}
-              onBlockDrop={dragDropHandler.handleBlockDrop}
-              onDeleteBlock={handleBlockDelete}
-              onDuplicateBlock={handleBlockDuplicate}
-              onSaveAsSnippet={handleSaveAsSnippet}
-              onTipTapChange={handleTipTapChange}
-              onTipTapBlur={handleTipTapBlur}
-              onColumnDrop={dragDropHandler.handleColumnDrop}
-            />
-          </ErrorBoundary>
+          <CanvasRenderer
+            blocks={blocks}
+            selectedBlockId={selectedBlockId}
+            editingBlockId={editingBlockId}
+            isDraggingOver={isDraggingOver}
+            dragOverIndex={dragOverIndex}
+            onBlockClick={handleBlockClick}
+            onBlockDoubleClick={handleBlockDoubleClick}
+            onBlockDragStart={dragDropHandler.handleBlockDragStart}
+            onBlockDrop={dragDropHandler.handleBlockDrop}
+            onDeleteBlock={handleBlockDelete}
+            onDuplicateBlock={handleBlockDuplicate}
+            onSaveAsSnippet={handleSaveAsSnippet}
+            onTipTapChange={handleTipTapChange}
+            onTipTapBlur={handleTipTapBlur}
+            onColumnDrop={dragDropHandler.handleColumnDrop}
+          />
         </div>
       </div>
 
