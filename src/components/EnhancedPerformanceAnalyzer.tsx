@@ -45,7 +45,7 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
     try {
       console.log('Direct performance analysis...');
       
-      const result = await directAIService.analyzePerformance(emailHTML);
+      const result = await directAIService.analyzePerformance(emailHTML, subjectLine);
       console.log('Direct performance analysis completed:', result);
       
       setAnalysis(result);
@@ -62,7 +62,7 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
     } finally {
       setIsAnalyzing(false);
     }
-  }, [emailHTML]);
+  }, [emailHTML, subjectLine]);
 
   // Auto-analyze when content changes
   useEffect(() => {
