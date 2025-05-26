@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -267,11 +266,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </Button>
           <Button onClick={() => onSaveTemplate({})} variant="outline" size="sm">
             <Save className="w-4 h-4 mr-2" />
-            Save Template
+            Save
           </Button>
           <Button onClick={onPublish} className="bg-blue-600 hover:bg-blue-700" size="sm">
             <Send className="w-4 h-4 mr-2" />
-            Publish
+            Send Test Email
           </Button>
           <Button
             variant="ghost"
