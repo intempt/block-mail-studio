@@ -16,20 +16,20 @@ interface DynamicLayoutIconProps {
 
 export const DynamicLayoutIcon: React.FC<DynamicLayoutIconProps> = ({ 
   layout, 
-  className = "w-6 h-5" 
+  className = "w-5 h-4" 
 }) => {
   const getColumnWidths = () => {
-    // Convert percentage strings to actual widths for SVG (total width = 24)
+    // Convert percentage strings to actual widths for SVG (total width = 20)
     return layout.preview.map(percent => {
       const numericValue = parseFloat(percent.replace('%', ''));
-      return (numericValue / 100) * 22; // 22 to leave space for gaps with larger size
+      return (numericValue / 100) * 18; // 18 to leave space for gaps
     });
   };
 
   const renderColumns = () => {
     const widths = getColumnWidths();
     let currentX = 1; // Start with 1px margin
-    const columnHeight = 14;
+    const columnHeight = 12;
     const gap = 0.5;
 
     return widths.map((width, index) => {
@@ -54,7 +54,7 @@ export const DynamicLayoutIcon: React.FC<DynamicLayoutIconProps> = ({
   return (
     <svg
       className={className}
-      viewBox="0 0 24 16"
+      viewBox="0 0 20 14"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
