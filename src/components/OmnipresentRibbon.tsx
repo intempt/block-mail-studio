@@ -48,15 +48,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-4 h-4" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-4 h-4" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-4 h-4" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Minus className="w-4 h-4" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-4 h-4" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-4 h-4" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-4 h-4" /> },
-  { id: 'html', name: 'HTML', icon: <Table className="w-4 h-4" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-4 h-4" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-5 h-5" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-5 h-5" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-5 h-5" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Minus className="w-5 h-5" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-5 h-5" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-5 h-5" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-5 h-5" /> },
+  { id: 'html', name: 'HTML', icon: <Table className="w-5 h-5" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-5 h-5" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -278,17 +278,17 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
       {/* Ribbon Content */}
       <div className="px-3 py-2">
-        <div className="flex items-center gap-2 overflow-x-auto">
+        <div className="flex items-center gap-3 overflow-x-auto">
           {/* Blocks Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Blocks</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-1">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center p-0.5 h-8 w-8 cursor-grab active:cursor-grabbing hover:bg-gray-100"
+                  className="flex flex-col items-center p-1 h-10 w-10 cursor-grab active:cursor-grabbing hover:bg-gray-100"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
@@ -299,90 +299,90 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-10" />
 
           {/* Layouts Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Layouts</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-1">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center p-0.5 h-8 w-8 cursor-pointer hover:bg-gray-100"
+                  className="flex flex-col items-center p-1 h-10 w-10 cursor-pointer hover:bg-gray-100"
                   onClick={() => handleLayoutSelect(layout)}
                 >
-                  <DynamicLayoutIcon layout={layout} />
+                  <DynamicLayoutIcon layout={layout} className="w-5 h-4" />
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-10" />
 
           {/* Email Settings Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Email Settings</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-1">
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-2 hover:bg-gray-100"
+                className="h-10 px-3 hover:bg-gray-100"
                 onClick={handleEmailSettingsToggle}
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-5 h-5" />
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-10" />
 
           {/* Text & Headings Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Text & Headings</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-1">
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-2 hover:bg-gray-100"
+                className="h-10 px-3 hover:bg-gray-100"
                 onClick={handleTextHeadingsToggle}
               >
-                <Type className="w-4 h-4" />
+                <Type className="w-5 h-5" />
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-10" />
 
           {/* Buttons & Links Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Buttons & Links</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-1">
               <Button
                 variant={showButtonsLinks ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-2 hover:bg-gray-100"
+                className="h-10 px-3 hover:bg-gray-100"
                 onClick={handleButtonsLinksToggle}
               >
-                <MousePointer className="w-4 h-4" />
+                <MousePointer className="w-5 h-5" />
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-10" />
 
           {/* AI Suggestions Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">AI Suggestions</div>
-            <div className="flex gap-0.5">
+            <div className="flex gap-1">
               <Button
                 variant={showAISuggestions ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-2 hover:bg-gray-100"
+                className="h-10 px-3 hover:bg-gray-100"
                 onClick={handleAISuggestionsToggle}
               >
-                <Lightbulb className="w-4 h-4" />
+                <Lightbulb className="w-5 h-5" />
               </Button>
             </div>
           </div>
