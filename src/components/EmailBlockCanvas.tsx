@@ -450,55 +450,53 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   }), [canvasWidth]);
 
   return (
-    <ErrorBoundary>
-      <div className="relative">
-        <div
-          style={canvasStyle}
-          className="email-canvas"
-          onDrop={dragDropHandler.handleCanvasDrop}
-          onDragOver={dragDropHandler.handleCanvasDragOver}
-          onDragLeave={dragDropHandler.handleCanvasDragLeave}
-        >
-          <div className="border-b border-gray-100 bg-white">
-            <CanvasSubjectLine
-              value={subject}
-              onChange={onSubjectChange}
-              emailContent={currentEmailHTML}
-            />
-          </div>
-
-          <div className="p-6">
-            <ErrorBoundary fallback={<div className="text-center py-8 text-gray-500">Error loading canvas content</div>}>
-              <CanvasRenderer
-                blocks={blocks}
-                selectedBlockId={selectedBlockId}
-                editingBlockId={editingBlockId}
-                isDraggingOver={isDraggingOver}
-                dragOverIndex={dragOverIndex}
-                onBlockClick={handleBlockClick}
-                onBlockDoubleClick={handleBlockDoubleClick}
-                onBlockDragStart={dragDropHandler.handleBlockDragStart}
-                onBlockDrop={dragDropHandler.handleBlockDrop}
-                onDeleteBlock={handleBlockDelete}
-                onDuplicateBlock={handleBlockDuplicate}
-                onSaveAsSnippet={handleSaveAsSnippet}
-                onTipTapChange={handleTipTapChange}
-                onTipTapBlur={handleTipTapBlur}
-                onColumnDrop={dragDropHandler.handleColumnDrop}
-              />
-            </ErrorBoundary>
-          </div>
+    <div className="relative">
+      <div
+        style={canvasStyle}
+        className="email-canvas"
+        onDrop={dragDropHandler.handleCanvasDrop}
+        onDragOver={dragDropHandler.handleCanvasDragOver}
+        onDragLeave={dragDropHandler.handleCanvasDragLeave}
+      >
+        <div className="border-b border-gray-100 bg-white">
+          <CanvasSubjectLine
+            value={subject}
+            onChange={onSubjectChange}
+            emailContent={currentEmailHTML}
+          />
         </div>
 
-        <CanvasStatus 
-          selectedBlockId={selectedBlockId}
-          canvasWidth={canvasWidth}
-          previewMode={previewMode}
-          emailHTML={currentEmailHTML}
-          subjectLine={subject}
-        />
+        <div className="p-6">
+          <ErrorBoundary fallback={<div className="text-center py-8 text-gray-500">Error loading canvas content</div>}>
+            <CanvasRenderer
+              blocks={blocks}
+              selectedBlockId={selectedBlockId}
+              editingBlockId={editingBlockId}
+              isDraggingOver={isDraggingOver}
+              dragOverIndex={dragOverIndex}
+              onBlockClick={handleBlockClick}
+              onBlockDoubleClick={handleBlockDoubleClick}
+              onBlockDragStart={dragDropHandler.handleBlockDragStart}
+              onBlockDrop={dragDropHandler.handleBlockDrop}
+              onDeleteBlock={handleBlockDelete}
+              onDuplicateBlock={handleBlockDuplicate}
+              onSaveAsSnippet={handleSaveAsSnippet}
+              onTipTapChange={handleTipTapChange}
+              onTipTapBlur={handleTipTapBlur}
+              onColumnDrop={dragDropHandler.handleColumnDrop}
+            />
+          </ErrorBoundary>
+        </div>
       </div>
-    </ErrorBoundary>
+
+      <CanvasStatus 
+        selectedBlockId={selectedBlockId}
+        canvasWidth={canvasWidth}
+        previewMode={previewMode}
+        emailHTML={currentEmailHTML}
+        subjectLine={subject}
+      />
+    </div>
   );
 });
 
