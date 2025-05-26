@@ -1,0 +1,224 @@
+
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  File, 
+  Plus, 
+  Layout, 
+  Palette, 
+  BarChart3, 
+  Eye,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
+import { GlobalStylesPanel } from './GlobalStylesPanel';
+import { PerformanceBrandPanel } from './PerformanceBrandPanel';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
+
+interface RibbonInterfaceProps {
+  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
+  universalContent: UniversalContent[];
+  onUniversalContentAdd: (content: UniversalContent) => void;
+  onGlobalStylesChange: (styles: any) => void;
+  emailHTML: string;
+  subjectLine: string;
+  editor?: any;
+  snippetRefreshTrigger?: number;
+  onTemplateLibraryOpen?: () => void;
+  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
+  previewMode?: 'desktop' | 'mobile';
+}
+
+export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
+  onBlockAdd,
+  onSnippetAdd,
+  universalContent,
+  onUniversalContentAdd,
+  onGlobalStylesChange,
+  emailHTML,
+  subjectLine,
+  editor,
+  snippetRefreshTrigger = 0,
+  onTemplateLibraryOpen,
+  onPreviewModeChange,
+  previewMode = 'desktop'
+}) => {
+  const [activeTab, setActiveTab] = useState('insert');
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const renderFileTab = () => (
+    <div className="flex items-center gap-4 p-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Templates</span>
+        <Button variant="outline" size="sm" onClick={onTemplateLibraryOpen}>
+          <File className="w-4 h-4 mr-2" />
+          Browse
+        </Button>
+      </div>
+      <div className="h-6 w-px bg-gray-300" />
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Document</span>
+        <Button variant="outline" size="sm">
+          Save
+        </Button>
+        <Button variant="outline" size="sm">
+          Export
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderLayoutTab = () => (
+    <div className="flex items-center gap-4 p-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Preview</span>
+        <div className="flex border rounded-md">
+          <Button
+            variant={previewMode === 'desktop' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onPreviewModeChange?.('desktop')}
+            className="rounded-r-none"
+          >
+            Desktop
+          </Button>
+          <Button
+            variant={previewMode === 'mobile' ? 'default' : 'ghost'}
+            size="sm"
+            onClick={() => onPreviewModeChange?.('mobile')}
+            className="rounded-l-none"
+          >
+            Mobile
+          </Button>
+        </div>
+      </div>
+      <div className="h-6 w-px bg-gray-300" />
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Canvas</span>
+        <Badge variant="outline">600px</Badge>
+      </div>
+    </div>
+  );
+
+  const renderViewTab = () => (
+    <div className="flex items-center gap-4 p-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Zoom</span>
+        <Button variant="outline" size="sm">100%</Button>
+      </div>
+      <div className="h-6 w-px bg-gray-300" />
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-medium text-gray-700">Display</span>
+        <Button variant="outline" size="sm">
+          <Eye className="w-4 h-4 mr-2" />
+          Guidelines
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isCollapsed) {
+    return (
+      <div className="bg-white border-b border-gray-200 flex items-center justify-between px-6 py-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">Ribbon Hidden</Badge>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(false)}
+          className="text-gray-600"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border-b border-gray-200">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between px-6 py-1 border-b border-gray-100">
+          <TabsList className="bg-transparent gap-6">
+            <TabsTrigger value="file" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              File
+            </TabsTrigger>
+            <TabsTrigger value="insert" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              Insert
+            </TabsTrigger>
+            <TabsTrigger value="layout" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              Layout
+            </TabsTrigger>
+            <TabsTrigger value="design" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              Design
+            </TabsTrigger>
+            <TabsTrigger value="review" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              Review
+            </TabsTrigger>
+            <TabsTrigger value="view" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              View
+            </TabsTrigger>
+          </TabsList>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(true)}
+            className="text-gray-600"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </Button>
+        </div>
+
+        <div className="min-h-[80px]">
+          <TabsContent value="file" className="mt-0">
+            {renderFileTab()}
+          </TabsContent>
+
+          <TabsContent value="insert" className="mt-0">
+            <div className="h-80 overflow-hidden">
+              <EnhancedEmailBlockPalette
+                onBlockAdd={onBlockAdd}
+                onSnippetAdd={onSnippetAdd}
+                universalContent={universalContent}
+                onUniversalContentAdd={onUniversalContentAdd}
+                compactMode={true}
+                snippetRefreshTrigger={snippetRefreshTrigger}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="layout" className="mt-0">
+            {renderLayoutTab()}
+          </TabsContent>
+
+          <TabsContent value="design" className="mt-0">
+            <div className="h-80 overflow-hidden">
+              <GlobalStylesPanel
+                onStylesChange={onGlobalStylesChange}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="review" className="mt-0">
+            <div className="h-80 overflow-hidden">
+              <PerformanceBrandPanel
+                emailHTML={emailHTML}
+                subjectLine={subjectLine}
+                editor={editor}
+              />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="view" className="mt-0">
+            {renderViewTab()}
+          </TabsContent>
+        </div>
+      </Tabs>
+    </div>
+  );
+};
