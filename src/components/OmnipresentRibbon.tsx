@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
 import { 
   Type, 
   Image, 
@@ -18,14 +17,14 @@ import {
   Eye,
   Send,
   Monitor,
-  Tablet,
   Smartphone,
   Save,
   ChevronDown,
   ChevronUp,
   Settings,
   Lightbulb,
-  Edit3
+  Edit3,
+  Trash2
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -134,21 +133,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-  // Email-standard device configurations
-  const emailDeviceConfig = {
-    mobile: { icon: Smartphone, width: 375, label: 'Mobile Email' },
-    desktop: { icon: Monitor, width: 600, label: 'Desktop Email' }
-  };
-
-  // Email industry standard widths
-  const emailWidthPresets = [
-    { label: 'Mobile S', width: 320 },
-    { label: 'Mobile M', width: 375 },
-    { label: 'Mobile L', width: 414 },
-    { label: 'Email Standard', width: 600 },
-    { label: 'Email Wide', width: 640 }
-  ];
-
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
     e.dataTransfer.effectAllowed = 'copy';
@@ -167,12 +151,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     };
 
     onBlockAdd('columns', layoutConfig);
-  };
-
-  const deviceConfig = {
-    desktop: { icon: Monitor, width: 1200, label: 'Desktop' },
-    tablet: { icon: Tablet, width: 768, label: 'Tablet' },
-    mobile: { icon: Smartphone, width: 375, label: 'Mobile' }
   };
 
   const closeAllPanels = () => {
@@ -210,7 +188,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   const handleTitleSave = () => {
     setIsEditingTitle(false);
-    // Auto-save functionality can be added here
     console.log('Campaign title saved:', campaignTitle);
   };
 
@@ -222,13 +199,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     }
   };
 
-  const handleWidthPresetSelect = (width: number) => {
-    onWidthChange(width);
-    // Set device mode based on width
-    if (width <= 414) {
-      onDeviceChange('mobile');
-    } else {
-      onDeviceChange('desktop');
+  const handleDeleteCanvas = () => {
+    if (confirm('Are you sure you want to clear all content?')) {
+      console.log('Clearing canvas content');
     }
   };
 
@@ -252,7 +225,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   return (
     <div className="bg-white border-b border-gray-200 relative">
-      {/* AI Suggestions Bar - Always visible when showAISuggestions is true */}
       <EnhancedAISuggestionsWidget
         isOpen={showAISuggestions}
         onToggle={handleAISuggestionsToggle}
@@ -265,9 +237,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         }}
       />
 
-      {/* Top Bar */}
       <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
-        {/* Left Section - Editable Campaign Title */}
         <div className="flex items-center gap-4">
           {onBack && (
             <Button
@@ -307,73 +277,51 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
         
-        {/* Center Section - Email-Standard Device Controls and Width Presets */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            {Object.entries(emailDeviceConfig).map(([device, config]) => {
-              const IconComponent = config.icon;
-              const isActive = (device === 'mobile' && canvasWidth <= 414) || 
-                              (device === 'desktop' && canvasWidth > 414);
-              
-              return (
-                <Button
-                  key={device}
-                  variant={isActive ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => handleWidthPresetSelect(config.width)}
-                  className={`flex items-center gap-2 h-8 px-3 ${
-                    isActive ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                  }`}
-                >
-                  <IconComponent className="w-4 h-4" />
-                  <span className="text-xs">{config.label}</span>
-                </Button>
-              );
-            })}
+            <Button
+              variant={previewMode === 'desktop' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onPreviewModeChange?.('desktop')}
+              className={`flex items-center gap-2 h-8 px-3 ${
+                previewMode === 'desktop' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+              }`}
+            >
+              <Monitor className="w-4 h-4" />
+              <span className="text-xs">Desktop</span>
+            </Button>
+            <Button
+              variant={previewMode === 'mobile' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => onPreviewModeChange?.('mobile')}
+              className={`flex items-center gap-2 h-8 px-3 ${
+                previewMode === 'mobile' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+              }`}
+            >
+              <Smartphone className="w-4 h-4" />
+              <span className="text-xs">Mobile</span>
+            </Button>
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              {emailWidthPresets.map((preset) => (
-                <Button
-                  key={preset.width}
-                  variant={canvasWidth === preset.width ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleWidthPresetSelect(preset.width)}
-                  className="h-7 px-2 text-xs"
-                >
-                  {preset.width}px
-                </Button>
-              ))}
-            </div>
-            
-            <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-              <span className="text-xs text-gray-500 min-w-[60px]">{canvasWidth}px</span>
-              <Slider
-                value={[canvasWidth]}
-                onValueChange={(value) => onWidthChange(value[0])}
-                min={320}
-                max={640}
-                step={10}
-                className="w-24"
-              />
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteCanvas}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Canvas
+          </Button>
         </div>
         
-        {/* Right Section */}
         <div className="flex items-center gap-3">
           <Button onClick={onPreview} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-2" />
             Preview
           </Button>
-          <Button onClick={() => onSaveTemplate({})} variant="outline" size="sm">
+          <Button onClick={() => onSaveTemplate({})} className="bg-blue-600 hover:bg-blue-700" size="sm">
             <Save className="w-4 h-4 mr-2" />
             Save
-          </Button>
-          <Button onClick={onPublish} className="bg-blue-600 hover:bg-blue-700" size="sm">
-            <Send className="w-4 h-4 mr-2" />
-            Send Test Email
           </Button>
           <Button
             variant="ghost"
@@ -386,10 +334,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Ribbon Content */}
       <div className="px-3 py-2">
         <div className="flex items-center gap-3 overflow-x-auto">
-          {/* Blocks Section */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               {blockItems.map((block) => (
@@ -410,7 +356,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Layouts Section */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               {layoutOptions.map((layout) => (
@@ -429,7 +374,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Email Settings Section */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
@@ -445,7 +389,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Text & Headings Section */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
@@ -461,7 +404,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Buttons Section */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
@@ -477,7 +419,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Links Section */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
@@ -493,7 +434,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* AI Suggestions Section - Updated to show compact state */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
@@ -509,7 +449,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Configuration Cards - keep existing cards but remove the old AI suggestions widget */}
       <EmailSettingsCard
         isOpen={showEmailSettings}
         onToggle={handleEmailSettingsToggle}
@@ -528,7 +467,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         onStylesChange={onGlobalStylesChange}
       />
 
-      {/* Links Card placeholder */}
       {showLinks && (
         <div className="absolute top-full left-0 right-0 z-50 mt-2 mx-6 shadow-lg border border-gray-200 bg-white rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">

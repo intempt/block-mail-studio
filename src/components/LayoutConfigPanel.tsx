@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -173,7 +174,7 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
           className={`${padding} cursor-grab hover:bg-slate-50 border-2 hover:border-blue-200 transition-all duration-200 active:cursor-grabbing`}
           draggable
           onDragStart={(e) => handleLayoutDragStart(e, layout)}
-          onClick={()={() => handleLayoutClick(layout)}
+          onClick={() => handleLayoutClick(layout)}
         >
           <div className="space-y-2">
             <div className={`text-xs font-medium text-slate-700 ${compactMode ? 'text-xs' : 'text-sm'}`}>
