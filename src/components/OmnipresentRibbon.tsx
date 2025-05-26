@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -150,7 +151,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const renderLayoutPreview = (layout: LayoutOption) => (
-    <div className="flex gap-1 h-4 mb-1">
+    <div className="flex h-3 mb-1">
       {layout.preview.map((width, index) => (
         <div
           key={index}
@@ -288,125 +289,125 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       </div>
 
       {/* Ribbon Content */}
-      <div className="px-6 py-4">
-        <div className="flex items-center gap-8 overflow-x-auto">
+      <div className="px-3 py-2">
+        <div className="flex items-center gap-4 overflow-x-auto">
           {/* Blocks Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Blocks</div>
-            <div className="flex gap-2">
+            <div className="text-[10px] font-medium text-gray-600 mb-1">Blocks</div>
+            <div className="flex gap-1">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="outline"
                   size="sm"
-                  className="flex flex-col items-center p-2 h-16 w-16 cursor-grab active:cursor-grabbing"
+                  className="flex flex-col items-center p-1 h-12 w-12 cursor-grab active:cursor-grabbing"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                 >
                   {block.icon}
-                  <span className="text-xs mt-1">{block.name}</span>
+                  <span className="text-[10px]">{block.name}</span>
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Layouts Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Layouts</div>
-            <div className="flex gap-2">
+            <div className="text-[10px] font-medium text-gray-600 mb-1">Layouts</div>
+            <div className="flex gap-1">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="outline"
                   size="sm"
-                  className="flex flex-col items-center p-2 h-16 w-16 cursor-pointer"
+                  className="flex flex-col items-center p-1 h-12 w-12 cursor-pointer"
                   onClick={() => handleLayoutSelect(layout)}
                 >
                   {renderLayoutPreview(layout)}
-                  <span className="text-xs">{layout.name}</span>
+                  <span className="text-[10px]">{layout.name}</span>
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Email Settings Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Email Settings</div>
-            <div className="flex gap-2">
+            <div className="text-[10px] font-medium text-gray-600 mb-1">Email Settings</div>
+            <div className="flex gap-1">
               <Button
                 variant={showEmailSettings ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2"
                 onClick={handleEmailSettingsToggle}
               >
                 <div className="flex flex-col items-center">
                   <Settings className="w-4 h-4" />
-                  <span className="text-xs mt-1">Settings</span>
+                  <span className="text-[10px]">Settings</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Text & Headings Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Text & Headings</div>
-            <div className="flex gap-2">
+            <div className="text-[10px] font-medium text-gray-600 mb-1">Text & Headings</div>
+            <div className="flex gap-1">
               <Button
                 variant={showTextHeadings ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2"
                 onClick={handleTextHeadingsToggle}
               >
                 <div className="flex flex-col items-center">
                   <Type className="w-4 h-4" />
-                  <span className="text-xs mt-1">Configure</span>
+                  <span className="text-[10px]">Configure</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* Buttons & Links Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Buttons & Links</div>
-            <div className="flex gap-2">
+            <div className="text-[10px] font-medium text-gray-600 mb-1">Buttons & Links</div>
+            <div className="flex gap-1">
               <Button
                 variant={showButtonsLinks ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2"
                 onClick={handleButtonsLinksToggle}
               >
                 <div className="flex flex-col items-center">
                   <MousePointer className="w-4 h-4" />
-                  <span className="text-xs mt-1">Configure</span>
+                  <span className="text-[10px]">Configure</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-12" />
 
           {/* AI Suggestions Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">AI Suggestions</div>
-            <div className="flex gap-2">
+            <div className="text-[10px] font-medium text-gray-600 mb-1">AI Suggestions</div>
+            <div className="flex gap-1">
               <Button
                 variant={showAISuggestions ? 'default' : 'outline'}
                 size="sm"
-                className="h-16 px-3"
+                className="h-12 px-2"
                 onClick={handleAISuggestionsToggle}
               >
                 <div className="flex flex-col items-center">
                   <Lightbulb className="w-4 h-4" />
-                  <span className="text-xs mt-1">Suggestions</span>
+                  <span className="text-[10px]">Suggestions</span>
                 </div>
               </Button>
             </div>
