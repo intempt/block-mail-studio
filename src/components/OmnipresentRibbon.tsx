@@ -23,12 +23,10 @@ import {
   ChevronDown,
   ChevronUp,
   Settings,
-  Palette,
   Lightbulb
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-import { GlobalStylesCard } from './GlobalStylesCard';
 import { ButtonsLinksCard } from './ButtonsLinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
 import { TextHeadingsCard } from './TextHeadingsCard';
@@ -46,29 +44,6 @@ interface LayoutOption {
   columns: number;
   ratio: string;
   preview: string[];
-}
-
-interface OmnipresentRibbonProps {
-  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
-  onSnippetAdd?: (snippet: EmailSnippet) => void;
-  universalContent: UniversalContent[];
-  onUniversalContentAdd: (content: UniversalContent) => void;
-  onGlobalStylesChange: (styles: any) => void;
-  emailHTML: string;
-  subjectLine: string;
-  editor?: any;
-  snippetRefreshTrigger?: number;
-  onTemplateLibraryOpen?: () => void;
-  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
-  previewMode?: 'desktop' | 'mobile';
-  onBack?: () => void;
-  canvasWidth: number;
-  deviceMode: 'desktop' | 'tablet' | 'mobile' | 'custom';
-  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => void;
-  onWidthChange: (width: number) => void;
-  onPreview: () => void;
-  onSaveTemplate: (template: any) => void;
-  onPublish: () => void;
 }
 
 const blockItems: BlockItem[] = [
@@ -97,6 +72,29 @@ const layoutOptions: LayoutOption[] = [
   { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
 ];
 
+interface OmnipresentRibbonProps {
+  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
+  universalContent: UniversalContent[];
+  onUniversalContentAdd: (content: UniversalContent) => void;
+  onGlobalStylesChange: (styles: any) => void;
+  emailHTML: string;
+  subjectLine: string;
+  editor?: any;
+  snippetRefreshTrigger?: number;
+  onTemplateLibraryOpen?: () => void;
+  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
+  previewMode?: 'desktop' | 'mobile';
+  onBack?: () => void;
+  canvasWidth: number;
+  deviceMode: 'desktop' | 'tablet' | 'mobile' | 'custom';
+  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => void;
+  onWidthChange: (width: number) => void;
+  onPreview: () => void;
+  onSaveTemplate: (template: any) => void;
+  onPublish: () => void;
+}
+
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onBlockAdd,
   onSnippetAdd,
@@ -120,7 +118,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPublish
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showGlobalStyles, setShowGlobalStyles] = useState(false);
   const [showButtonsLinks, setShowButtonsLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
@@ -165,16 +162,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   );
 
   const closeAllPanels = () => {
-    setShowGlobalStyles(false);
     setShowButtonsLinks(false);
     setShowEmailSettings(false);
     setShowTextHeadings(false);
     setShowAISuggestions(false);
-  };
-
-  const handleGlobalStylesToggle = () => {
-    if (!showGlobalStyles) closeAllPanels();
-    setShowGlobalStyles(!showGlobalStyles);
   };
 
   const handleButtonsLinksToggle = () => {
@@ -343,26 +334,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-16" />
 
-          {/* Global Styles Section */}
-          <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Global Styles</div>
-            <div className="flex gap-2">
-              <Button
-                variant={showGlobalStyles ? 'default' : 'outline'}
-                size="sm"
-                className="h-16 px-3"
-                onClick={handleGlobalStylesToggle}
-              >
-                <div className="flex flex-col items-center">
-                  <Palette className="w-4 h-4" />
-                  <span className="text-xs mt-1">Styles</span>
-                </div>
-              </Button>
-            </div>
-          </div>
-
-          <Separator orientation="vertical" className="h-16" />
-
           {/* Email Settings Section */}
           <div className="flex-shrink-0">
             <div className="text-xs font-medium text-gray-600 mb-2">Email Settings</div>
@@ -418,32 +389,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   <span className="text-xs mt-1">Configure</span>
                 </div>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-16 px-3"
-                onClick={() => {
-                  if (editor) {
-                    editor.commands.insertContent('<a href="#">Link text</a>');
-                  }
-                }}
-              >
-                <div className="flex flex-col items-center">
-                  <Link className="w-4 h-4" />
-                  <span className="text-xs mt-1">Link</span>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-16 px-3"
-                onClick={() => onBlockAdd('button')}
-              >
-                <div className="flex flex-col items-center">
-                  <MousePointer className="w-4 h-4" />
-                  <span className="text-xs mt-1">Button</span>
-                </div>
-              </Button>
             </div>
           </div>
 
@@ -470,13 +415,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       </div>
 
       {/* Configuration Cards */}
-      <GlobalStylesCard
-        isOpen={showGlobalStyles}
-        onToggle={handleGlobalStylesToggle}
-        onStylesChange={onGlobalStylesChange}
-        onOpenAdvanced={() => {}}
-      />
-
       <EmailSettingsCard
         isOpen={showEmailSettings}
         onToggle={handleEmailSettingsToggle}
