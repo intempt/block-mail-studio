@@ -44,6 +44,19 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
     }
   };
 
+  const getDynamicTitle = () => {
+    switch (activeTab) {
+      case 'journeys':
+        return 'Describe your Journey';
+      case 'messages':
+        return 'Describe your Message';
+      case 'snippets':
+        return 'Describe your Snippet';
+      default:
+        return 'Describe your Journey';
+    }
+  };
+
   const handleCreateMessage = () => {
     console.log('=== WorkspacePage: Create Message button clicked ===');
     console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
@@ -115,9 +128,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           </div>
         </div>
 
-        {/* Universal Chat Interface */}
+        {/* Universal Chat Interface with Dynamic Title */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+              {getDynamicTitle()}
+            </h2>
             <UniversalConversationalInterface 
               context={activeTab as 'journeys' | 'messages' | 'snippets'}
               onEmailBuilderOpen={onEmailBuilderOpen}
