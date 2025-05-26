@@ -27,6 +27,7 @@ import {
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { GlobalStylesCard } from './GlobalStylesCard';
+import { ButtonsLinksCard } from './ButtonsLinksCard';
 
 interface BlockItem {
   id: string;
@@ -132,6 +133,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showGlobalStyles, setShowGlobalStyles] = useState(false);
+  const [showButtonsLinks, setShowButtonsLinks] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
@@ -185,6 +187,18 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   const handleGlobalStylesToggle = () => {
     setShowGlobalStyles(!showGlobalStyles);
+    // Close other panels when opening this one
+    if (!showGlobalStyles) {
+      setShowButtonsLinks(false);
+    }
+  };
+
+  const handleButtonsLinksToggle = () => {
+    setShowButtonsLinks(!showButtonsLinks);
+    // Close other panels when opening this one
+    if (!showButtonsLinks) {
+      setShowGlobalStyles(false);
+    }
   };
 
   const handleOpenAdvancedStyles = () => {
@@ -375,10 +389,21 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-16" />
 
-          {/* Links & Buttons Section */}
+          {/* Buttons & Links Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Links & Buttons</div>
+            <div className="text-xs font-medium text-gray-600 mb-2">Buttons & Links</div>
             <div className="flex gap-2">
+              <Button
+                variant={showButtonsLinks ? 'default' : 'outline'}
+                size="sm"
+                className="h-16 px-3"
+                onClick={handleButtonsLinksToggle}
+              >
+                <div className="flex flex-col items-center">
+                  <MousePointer className="w-4 h-4" />
+                  <span className="text-xs mt-1">Configure</span>
+                </div>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -430,12 +455,18 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Global Styles Card */}
+      {/* Configuration Cards */}
       <GlobalStylesCard
         isOpen={showGlobalStyles}
         onToggle={handleGlobalStylesToggle}
         onStylesChange={onGlobalStylesChange}
         onOpenAdvanced={handleOpenAdvancedStyles}
+      />
+
+      <ButtonsLinksCard
+        isOpen={showButtonsLinks}
+        onToggle={handleButtonsLinksToggle}
+        onStylesChange={onGlobalStylesChange}
       />
     </div>
   );
