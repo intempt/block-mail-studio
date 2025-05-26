@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -22,15 +23,13 @@ import {
 } from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
+import { OmnipresentRibbon } from './OmnipresentRibbon';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
-
-// Direct imports without lazy loading
-import { OmnipresentRibbon } from './OmnipresentRibbon';
-import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 
 interface Block {
   id: string;
@@ -122,23 +121,18 @@ export default function EmailEditor({
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
-  // Initialize editor
   useEffect(() => {
-    const initializeEditor = async () => {
-      if (editor && editor.getHTML() !== content) {
-        console.log('EmailEditor: Updating editor content from prop');
-        editor.commands.setContent(content);
-      }
-
-      console.log('EmailEditor: Loading templates');
-      
-      const { DirectTemplateService } = await import('@/services/directTemplateService');
-      const initialTemplates = DirectTemplateService.getAllTemplates();
-      setTemplates(initialTemplates);
-    };
-
-    initializeEditor();
+    if (editor && editor.getHTML() !== content) {
+      console.log('EmailEditor: Updating editor content from prop');
+      editor.commands.setContent(content);
+    }
   }, [editor, content]);
+
+  useEffect(() => {
+    console.log('EmailEditor: Loading templates');
+    const initialTemplates = DirectTemplateService.getAllTemplates();
+    setTemplates(initialTemplates);
+  }, []);
 
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
@@ -167,9 +161,11 @@ export default function EmailEditor({
       return;
     }
 
+    // Handle layout blocks specifically
     if (blockType === 'columns' && layoutConfig) {
       console.log('EmailEditor: Processing layout configuration:', layoutConfig);
       
+      // Create the layout block data structure
       const columnCount = layoutConfig.columnCount || layoutConfig.columns || 2;
       const columnRatio = layoutConfig.columnRatio || layoutConfig.ratio || '50-50';
       const columnElements = layoutConfig.columnElements || [];
@@ -202,6 +198,7 @@ export default function EmailEditor({
 
       console.log('EmailEditor: Created layout block:', newLayoutBlock);
       
+      // Add the block directly to the canvas
       if (canvasRef.current) {
         canvasRef.current.addBlock(newLayoutBlock);
       }
@@ -209,6 +206,7 @@ export default function EmailEditor({
       return;
     }
 
+    // Handle regular blocks
     const newBlock: Block = {
       id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: blockType,
@@ -244,18 +242,14 @@ export default function EmailEditor({
   };
 
   const handlePublish = async () => {
-    try {
-      const existingTemplateNames = templates.map(t => t.name);
-      const newTemplate = DirectTemplateService.savePublishedTemplate(
-        content,
-        subject,
-        existingTemplateNames
-      );
-      setTemplates(prev => [...prev, newTemplate]);
-      setShowTemplateLibrary(false);
-    } catch (error) {
-      console.error('Failed to publish template:', error);
-    }
+    const existingTemplateNames = templates.map(t => t.name);
+    const newTemplate = DirectTemplateService.savePublishedTemplate(
+      content,
+      subject,
+      existingTemplateNames
+    );
+    setTemplates(prev => [...prev, newTemplate]);
+    setShowTemplateLibrary(false);
   };
 
   const handleTemplateLoad = (template: EmailTemplate) => {
@@ -264,13 +258,9 @@ export default function EmailEditor({
   };
 
   const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    try {
-      const newTemplate = DirectTemplateService.saveTemplate(template);
-      setTemplates(prev => [...prev, newTemplate]);
-      setShowTemplateLibrary(false);
-    } catch (error) {
-      console.error('Failed to save template:', error);
-    }
+    const newTemplate = DirectTemplateService.saveTemplate(template);
+    setTemplates(prev => [...prev, newTemplate]);
+    setShowTemplateLibrary(false);
   };
 
   const handleSnippetAdd = (snippet: EmailSnippet) => {

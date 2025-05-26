@@ -6,8 +6,6 @@ import { CanvasStatus } from './canvas/CanvasStatus';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
-import { mjmlService } from '@/services/MJMLService';
-import { createMJMLTemplate, compileMJMLToHTML } from '@/utils/emailUtils';
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -44,14 +42,17 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [currentEmailHTML, setCurrentEmailHTML] = useState('');
 
+  // Helper function to strip HTML tags for text comparison
   const stripHTML = (html: string): string => {
     return html.replace(/<[^>]*>/g, '').trim();
   };
 
+  // Helper function to normalize text for comparison
   const normalizeText = (text: string): string => {
     return text.toLowerCase().replace(/\s+/g, ' ').trim();
   };
 
+  // Enhanced findAndReplaceText with better HTML handling
   const findAndReplaceText = useCallback((current: string, replacement: string) => {
     console.log('FindAndReplaceText: Searching for:', current);
     console.log('FindAndReplaceText: Replacing with:', replacement);
@@ -66,20 +67,25 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         
         console.log('FindAndReplaceText: Checking block text:', blockTextContent);
         
+        // Check if the current text exists in this block (fuzzy match)
         if (blockTextNormalized.includes(currentNormalized)) {
           console.log('FindAndReplaceText: Found match in text block');
           
+          // Create new HTML with replacement
           let newHTML = block.content.html || '';
           
+          // Try exact replacement first
           if (newHTML.includes(current)) {
             newHTML = newHTML.replace(current, replacement);
             replacementsMade++;
           } else {
+            // Try replacing just the text content while preserving some HTML structure
             const strippedCurrent = stripHTML(current);
             if (newHTML.includes(strippedCurrent)) {
               newHTML = newHTML.replace(strippedCurrent, replacement);
               replacementsMade++;
             } else {
+              // Fallback: replace the entire content if it's similar enough
               const similarity = blockTextNormalized.length > 0 ? 
                 currentNormalized.length / blockTextNormalized.length : 0;
               
@@ -120,6 +126,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           };
         }
       } else if (block.type === 'columns') {
+        // Handle columns recursively
         const updatedColumns = block.content.columns.map(column => ({
           ...column,
           blocks: column.blocks.map(columnBlock => {
@@ -209,7 +216,19 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       console.log('Images optimized for better performance');
     },
     minifyHTML: () => {
-      console.log('MJML content optimized');
+      setBlocks(prev => prev.map(block => {
+        if (block.type === 'text') {
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              html: block.content.html.replace(/\s+/g, ' ').trim()
+            }
+          };
+        }
+        return block;
+      }));
+      console.log('HTML content minified');
     },
     checkLinks: () => {
       let totalLinks = 0;
@@ -269,49 +288,86 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setBlocks(initialBlocks);
   }, []);
 
-  const renderBlockToMJML = useCallback((block: EmailBlock): string => {
-    try {
-      return mjmlService.renderBlockToMJML(block);
-    } catch (error) {
-      console.error('Error rendering block to MJML:', error);
-      return `<!-- Error rendering block: ${block.type} -->`;
+  const renderBlockToHTML = useCallback((block: EmailBlock): string => {
+    switch (block.type) {
+      case 'text':
+        return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
+      case 'button':
+        return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.link || '#'}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">${block.content.text || 'Button'}</a></div>`;
+      case 'image':
+        return `<div style="text-align: center; margin: 20px 0;"><img src="${block.content.src || ''}" alt="${block.content.alt || ''}" style="max-width: 100%; height: auto;" /></div>`;
+      case 'spacer':
+        return `<div style="height: ${block.content.height || '20px'};"></div>`;
+      case 'divider':
+        return `<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />`;
+      case 'columns':
+        return renderColumnsToHTML(block as ColumnsBlock);
+      default:
+        return '';
     }
   }, []);
 
-  const renderColumnsToMJML = useCallback((block: ColumnsBlock): string => {
-    try {
-      return mjmlService.renderColumnsToMJML(block);
-    } catch (error) {
-      console.error('Error rendering columns to MJML:', error);
-      return `<!-- Error rendering columns block -->`;
-    }
-  }, []);
+  const renderColumnsToHTML = useCallback((block: ColumnsBlock): string => {
+    const getColumnWidths = (ratio: string) => {
+      const ratioMap: Record<string, string[]> = {
+        '100': ['100%'],
+        '50-50': ['50%', '50%'],
+        '33-67': ['33%', '67%'],
+        '67-33': ['67%', '33%'],
+        '25-75': ['25%', '75%'],
+        '75-25': ['75%', '25%'],
+        '33-33-33': ['33.33%', '33.33%', '33.33%'],
+        '25-50-25': ['25%', '50%', '25%'],
+        '25-25-50': ['25%', '25%', '50%'],
+        '50-25-25': ['50%', '25%', '25%'],
+        '25-25-25-25': ['25%', '25%', '25%', '25%']
+      };
+      return ratioMap[ratio] || ['100%'];
+    };
+
+    const columnWidths = getColumnWidths(block.content.columnRatio);
+    
+    const columnsHTML = block.content.columns.map((column, index) => {
+      const columnBlocks = column.blocks.map(renderBlockToHTML).join('');
+      return `
+        <td style="width: ${columnWidths[index]}; vertical-align: top; padding: 0 8px;">
+          ${columnBlocks}
+        </td>
+      `;
+    }).join('');
+
+    return `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
+        <tr>
+          ${columnsHTML}
+        </tr>
+      </table>
+    `;
+  }, [renderBlockToHTML]);
 
   useEffect(() => {
     const generateHTML = () => {
-      try {
-        if (blocks.length === 0) {
-          const emptyHTML = '';
-          onContentChange(emptyHTML);
-          setCurrentEmailHTML(emptyHTML);
-          return;
-        }
-
-        const mjmlBlocks = blocks.map(renderBlockToMJML).join('');
-        const mjmlTemplate = createMJMLTemplate(mjmlBlocks, subject);
-        const compiledHTML = compileMJMLToHTML(mjmlTemplate);
-
-        onContentChange(compiledHTML);
-        setCurrentEmailHTML(compiledHTML);
-      } catch (error) {
-        console.error('Error generating HTML:', error);
-        onContentChange('<p>Error generating email content</p>');
-        setCurrentEmailHTML('<p>Error generating email content</p>');
+      if (blocks.length === 0) {
+        const emptyHTML = '';
+        onContentChange(emptyHTML);
+        setCurrentEmailHTML(emptyHTML);
+        return;
       }
+
+      const blockElements = blocks.map(renderBlockToHTML).join('');
+
+      const fullHTML = `
+        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
+          ${blockElements}
+        </div>
+      `;
+
+      onContentChange(fullHTML);
+      setCurrentEmailHTML(fullHTML);
     };
 
     generateHTML();
-  }, [blocks, onContentChange, renderBlockToMJML, subject]);
+  }, [blocks, onContentChange, renderBlockToHTML]);
 
   const handleBlockClick = useCallback((blockId: string) => {
     setSelectedBlockId(blockId);
@@ -457,6 +513,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         onDragOver={dragDropHandler.handleCanvasDragOver}
         onDragLeave={dragDropHandler.handleCanvasDragLeave}
       >
+        {/* Subject Line Section */}
         <div className="border-b border-gray-100 bg-white">
           <CanvasSubjectLine
             value={subject}
@@ -465,6 +522,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           />
         </div>
 
+        {/* Email Content */}
         <div className="p-6">
           <CanvasRenderer
             blocks={blocks}
