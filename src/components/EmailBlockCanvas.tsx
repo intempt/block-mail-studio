@@ -5,7 +5,7 @@ import { DirectSnippetService } from '@/services/directSnippetService';
 import { useDragDropHandler } from './canvas/DragDropHandler';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { CanvasStatus } from './canvas/CanvasStatus';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import './EmailBlockCanvas.css';
 
 export interface EmailBlockCanvasRef {
@@ -193,10 +193,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       if (block) {
         const snippet = DirectSnippetService.createSnippetFromBlock(block);
         
-        toast({
-          title: "Snippet Saved",
-          description: `"${snippet.name}" has been saved to your snippets.`,
-        });
+        toast.success(`"${snippet.name}" has been saved to your snippets.`);
 
         onSnippetSaved?.();
       }
