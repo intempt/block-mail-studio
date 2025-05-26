@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -21,10 +20,13 @@ import {
   Smartphone,
   Save,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Settings,
+  Palette
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
+import { GlobalStylesCard } from './GlobalStylesCard';
 
 interface BlockItem {
   id: string;
@@ -129,6 +131,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPublish
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showGlobalStyles, setShowGlobalStyles] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
@@ -180,6 +183,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     </div>
   );
 
+  const handleGlobalStylesToggle = () => {
+    setShowGlobalStyles(!showGlobalStyles);
+  };
+
+  const handleOpenAdvancedStyles = () => {
+    // This would open the full GlobalStylesPanel in a sidebar
+    console.log('Opening advanced global styles panel');
+  };
+
   if (isCollapsed) {
     return (
       <div className="bg-white border-b border-gray-200 flex items-center justify-between px-6 py-2">
@@ -199,7 +211,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   }
 
   return (
-    <div className="bg-white border-b border-gray-200">
+    <div className="bg-white border-b border-gray-200 relative">
       {/* Top Bar */}
       <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
         {/* Left Section */}
@@ -395,8 +407,36 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               </Button>
             </div>
           </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* Global Styles Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Global Styles</div>
+            <div className="flex gap-2">
+              <Button
+                variant={showGlobalStyles ? 'default' : 'outline'}
+                size="sm"
+                className="h-16 px-3"
+                onClick={handleGlobalStylesToggle}
+              >
+                <div className="flex flex-col items-center">
+                  <Palette className="w-4 h-4" />
+                  <span className="text-xs mt-1">Styles</span>
+                </div>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Global Styles Card */}
+      <GlobalStylesCard
+        isOpen={showGlobalStyles}
+        onToggle={handleGlobalStylesToggle}
+        onStylesChange={onGlobalStylesChange}
+        onOpenAdvanced={handleOpenAdvancedStyles}
+      />
     </div>
   );
 };
