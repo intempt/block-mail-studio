@@ -1,13 +1,11 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
-import { StreamingMessage } from './StreamingMessage';
 import { ThinkingIndicator } from './ThinkingIndicator';
 import { ChatCompletionService } from '@/services/chatCompletionService';
-import { StreamingChatService } from '@/services/streamingChatService';
+import { StreamingMessage } from './StreamingMessage';
 import { MarkdownFormatter } from './MarkdownFormatter';
 
 interface Message {
@@ -112,79 +110,33 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
     setMessages(prev => [...prev, userMessage]);
     setIsThinking(true);
+    setIsLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const response = await ChatCompletionService.processUserMessage(sessionId, message, mode);
+      
       setIsThinking(false);
-      setIsLoading(true);
-
-      const streamingMessageId = (Date.now() + 1).toString();
-      const streamingMessage: Message = {
-        id: streamingMessageId,
+      
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: '',
+        content: response.content,
         timestamp: new Date(),
-        isStreaming: true
+        emailData: response.emailData
       };
 
-      setMessages(prev => [...prev, streamingMessage]);
-      
-      const streamGenerator = StreamingChatService.streamResponse(message);
-      
-      for await (const chunk of streamGenerator) {
-        if (chunk.error) {
-          setMessages(prev => prev.map(msg => 
-            msg.id === streamingMessageId 
-              ? { ...msg, content: 'I had trouble processing that. Please try again.', isStreaming: false }
-              : msg
-          ));
-          break;
-        }
+      setMessages(prev => [...prev, aiResponse]);
 
-        setMessages(prev => prev.map(msg => 
-          msg.id === streamingMessageId 
-            ? { ...msg, content: chunk.content, isStreaming: !chunk.isComplete }
-            : msg
-        ));
-
-        if (chunk.isComplete) {
-          try {
-            const response = await ChatCompletionService.processUserMessage(sessionId, message, mode);
-            
-            setMessages(prev => prev.map(msg => 
-              msg.id === streamingMessageId 
-                ? { 
-                    ...msg, 
-                    content: response.content, 
-                    isStreaming: false, 
-                    emailData: response.emailData 
-                  }
-                : msg
-            ));
-
-            if (response.campaignContext) {
-              setCampaignContext(response.campaignContext);
-            }
-
-            // Clean up chip labels - remove dashes and format properly
-            const cleanedChips: ConversationalChip[] = response.suggestedChips.map((chip, index) => ({
-              id: `chip-${Date.now()}-${index}`,
-              label: chip.replace(/^-\s*/, '').trim(), // Remove leading dashes
-              type: 'contextual' as const
-            }));
-            setChips(cleanedChips);
-
-          } catch (error) {
-            console.error('Error getting actual response:', error);
-            setMessages(prev => prev.map(msg => 
-              msg.id === streamingMessageId 
-                ? { ...msg, content: chunk.content, isStreaming: false }
-                : msg
-            ));
-          }
-          break;
-        }
+      if (response.campaignContext) {
+        setCampaignContext(response.campaignContext);
       }
+
+      const cleanedChips: ConversationalChip[] = response.suggestedChips.map((chip, index) => ({
+        id: `chip-${Date.now()}-${index}`,
+        label: chip.replace(/^-\s*/, '').trim(),
+        type: 'contextual' as const
+      }));
+      setChips(cleanedChips);
 
     } catch (error) {
       console.error('Error processing message:', error);
@@ -208,7 +160,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
   const handleLoadIntoEditor = (emailData: any) => {
     console.log('UniversalConversationalInterface: Loading email into editor:', emailData);
-    console.log('UniversalConversationalInterface: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
+    console.log('UniversalConversationalInterface: onEmailBuilderOpen callback:', !!onEmailBuilderOpen);
     
     if (onEmailBuilderOpen && emailData) {
       const emailHTML = emailData.html || emailData.emailHTML || '';
@@ -264,19 +216,10 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
                 ? 'bg-gray-100 text-gray-700'
                 : 'bg-gray-50 border border-gray-200 text-gray-900'
             }`}>
-              {message.isStreaming ? (
-                <StreamingMessage 
-                  content={message.content}
-                  isComplete={false}
-                  isStreaming={true}
-                  className={`text-left ${message.type === 'user' ? 'text-white' : 'text-gray-900'}`}
-                />
-              ) : (
-                <MarkdownFormatter 
-                  content={message.content} 
-                  className={`text-left ${message.type === 'user' ? 'text-white' : 'text-gray-900'}`} 
-                />
-              )}
+              <MarkdownFormatter 
+                content={message.content} 
+                className={`text-left ${message.type === 'user' ? 'text-white' : 'text-gray-900'}`} 
+              />
               
               <div className="flex items-center justify-between mt-2">
                 <p className="text-xs opacity-70">

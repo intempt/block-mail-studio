@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,34 +25,18 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
     switch (activeTab) {
       case 'journeys':
         return {
-          title: 'Journeys',
-          description: 'Create and manage automated customer workflows',
-          chatTitle: 'What kind of journey would you like to create?',
-          chatDescription: 'Describe your customer workflow and let AI help you build it',
           breadcrumbText: 'Journeys'
         };
       case 'messages':
         return {
-          title: 'Messages',
-          description: 'Create and manage your email, SMS, and push campaigns',
-          chatTitle: 'What kind of message is next?',
-          chatDescription: 'Describe your email, SMS or push task and let AI help you build it',
           breadcrumbText: 'Messages'
         };
       case 'snippets':
         return {
-          title: 'Snippets',
-          description: 'Create and manage reusable content blocks',
-          chatTitle: 'What content snippet do you need?',
-          chatDescription: 'Describe your content needs and let AI help you create it',
           breadcrumbText: 'Snippets'
         };
       default:
         return {
-          title: 'Journeys',
-          description: 'Create and manage automated customer workflows',
-          chatTitle: 'What kind of journey would you like to create?',
-          chatDescription: 'Describe your customer workflow and let AI help you build it',
           breadcrumbText: 'Journeys'
         };
     }
@@ -82,20 +67,9 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Page Header - NO CREATE BUTTON */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
-          <p className="text-gray-600">{config.description}</p>
-        </div>
-
-        {/* PROMPT-FIRST: Universal Chat Interface at the top */}
+        {/* Universal Chat Interface */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="p-6">
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">{config.chatTitle}</h2>
-              <p className="text-gray-600">{config.chatDescription}</p>
-            </div>
-            
             <UniversalConversationalInterface 
               context={activeTab as 'journeys' | 'messages' | 'snippets'}
               onEmailBuilderOpen={onEmailBuilderOpen}
@@ -127,8 +101,8 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           </TabsList>
 
           <TabsContent value="journeys" className="space-y-6 mt-6">
-            {/* Search Bar */}
-            <div className="flex items-center gap-4">
+            {/* Search Bar - no filter */}
+            <div className="flex items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -136,7 +110,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
                   className="pl-10"
                 />
               </div>
-              <Button variant="outline">Filter</Button>
             </div>
             
             <JourneysTab />
@@ -154,8 +127,8 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-6 mt-6">
-            {/* Search Bar */}
-            <div className="flex items-center gap-4">
+            {/* Search Bar - no filter */}
+            <div className="flex items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -163,12 +136,10 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
                   className="pl-10"
                 />
               </div>
-              <Button variant="outline">Filter</Button>
             </div>
             
             <div className="bg-white rounded-lg border border-gray-200">
               <div className="p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Messages</h3>
                 <MessagesTable onEmailBuilderOpen={onEmailBuilderOpen} />
               </div>
             </div>
@@ -186,8 +157,8 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           </TabsContent>
 
           <TabsContent value="snippets" className="space-y-6 mt-6">
-            {/* Search Bar */}
-            <div className="flex items-center gap-4">
+            {/* Search Bar - no filter */}
+            <div className="flex items-center">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -195,7 +166,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
                   className="pl-10"
                 />
               </div>
-              <Button variant="outline">Filter</Button>
             </div>
             
             <SnippetsTab />
