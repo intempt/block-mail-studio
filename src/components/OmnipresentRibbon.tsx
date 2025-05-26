@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -23,7 +22,8 @@ import {
   ChevronDown,
   ChevronUp,
   Settings,
-  Palette
+  Palette,
+  Lightbulb
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -31,6 +31,7 @@ import { GlobalStylesCard } from './GlobalStylesCard';
 import { ButtonsLinksCard } from './ButtonsLinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
 import { TextHeadingsCard } from './TextHeadingsCard';
+import { AISuggestionsCard } from './AISuggestionsCard';
 
 interface BlockItem {
   id: string;
@@ -122,6 +123,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [showButtonsLinks, setShowButtonsLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
@@ -166,6 +168,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     setShowButtonsLinks(false);
     setShowEmailSettings(false);
     setShowTextHeadings(false);
+    setShowAISuggestions(false);
   };
 
   const handleGlobalStylesToggle = () => {
@@ -186,6 +189,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const handleTextHeadingsToggle = () => {
     if (!showTextHeadings) closeAllPanels();
     setShowTextHeadings(!showTextHeadings);
+  };
+
+  const handleAISuggestionsToggle = () => {
+    if (!showAISuggestions) closeAllPanels();
+    setShowAISuggestions(!showAISuggestions);
   };
 
   if (isCollapsed) {
@@ -429,6 +437,26 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               </Button>
             </div>
           </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* AI Suggestions Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">AI Suggestions</div>
+            <div className="flex gap-2">
+              <Button
+                variant={showAISuggestions ? 'default' : 'outline'}
+                size="sm"
+                className="h-16 px-3"
+                onClick={handleAISuggestionsToggle}
+              >
+                <div className="flex flex-col items-center">
+                  <Lightbulb className="w-4 h-4" />
+                  <span className="text-xs mt-1">Suggestions</span>
+                </div>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -456,6 +484,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         isOpen={showButtonsLinks}
         onToggle={handleButtonsLinksToggle}
         onStylesChange={onGlobalStylesChange}
+      />
+
+      <AISuggestionsCard
+        isOpen={showAISuggestions}
+        onToggle={handleAISuggestionsToggle}
+        emailHTML={emailHTML}
+        subjectLine={subjectLine}
+        onApplySuggestion={(suggestion) => {
+          console.log('Applying suggestion:', suggestion);
+        }}
       />
     </div>
   );

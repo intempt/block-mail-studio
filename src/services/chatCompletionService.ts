@@ -1,4 +1,3 @@
-
 import { OpenAIEmailService } from './openAIEmailService';
 
 interface ConversationMessage {
@@ -280,58 +279,50 @@ Important: Phrase chips as natural user responses without emojis. Examples:
     userMessage: string, 
     context: ChatContext
   ): Promise<ChatCompletionResponse> {
-    if (context.area !== 'messages') {
-      return {
-        content: `Do mode is coming soon for ${context.area}. Use Ask mode for expert guidance and strategic advice.`,
-        intent: 'exploration',
-        suggestedChips: this.getDefaultChips(context.area, 'ask'),
-        shouldGenerateEmail: false
-      };
-    }
+    if (context.area === 'messages') {
+      // Enhanced logic to determine when to generate email
+      const shouldGenerate = this.shouldGenerateEmailNow(userMessage, context);
 
-    // Enhanced logic to determine when to generate email
-    const shouldGenerate = this.shouldGenerateEmailNow(userMessage, context);
+      if (shouldGenerate && context.campaign?.type === 'email') {
+        try {
+          const campaignPrompt = this.buildCampaignPrompt(context.campaign, userMessage);
+          
+          const emailData = await OpenAIEmailService.generateEmailContent({
+            prompt: campaignPrompt,
+            emailType: context.campaign.purpose || 'promotional',
+            tone: 'professional'
+          });
 
-    if (shouldGenerate && context.campaign?.type === 'email') {
-      try {
-        const campaignPrompt = this.buildCampaignPrompt(context.campaign, userMessage);
-        
-        const emailData = await OpenAIEmailService.generateEmailContent({
-          prompt: campaignPrompt,
-          emailType: context.campaign.purpose || 'promotional',
-          tone: 'professional'
-        });
+          // Ensure proper structure for email data with correct email-block classes
+          const formattedEmailData = {
+            subject: emailData.subject || 'Your Campaign Email',
+            html: this.wrapEmailWithBlocks(emailData.html || ''),
+            previewText: emailData.previewText || 'Email preview text'
+          };
 
-        // Ensure proper structure for email data with correct email-block classes
-        const formattedEmailData = {
-          subject: emailData.subject || 'Your Campaign Email',
-          html: this.wrapEmailWithBlocks(emailData.html || ''),
-          previewText: emailData.previewText || 'Email preview text'
-        };
-
-        return {
-          content: `**Perfect! I've created your ${context.campaign.purpose || 'email'} campaign.**
+          return {
+            content: `**Perfect! I've created your ${context.campaign.purpose || 'email'} campaign.**
 
 The email is ready for you to review and customize in the editor. Click the lightning bolt below to load it.`,
-          intent: 'action',
-          suggestedChips: ['Load it in the editor', 'Let me refine the copy', 'Change the tone to be more casual', 'Add more sections to this email'],
-          shouldGenerateEmail: true,
-          emailData: formattedEmailData,
-          campaignContext: context.campaign
-        };
-      } catch (error) {
-        console.error('Email generation failed:', error);
-        return {
-          content: 'I had trouble generating the email. Let me help you refine the campaign details first. What specific aspects would you like to focus on?',
-          intent: 'question',
-          suggestedChips: ['Help me write subject line ideas', 'Show me content structure options', 'I want to focus on the call-to-action', 'Let me add personalization'],
-          shouldGenerateEmail: false,
-          campaignContext: context.campaign
-        };
-      }
-    } else {
-      // Guide user to provide more campaign details
-      const prompt = `You are GrowthOS helping build an email campaign in DO mode.
+            intent: 'action',
+            suggestedChips: ['Load it in the editor', 'Let me refine the copy', 'Change the tone to be more casual', 'Add more sections to this email'],
+            shouldGenerateEmail: true,
+            emailData: formattedEmailData,
+            campaignContext: context.campaign
+          };
+        } catch (error) {
+          console.error('Email generation failed:', error);
+          return {
+            content: 'I had trouble generating the email. Let me help you refine the campaign details first. What specific aspects would you like to focus on?',
+            intent: 'question',
+            suggestedChips: ['Help me write subject line ideas', 'Show me content structure options', 'I want to focus on the call-to-action', 'Let me add personalization'],
+            shouldGenerateEmail: false,
+            campaignContext: context.campaign
+          };
+        }
+      } else {
+        // Guide user to provide more campaign details
+        const prompt = `You are GrowthOS helping build an email campaign in DO mode.
 
 Campaign context: ${JSON.stringify(context.campaign)}
 Conversation: ${this.buildConversationContext(context)}
@@ -343,32 +334,115 @@ Suggest 3-4 clarifying questions or next steps as chips after your response, pre
 
 Important: Phrase chips as natural user responses without emojis.`;
 
+        try {
+          const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
+          const [content, chipsSection] = response.split('CHIPS:');
+          
+          const suggestedChips = chipsSection 
+            ? chipsSection.split(',').map(chip => chip.trim()).slice(0, 4)
+            : this.getCampaignChips(context.campaign!);
+
+          return {
+            content: content.trim(),
+            intent: 'action',
+            suggestedChips,
+            shouldGenerateEmail: false,
+            campaignContext: context.campaign
+          };
+        } catch (error) {
+          console.error('Do response generation failed:', error);
+          return {
+            content: 'Let\'s build your campaign step by step. What type of email campaign would you like to create?',
+            intent: 'action',
+            suggestedChips: this.getCampaignChips(context.campaign!),
+            shouldGenerateEmail: false,
+            campaignContext: context.campaign
+          };
+        }
+      }
+    }
+
+    // Handle Do mode for Journeys and Snippets
+    if (context.area === 'journeys') {
       try {
+        const prompt = `You are GrowthOS helping create customer journeys and automation flows in DO mode.
+
+Context: ${context.area}
+User message: "${userMessage}"
+
+Create actionable journey content, maps, automation sequences, or touchpoint designs based on the user's request.
+
+Suggest 3-4 relevant next steps as chips after your response, prefixed with "CHIPS:"
+
+Important: Phrase chips as natural user responses without emojis.`;
+
         const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
         const [content, chipsSection] = response.split('CHIPS:');
         
         const suggestedChips = chipsSection 
           ? chipsSection.split(',').map(chip => chip.trim()).slice(0, 4)
-          : this.getCampaignChips(context.campaign!);
+          : ['Create another journey map', 'Add automation triggers', 'Design touchpoint sequences', 'Optimize conversion flows'];
 
         return {
           content: content.trim(),
           intent: 'action',
           suggestedChips,
-          shouldGenerateEmail: false,
-          campaignContext: context.campaign
+          shouldGenerateEmail: false
         };
       } catch (error) {
-        console.error('Do response generation failed:', error);
+        console.error('Journeys do response failed:', error);
         return {
-          content: 'Let\'s build your campaign step by step. What type of email campaign would you like to create?',
+          content: 'Let me help you create customer journey assets. What specific journey or automation flow would you like to build?',
           intent: 'action',
-          suggestedChips: this.getCampaignChips(context.campaign!),
-          shouldGenerateEmail: false,
-          campaignContext: context.campaign
+          suggestedChips: ['Create a customer onboarding journey', 'Design a retention automation', 'Map the purchase journey', 'Build a re-engagement sequence'],
+          shouldGenerateEmail: false
         };
       }
     }
+
+    if (context.area === 'snippets') {
+      try {
+        const prompt = `You are GrowthOS helping create content snippets and optimization assets in DO mode.
+
+Context: ${context.area}
+User message: "${userMessage}"
+
+Create specific content snippets, subject lines, CTAs, or optimization content based on the user's request.
+
+Suggest 3-4 relevant next steps as chips after your response, prefixed with "CHIPS:"
+
+Important: Phrase chips as natural user responses without emojis.`;
+
+        const response = await OpenAIEmailService.callOpenAI(prompt, 2, false);
+        const [content, chipsSection] = response.split('CHIPS:');
+        
+        const suggestedChips = chipsSection 
+          ? chipsSection.split(',').map(chip => chip.trim()).slice(0, 4)
+          : ['Create more variations', 'Generate subject line alternatives', 'Write compelling CTAs', 'Add personalization tokens'];
+
+        return {
+          content: content.trim(),
+          intent: 'action',
+          suggestedChips,
+          shouldGenerateEmail: false
+        };
+      } catch (error) {
+        console.error('Snippets do response failed:', error);
+        return {
+          content: 'Let me help you create content snippets and optimize your messaging. What specific content would you like me to generate?',
+          intent: 'action',
+          suggestedChips: ['Write compelling subject lines', 'Create call-to-action buttons', 'Generate email content snippets', 'Build personalization templates'],
+          shouldGenerateEmail: false
+        };
+      }
+    }
+
+    return {
+      content: 'Do mode is ready! What would you like me to create for you?',
+      intent: 'action',
+      suggestedChips: this.getDefaultChips(context.area, 'do'),
+      shouldGenerateEmail: false
+    };
   }
 
   private static shouldGenerateEmailNow(userMessage: string, context: ChatContext): boolean {

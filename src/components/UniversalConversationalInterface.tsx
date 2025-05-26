@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
@@ -266,7 +265,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           placeholder={placeholderText[context]}
           context={context}
           onModeChange={setCurrentMode}
-          disableDoMode={context !== 'messages'}
+          disableDoMode={false}
         />
       </div>
     </div>
