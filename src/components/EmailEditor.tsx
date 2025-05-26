@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -266,7 +267,6 @@ export default function EmailEditor({
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [canvasWidth] = useState(600);
   const [blockCount] = useState(0);
-  const [wordCount] = useState(0);
   const [zoom, setZoom] = useState(100);
 
   const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
@@ -282,23 +282,17 @@ export default function EmailEditor({
   };
 
   const handleRefreshAnalysis = () => {
-    // Trigger analysis refresh - this could integrate with existing analysis components
-    console.log('Refreshing performance and brand analysis...');
-    // In a real implementation, this would trigger the analysis components to re-run
-  };
-
-  const handleApplySuggestion = (suggestion: any) => {
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    console.log(`Applied: ${suggestion.title}`);
-  };
-
-  const handleRefreshAnalysis = () => {
     console.log('Refreshing performance and brand analysis...');
     // Simulate refreshed data
     setPerformanceMetrics(prev => ({
       ...prev,
       overallScore: Math.min(100, (prev.overallScore || 0) + Math.floor(Math.random() * 10) - 5)
     }));
+  };
+
+  const handleApplySuggestion = (suggestion: any) => {
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+    console.log(`Applied: ${suggestion.title}`);
   };
 
   console.log('EmailEditor: About to render main component');
@@ -380,7 +374,6 @@ export default function EmailEditor({
         canvasWidth={canvasWidth}
         previewMode={previewMode}
         blockCount={blockCount}
-        wordCount={wordCount}
         zoom={zoom}
         onZoomChange={handleZoomChange}
         performanceMetrics={performanceMetrics}
