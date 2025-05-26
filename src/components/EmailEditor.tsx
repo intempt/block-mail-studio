@@ -3,7 +3,8 @@ import React, {
   useState,
   useEffect,
   useRef,
-  useCallback
+  useCallback,
+  useMemo
 } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -82,41 +83,56 @@ export default function EmailEditor({
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
   const [universalContent] = useState<UniversalContent[]>([]);
+  const [editorReady, setEditorReady] = useState(false);
+
+  // Stabilize extensions array to prevent recreating editor on every render
+  const extensions = useMemo(() => [
+    StarterKit.configure({
+      history: false,
+    }),
+    Underline,
+    Link,
+    Image,
+    Placeholder.configure({
+      placeholder: 'Write something here...'
+    }),
+    TextStyle,
+    Color,
+    TextAlign.configure({
+      types: ['heading', 'paragraph']
+    }),
+  ], []);
+
+  // Handle content changes from editor
+  const handleEditorUpdate = useCallback(({ editor }: any) => {
+    const newHTML = editor.getHTML();
+    setEmailHTML(newHTML);
+  }, []);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        history: false,
-      }),
-      Underline,
-      Link,
-      Image,
-      Placeholder.configure({
-        placeholder: 'Write something here...'
-      }),
-      TextStyle,
-      Color,
-      TextAlign.configure({
-        types: ['heading', 'paragraph']
-      }),
-    ],
+    extensions,
     content: emailHTML,
-    onUpdate: ({ editor }) => {
-      setEmailHTML(editor.getHTML());
-    }
-  });
+    onUpdate: handleEditorUpdate,
+    immediatelyRender: false,
+  }, [extensions]); // Only depend on extensions, not content
 
+  // Set initial content when editor is ready
   useEffect(() => {
-    if (initialHTML) {
-      setEmailHTML(initialHTML);
-      if (editor) {
+    if (editor && !editorReady) {
+      if (initialHTML) {
         editor.commands.setContent(initialHTML);
+        setEmailHTML(initialHTML);
       }
+      setEditorReady(true);
     }
-    if (initialSubject) {
+  }, [editor, initialHTML, editorReady]);
+
+  // Set initial subject when component mounts
+  useEffect(() => {
+    if (initialSubject && !subjectLine) {
       setSubjectLine(initialSubject);
     }
-  }, [initialHTML, initialSubject, editor]);
+  }, [initialSubject, subjectLine]);
 
   useEffect(() => {
     const initialTemplates = DirectTemplateService.getAllTemplates();
