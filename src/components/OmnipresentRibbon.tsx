@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -306,7 +305,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => onBlockAdd(block.id)}
                 >
                   {block.icon}
-                  <span className="text-[10px]">{block.name}</span>
                 </Button>
               ))}
             </div>
@@ -327,7 +325,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                 >
                   {renderLayoutPreview(layout)}
-                  <span className="text-[10px]">{layout.name}</span>
                 </Button>
               ))}
             </div>
@@ -345,10 +342,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 className="h-12 px-2"
                 onClick={handleEmailSettingsToggle}
               >
-                <div className="flex flex-col items-center">
-                  <Settings className="w-4 h-4" />
-                  <span className="text-[10px]">Settings</span>
-                </div>
+                <Settings className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -365,10 +359,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 className="h-12 px-2"
                 onClick={handleTextHeadingsToggle}
               >
-                <div className="flex flex-col items-center">
-                  <Type className="w-4 h-4" />
-                  <span className="text-[10px]">Configure</span>
-                </div>
+                <Type className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -385,10 +376,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 className="h-12 px-2"
                 onClick={handleButtonsLinksToggle}
               >
-                <div className="flex flex-col items-center">
-                  <MousePointer className="w-4 h-4" />
-                  <span className="text-[10px]">Configure</span>
-                </div>
+                <MousePointer className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -405,10 +393,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 className="h-12 px-2"
                 onClick={handleAISuggestionsToggle}
               >
-                <div className="flex flex-col items-center">
-                  <Lightbulb className="w-4 h-4" />
-                  <span className="text-[10px]">Suggestions</span>
-                </div>
+                <Lightbulb className="w-4 h-4" />
               </Button>
             </div>
           </div>
