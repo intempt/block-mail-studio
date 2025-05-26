@@ -66,6 +66,8 @@ export default function EmailEditor({
   initialSubject?: string; 
   onBack?: () => void;
 }) {
+  console.log('EmailEditor: Component starting to render');
+
   const [emailHTML, setEmailHTML] = useState(initialHTML);
   const [subjectLine, setSubjectLine] = useState(initialSubject);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -85,41 +87,53 @@ export default function EmailEditor({
   const [universalContent] = useState<UniversalContent[]>([]);
   const [editorReady, setEditorReady] = useState(false);
 
+  console.log('EmailEditor: State initialized, creating extensions');
+
   // Stabilize extensions array to prevent recreating editor on every render
-  const extensions = useMemo(() => [
-    StarterKit.configure({
-      history: false,
-    }),
-    Underline,
-    Link,
-    Image,
-    Placeholder.configure({
-      placeholder: 'Write something here...'
-    }),
-    TextStyle,
-    Color,
-    TextAlign.configure({
-      types: ['heading', 'paragraph']
-    }),
-  ], []);
+  const extensions = useMemo(() => {
+    console.log('EmailEditor: Creating TipTap extensions');
+    return [
+      StarterKit.configure({
+        history: false,
+      }),
+      Underline,
+      Link,
+      Image,
+      Placeholder.configure({
+        placeholder: 'Write something here...'
+      }),
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+    ];
+  }, []);
 
   // Handle content changes from editor
   const handleEditorUpdate = useCallback(({ editor }: any) => {
+    console.log('EmailEditor: Editor content updated');
     const newHTML = editor.getHTML();
     setEmailHTML(newHTML);
   }, []);
+
+  console.log('EmailEditor: About to create TipTap editor');
 
   const editor = useEditor({
     extensions,
     content: emailHTML,
     onUpdate: handleEditorUpdate,
     immediatelyRender: false,
-  }, [extensions]); // Only depend on extensions, not content
+  }, [extensions]);
+
+  console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
   // Set initial content when editor is ready
   useEffect(() => {
+    console.log('EmailEditor: useEffect for editor ready', { editor: !!editor, editorReady, initialHTML });
     if (editor && !editorReady) {
       if (initialHTML) {
+        console.log('EmailEditor: Setting initial content');
         editor.commands.setContent(initialHTML);
         setEmailHTML(initialHTML);
       }
@@ -129,12 +143,14 @@ export default function EmailEditor({
 
   // Set initial subject when component mounts
   useEffect(() => {
+    console.log('EmailEditor: useEffect for initial subject', { initialSubject, subjectLine });
     if (initialSubject && !subjectLine) {
       setSubjectLine(initialSubject);
     }
   }, [initialSubject, subjectLine]);
 
   useEffect(() => {
+    console.log('EmailEditor: Loading templates');
     const initialTemplates = DirectTemplateService.getAllTemplates();
     setTemplates(initialTemplates);
   }, []);
@@ -252,43 +268,55 @@ export default function EmailEditor({
   };
 
   const renderLeftPanel = () => {
-    switch (leftPanel) {
-      case 'blocks':
-        return (
-          <EnhancedEmailBlockPalette
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={universalContent}
-            onUniversalContentAdd={handleUniversalContentAdd}
-            compactMode={false}
-            snippetRefreshTrigger={0}
-          />
-        );
-      case 'design':
-        return (
-          <GlobalStylesPanel
-            onStylesChange={handleGlobalStylesChange}
-          />
-        );
-      case 'properties':
-        return (
-          <PropertyEditorPanel
-            selectedBlock={selectedBlock}
-            onBlockUpdate={handleBlockUpdate}
-          />
-        );
-      case 'performance':
-        return (
-          <PerformanceBrandPanel
-            emailHTML={emailHTML}
-            subjectLine={subjectLine}
-            editor={editor}
-          />
-        );
-      default:
-        return null;
+    console.log('EmailEditor: Rendering left panel', { leftPanel });
+    try {
+      switch (leftPanel) {
+        case 'blocks':
+          console.log('EmailEditor: Rendering blocks panel');
+          return (
+            <EnhancedEmailBlockPalette
+              onBlockAdd={handleBlockAdd}
+              onSnippetAdd={handleSnippetAdd}
+              universalContent={universalContent}
+              onUniversalContentAdd={handleUniversalContentAdd}
+              compactMode={false}
+              snippetRefreshTrigger={0}
+            />
+          );
+        case 'design':
+          console.log('EmailEditor: Rendering design panel');
+          return (
+            <GlobalStylesPanel
+              onStylesChange={handleGlobalStylesChange}
+            />
+          );
+        case 'properties':
+          console.log('EmailEditor: Rendering properties panel');
+          return (
+            <PropertyEditorPanel
+              selectedBlock={selectedBlock}
+              onBlockUpdate={handleBlockUpdate}
+            />
+          );
+        case 'performance':
+          console.log('EmailEditor: Rendering performance panel');
+          return (
+            <PerformanceBrandPanel
+              emailHTML={emailHTML}
+              subjectLine={subjectLine}
+              editor={editor}
+            />
+          );
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('EmailEditor: Error rendering left panel:', error);
+      return <div>Error loading panel</div>;
     }
   };
+
+  console.log('EmailEditor: About to render main component');
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
