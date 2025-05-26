@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Toggle } from '@/components/ui/toggle';
 import { 
   Send, 
   MessageSquare, 
@@ -68,46 +67,32 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
 
   return (
     <div className="border border-gray-300 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 bg-white">
-      {/* Mode Toggle Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-        <div className="flex items-center space-x-3">
-          <Toggle
-            pressed={isDoMode && !disableDoMode}
-            onPressedChange={handleToggleMode}
-            disabled={disableDoMode}
-            className={`h-8 px-3 transition-all duration-200 ${
-              isDoMode && !disableDoMode
-                ? 'bg-blue-600 text-white hover:bg-blue-700 data-[state=on]:bg-blue-600 data-[state=on]:text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-            } ${disableDoMode ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            {isDoMode && !disableDoMode ? (
-              <>
-                <Zap className="w-3 h-3 mr-1" />
-                Do
-              </>
-            ) : (
-              <>
-                <MessageSquare className="w-3 h-3 mr-1" />
-                Ask
-              </>
-            )}
-          </Toggle>
-          
-          {disableDoMode && (
-            <span className="text-xs text-gray-500">
-              Do mode available for {context === 'messages' ? 'email creation' : context} only
-            </span>
-          )}
-        </div>
-        
-        <div className="text-xs text-gray-500">
-          {isDoMode && !disableDoMode ? 'Create when possible' : 'Plan and discuss'}
-        </div>
-      </div>
-
-      {/* Input Area */}
       <div className="flex items-center p-3 space-x-3">
+        {/* Ask/Do Mode Toggle Button */}
+        <Button
+          onClick={handleToggleMode}
+          disabled={disableDoMode}
+          variant="ghost"
+          size="sm"
+          className={`h-8 px-3 transition-all duration-200 ${
+            isDoMode && !disableDoMode
+              ? 'bg-green-500 text-white hover:bg-green-600 shadow-md shadow-green-200'
+              : 'bg-blue-500 text-white hover:bg-blue-600 shadow-md shadow-blue-200'
+          } ${disableDoMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {isDoMode && !disableDoMode ? (
+            <>
+              <Zap className="w-3 h-3 mr-1" />
+              Do
+            </>
+          ) : (
+            <>
+              <MessageSquare className="w-3 h-3 mr-1" />
+              Ask
+            </>
+          )}
+        </Button>
+
         <Input
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
@@ -116,6 +101,7 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           disabled={isLoading}
         />
+        
         <Button 
           onClick={handleSend} 
           disabled={!inputMessage.trim() || isLoading}

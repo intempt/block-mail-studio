@@ -24,7 +24,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           description: 'Create and manage automated customer workflows',
           chatTitle: 'What kind of journey would you like to create?',
           chatDescription: 'Describe your customer workflow and let AI help you build it',
-          buttonText: 'Create Journey',
           breadcrumbText: 'Journeys'
         };
       case 'messages':
@@ -33,7 +32,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           description: 'Create and manage your email, SMS, and push campaigns',
           chatTitle: 'What kind of message is next?',
           chatDescription: 'Describe your email, SMS or push task and let AI help you build it',
-          buttonText: 'Create Message',
           breadcrumbText: 'Messages'
         };
       case 'snippets':
@@ -42,7 +40,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           description: 'Create and manage reusable content blocks',
           chatTitle: 'What content snippet do you need?',
           chatDescription: 'Describe your content needs and let AI help you create it',
-          buttonText: 'Create Snippet',
           breadcrumbText: 'Snippets'
         };
       default:
@@ -51,7 +48,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           description: 'Create and manage automated customer workflows',
           chatTitle: 'What kind of journey would you like to create?',
           chatDescription: 'Describe your customer workflow and let AI help you build it',
-          buttonText: 'Create Journey',
           breadcrumbText: 'Journeys'
         };
     }
@@ -62,16 +58,10 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
-            <p className="text-gray-600">{config.description}</p>
-          </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            {config.buttonText}
-          </Button>
+        {/* Page Header - No Create button */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
+          <p className="text-gray-600">{config.description}</p>
         </div>
 
         {/* PROMPT-FIRST: Universal Chat Interface at the top */}
@@ -89,7 +79,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           </div>
         </div>
 
-        {/* Tab Navigation - Reordered with Journeys first */}
+        {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-gray-100">
             <TabsTrigger 

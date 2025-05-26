@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
@@ -257,10 +256,10 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   };
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
       {/* Campaign Progress Indicator */}
       {campaignContext && context === 'messages' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex-shrink-0">
           <div className="flex items-center gap-2 text-blue-800">
             <Target className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -270,103 +269,98 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         </div>
       )}
 
-      {/* Chat Messages - No ScrollArea, just natural scrolling */}
-      <div className="space-y-4">
+      {/* Chat Messages - Single scrollable area */}
+      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
         {messages.map((message) => (
-          <div key={message.id}>
-            <div className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {(message.type === 'ai' || message.type === 'system') && (
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
-                </div>
+          <div key={message.id} className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+            {(message.type === 'ai' || message.type === 'system') && (
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+            )}
+            
+            <div className={`max-w-[70%] rounded-xl p-4 ${
+              message.type === 'user'
+                ? 'bg-blue-600 text-white'
+                : message.type === 'system'
+                ? 'bg-gray-100 text-gray-700'
+                : 'bg-gray-50 border border-gray-200 text-gray-900'
+            }`}>
+              {message.isStreaming ? (
+                <StreamingMessage 
+                  content={message.content}
+                  isComplete={false}
+                  isStreaming={true}
+                  className={message.type === 'user' ? 'text-white' : 'text-gray-900'}
+                />
+              ) : (
+                <MarkdownFormatter 
+                  content={message.content} 
+                  className={message.type === 'user' ? 'text-white' : 'text-gray-900'} 
+                />
               )}
               
-              <div className={`max-w-[70%] rounded-xl p-4 ${
-                message.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : message.type === 'system'
-                  ? 'bg-gray-100 text-gray-700'
-                  : 'bg-gray-50 border border-gray-200 text-gray-900'
-              }`}>
-                {message.isStreaming ? (
-                  <StreamingMessage 
-                    content={message.content}
-                    isComplete={false}
-                    isStreaming={true}
-                    className={message.type === 'user' ? 'text-white' : 'text-gray-900'}
-                  />
-                ) : (
-                  <MarkdownFormatter 
-                    content={message.content} 
-                    className={message.type === 'user' ? 'text-white' : 'text-gray-900'} 
-                  />
-                )}
-                
-                <div className="flex items-center justify-between mt-2">
-                  <p className="text-xs opacity-70">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {message.mode && (
-                      <span className="text-xs opacity-70">
-                        {message.mode === 'ask' ? '💭' : '⚡'}
-                      </span>
-                    )}
-                    {message.emailData && message.emailData.html && (
-                      <button
-                        onClick={() => handleLoadIntoEditor(message.emailData)}
-                        className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center gap-1 transition-colors"
-                      >
-                        <Zap className="w-3 h-3" />
-                        Load in Editor
-                      </button>
-                    )}
-                  </div>
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-xs opacity-70">
+                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+                <div className="flex items-center gap-2">
+                  {message.emailData && message.emailData.html && (
+                    <button
+                      onClick={() => handleLoadIntoEditor(message.emailData)}
+                      className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 flex items-center gap-1 transition-colors"
+                    >
+                      <Zap className="w-3 h-3" />
+                      Load in Editor
+                    </button>
+                  )}
                 </div>
               </div>
-              
-              {message.type === 'user' && (
-                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-gray-600" />
-                </div>
-              )}
             </div>
+            
+            {message.type === 'user' && (
+              <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                <User className="w-4 h-4 text-gray-600" />
+              </div>
+            )}
           </div>
         ))}
         
         {isThinking && <ThinkingIndicator />}
       </div>
 
-      {/* Conversational Chips */}
-      <div className="mb-6">
+      {/* Conversational Chips - Fixed bottom area */}
+      <div className="flex-shrink-0 mb-4">
         <ConversationalChipGenerator
           chips={chips}
           onChipSelect={handleChipSelect}
-          onRefreshChips={handleRefreshChips}
-          onResetToStarter={resetToFreshStart}
+          onRefreshChips={() => {}}
+          onResetToStarter={() => {}}
           isLoading={isLoading}
           currentMode={currentMode}
         />
       </div>
 
-      {/* Context-Specific Input */}
-      {context === 'messages' ? (
-        <EnhancedChatInput
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          placeholder={placeholderText[context]}
-          context={context}
-          onModeChange={setCurrentMode}
-        />
-      ) : (
-        <SimpleConversationalInput
-          onSendMessage={handleSendMessage}
-          isLoading={isLoading}
-          placeholder={placeholderText[context]}
-          context={context}
-          disableDoMode={true}
-        />
-      )}
+      {/* Context-Specific Input - Fixed bottom */}
+      <div className="flex-shrink-0">
+        {context === 'messages' ? (
+          <EnhancedChatInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            placeholder={placeholderText[context]}
+            context={context}
+            onModeChange={setCurrentMode}
+          />
+        ) : (
+          <SimpleConversationalInput
+            onSendMessage={handleSendMessage}
+            isLoading={isLoading}
+            placeholder={placeholderText[context]}
+            context={context}
+            disableDoMode={true}
+          />
+        )}
+      </div>
     </div>
   );
 };
