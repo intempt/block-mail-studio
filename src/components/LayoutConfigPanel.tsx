@@ -17,7 +17,6 @@ interface LayoutOption {
 
 interface LayoutConfigPanelProps {
   onLayoutSelect: (layout: any) => void;
-  onLayoutDrag?: (e: React.DragEvent, layout: any) => void;
   compactMode?: boolean;
   isExpanded?: boolean;
   onToggleExpanded?: () => void;
@@ -105,7 +104,6 @@ const layoutOptions: LayoutOption[] = [
 
 export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   onLayoutSelect,
-  onLayoutDrag,
   compactMode = false,
   isExpanded = true,
   onToggleExpanded
@@ -144,18 +142,14 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
       columns
     };
 
-    if (onLayoutDrag) {
-      onLayoutDrag(e, layoutConfig);
-    } else {
-      const dragData = createDragData({
-        blockType: 'columns',
-        isLayout: true,
-        layoutData: layoutConfig
-      });
+    const dragData = createDragData({
+      blockType: 'columns',
+      isLayout: true,
+      layoutData: layoutConfig
+    });
 
-      e.dataTransfer.setData('application/json', dragData);
-      e.dataTransfer.effectAllowed = 'copy';
-    }
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.effectAllowed = 'copy';
   };
 
   const renderLayoutPreview = (layout: LayoutOption) => (
