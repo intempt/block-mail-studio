@@ -1,7 +1,5 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import { useDebounce } from 'usehooks-ts';
-import { useToast } from "@/components/ui/use-toast";
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -12,26 +10,17 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
-import Youtube from '@tiptap/extension-youtube';
-import Iframe from '@tiptap/extension-iframe';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { common, createLowlight } from 'lowlight'
 import { Color } from '@tiptap/extension-color'
 import TextStyle from '@tiptap/extension-text-style'
-import { setBlockType } from '@tiptap/core';
-import { v4 as uuidv4 } from 'uuid';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
 import { OmnipresentRibbon } from '@/components/OmnipresentRibbon';
 import { EmailPreview } from '@/components/EmailPreview';
-import { EmailBlockPalette } from '@/components/EmailBlockPalette';
 import { EnhancedEmailBlockPalette } from '@/components/EnhancedEmailBlockPalette';
 import { EmailTemplate } from '@/components/TemplateManager';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-import { createDragData } from '@/utils/dragDropUtils';
 import { generateUniqueId } from '@/utils/blockUtils';
-import { EmailBlock } from '@/components/EmailBlock';
 import { EnhancedTopBar } from '@/components/EnhancedTopBar';
 
 interface Block {
@@ -41,8 +30,11 @@ interface Block {
   styles?: any;
 }
 
-export const WorkspacePage = () => {
-  const router = useRouter();
+interface WorkspacePageProps {
+  onEmailBuilderOpen?: (emailHTML?: string, subject?: string) => void;
+}
+
+export const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => {
   const [emailHTML, setEmailHTML] = useState<string>('');
   const [subjectLine, setSubjectLine] = useState<string>('');
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -55,7 +47,6 @@ export const WorkspacePage = () => {
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
 
-  const { toast } = useToast();
   const lowlight = createLowlight()
 
   const editor = useEditor({
@@ -73,8 +64,6 @@ export const WorkspacePage = () => {
       TableRow,
       TableCell,
       TableHeader,
-      Youtube,
-      Iframe,
       CodeBlockLowlight.configure({
         lowlight,
       }),
@@ -87,11 +76,9 @@ export const WorkspacePage = () => {
     },
   });
 
-  const [debouncedEmailHTML] = useDebounce(emailHTML, 500);
-
   useEffect(() => {
     setEmailHTML(editor?.getHTML() || '');
-  }, [editor?.isReady, editor?.getHTML]);
+  }, [editor]);
 
   const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
     console.log('Adding block:', blockType, layoutConfig);
@@ -107,7 +94,7 @@ export const WorkspacePage = () => {
   const handleSnippetAdd = useCallback((snippet: EmailSnippet) => {
     console.log('Adding snippet:', snippet);
     if (editor) {
-      editor.commands.insertContent(snippet.html);
+      editor.commands.insertContent(snippet.blockData || snippet.name);
       setEmailHTML(editor.getHTML());
     }
   }, [editor]);
@@ -136,12 +123,6 @@ export const WorkspacePage = () => {
     setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
   }, []);
 
-  const handleDragStart = (e: React.DragEvent, blockType: string) => {
-    const dragData = createDragData({ blockType });
-    e.dataTransfer.setData('application/json', dragData);
-    e.dataTransfer.effectAllowed = 'copy';
-  };
-
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const dragData = e.dataTransfer.getData('application/json');
@@ -161,10 +142,6 @@ export const WorkspacePage = () => {
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-  };
-
-  const handleTogglePalette = () => {
-    setIsPaletteOpen(!isPaletteOpen);
   };
 
   const handleGlobalStylesChange = (styles: any) => {
@@ -194,60 +171,36 @@ export const WorkspacePage = () => {
     }
   };
 
-  const handleSaveTemplate = async (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    try {
-      const response = await fetch('/api/templates', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(template),
-      });
-  
-      if (response.ok) {
-        toast({
-          title: "Template saved!",
-          description: "Your email template has been successfully saved.",
-        });
-        setSnippetRefreshTrigger(prev => prev + 1);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Error saving template",
-          description: "Failed to save the email template. Please try again.",
-        });
-      }
-    } catch (error) {
-      console.error("Error saving template:", error);
-      toast({
-        variant: "destructive",
-        title: "Error saving template",
-        description: "An unexpected error occurred while saving the template.",
-      });
-    }
-  };
-
   const handlePublish = () => {
     console.log('Publishing email...');
-    toast({
-      title: "Email Published!",
-      description: "Your email has been successfully published.",
-    });
+  };
+
+  const handleBack = () => {
+    if (onEmailBuilderOpen) {
+      // Navigate back to main interface
+      console.log('Navigating back');
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <EnhancedTopBar 
-        onBack={() => router.push('/')}
+      <OmnipresentRibbon 
+        onBlockAdd={handleBlockAdd}
+        onSnippetAdd={handleSnippetAdd}
+        universalContent={universalContent}
+        onUniversalContentAdd={handleUniversalContentAdd}
+        onGlobalStylesChange={handleGlobalStylesChange}
+        emailHTML={emailHTML}
+        subjectLine={subjectLine}
+        editor={editor}
+        snippetRefreshTrigger={snippetRefreshTrigger}
+        onBack={handleBack}
         canvasWidth={canvasWidth}
         deviceMode={deviceMode}
         onDeviceChange={handleDeviceChange}
         onWidthChange={handleCanvasWidthChange}
         onPreview={() => setIsPreviewOpen(true)}
-        onSaveTemplate={handleSaveTemplate}
         onPublish={handlePublish}
-        emailHTML={debouncedEmailHTML}
-        subjectLine={subjectLine}
       />
 
       <div className="flex flex-col lg:flex-row w-full h-full">
@@ -277,35 +230,27 @@ export const WorkspacePage = () => {
                 onChange={(e) => setSubjectLine(e.target.value)}
               />
             </div>
-            {blocks.map((block) => (
-              <EmailBlock
-                key={block.id}
-                block={block}
-                onBlockUpdate={handleBlockUpdate}
-                onBlockStyleUpdate={handleBlockStyleUpdate}
-                onBlockDelete={handleBlockDelete}
-                emailHTML={debouncedEmailHTML}
-                editor={editor}
-              />
-            ))}
             <div className="min-h-[200px] p-4">
               {blocks.length === 0 && (
                 <div className="text-center text-gray-500">
                   Drag and drop blocks here to start building your email.
                 </div>
               )}
+              <EditorContent editor={editor} />
             </div>
           </div>
         </div>
       </div>
 
       <EmailPreview
-        emailHTML={debouncedEmailHTML}
+        emailHTML={emailHTML}
         subjectLine={subjectLine}
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}
-        deviceMode={deviceMode}
+        deviceMode={deviceMode === 'mobile' ? 'mobile' : 'desktop'}
       />
     </div>
   );
 };
+
+export default WorkspacePage;
