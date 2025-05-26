@@ -22,30 +22,15 @@ import {
 } from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
-import { ErrorBoundary } from './ErrorBoundary';
-import { LoadingFallback } from './LoadingFallback';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 
-// Lazy imports with error handling
-const OmnipresentRibbon = React.lazy(() => 
-  import('./OmnipresentRibbon').catch(() => ({
-    default: () => <div className="h-16 bg-gray-100 border-b flex items-center px-4">
-      <span className="text-gray-500">Toolbar loading...</span>
-    </div>
-  }))
-);
-
-const EmailTemplateLibrary = React.lazy(() => 
-  import('./EmailTemplateLibrary').then(module => ({
-    default: module.EmailTemplateLibrary
-  })).catch(() => ({
-    default: () => <div>Template library unavailable</div>
-  }))
-);
+// Direct imports without lazy loading
+import { OmnipresentRibbon } from './OmnipresentRibbon';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 
 interface Block {
   id: string;
@@ -86,8 +71,6 @@ export default function EmailEditor({
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
@@ -105,37 +88,27 @@ export default function EmailEditor({
 
   const extensions = useMemo(() => {
     console.log('EmailEditor: Creating TipTap extensions');
-    try {
-      return [
-        StarterKit.configure({
-          history: false,
-        }),
-        Underline,
-        Link,
-        Image,
-        Placeholder.configure({
-          placeholder: 'Write something here...'
-        }),
-        TextStyle,
-        Color,
-        TextAlign.configure({
-          types: ['heading', 'paragraph']
-        }),
-      ];
-    } catch (error) {
-      console.error('Error creating TipTap extensions:', error);
-      setLoadingError('Failed to initialize text editor');
-      return [];
-    }
+    return [
+      StarterKit.configure({
+        history: false,
+      }),
+      Underline,
+      Link,
+      Image,
+      Placeholder.configure({
+        placeholder: 'Write something here...'
+      }),
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+    ];
   }, []);
 
   const handleEditorUpdate = useCallback(({ editor }) => {
-    try {
-      const newContent = editor.getHTML();
-      onContentChange(newContent);
-    } catch (error) {
-      console.error('Error updating editor content:', error);
-    }
+    const newContent = editor.getHTML();
+    onContentChange(newContent);
   }, [onContentChange]);
 
   console.log('EmailEditor: About to create TipTap editor');
@@ -149,39 +122,19 @@ export default function EmailEditor({
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
-  // Initialize editor and handle loading states
+  // Initialize editor
   useEffect(() => {
     const initializeEditor = async () => {
-      try {
-        setIsLoading(true);
-        
-        if (editor && editor.getHTML() !== content) {
-          console.log('EmailEditor: Updating editor content from prop');
-          editor.commands.setContent(content);
-        }
-
-        // Simulate loading time for heavy components
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        console.log('EmailEditor: Loading templates');
-        
-        // Load templates with error handling
-        try {
-          const { DirectTemplateService } = await import('@/services/directTemplateService');
-          const initialTemplates = DirectTemplateService.getAllTemplates();
-          setTemplates(initialTemplates);
-        } catch (error) {
-          console.warn('Failed to load templates:', error);
-          setTemplates([]);
-        }
-
-        setIsLoading(false);
-        setLoadingError(null);
-      } catch (error) {
-        console.error('Failed to initialize editor:', error);
-        setLoadingError('Failed to initialize editor');
-        setIsLoading(false);
+      if (editor && editor.getHTML() !== content) {
+        console.log('EmailEditor: Updating editor content from prop');
+        editor.commands.setContent(content);
       }
+
+      console.log('EmailEditor: Loading templates');
+      
+      const { DirectTemplateService } = await import('@/services/directTemplateService');
+      const initialTemplates = DirectTemplateService.getAllTemplates();
+      setTemplates(initialTemplates);
     };
 
     initializeEditor();
@@ -343,107 +296,58 @@ export default function EmailEditor({
 
   console.log('EmailEditor: About to render main component');
 
-  // Show loading state
-  if (isLoading) {
-    return <LoadingFallback message="Initializing email editor..." height="100vh" />;
-  }
-
-  // Show error state with recovery option
-  if (loadingError) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">Failed to Load Editor</h2>
-          <p className="text-gray-600 mb-4">{loadingError}</p>
-          <Button onClick={() => window.location.reload()}>
-            Reload Editor
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <ErrorBoundary fallback={
-      <div className="h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">Editor Error</h2>
-          <p className="text-gray-600 mb-4">The email editor encountered an error.</p>
-          <Button onClick={() => window.location.reload()}>
-            Reload Editor
-          </Button>
+    <div className="h-screen flex flex-col bg-gray-50">
+      <OmnipresentRibbon
+        onBlockAdd={handleBlockAdd}
+        onSnippetAdd={handleSnippetAdd}
+        universalContent={universalContent}
+        onUniversalContentAdd={handleUniversalContentAdd}
+        onGlobalStylesChange={handleGlobalStylesChange}
+        emailHTML={content}
+        subjectLine={subject}
+        editor={editor}
+        snippetRefreshTrigger={snippetRefreshTrigger}
+        onTemplateLibraryOpen={handleTemplateLibraryOpen}
+        onPreviewModeChange={handlePreviewModeChange}
+        previewMode={previewMode}
+        onBack={onBack}
+        canvasWidth={canvasWidth}
+        deviceMode={deviceMode}
+        onDeviceChange={handleDeviceChange}
+        onWidthChange={handleWidthChange}
+        onPreview={handlePreview}
+        onSaveTemplate={handleSaveAsTemplate}
+        onPublish={handlePublish}
+      />
+
+      <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
+        <div className="max-w-4xl mx-auto">
+          <EmailBlockCanvas
+            ref={canvasRef}
+            onContentChange={handleContentChangeFromCanvas}
+            onBlockSelect={() => {}}
+            previewWidth={canvasWidth}
+            previewMode={previewMode}
+            compactMode={false}
+            subject={subject}
+            onSubjectChange={onSubjectChange}
+          />
         </div>
       </div>
-    }>
-      <div className="h-screen flex flex-col bg-gray-50">
-        <React.Suspense fallback={
-          <div className="h-16 bg-white border-b flex items-center px-4">
-            <span className="text-gray-500">Loading toolbar...</span>
-          </div>
-        }>
-          <OmnipresentRibbon
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={universalContent}
-            onUniversalContentAdd={handleUniversalContentAdd}
-            onGlobalStylesChange={handleGlobalStylesChange}
-            emailHTML={content}
-            subjectLine={subject}
-            editor={editor}
-            snippetRefreshTrigger={snippetRefreshTrigger}
-            onTemplateLibraryOpen={handleTemplateLibraryOpen}
-            onPreviewModeChange={handlePreviewModeChange}
-            previewMode={previewMode}
-            onBack={onBack}
-            canvasWidth={canvasWidth}
-            deviceMode={deviceMode}
-            onDeviceChange={handleDeviceChange}
-            onWidthChange={handleWidthChange}
-            onPreview={handlePreview}
-            onSaveTemplate={handleSaveAsTemplate}
-            onPublish={handlePublish}
-          />
-        </React.Suspense>
 
-        <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
-          <div className="max-w-4xl mx-auto">
-            <ErrorBoundary fallback={
-              <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">Canvas failed to load</p>
-                <Button onClick={() => window.location.reload()}>
-                  Reload Canvas
-                </Button>
-              </div>
-            }>
-              <EmailBlockCanvas
-                ref={canvasRef}
-                onContentChange={handleContentChangeFromCanvas}
-                onBlockSelect={() => {}}
-                previewWidth={canvasWidth}
-                previewMode={previewMode}
-                compactMode={false}
-                subject={subject}
-                onSubjectChange={onSubjectChange}
-              />
-            </ErrorBoundary>
-          </div>
-        </div>
+      {showPreview && (
+        <EmailPreview
+          html={content}
+          previewMode={previewMode}
+        />
+      )}
 
-        {showPreview && (
-          <EmailPreview
-            html={content}
-            previewMode={previewMode}
-          />
-        )}
-
-        {showTemplateLibrary && (
-          <React.Suspense fallback={<LoadingFallback message="Loading templates..." />}>
-            <EmailTemplateLibrary
-              editor={editor}
-            />
-          </React.Suspense>
-        )}
-      </div>
-    </ErrorBoundary>
+      {showTemplateLibrary && (
+        <EmailTemplateLibrary
+          editor={editor}
+        />
+      )}
+    </div>
   );
 }
