@@ -33,13 +33,13 @@ export const useDragDropHandler = ({
       const data = parseDragData(e.dataTransfer.getData('application/json'));
       if (!data) return;
       
-      console.log('Canvas drop data:', data);
+      console.log('DragDropHandler: Canvas drop data:', data);
       
-      if (data.isLayout && data.layoutData) {
-        console.log('Creating layout block with data:', data.layoutData);
+      if ((data.isLayout || data.blockType === 'columns') && data.layoutData) {
+        console.log('DragDropHandler: Creating layout block with data:', data.layoutData);
         
-        const columnCount = data.layoutData.columnCount || data.layoutData.columns || 2;
-        const columnRatio = data.layoutData.columnRatio || data.layoutData.ratio || '50-50';
+        const columnCount = data.layoutData.columnCount || 2;
+        const columnRatio = data.layoutData.columnRatio || '50-50';
         const columnElements = data.layoutData.columnElements || [];
 
         const newBlock: EmailBlock = {
@@ -70,40 +70,10 @@ export const useDragDropHandler = ({
           newBlocks.splice(insertIndex, 0, newBlock);
           return newBlocks;
         });
-        console.log('Layout block added:', newBlock);
-      } else if (data.blockType === 'columns' && data.layoutData) {
-        const columnCount = data.layoutData.columnCount || data.layoutData.columns || 2;
-        const columnRatio = data.layoutData.columnRatio || data.layoutData.ratio || '50-50';
-
-        const newBlock: EmailBlock = {
-          id: `layout-${Date.now()}`,
-          type: 'columns',
-          content: {
-            columnCount: columnCount as 1 | 2 | 3 | 4,
-            columnRatio: columnRatio,
-            columns: Array.from({ length: columnCount }, (_, i) => ({
-              id: `col-${i}-${Date.now()}`,
-              blocks: [],
-              width: `${100 / columnCount}%`
-            })),
-            gap: '16px'
-          },
-          styling: getDefaultStyles('columns'),
-          position: { x: 0, y: 0 },
-          displayOptions: {
-            showOnDesktop: true,
-            showOnTablet: true,
-            showOnMobile: true
-          }
-        };
-        
-        const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
-        setBlocks(prev => {
-          const newBlocks = [...prev];
-          newBlocks.splice(insertIndex, 0, newBlock);
-          return newBlocks;
-        });
+        console.log('DragDropHandler: Layout block added:', newBlock);
       } else if (data.blockType) {
+        console.log('DragDropHandler: Creating regular block:', data.blockType);
+        
         const newBlock: EmailBlock = {
           id: `block-${Date.now()}`,
           type: data.blockType as any,
@@ -123,9 +93,10 @@ export const useDragDropHandler = ({
           newBlocks.splice(insertIndex, 0, newBlock);
           return newBlocks;
         });
+        console.log('DragDropHandler: Regular block added:', newBlock);
       }
     } catch (error) {
-      console.error('Error handling drop:', error);
+      console.error('DragDropHandler: Error handling drop:', error);
     }
   };
 
@@ -197,6 +168,8 @@ export const useDragDropHandler = ({
       const data = parseDragData(e.dataTransfer.getData('application/json'));
       if (!data?.blockType) return;
       
+      console.log('DragDropHandler: Adding block to column:', { blockType: data.blockType, layoutBlockId, columnIndex });
+      
       const newBlock: EmailBlock = {
         id: `block-${Date.now()}`,
         type: data.blockType as any,
@@ -231,9 +204,9 @@ export const useDragDropHandler = ({
         return block;
       }));
       
-      console.log('Block added to column:', newBlock);
+      console.log('DragDropHandler: Block added to column:', newBlock);
     } catch (error) {
-      console.error('Error handling column drop:', error);
+      console.error('DragDropHandler: Error handling column drop:', error);
     }
   };
 

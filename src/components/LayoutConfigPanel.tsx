@@ -112,36 +112,34 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   const spacing = compactMode ? 'gap-2' : 'gap-3';
   const padding = compactMode ? 'p-2' : 'p-3';
 
-  const handleLayoutClick = (layout: LayoutOption) => {
-    console.log('Layout clicked:', layout.name);
+  const createLayoutConfig = (layout: LayoutOption) => {
     const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
       id: generateUniqueId(),
       blocks: [],
-      width: layout.preview[index] || '100%'
+      width: layout.preview[index] || `${100 / layout.columns}%`
     }));
 
-    const layoutConfig = {
-      ...layout,
-      columnElements // Use different property name to avoid confusion
+    return {
+      columnCount: layout.columns,
+      columnRatio: layout.ratio,
+      columnElements: columnElements
     };
+  };
 
+  const handleLayoutClick = (layout: LayoutOption) => {
+    console.log('LayoutConfigPanel: Layout clicked:', layout.name);
+    
+    const layoutConfig = createLayoutConfig(layout);
+    console.log('LayoutConfigPanel: Created layout config for click:', layoutConfig);
+    
     onLayoutSelect(layoutConfig);
   };
 
   const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
-    console.log('Starting layout drag:', layout.name);
+    console.log('LayoutConfigPanel: Starting layout drag:', layout.name);
     
-    const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
-      id: generateUniqueId(),
-      blocks: [],
-      width: layout.preview[index] || '100%'
-    }));
-
-    const layoutConfig = {
-      columnCount: layout.columns,
-      columnRatio: layout.ratio,
-      columnElements // Clear separation between count and elements
-    };
+    const layoutConfig = createLayoutConfig(layout);
+    console.log('LayoutConfigPanel: Created layout config for drag:', layoutConfig);
 
     const dragData = createDragData({
       blockType: 'columns',
@@ -149,6 +147,8 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
       layoutData: layoutConfig
     });
 
+    console.log('LayoutConfigPanel: Drag data:', dragData);
+    
     e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'copy';
   };
@@ -173,7 +173,7 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
           className={`${padding} cursor-grab hover:bg-slate-50 border-2 hover:border-blue-200 transition-all duration-200 active:cursor-grabbing`}
           draggable
           onDragStart={(e) => handleLayoutDragStart(e, layout)}
-          onClick={() => handleLayoutClick(layout)}
+          onClick={()={() => handleLayoutClick(layout)}
         >
           <div className="space-y-2">
             <div className={`text-xs font-medium text-slate-700 ${compactMode ? 'text-xs' : 'text-sm'}`}>

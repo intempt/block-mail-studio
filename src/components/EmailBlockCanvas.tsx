@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -22,6 +23,7 @@ export interface EmailBlockCanvasRef {
   optimizeImages: () => void;
   minifyHTML: () => void;
   checkLinks: () => { workingLinks: number; brokenLinks: number; totalLinks: number };
+  addBlock: (block: EmailBlock) => void;
 }
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
@@ -112,6 +114,10 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
       console.log(`Link check complete: ${workingLinks} working, ${brokenLinks} broken, ${totalLinks} total`);
       return { workingLinks, brokenLinks, totalLinks };
+    },
+    addBlock: (block: EmailBlock) => {
+      console.log('EmailBlockCanvas: Adding block via ref:', block);
+      setBlocks(prev => [...prev, block]);
     }
   }), [blocks]);
 

@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -73,6 +74,8 @@ export default function EmailEditor({
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+
+  const canvasRef = useRef<any>(null);
 
   const layoutConfig = useMemo<LayoutConfig>(() => ({
     direction: 'column',
@@ -153,13 +156,57 @@ export default function EmailEditor({
   const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
     console.log('EmailEditor: handleBlockAdd called with:', { blockType, layoutConfig });
     
-    if (!editor) return;
-
-    if (blockType === 'columns' && layoutConfig) {
-      console.log('EmailEditor: Processing layout configuration:', layoutConfig);
+    if (!canvasRef.current) {
+      console.warn('EmailEditor: Canvas ref not available, cannot add block');
       return;
     }
 
+    // Handle layout blocks specifically
+    if (blockType === 'columns' && layoutConfig) {
+      console.log('EmailEditor: Processing layout configuration:', layoutConfig);
+      
+      // Create the layout block data structure
+      const columnCount = layoutConfig.columnCount || layoutConfig.columns || 2;
+      const columnRatio = layoutConfig.columnRatio || layoutConfig.ratio || '50-50';
+      const columnElements = layoutConfig.columnElements || [];
+      
+      const newLayoutBlock: EmailBlock = {
+        id: `layout-${Date.now()}`,
+        type: 'columns',
+        content: {
+          columnCount: columnCount as 1 | 2 | 3 | 4,
+          columnRatio: columnRatio,
+          columns: columnElements.length > 0 ? columnElements : Array.from({ length: columnCount }, (_, i) => ({
+            id: `col-${i}-${Date.now()}`,
+            blocks: [],
+            width: `${100 / columnCount}%`
+          })),
+          gap: '16px'
+        },
+        styling: {
+          desktop: { width: '100%', height: 'auto' },
+          tablet: { width: '100%', height: 'auto' },
+          mobile: { width: '100%', height: 'auto' }
+        },
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        }
+      };
+
+      console.log('EmailEditor: Created layout block:', newLayoutBlock);
+      
+      // Add the block directly to the canvas
+      if (canvasRef.current) {
+        canvasRef.current.addBlock(newLayoutBlock);
+      }
+      
+      return;
+    }
+
+    // Handle regular blocks
     const newBlock: Block = {
       id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: blockType,
@@ -167,6 +214,7 @@ export default function EmailEditor({
       styles: {}
     };
 
+    console.log('EmailEditor: Created regular block:', newBlock);
     setBlocks(prev => [...prev, newBlock]);
   };
 
@@ -266,6 +314,7 @@ export default function EmailEditor({
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
         <div className="max-w-4xl mx-auto">
           <EmailBlockCanvas
+            ref={canvasRef}
             onContentChange={handleContentChangeFromCanvas}
             onBlockSelect={() => {}}
             previewWidth={canvasWidth}
