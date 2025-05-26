@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
@@ -5,7 +6,6 @@ import { EnhancedChatInput } from './EnhancedChatInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
 import { StreamingMessage } from './StreamingMessage';
 import { ThinkingIndicator } from './ThinkingIndicator';
-import { ScrollToBottomButton } from './ScrollToBottomButton';
 import { ChatCompletionService } from '@/services/chatCompletionService';
 import { StreamingChatService } from '@/services/streamingChatService';
 import { MarkdownFormatter } from './MarkdownFormatter';
@@ -47,11 +47,12 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const [sessionId] = useState(() => `session-${Date.now()}`);
   const [campaignContext, setCampaignContext] = useState<any>(null);
   const [currentMode, setCurrentMode] = useState<'ask' | 'do'>('ask');
-  const [showScrollButton, setShowScrollButton] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    console.log('UniversalConversationalInterface: Initializing with context:', context);
+    console.log('UniversalConversationalInterface: onEmailBuilderOpen callback:', onEmailBuilderOpen);
+    
     ChatCompletionService.initializeContext(sessionId, context);
     
     const welcomeMessage: Message = {
@@ -63,7 +64,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     
     setMessages([welcomeMessage]);
     setChips(getInitialChips(context));
-  }, [context, sessionId]);
+  }, [context, sessionId, onEmailBuilderOpen]);
 
   const getWelcomeMessage = (context: string): string => {
     const messages = {
@@ -77,28 +78,30 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const getInitialChips = (context: string): ConversationalChip[] => {
     const chipSets = {
       messages: [
-        { id: 'email-campaign', label: 'I want to create an email campaign', type: 'starter' as const },
-        { id: 'sms-campaign', label: 'I need to build an SMS campaign', type: 'starter' as const },
-        { id: 'push-notification', label: 'Help me create push notifications', type: 'starter' as const },
-        { id: 'rich-text-email', label: 'I want to design a rich text email', type: 'starter' as const }
+        { id: 'email-campaign', label: 'Create an email campaign', type: 'starter' as const },
+        { id: 'sms-campaign', label: 'Build an SMS campaign', type: 'starter' as const },
+        { id: 'push-notification', label: 'Create push notifications', type: 'starter' as const },
+        { id: 'rich-text-email', label: 'Design a rich text email', type: 'starter' as const }
       ],
       journeys: [
-        { id: 'map-journey', label: 'I need to map a customer journey', type: 'starter' as const },
-        { id: 'onboarding-flow', label: 'Help me design an onboarding flow', type: 'starter' as const },
-        { id: 'retention-strategy', label: 'I want to build a retention strategy', type: 'starter' as const },
-        { id: 'conversion-optimization', label: 'Show me how to optimize conversions', type: 'starter' as const }
+        { id: 'map-journey', label: 'Map a customer journey', type: 'starter' as const },
+        { id: 'onboarding-flow', label: 'Design an onboarding flow', type: 'starter' as const },
+        { id: 'retention-strategy', label: 'Build a retention strategy', type: 'starter' as const },
+        { id: 'conversion-optimization', label: 'Optimize conversions', type: 'starter' as const }
       ],
       snippets: [
-        { id: 'subject-lines', label: 'I need help writing better subject lines', type: 'starter' as const },
-        { id: 'cta-optimization', label: 'Help me optimize my call-to-actions', type: 'starter' as const },
-        { id: 'personalization', label: 'I want to add more personalization', type: 'starter' as const },
-        { id: 'ab-testing', label: 'Show me how to plan A/B tests', type: 'starter' as const }
+        { id: 'subject-lines', label: 'Write better subject lines', type: 'starter' as const },
+        { id: 'cta-optimization', label: 'Optimize call-to-actions', type: 'starter' as const },
+        { id: 'personalization', label: 'Add more personalization', type: 'starter' as const },
+        { id: 'ab-testing', label: 'Plan A/B tests', type: 'starter' as const }
       ]
     };
     return chipSets[context] || chipSets.messages;
   };
 
   const handleSendMessage = async (message: string, mode: 'ask' | 'do') => {
+    console.log('UniversalConversationalInterface: Sending message:', message, 'Mode:', mode);
+    
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
@@ -163,12 +166,13 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
               setCampaignContext(response.campaignContext);
             }
 
-            const newChips: ConversationalChip[] = response.suggestedChips.map((chip, index) => ({
+            // Clean up chip labels - remove dashes and format properly
+            const cleanedChips: ConversationalChip[] = response.suggestedChips.map((chip, index) => ({
               id: `chip-${Date.now()}-${index}`,
-              label: chip,
+              label: chip.replace(/^-\s*/, '').trim(), // Remove leading dashes
               type: 'contextual' as const
             }));
-            setChips(newChips);
+            setChips(cleanedChips);
 
           } catch (error) {
             console.error('Error getting actual response:', error);
@@ -198,65 +202,32 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   };
 
   const handleChipSelect = async (chip: ConversationalChip) => {
+    console.log('UniversalConversationalInterface: Chip selected:', chip.label);
     await handleSendMessage(chip.label, currentMode);
   };
 
   const handleLoadIntoEditor = (emailData: any) => {
-    console.log('Loading email into editor:', emailData);
+    console.log('UniversalConversationalInterface: Loading email into editor:', emailData);
+    console.log('UniversalConversationalInterface: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
     
     if (onEmailBuilderOpen && emailData) {
       const emailHTML = emailData.html || emailData.emailHTML || '';
       const subjectLine = emailData.subject || emailData.subjectLine || '';
       
-      console.log('Mapped data - HTML:', emailHTML.substring(0, 100) + '...', 'Subject:', subjectLine);
+      console.log('UniversalConversationalInterface: Calling onEmailBuilderOpen with HTML length:', emailHTML.length, 'Subject:', subjectLine);
       
       onEmailBuilderOpen(emailHTML, subjectLine);
     } else {
-      console.error('Missing email data or callback:', { emailData, onEmailBuilderOpen });
+      console.error('UniversalConversationalInterface: Missing email data or callback:', { emailData, onEmailBuilderOpen });
     }
   };
-
-  // Add scroll detection effect
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-      
-      // Show button when user is more than 200px from bottom
-      setShowScrollButton(distanceFromBottom > 200);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Auto-scroll to bottom for new messages
   useEffect(() => {
     if (messagesEndRef.current) {
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const scrollHeight = document.documentElement.scrollHeight;
-      const clientHeight = document.documentElement.clientHeight;
-      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-      
-      // Only auto-scroll if user is near the bottom (within 300px)
-      if (distanceFromBottom < 300) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        setUnreadCount(0);
-      } else {
-        // User is scrolled up, increment unread count
-        setUnreadCount(prev => prev + 1);
-      }
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
-
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      setUnreadCount(0);
-    }
-  };
 
   const placeholderText = {
     journeys: 'your customer journey challenge...',
@@ -356,12 +327,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           disableDoMode={context !== 'messages'}
         />
       </div>
-
-      <ScrollToBottomButton
-        isVisible={showScrollButton}
-        unreadCount={unreadCount}
-        onClick={scrollToBottom}
-      />
     </div>
   );
 };

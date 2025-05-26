@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,10 @@ interface WorkspacePageProps {
 
 const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => {
   const [activeTab, setActiveTab] = useState('journeys');
+
+  useEffect(() => {
+    console.log('WorkspacePage: Rendered with onEmailBuilderOpen:', !!onEmailBuilderOpen);
+  }, [onEmailBuilderOpen]);
 
   const getContextConfig = () => {
     switch (activeTab) {
@@ -54,14 +58,14 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
   };
 
   const handleCreateMessage = () => {
-    console.log('Create Message button clicked in WorkspacePage');
-    console.log('onEmailBuilderOpen callback:', onEmailBuilderOpen);
+    console.log('WorkspacePage: Create Message button clicked');
+    console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
     
     if (onEmailBuilderOpen) {
-      console.log('Calling onEmailBuilderOpen from WorkspacePage');
+      console.log('WorkspacePage: Calling onEmailBuilderOpen from Create Message button');
       onEmailBuilderOpen();
     } else {
-      console.error('onEmailBuilderOpen callback not provided to WorkspacePage');
+      console.error('WorkspacePage: onEmailBuilderOpen callback not provided');
     }
   };
 
