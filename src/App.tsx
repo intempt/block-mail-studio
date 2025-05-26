@@ -6,7 +6,6 @@ import Index from '@/pages/Index';
 import Messages from '@/pages/Messages';
 import WorkspacePage from '@/pages/WorkspacePage';
 import NotFound from '@/pages/NotFound';
-import EmailEditor from '@/components/EmailEditor';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -20,7 +19,6 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/workspace" element={<WorkspacePage />} />
-            <Route path="/editor" element={<EmailEditor />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
   Plus, 
   Type, 
@@ -11,7 +10,6 @@ import {
   Minus,
   Quote,
   List,
-  Calendar,
   Star,
   ChevronDown
 } from 'lucide-react';

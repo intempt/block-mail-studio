@@ -56,26 +56,26 @@ interface LayoutConfig {
 
 type LeftPanelTab = 'blocks' | 'design' | 'properties' | 'performance';
 
-export default function EmailEditor({ 
-  initialHTML = '', 
-  initialSubject = '', 
-  onBack 
-}: { 
-  initialHTML?: string; 
-  initialSubject?: string; 
+interface EmailEditorProps {
+  content: string;
+  subject: string;
+  onContentChange: (content: string) => void;
+  onSubjectChange: (subject: string) => void;
   onBack?: () => void;
-}) {
+}
+
+export default function EmailEditor({ 
+  content,
+  subject,
+  onContentChange,
+  onSubjectChange,
+  onBack 
+}: EmailEditorProps) {
   console.log('EmailEditor: Component starting to render');
 
-  const [emailHTML, setEmailHTML] = useState(initialHTML);
-  const [subjectLine, setSubjectLine] = useState(initialSubject);
+  // Local UI state only - no content state
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
-  const [layoutConfig, setLayoutConfig] = useState<LayoutConfig>({
-    direction: 'column',
-    alignItems: 'center',
-    justifyContent: 'start'
-  });
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -84,11 +84,17 @@ export default function EmailEditor({
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
   const [universalContent] = useState<UniversalContent[]>([]);
-  const [editorReady, setEditorReady] = useState(false);
+
+  // Stable layout config
+  const layoutConfig = useMemo<LayoutConfig>(() => ({
+    direction: 'column',
+    alignItems: 'center',
+    justifyContent: 'start'
+  }), []);
 
   console.log('EmailEditor: State initialized, creating extensions');
 
-  // Stabilize extensions array to prevent recreating editor on every render
+  // Stable extensions array
   const extensions = useMemo(() => {
     console.log('EmailEditor: Creating TipTap extensions');
     return [
@@ -109,40 +115,33 @@ export default function EmailEditor({
     ];
   }, []);
 
-  // Stabilize onUpdate function to prevent editor recreation
+  // Stable update handler
   const handleEditorUpdate = useCallback(({ editor }) => {
-    setEmailHTML(editor.getHTML());
-  }, []);
+    const newContent = editor.getHTML();
+    onContentChange(newContent);
+  }, [onContentChange]);
 
   console.log('EmailEditor: About to create TipTap editor');
 
+  // Create editor once with stable configuration
   const editor = useEditor({
     extensions,
-    content: initialHTML,
+    content: '', // Start with empty content
     onUpdate: handleEditorUpdate,
     immediatelyRender: false,
   });
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
+  // Update editor content when prop changes
   useEffect(() => {
-    console.log('EmailEditor: useEffect for editor ready', { editor: !!editor, editorReady });
-    if (editor && !editorReady) {
-      if (initialHTML) {
-        console.log('EmailEditor: Setting initial content');
-        editor.commands.setContent(initialHTML);
-      }
-      setEditorReady(true);
+    if (editor && editor.getHTML() !== content) {
+      console.log('EmailEditor: Updating editor content from prop');
+      editor.commands.setContent(content);
     }
-  }, [editor, editorReady]);
+  }, [editor, content]);
 
-  useEffect(() => {
-    console.log('EmailEditor: useEffect for initial subject', { initialSubject, subjectLine });
-    if (initialSubject && !subjectLine) {
-      setSubjectLine(initialSubject);
-    }
-  }, [initialSubject, subjectLine]);
-
+  // Load templates once
   useEffect(() => {
     console.log('EmailEditor: Loading templates');
     const initialTemplates = DirectTemplateService.getAllTemplates();
@@ -204,8 +203,8 @@ export default function EmailEditor({
     // Save template on publish
     const existingTemplateNames = templates.map(t => t.name);
     const newTemplate = DirectTemplateService.savePublishedTemplate(
-      emailHTML,
-      subjectLine,
+      content,
+      subject,
       existingTemplateNames
     );
     setTemplates(prev => [...prev, newTemplate]);
@@ -213,21 +212,18 @@ export default function EmailEditor({
   };
 
   const handleCopyCode = () => {
-    navigator.clipboard.writeText(emailHTML);
+    navigator.clipboard.writeText(content);
   };
 
   const handleSyncFromCode = () => {
     if (editor) {
-      editor.commands.setContent(emailHTML);
+      editor.commands.setContent(content);
     }
   };
 
   const handleTemplateLoad = (template: EmailTemplate) => {
-    setEmailHTML(template.html);
-    setSubjectLine(template.subject);
-    if (editor) {
-      editor.commands.setContent(template.html);
-    }
+    onContentChange(template.html);
+    onSubjectChange(template.subject);
   };
 
   const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
@@ -254,11 +250,8 @@ export default function EmailEditor({
     }
   };
 
-  const handleContentChange = (content: string) => {
-    setEmailHTML(content);
-    if (editor) {
-      editor.commands.setContent(content);
-    }
+  const handleContentChangeFromCanvas = (newContent: string) => {
+    onContentChange(newContent);
   };
 
   const renderLeftPanel = () => {
@@ -296,8 +289,8 @@ export default function EmailEditor({
           console.log('EmailEditor: Rendering performance panel');
           return (
             <PerformanceBrandPanel
-              emailHTML={emailHTML}
-              subjectLine={subjectLine}
+              emailHTML={content}
+              subjectLine={subject}
               editor={editor}
             />
           );
@@ -333,9 +326,9 @@ export default function EmailEditor({
         
         <div className="flex items-center gap-3">
           <EnhancedEmailSubjectLine
-            value={subjectLine}
-            onChange={setSubjectLine}
-            emailContent={emailHTML}
+            value={subject}
+            onChange={onSubjectChange}
+            emailContent={content}
           />
           <Button onClick={handlePreview} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-2" />
@@ -421,7 +414,7 @@ export default function EmailEditor({
           <div className="flex-1 overflow-auto bg-gray-100 p-6">
             <div className="max-w-2xl mx-auto">
               <EmailBlockCanvas
-                onContentChange={handleContentChange}
+                onContentChange={handleContentChangeFromCanvas}
                 onBlockSelect={handleBlockSelect}
                 previewWidth={600}
                 previewMode="desktop"
@@ -461,7 +454,7 @@ export default function EmailEditor({
             <div className="flex-1 overflow-hidden">
               <EmailCodeEditor
                 editor={editor}
-                initialHtml={emailHTML}
+                initialHtml={content}
               />
             </div>
           </div>
@@ -471,7 +464,7 @@ export default function EmailEditor({
       {/* Modals */}
       {showPreview && (
         <EmailPreview
-          html={emailHTML}
+          html={content}
           previewMode={previewMode}
         />
       )}

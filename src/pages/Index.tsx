@@ -1,59 +1,53 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import WorkspacePage from './WorkspacePage';
 import EmailEditor from '@/components/EmailEditor';
 
 const Index = () => {
   const [showEditor, setShowEditor] = useState(false);
-  const [initialEmailHTML, setInitialEmailHTML] = useState<string>('');
-  const [initialSubjectLine, setInitialSubjectLine] = useState<string>('');
+  const [emailContent, setEmailContent] = useState<string>('');
+  const [subjectLine, setSubjectLine] = useState<string>('');
 
-  const handleEmailBuilderOpen = (emailHTML?: string, subjectLine?: string) => {
+  const handleEmailBuilderOpen = useCallback((emailHTML?: string, subject?: string) => {
     console.log('=== Index.tsx: handleEmailBuilderOpen called ===');
     console.log('Index.tsx: emailHTML provided:', !!emailHTML, 'Length:', emailHTML?.length || 0);
-    console.log('Index.tsx: subjectLine provided:', !!subjectLine, 'Value:', subjectLine || 'empty');
-    console.log('Index.tsx: Current showEditor state:', showEditor);
+    console.log('Index.tsx: subject provided:', !!subject, 'Value:', subject || 'empty');
     
-    if (emailHTML) {
-      console.log('Index.tsx: Setting initialEmailHTML');
-      setInitialEmailHTML(emailHTML);
-    } else {
-      console.log('Index.tsx: No emailHTML provided, using empty string');
-      setInitialEmailHTML('');
-    }
-    
-    if (subjectLine) {
-      console.log('Index.tsx: Setting initialSubjectLine');
-      setInitialSubjectLine(subjectLine);
-    } else {
-      console.log('Index.tsx: No subjectLine provided, using empty string');
-      setInitialSubjectLine('');
-    }
-    
-    console.log('Index.tsx: Setting showEditor to true');
+    setEmailContent(emailHTML || '');
+    setSubjectLine(subject || '');
     setShowEditor(true);
     console.log('Index.tsx: handleEmailBuilderOpen completed');
-  };
+  }, []);
 
-  const handleBackToWorkspace = () => {
+  const handleBackToWorkspace = useCallback(() => {
     console.log('=== Index.tsx: handleBackToWorkspace called ===');
     setShowEditor(false);
-    setInitialEmailHTML('');
-    setInitialSubjectLine('');
+    setEmailContent('');
+    setSubjectLine('');
     console.log('Index.tsx: Returned to workspace');
-  };
+  }, []);
+
+  const handleContentChange = useCallback((content: string) => {
+    setEmailContent(content);
+  }, []);
+
+  const handleSubjectChange = useCallback((subject: string) => {
+    setSubjectLine(subject);
+  }, []);
 
   console.log('=== Index.tsx: Rendering ===');
   console.log('Index.tsx: showEditor:', showEditor);
-  console.log('Index.tsx: initialEmailHTML length:', initialEmailHTML.length);
-  console.log('Index.tsx: initialSubjectLine:', initialSubjectLine);
+  console.log('Index.tsx: emailContent length:', emailContent.length);
+  console.log('Index.tsx: subjectLine:', subjectLine);
 
   if (showEditor) {
     console.log('Index.tsx: Rendering EmailEditor');
     return (
       <EmailEditor 
-        initialHTML={initialEmailHTML}
-        initialSubject={initialSubjectLine}
+        content={emailContent}
+        subject={subjectLine}
+        onContentChange={handleContentChange}
+        onSubjectChange={handleSubjectChange}
         onBack={handleBackToWorkspace}
       />
     );
