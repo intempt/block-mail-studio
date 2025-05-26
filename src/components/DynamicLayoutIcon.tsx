@@ -1,0 +1,64 @@
+
+import React from 'react';
+
+interface LayoutOption {
+  id: string;
+  name: string;
+  columns: number;
+  ratio: string;
+  preview: string[];
+}
+
+interface DynamicLayoutIconProps {
+  layout: LayoutOption;
+  className?: string;
+}
+
+export const DynamicLayoutIcon: React.FC<DynamicLayoutIconProps> = ({ 
+  layout, 
+  className = "w-4 h-3" 
+}) => {
+  const getColumnWidths = () => {
+    // Convert percentage strings to actual widths for SVG (total width = 16)
+    return layout.preview.map(percent => {
+      const numericValue = parseFloat(percent.replace('%', ''));
+      return (numericValue / 100) * 14; // 14 to leave space for gaps
+    });
+  };
+
+  const renderColumns = () => {
+    const widths = getColumnWidths();
+    let currentX = 1; // Start with 1px margin
+    const columnHeight = 10;
+    const gap = 0.5;
+
+    return widths.map((width, index) => {
+      const rect = (
+        <rect
+          key={index}
+          x={currentX}
+          y={1}
+          width={width}
+          height={columnHeight}
+          fill="#dbeafe"
+          stroke="#93c5fd"
+          strokeWidth="0.5"
+          rx="0.5"
+        />
+      );
+      currentX += width + gap;
+      return rect;
+    });
+  };
+
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {renderColumns()}
+    </svg>
+  );
+};

@@ -31,6 +31,7 @@ import { ButtonsLinksCard } from './ButtonsLinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
 import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
+import { DynamicLayoutIcon } from './DynamicLayoutIcon';
 
 interface BlockItem {
   id: string;
@@ -148,18 +149,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     tablet: { icon: Tablet, width: 768, label: 'Tablet' },
     mobile: { icon: Smartphone, width: 375, label: 'Mobile' }
   };
-
-  const renderLayoutPreview = (layout: LayoutOption) => (
-    <div className="flex h-3 mb-1">
-      {layout.preview.map((width, index) => (
-        <div
-          key={index}
-          className="bg-blue-200 rounded-sm border border-blue-300"
-          style={{ width }}
-        />
-      ))}
-    </div>
-  );
 
   const closeAllPanels = () => {
     setShowButtonsLinks(false);
@@ -324,7 +313,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   className="flex flex-col items-center p-1 h-12 w-12 cursor-pointer"
                   onClick={() => handleLayoutSelect(layout)}
                 >
-                  {renderLayoutPreview(layout)}
+                  <DynamicLayoutIcon layout={layout} />
                 </Button>
               ))}
             </div>
