@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -266,6 +267,7 @@ export default function EmailEditor({
         onDeviceChange={handleDeviceChange}
         onWidthChange={handleWidthChange}
         onPreview={handlePreview}
+        onSaveTemplate={handleSaveAsTemplate}
         onPublish={handlePublish}
       />
 
@@ -287,11 +289,8 @@ export default function EmailEditor({
       {/* Modals */}
       {showPreview && (
         <EmailPreview
-          emailHTML={content}
-          subjectLine={subject}
-          isOpen={showPreview}
-          onClose={() => setShowPreview(false)}
-          deviceMode={previewMode}
+          html={content}
+          previewMode={previewMode}
         />
       )}
 

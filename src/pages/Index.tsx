@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
-import { WorkspacePage } from './WorkspacePage';
+import WorkspacePage from './WorkspacePage';
 import EmailEditor from '@/components/EmailEditor';
 
 const Index = () => {

@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Index from '@/pages/Index';
 import Messages from '@/pages/Messages';
-import { WorkspacePage } from '@/pages/WorkspacePage';
+import WorkspacePage from '@/pages/WorkspacePage';
 import NotFound from '@/pages/NotFound';
 import './App.css';
 

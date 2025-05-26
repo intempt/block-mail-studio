@@ -1,255 +1,247 @@
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
-import Table from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { common, createLowlight } from 'lowlight'
-import { Color } from '@tiptap/extension-color'
-import TextStyle from '@tiptap/extension-text-style'
-import { OmnipresentRibbon } from '@/components/OmnipresentRibbon';
-import { EmailPreview } from '@/components/EmailPreview';
-import { EnhancedEmailBlockPalette } from '@/components/EnhancedEmailBlockPalette';
-import { EmailTemplate } from '@/components/TemplateManager';
-import { UniversalContent } from '@/types/emailBlocks';
-import { EmailSnippet } from '@/types/snippets';
-import { generateUniqueId } from '@/utils/blockUtils';
-import { EnhancedTopBar } from '@/components/EnhancedTopBar';
-
-interface Block {
-  id: string;
-  type: string;
-  content: any;
-  styles?: any;
-}
+import React, { useState, useEffect } from 'react';
+import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { UniversalConversationalInterface } from '@/components/UniversalConversationalInterface';
+import { JourneysTab } from '@/components/JourneysTab';
+import { SnippetsTab } from '@/components/SnippetsTab';
+import { MessagesTable } from '@/components/MessagesTable';
+import { Search, Plus, Zap } from 'lucide-react';
 
 interface WorkspacePageProps {
-  onEmailBuilderOpen?: (emailHTML?: string, subject?: string) => void;
+  onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
 }
 
-export const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => {
-  const [emailHTML, setEmailHTML] = useState<string>('');
-  const [subjectLine, setSubjectLine] = useState<string>('');
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [universalContent, setUniversalContent] = useState<UniversalContent[]>([]);
-  const [isPaletteOpen, setIsPaletteOpen] = useState(true);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [globalStyles, setGlobalStyles] = useState({});
-  const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
-  const [canvasWidth, setCanvasWidth] = useState(600);
-  const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
-  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
-
-  const lowlight = createLowlight()
-
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Link.configure({
-        openOnClick: false,
-      }),
-      Image,
-      Table,
-      TableRow,
-      TableCell,
-      TableHeader,
-      CodeBlockLowlight.configure({
-        lowlight,
-      }),
-      Color,
-      TextStyle,
-    ],
-    content: '<p>Lets get started!</p>',
-    onUpdate: ({ editor }) => {
-      setEmailHTML(editor.getHTML());
-    },
-  });
+const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => {
+  const [activeTab, setActiveTab] = useState('journeys');
 
   useEffect(() => {
-    setEmailHTML(editor?.getHTML() || '');
-  }, [editor]);
+    console.log('=== WorkspacePage: Component mounted/updated ===');
+    console.log('WorkspacePage: onEmailBuilderOpen callback provided:', !!onEmailBuilderOpen);
+    console.log('WorkspacePage: onEmailBuilderOpen type:', typeof onEmailBuilderOpen);
+  }, [onEmailBuilderOpen]);
 
-  const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
-    console.log('Adding block:', blockType, layoutConfig);
-    const newBlock = {
-      id: generateUniqueId(),
-      type: blockType,
-      content: layoutConfig || { text: 'New ' + blockType },
-      styles: {}
-    };
-    setBlocks(prevBlocks => [...prevBlocks, newBlock]);
-  }, []);
-
-  const handleSnippetAdd = useCallback((snippet: EmailSnippet) => {
-    console.log('Adding snippet:', snippet);
-    if (editor) {
-      editor.commands.insertContent(snippet.blockData || snippet.name);
-      setEmailHTML(editor.getHTML());
-    }
-  }, [editor]);
-
-  const handleUniversalContentAdd = useCallback((content: UniversalContent) => {
-    setUniversalContent(prevContent => [...prevContent, content]);
-  }, []);
-
-  const handleBlockUpdate = useCallback((blockId: string, newContent: any) => {
-    setBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === blockId ? { ...block, content: newContent } : block
-      )
-    );
-  }, []);
-
-  const handleBlockStyleUpdate = useCallback((blockId: string, newStyles: any) => {
-    setBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === blockId ? { ...block, styles: newStyles } : block
-      )
-    );
-  }, []);
-
-  const handleBlockDelete = useCallback((blockId: string) => {
-    setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const dragData = e.dataTransfer.getData('application/json');
-
-    if (dragData) {
-      try {
-        const data = JSON.parse(dragData);
-        if (data.blockType) {
-          handleBlockAdd(data.blockType, data.layoutData);
-        }
-      } catch (error) {
-        console.error('Error parsing drag data:', error);
-      }
-    }
-  }, [handleBlockAdd]);
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-  };
-
-  const handleGlobalStylesChange = (styles: any) => {
-    setGlobalStyles(styles);
-  };
-
-  const handleCanvasWidthChange = (width: number) => {
-    setCanvasWidth(width);
-    setDeviceMode('custom');
-  };
-
-  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile') => {
-    setDeviceMode(device);
-    switch (device) {
-      case 'desktop':
-        setCanvasWidth(1200);
-        break;
-      case 'tablet':
-        setCanvasWidth(768);
-        break;
-      case 'mobile':
-        setCanvasWidth(375);
-        break;
+  const getContextConfig = () => {
+    switch (activeTab) {
+      case 'journeys':
+        return {
+          breadcrumbText: 'Journeys'
+        };
+      case 'messages':
+        return {
+          breadcrumbText: 'Messages'
+        };
+      case 'snippets':
+        return {
+          breadcrumbText: 'Snippets'
+        };
       default:
-        setCanvasWidth(600);
-        break;
+        return {
+          breadcrumbText: 'Journeys'
+        };
     }
   };
 
-  const handlePublish = () => {
-    console.log('Publishing email...');
+  const getDynamicTitle = () => {
+    switch (activeTab) {
+      case 'journeys':
+        return 'Describe your Journey';
+      case 'messages':
+        return 'Describe your Message';
+      case 'snippets':
+        return 'Describe your Snippet';
+      default:
+        return 'Describe your Journey';
+    }
   };
 
-  const handleBack = () => {
+  const handleCreateMessage = () => {
+    console.log('=== WorkspacePage: Create Message button clicked ===');
+    console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
+    console.log('WorkspacePage: onEmailBuilderOpen function:', onEmailBuilderOpen);
+    
     if (onEmailBuilderOpen) {
-      // Navigate back to main interface
-      console.log('Navigating back');
+      console.log('WorkspacePage: Calling onEmailBuilderOpen from Create Message button');
+      try {
+        onEmailBuilderOpen();
+        console.log('WorkspacePage: onEmailBuilderOpen call completed successfully');
+      } catch (error) {
+        console.error('WorkspacePage: Error calling onEmailBuilderOpen:', error);
+      }
+    } else {
+      console.error('WorkspacePage: onEmailBuilderOpen callback not provided');
+      alert('Error: Email editor callback not available. Please refresh the page.');
     }
   };
+
+  const handleForceLoadEditor = () => {
+    console.log('=== WorkspacePage: Force Load Editor button clicked ===');
+    console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
+    
+    if (onEmailBuilderOpen) {
+      console.log('WorkspacePage: Force loading editor with empty content');
+      try {
+        onEmailBuilderOpen('', 'New Email Campaign');
+        console.log('WorkspacePage: Force load completed successfully');
+      } catch (error) {
+        console.error('WorkspacePage: Error force loading editor:', error);
+      }
+    } else {
+      console.error('WorkspacePage: onEmailBuilderOpen callback not provided for force load');
+      alert('Error: Email editor callback not available. Please refresh the page.');
+    }
+  };
+
+  const handleCreateJourney = () => {
+    console.log('Create Journey clicked - feature coming soon');
+  };
+
+  const handleCreateSnippet = () => {
+    console.log('Create Snippet clicked - feature coming soon');
+  };
+
+  const config = getContextConfig();
+
+  console.log('=== WorkspacePage: Rendering ===');
+  console.log('WorkspacePage: activeTab:', activeTab);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <OmnipresentRibbon 
-        onBlockAdd={handleBlockAdd}
-        onSnippetAdd={handleSnippetAdd}
-        universalContent={universalContent}
-        onUniversalContentAdd={handleUniversalContentAdd}
-        onGlobalStylesChange={handleGlobalStylesChange}
-        emailHTML={emailHTML}
-        subjectLine={subjectLine}
-        editor={editor}
-        snippetRefreshTrigger={snippetRefreshTrigger}
-        onBack={handleBack}
-        canvasWidth={canvasWidth}
-        deviceMode={deviceMode}
-        onDeviceChange={handleDeviceChange}
-        onWidthChange={handleCanvasWidthChange}
-        onPreview={() => setIsPreviewOpen(true)}
-        onPublish={handlePublish}
-      />
-
-      <div className="flex flex-col lg:flex-row w-full h-full">
-        <div className="w-full lg:w-80 flex-shrink-0 border-r border-gray-200 bg-white">
-          <EnhancedEmailBlockPalette
-            onBlockAdd={handleBlockAdd}
-            onSnippetAdd={handleSnippetAdd}
-            universalContent={universalContent}
-            onUniversalContentAdd={handleUniversalContentAdd}
-            compactMode={true}
-            snippetRefreshTrigger={snippetRefreshTrigger}
-          />
-        </div>
-
-        <div
-          className="flex-1 h-full overflow-auto p-4"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mx-auto" style={{ width: `${canvasWidth}px` }}>
-            <div className="p-4 border-b border-gray-200">
-              <input
-                type="text"
-                placeholder="Subject Line"
-                className="w-full text-lg font-medium text-gray-800 border-none focus:outline-none focus:ring-0"
-                value={subjectLine}
-                onChange={(e) => setSubjectLine(e.target.value)}
-              />
+    <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
+      <div className="space-y-8 max-w-4xl mx-auto">
+        {/* Force Load Editor Button - Emergency Access */}
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Quick Access</h3>
+              <p className="text-xs text-red-600">Direct access to email editor (debugging)</p>
             </div>
-            <div className="min-h-[200px] p-4">
-              {blocks.length === 0 && (
-                <div className="text-center text-gray-500">
-                  Drag and drop blocks here to start building your email.
-                </div>
-              )}
-              <EditorContent editor={editor} />
-            </div>
+            <Button 
+              onClick={handleForceLoadEditor}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              size="sm"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Force Load Editor
+            </Button>
           </div>
         </div>
-      </div>
 
-      <EmailPreview
-        emailHTML={emailHTML}
-        subjectLine={subjectLine}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        deviceMode={deviceMode === 'mobile' ? 'mobile' : 'desktop'}
-      />
-    </div>
+        {/* Universal Chat Interface with Dynamic Title */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+          <div className="p-6">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+              {getDynamicTitle()}
+            </h2>
+            <UniversalConversationalInterface 
+              context={activeTab as 'journeys' | 'messages' | 'snippets'}
+              onEmailBuilderOpen={onEmailBuilderOpen}
+            />
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+            <TabsTrigger 
+              value="journeys" 
+              className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
+            >
+              Journeys
+            </TabsTrigger>
+            <TabsTrigger 
+              value="messages"
+              className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
+            >
+              Messages
+            </TabsTrigger>
+            <TabsTrigger 
+              value="snippets"
+              className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
+            >
+              Snippets
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="journeys" className="space-y-6 mt-6">
+            {/* Search Bar - no filter */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search journeys..."
+                className="pl-10"
+              />
+            </div>
+            
+            <JourneysTab />
+            
+            {/* Create Journey Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleCreateJourney}
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Journey
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="messages" className="space-y-6 mt-6">
+            {/* Search Bar - no filter */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search messages..."
+                className="pl-10"
+              />
+            </div>
+            
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="p-6">
+                <MessagesTable onEmailBuilderOpen={onEmailBuilderOpen} />
+              </div>
+            </div>
+            
+            {/* Create Message Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleCreateMessage}
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Message
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="snippets" className="space-y-6 mt-6">
+            {/* Search Bar - no filter */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search snippets..."
+                className="pl-10"
+              />
+            </div>
+            
+            <SnippetsTab />
+            
+            {/* Create Snippet Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleCreateSnippet}
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Snippet
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AuthenticIntemptLayout>
   );
 };
 
