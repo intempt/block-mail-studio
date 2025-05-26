@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Toggle } from '@/components/ui/toggle';
 import { 
   Send, 
   MessageSquare, 
@@ -25,11 +26,12 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
   context = 'messages'
 }) => {
   const [inputMessage, setInputMessage] = useState('');
-  const [selectedMode, setSelectedMode] = useState<'ask' | 'do'>('ask');
+  const [isDoMode, setIsDoMode] = useState(false);
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
-    onSendMessage(inputMessage, selectedMode);
+    const mode = (isDoMode && !disableDoMode) ? 'do' : 'ask';
+    onSendMessage(inputMessage, mode);
     setInputMessage('');
   };
 
@@ -40,54 +42,54 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
     }
   };
 
-  const getDoTooltip = () => {
-    if (disableDoMode) {
-      return 'Do mode available for email creation only';
+  const handleToggleMode = () => {
+    if (!disableDoMode) {
+      setIsDoMode(!isDoMode);
     }
-    return undefined;
+  };
+
+  const getModePlaceholder = () => {
+    const currentMode = (isDoMode && !disableDoMode) ? 'do' : 'ask';
+    return `${currentMode === 'ask' ? 'Ask about' : 'Create'} ${placeholder.toLowerCase()}`;
   };
 
   return (
     <div className="border border-gray-300 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 bg-white">
-      {/* Mode Toggle */}
+      {/* Mode Toggle Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center bg-white rounded-md border border-gray-200">
-            <Button
-              variant={selectedMode === 'ask' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSelectedMode('ask')}
-              className={`h-8 px-3 rounded-r-none ${
-                selectedMode === 'ask' 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <MessageSquare className="w-3 h-3 mr-1" />
-              Ask
-            </Button>
-            <Button
-              variant={selectedMode === 'do' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => !disableDoMode && setSelectedMode('do')}
-              disabled={disableDoMode}
-              title={getDoTooltip()}
-              className={`h-8 px-3 rounded-l-none border-l ${
-                disableDoMode 
-                  ? 'text-gray-400 cursor-not-allowed opacity-50'
-                  : selectedMode === 'do' 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <Zap className="w-3 h-3 mr-1" />
-              Do
-            </Button>
-          </div>
+        <div className="flex items-center space-x-3">
+          <Toggle
+            pressed={isDoMode && !disableDoMode}
+            onPressedChange={handleToggleMode}
+            disabled={disableDoMode}
+            className={`h-8 px-3 transition-all duration-200 ${
+              isDoMode && !disableDoMode
+                ? 'bg-blue-600 text-white hover:bg-blue-700 data-[state=on]:bg-blue-600 data-[state=on]:text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            } ${disableDoMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isDoMode && !disableDoMode ? (
+              <>
+                <Zap className="w-3 h-3 mr-1" />
+                Do
+              </>
+            ) : (
+              <>
+                <MessageSquare className="w-3 h-3 mr-1" />
+                Ask
+              </>
+            )}
+          </Toggle>
+          
+          {disableDoMode && (
+            <span className="text-xs text-gray-500">
+              Do mode available for {context === 'messages' ? 'email creation' : context} only
+            </span>
+          )}
         </div>
         
         <div className="text-xs text-gray-500">
-          {selectedMode === 'ask' ? 'Plan and discuss' : 'Create when possible'}
+          {isDoMode && !disableDoMode ? 'Create when possible' : 'Plan and discuss'}
         </div>
       </div>
 
@@ -96,7 +98,7 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
         <Input
           value={inputMessage}
           onChange={(e) => setInputMessage(e.target.value)}
-          placeholder={`${selectedMode === 'ask' ? 'Ask about' : 'Create'} ${placeholder.toLowerCase()}`}
+          placeholder={getModePlaceholder()}
           onKeyPress={handleKeyPress}
           className="flex-1 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
           disabled={isLoading}
