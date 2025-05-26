@@ -29,12 +29,12 @@ export const ConversationalSMSBuilder: React.FC<ConversationalSMSBuilderProps> =
 
   const handleCopy = () => {
     navigator.clipboard.writeText(smsContent);
-    toast.success("SMS content copied to clipboard");
+    console.log("SMS content copied to clipboard");
   };
 
   const handleComplete = () => {
     setIsComplete(true);
-    toast.success("Your SMS message is ready to send");
+    console.log("Your SMS message is ready to send");
   };
 
   return (

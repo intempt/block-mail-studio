@@ -34,12 +34,12 @@ export const ConversationalPushBuilder: React.FC<ConversationalPushBuilderProps>
   const handleCopy = () => {
     const pushJson = JSON.stringify(pushData, null, 2);
     navigator.clipboard.writeText(pushJson);
-    toast.success("Push notification data copied to clipboard");
+    console.log("Push notification data copied to clipboard");
   };
 
   const handleComplete = () => {
     setIsComplete(true);
-    toast.success("Your push notification is ready to send");
+    console.log("Your push notification is ready to send");
   };
 
   return (
