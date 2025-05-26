@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -43,21 +42,164 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [currentEmailHTML, setCurrentEmailHTML] = useState('');
 
-  useImperativeHandle(ref, () => ({
-    findAndReplaceText: (current: string, replacement: string) => {
-      setBlocks(prev => prev.map(block => {
-        if (block.type === 'text') {
+  // Helper function to strip HTML tags for text comparison
+  const stripHTML = (html: string): string => {
+    return html.replace(/<[^>]*>/g, '').trim();
+  };
+
+  // Helper function to normalize text for comparison
+  const normalizeText = (text: string): string => {
+    return text.toLowerCase().replace(/\s+/g, ' ').trim();
+  };
+
+  // Enhanced findAndReplaceText with better HTML handling
+  const findAndReplaceText = useCallback((current: string, replacement: string) => {
+    console.log('FindAndReplaceText: Searching for:', current);
+    console.log('FindAndReplaceText: Replacing with:', replacement);
+    
+    const currentNormalized = normalizeText(stripHTML(current));
+    let replacementsMade = 0;
+
+    setBlocks(prev => prev.map(block => {
+      if (block.type === 'text') {
+        const blockTextContent = stripHTML(block.content.html || '');
+        const blockTextNormalized = normalizeText(blockTextContent);
+        
+        console.log('FindAndReplaceText: Checking block text:', blockTextContent);
+        
+        // Check if the current text exists in this block (fuzzy match)
+        if (blockTextNormalized.includes(currentNormalized)) {
+          console.log('FindAndReplaceText: Found match in text block');
+          
+          // Create new HTML with replacement
+          let newHTML = block.content.html || '';
+          
+          // Try exact replacement first
+          if (newHTML.includes(current)) {
+            newHTML = newHTML.replace(current, replacement);
+            replacementsMade++;
+          } else {
+            // Try replacing just the text content while preserving some HTML structure
+            const strippedCurrent = stripHTML(current);
+            if (newHTML.includes(strippedCurrent)) {
+              newHTML = newHTML.replace(strippedCurrent, replacement);
+              replacementsMade++;
+            } else {
+              // Fallback: replace the entire content if it's similar enough
+              const similarity = blockTextNormalized.length > 0 ? 
+                currentNormalized.length / blockTextNormalized.length : 0;
+              
+              if (similarity > 0.7 || blockTextNormalized === currentNormalized) {
+                newHTML = `<p>${replacement}</p>`;
+                replacementsMade++;
+              }
+            }
+          }
+          
+          console.log('FindAndReplaceText: Updated HTML:', newHTML);
+          
           return {
             ...block,
             content: {
               ...block.content,
-              html: block.content.html.replace(new RegExp(current, 'g'), replacement)
+              html: newHTML
             }
           };
         }
-        return block;
-      }));
-    },
+      } else if (block.type === 'button') {
+        const buttonText = block.content.text || '';
+        const buttonTextNormalized = normalizeText(buttonText);
+        
+        console.log('FindAndReplaceText: Checking button text:', buttonText);
+        
+        if (buttonTextNormalized.includes(normalizeText(current)) || 
+            normalizeText(current).includes(buttonTextNormalized)) {
+          console.log('FindAndReplaceText: Found match in button block');
+          
+          replacementsMade++;
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              text: replacement
+            }
+          };
+        }
+      } else if (block.type === 'columns') {
+        // Handle columns recursively
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.map(columnBlock => {
+            if (columnBlock.type === 'text') {
+              const blockTextContent = stripHTML(columnBlock.content.html || '');
+              const blockTextNormalized = normalizeText(blockTextContent);
+              
+              if (blockTextNormalized.includes(currentNormalized)) {
+                console.log('FindAndReplaceText: Found match in column text block');
+                
+                let newHTML = columnBlock.content.html || '';
+                
+                if (newHTML.includes(current)) {
+                  newHTML = newHTML.replace(current, replacement);
+                  replacementsMade++;
+                } else {
+                  const strippedCurrent = stripHTML(current);
+                  if (newHTML.includes(strippedCurrent)) {
+                    newHTML = newHTML.replace(strippedCurrent, replacement);
+                    replacementsMade++;
+                  }
+                }
+                
+                return {
+                  ...columnBlock,
+                  content: {
+                    ...columnBlock.content,
+                    html: newHTML
+                  }
+                };
+              }
+            } else if (columnBlock.type === 'button') {
+              const buttonText = columnBlock.content.text || '';
+              const buttonTextNormalized = normalizeText(buttonText);
+              
+              if (buttonTextNormalized.includes(normalizeText(current))) {
+                console.log('FindAndReplaceText: Found match in column button block');
+                
+                replacementsMade++;
+                return {
+                  ...columnBlock,
+                  content: {
+                    ...columnBlock.content,
+                    text: replacement
+                  }
+                };
+              }
+            }
+            return columnBlock;
+          })
+        }));
+        
+        return {
+          ...block,
+          content: {
+            ...block.content,
+            columns: updatedColumns
+          }
+        };
+      }
+      
+      return block;
+    }));
+
+    console.log('FindAndReplaceText: Total replacements made:', replacementsMade);
+    
+    if (replacementsMade === 0) {
+      console.warn('FindAndReplaceText: No replacements made. Current text not found.');
+    }
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    findAndReplaceText,
     optimizeImages: () => {
       setBlocks(prev => prev.map(block => {
         if (block.type === 'image' && block.content.src) {
@@ -119,7 +261,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       console.log('EmailBlockCanvas: Adding block via ref:', block);
       setBlocks(prev => [...prev, block]);
     }
-  }), [blocks]);
+  }), [blocks, findAndReplaceText]);
 
   useEffect(() => {
     const initialBlocks: EmailBlock[] = [
