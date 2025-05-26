@@ -2,8 +2,6 @@
 import React, { useState } from 'react';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import { UniversalConversationalInterface } from '@/components/UniversalConversationalInterface';
 import { JourneysTab } from '@/components/JourneysTab';
 import { SnippetsTab } from '@/components/SnippetsTab';
@@ -55,27 +53,13 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
   const config = getContextConfig();
 
-  const handleCreateMessage = () => {
-    if (onEmailBuilderOpen) {
-      onEmailBuilderOpen();
-    }
-  };
-
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Page Header with conditional Create Message button */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
-            <p className="text-gray-600">{config.description}</p>
-          </div>
-          {activeTab === 'messages' && (
-            <Button onClick={handleCreateMessage} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Message
-            </Button>
-          )}
+        {/* Page Header - NO CREATE BUTTON */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
+          <p className="text-gray-600">{config.description}</p>
         </div>
 
         {/* PROMPT-FIRST: Universal Chat Interface at the top */}
@@ -124,7 +108,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
             <div className="bg-white rounded-lg border border-gray-200">
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Messages</h3>
-                <MessagesTable />
+                <MessagesTable onEmailBuilderOpen={onEmailBuilderOpen} />
               </div>
             </div>
           </TabsContent>

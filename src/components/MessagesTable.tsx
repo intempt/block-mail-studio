@@ -11,7 +11,8 @@ import {
   Eye,
   Edit,
   Copy,
-  Trash2
+  Trash2,
+  Plus
 } from 'lucide-react';
 
 interface Message {
@@ -23,6 +24,10 @@ interface Message {
   lastModified: string;
   opens?: number;
   clicks?: number;
+}
+
+interface MessagesTableProps {
+  onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
 }
 
 const mockMessages: Message[] = [
@@ -82,7 +87,19 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const MessagesTable: React.FC = () => {
+export const MessagesTable: React.FC<MessagesTableProps> = ({ onEmailBuilderOpen }) => {
+  const handleCreateMessage = () => {
+    console.log('Create Message button clicked');
+    console.log('onEmailBuilderOpen callback:', onEmailBuilderOpen);
+    
+    if (onEmailBuilderOpen) {
+      console.log('Calling onEmailBuilderOpen');
+      onEmailBuilderOpen();
+    } else {
+      console.error('onEmailBuilderOpen callback not provided');
+    }
+  };
+
   return (
     <Card className="mt-6">
       <div className="p-6">
@@ -162,6 +179,17 @@ export const MessagesTable: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* CREATE MESSAGE BUTTON - NOW AT BOTTOM OF TAB */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <Button 
+            onClick={handleCreateMessage}
+            className="bg-blue-600 hover:bg-blue-700 w-full"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Message
+          </Button>
         </div>
       </div>
     </Card>

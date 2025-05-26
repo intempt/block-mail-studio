@@ -1,9 +1,15 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { GitBranch, Users, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { GitBranch, Users, Clock, Plus } from 'lucide-react';
 
 export const JourneysTab: React.FC = () => {
+  const handleCreateJourney = () => {
+    // Placeholder for future journey creation functionality
+    console.log('Create Journey clicked - feature coming soon');
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -55,6 +61,17 @@ export const JourneysTab: React.FC = () => {
             </div>
           </div>
         </Card>
+      </div>
+
+      {/* CREATE JOURNEY BUTTON - AT BOTTOM OF TAB */}
+      <div className="pt-4 border-t border-gray-200">
+        <Button 
+          onClick={handleCreateJourney}
+          className="bg-blue-600 hover:bg-blue-700 w-full"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Journey
+        </Button>
       </div>
     </div>
   );

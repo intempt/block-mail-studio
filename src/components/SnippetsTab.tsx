@@ -3,9 +3,14 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, FileText, Mail, MessageSquare } from 'lucide-react';
+import { Search, FileText, Mail, MessageSquare, Plus } from 'lucide-react';
 
 export const SnippetsTab: React.FC = () => {
+  const handleCreateSnippet = () => {
+    // Placeholder for future snippet creation functionality
+    console.log('Create Snippet clicked - feature coming soon');
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -75,6 +80,17 @@ export const SnippetsTab: React.FC = () => {
             <Button variant="outline" size="sm" className="text-xs">Use</Button>
           </div>
         </Card>
+      </div>
+
+      {/* CREATE SNIPPET BUTTON - AT BOTTOM OF TAB */}
+      <div className="pt-4 border-t border-gray-200">
+        <Button 
+          onClick={handleCreateSnippet}
+          className="bg-blue-600 hover:bg-blue-700 w-full"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Snippet
+        </Button>
       </div>
     </div>
   );

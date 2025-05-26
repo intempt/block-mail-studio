@@ -241,7 +241,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
               </div>
             )}
             
-            <div className={`max-w-[70%] rounded-xl p-4 ${
+            <div className={`max-w-[70%] rounded-xl p-4 text-left ${
               message.type === 'user'
                 ? 'bg-blue-600 text-white'
                 : message.type === 'system'
@@ -253,12 +253,12 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
                   content={message.content}
                   isComplete={false}
                   isStreaming={true}
-                  className={message.type === 'user' ? 'text-white' : 'text-gray-900'}
+                  className={`text-left ${message.type === 'user' ? 'text-white' : 'text-gray-900'}`}
                 />
               ) : (
                 <MarkdownFormatter 
                   content={message.content} 
-                  className={message.type === 'user' ? 'text-white' : 'text-gray-900'} 
+                  className={`text-left ${message.type === 'user' ? 'text-white' : 'text-gray-900'}`} 
                 />
               )}
               

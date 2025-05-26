@@ -45,9 +45,9 @@ export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({ content, c
       // Handle bullet points
       if (line.trim().startsWith('•') || line.trim().startsWith('-')) {
         return (
-          <div key={index} className="flex items-start gap-2 mb-1">
+          <div key={index} className="flex items-start gap-2 mb-1 text-left">
             <span className="text-blue-500 mt-1">•</span>
-            <span className="flex-1">{formatText(line.replace(/^[•-]\s*/, ''))}</span>
+            <span className="flex-1 text-left">{formatText(line.replace(/^[•-]\s*/, ''))}</span>
           </div>
         );
       }
@@ -55,14 +55,14 @@ export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({ content, c
       // Handle headings
       if (line.trim().startsWith('##')) {
         return (
-          <h3 key={index} className="font-semibold text-lg mt-3 mb-2 text-gray-900">
+          <h3 key={index} className="font-semibold text-lg mt-3 mb-2 text-gray-900 text-left">
             {formatText(line.replace(/^##\s*/, ''))}
           </h3>
         );
       }
       
       return (
-        <div key={index} className="mb-1">
+        <div key={index} className="mb-1 text-left">
           {formatText(line)}
         </div>
       );
@@ -70,7 +70,7 @@ export const MarkdownFormatter: React.FC<MarkdownFormatterProps> = ({ content, c
   };
 
   return (
-    <div className={`leading-relaxed ${className}`}>
+    <div className={`leading-relaxed text-left ${className}`}>
       {formatLines(content)}
     </div>
   );
