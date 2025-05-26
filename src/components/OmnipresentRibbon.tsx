@@ -27,9 +27,7 @@ import {
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-import { ButtonsLinksCard } from './ButtonsLinksCard';
-import { EmailSettingsCard } from './EmailSettingsCard';
-import { TextHeadingsCard } from './TextHeadingsCard';
+import { StylesCard } from './StylesCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
 
@@ -63,7 +61,7 @@ const layoutOptions: LayoutOption[] = [
   { id: '1-column', name: '1 Col', columns: 1, ratio: '100', preview: ['100%'] },
   { id: '2-column-50-50', name: '50/50', columns: 2, ratio: '50-50', preview: ['50%', '50%'] },
   { id: '2-column-33-67', name: '33/67', columns: 2, ratio: '33-67', preview: ['33%', '67%'] },
-  { id: '2-column-67-33', name: '67/33', columns: 2, ratio: '67-33', preview: ['67%', '33%'] },
+  { id: '2-column-67-33', name: '67/33', columns: 2, ratio: '67%', preview: ['67%', '33%'] },
   { id: '2-column-25-75', name: '25/75', columns: 2, ratio: '25-75', preview: ['25%', '75%'] },
   { id: '2-column-75-25', name: '75/25', columns: 2, ratio: '75-25', preview: ['75%', '25%'] },
   { id: '3-column-equal', name: '33/33/33', columns: 3, ratio: '33-33-33', preview: ['33%', '33%', '33%'] },
@@ -119,9 +117,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPublish
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showButtonsLinks, setShowButtonsLinks] = useState(false);
-  const [showEmailSettings, setShowEmailSettings] = useState(false);
-  const [showTextHeadings, setShowTextHeadings] = useState(false);
+  const [showStyles, setShowStyles] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
@@ -151,25 +147,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const closeAllPanels = () => {
-    setShowButtonsLinks(false);
-    setShowEmailSettings(false);
-    setShowTextHeadings(false);
+    setShowStyles(false);
     setShowAISuggestions(false);
   };
 
-  const handleButtonsLinksToggle = () => {
-    if (!showButtonsLinks) closeAllPanels();
-    setShowButtonsLinks(!showButtonsLinks);
-  };
-
-  const handleEmailSettingsToggle = () => {
-    if (!showEmailSettings) closeAllPanels();
-    setShowEmailSettings(!showEmailSettings);
-  };
-
-  const handleTextHeadingsToggle = () => {
-    if (!showTextHeadings) closeAllPanels();
-    setShowTextHeadings(!showTextHeadings);
+  const handleStylesToggle = () => {
+    if (!showStyles) closeAllPanels();
+    setShowStyles(!showStyles);
   };
 
   const handleAISuggestionsToggle = () => {
@@ -284,17 +268,17 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <div className="text-[10px] font-medium text-gray-600 mb-1">Blocks</div>
             <div className="flex gap-1">
               {blockItems.map((block) => (
-                <Button
+                <button
                   key={block.id}
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center p-1 h-10 w-10 cursor-grab active:cursor-grabbing hover:bg-gray-100"
+                  className="flex flex-col items-center justify-center w-12 h-12 cursor-grab active:cursor-grabbing hover:bg-gray-100 rounded transition-colors"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                 >
-                  {block.icon}
-                </Button>
+                  <div className="w-7 h-7 flex items-center justify-center">
+                    {React.cloneElement(block.icon as React.ReactElement, { className: 'w-6 h-6' })}
+                  </div>
+                </button>
               ))}
             </div>
           </div>
@@ -306,67 +290,31 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <div className="text-[10px] font-medium text-gray-600 mb-1">Layouts</div>
             <div className="flex gap-1">
               {layoutOptions.map((layout) => (
-                <Button
+                <button
                   key={layout.id}
-                  variant="ghost"
-                  size="sm"
-                  className="flex flex-col items-center p-1 h-10 w-10 cursor-pointer hover:bg-gray-100"
+                  className="flex flex-col items-center justify-center w-12 h-12 cursor-pointer hover:bg-gray-100 rounded transition-colors"
                   onClick={() => handleLayoutSelect(layout)}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-5 h-4" />
-                </Button>
+                  <DynamicLayoutIcon layout={layout} className="w-6 h-5" />
+                </button>
               ))}
             </div>
           </div>
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Email Settings Section */}
+          {/* Styles Section */}
           <div className="flex-shrink-0">
-            <div className="text-[10px] font-medium text-gray-600 mb-1">Email Settings</div>
+            <div className="text-[10px] font-medium text-gray-600 mb-1">Styles</div>
             <div className="flex gap-1">
-              <Button
-                variant={showEmailSettings ? 'default' : 'ghost'}
-                size="sm"
-                className="h-10 px-3 hover:bg-gray-100"
-                onClick={handleEmailSettingsToggle}
+              <button
+                className={`flex flex-col items-center justify-center w-12 h-12 cursor-pointer rounded transition-colors ${
+                  showStyles ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                }`}
+                onClick={handleStylesToggle}
               >
-                <Settings className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-
-          <Separator orientation="vertical" className="h-10" />
-
-          {/* Text & Headings Section */}
-          <div className="flex-shrink-0">
-            <div className="text-[10px] font-medium text-gray-600 mb-1">Text & Headings</div>
-            <div className="flex gap-1">
-              <Button
-                variant={showTextHeadings ? 'default' : 'ghost'}
-                size="sm"
-                className="h-10 px-3 hover:bg-gray-100"
-                onClick={handleTextHeadingsToggle}
-              >
-                <Type className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-
-          <Separator orientation="vertical" className="h-10" />
-
-          {/* Buttons & Links Section */}
-          <div className="flex-shrink-0">
-            <div className="text-[10px] font-medium text-gray-600 mb-1">Buttons & Links</div>
-            <div className="flex gap-1">
-              <Button
-                variant={showButtonsLinks ? 'default' : 'ghost'}
-                size="sm"
-                className="h-10 px-3 hover:bg-gray-100"
-                onClick={handleButtonsLinksToggle}
-              >
-                <MousePointer className="w-5 h-5" />
-              </Button>
+                <Settings className="w-6 h-6" />
+              </button>
             </div>
           </div>
 
@@ -376,35 +324,23 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">AI Suggestions</div>
             <div className="flex gap-1">
-              <Button
-                variant={showAISuggestions ? 'default' : 'ghost'}
-                size="sm"
-                className="h-10 px-3 hover:bg-gray-100"
+              <button
+                className={`flex flex-col items-center justify-center w-12 h-12 cursor-pointer rounded transition-colors ${
+                  showAISuggestions ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'
+                }`}
                 onClick={handleAISuggestionsToggle}
               >
-                <Lightbulb className="w-5 h-5" />
-              </Button>
+                <Lightbulb className="w-6 h-6" />
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Configuration Cards */}
-      <EmailSettingsCard
-        isOpen={showEmailSettings}
-        onToggle={handleEmailSettingsToggle}
-        onStylesChange={onGlobalStylesChange}
-      />
-
-      <TextHeadingsCard
-        isOpen={showTextHeadings}
-        onToggle={handleTextHeadingsToggle}
-        onStylesChange={onGlobalStylesChange}
-      />
-
-      <ButtonsLinksCard
-        isOpen={showButtonsLinks}
-        onToggle={handleButtonsLinksToggle}
+      <StylesCard
+        isOpen={showStyles}
+        onToggle={handleStylesToggle}
         onStylesChange={onGlobalStylesChange}
       />
 
