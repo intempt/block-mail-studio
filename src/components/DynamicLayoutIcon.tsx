@@ -16,7 +16,7 @@ interface DynamicLayoutIconProps {
 
 export const DynamicLayoutIcon: React.FC<DynamicLayoutIconProps> = ({ 
   layout, 
-  className = "w-5 h-4" 
+  className = "w-6 h-5" 
 }) => {
   const getColumnWidths = () => {
     // Convert percentage strings to actual widths for SVG (total width = 20)
