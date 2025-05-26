@@ -30,7 +30,6 @@ import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
-import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -279,11 +278,6 @@ export default function EmailEditor({
         </div>
         
         <div className="flex items-center gap-3">
-          <EnhancedEmailSubjectLine
-            value={subject}
-            onChange={onSubjectChange}
-            emailContent={content}
-          />
           <Button onClick={handlePreview} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-2" />
             Preview
@@ -358,6 +352,8 @@ export default function EmailEditor({
               previewWidth={600}
               previewMode="desktop"
               compactMode={false}
+              subject={subject}
+              onSubjectChange={onSubjectChange}
             />
           </div>
         </div>
