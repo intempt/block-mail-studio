@@ -8,6 +8,7 @@ import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
 import { mjmlService } from '@/services/MJMLService';
 import { createMJMLTemplate, compileMJMLToHTML } from '@/utils/emailUtils';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -44,17 +45,14 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [currentEmailHTML, setCurrentEmailHTML] = useState('');
 
-  // Helper function to strip HTML tags for text comparison
   const stripHTML = (html: string): string => {
     return html.replace(/<[^>]*>/g, '').trim();
   };
 
-  // Helper function to normalize text for comparison
   const normalizeText = (text: string): string => {
     return text.toLowerCase().replace(/\s+/g, ' ').trim();
   };
 
-  // Enhanced findAndReplaceText with better HTML handling
   const findAndReplaceText = useCallback((current: string, replacement: string) => {
     console.log('FindAndReplaceText: Searching for:', current);
     console.log('FindAndReplaceText: Replacing with:', replacement);
@@ -69,25 +67,20 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         
         console.log('FindAndReplaceText: Checking block text:', blockTextContent);
         
-        // Check if the current text exists in this block (fuzzy match)
         if (blockTextNormalized.includes(currentNormalized)) {
           console.log('FindAndReplaceText: Found match in text block');
           
-          // Create new HTML with replacement
           let newHTML = block.content.html || '';
           
-          // Try exact replacement first
           if (newHTML.includes(current)) {
             newHTML = newHTML.replace(current, replacement);
             replacementsMade++;
           } else {
-            // Try replacing just the text content while preserving some HTML structure
             const strippedCurrent = stripHTML(current);
             if (newHTML.includes(strippedCurrent)) {
               newHTML = newHTML.replace(strippedCurrent, replacement);
               replacementsMade++;
             } else {
-              // Fallback: replace the entire content if it's similar enough
               const similarity = blockTextNormalized.length > 0 ? 
                 currentNormalized.length / blockTextNormalized.length : 0;
               
@@ -128,7 +121,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           };
         }
       } else if (block.type === 'columns') {
-        // Handle columns recursively
         const updatedColumns = block.content.columns.map(column => ({
           ...column,
           blocks: column.blocks.map(columnBlock => {
@@ -279,33 +271,44 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   }, []);
 
   const renderBlockToMJML = useCallback((block: EmailBlock): string => {
-    return mjmlService.renderBlockToMJML(block);
+    try {
+      return mjmlService.renderBlockToMJML(block);
+    } catch (error) {
+      console.error('Error rendering block to MJML:', error);
+      return `<!-- Error rendering block: ${block.type} -->`;
+    }
   }, []);
 
   const renderColumnsToMJML = useCallback((block: ColumnsBlock): string => {
-    return mjmlService.renderColumnsToMJML(block);
+    try {
+      return mjmlService.renderColumnsToMJML(block);
+    } catch (error) {
+      console.error('Error rendering columns to MJML:', error);
+      return `<!-- Error rendering columns block -->`;
+    }
   }, []);
 
   useEffect(() => {
     const generateHTML = () => {
-      if (blocks.length === 0) {
-        const emptyHTML = '';
-        onContentChange(emptyHTML);
-        setCurrentEmailHTML(emptyHTML);
-        return;
+      try {
+        if (blocks.length === 0) {
+          const emptyHTML = '';
+          onContentChange(emptyHTML);
+          setCurrentEmailHTML(emptyHTML);
+          return;
+        }
+
+        const mjmlBlocks = blocks.map(renderBlockToMJML).join('');
+        const mjmlTemplate = createMJMLTemplate(mjmlBlocks, subject);
+        const compiledHTML = compileMJMLToHTML(mjmlTemplate);
+
+        onContentChange(compiledHTML);
+        setCurrentEmailHTML(compiledHTML);
+      } catch (error) {
+        console.error('Error generating HTML:', error);
+        onContentChange('<p>Error generating email content</p>');
+        setCurrentEmailHTML('<p>Error generating email content</p>');
       }
-
-      // Convert blocks to MJML
-      const mjmlBlocks = blocks.map(renderBlockToMJML).join('');
-      
-      // Create complete MJML template
-      const mjmlTemplate = createMJMLTemplate(mjmlBlocks, subject);
-      
-      // Compile MJML to HTML
-      const compiledHTML = compileMJMLToHTML(mjmlTemplate);
-
-      onContentChange(compiledHTML);
-      setCurrentEmailHTML(compiledHTML);
     };
 
     generateHTML();
@@ -447,53 +450,55 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   }), [canvasWidth]);
 
   return (
-    <div className="relative">
-      <div
-        style={canvasStyle}
-        className="email-canvas"
-        onDrop={dragDropHandler.handleCanvasDrop}
-        onDragOver={dragDropHandler.handleCanvasDragOver}
-        onDragLeave={dragDropHandler.handleCanvasDragLeave}
-      >
-        {/* Subject Line Section */}
-        <div className="border-b border-gray-100 bg-white">
-          <CanvasSubjectLine
-            value={subject}
-            onChange={onSubjectChange}
-            emailContent={currentEmailHTML}
-          />
+    <ErrorBoundary>
+      <div className="relative">
+        <div
+          style={canvasStyle}
+          className="email-canvas"
+          onDrop={dragDropHandler.handleCanvasDrop}
+          onDragOver={dragDropHandler.handleCanvasDragOver}
+          onDragLeave={dragDropHandler.handleCanvasDragLeave}
+        >
+          <div className="border-b border-gray-100 bg-white">
+            <CanvasSubjectLine
+              value={subject}
+              onChange={onSubjectChange}
+              emailContent={currentEmailHTML}
+            />
+          </div>
+
+          <div className="p-6">
+            <ErrorBoundary fallback={<div className="text-center py-8 text-gray-500">Error loading canvas content</div>}>
+              <CanvasRenderer
+                blocks={blocks}
+                selectedBlockId={selectedBlockId}
+                editingBlockId={editingBlockId}
+                isDraggingOver={isDraggingOver}
+                dragOverIndex={dragOverIndex}
+                onBlockClick={handleBlockClick}
+                onBlockDoubleClick={handleBlockDoubleClick}
+                onBlockDragStart={dragDropHandler.handleBlockDragStart}
+                onBlockDrop={dragDropHandler.handleBlockDrop}
+                onDeleteBlock={handleBlockDelete}
+                onDuplicateBlock={handleBlockDuplicate}
+                onSaveAsSnippet={handleSaveAsSnippet}
+                onTipTapChange={handleTipTapChange}
+                onTipTapBlur={handleTipTapBlur}
+                onColumnDrop={dragDropHandler.handleColumnDrop}
+              />
+            </ErrorBoundary>
+          </div>
         </div>
 
-        {/* Email Content */}
-        <div className="p-6">
-          <CanvasRenderer
-            blocks={blocks}
-            selectedBlockId={selectedBlockId}
-            editingBlockId={editingBlockId}
-            isDraggingOver={isDraggingOver}
-            dragOverIndex={dragOverIndex}
-            onBlockClick={handleBlockClick}
-            onBlockDoubleClick={handleBlockDoubleClick}
-            onBlockDragStart={dragDropHandler.handleBlockDragStart}
-            onBlockDrop={dragDropHandler.handleBlockDrop}
-            onDeleteBlock={handleBlockDelete}
-            onDuplicateBlock={handleBlockDuplicate}
-            onSaveAsSnippet={handleSaveAsSnippet}
-            onTipTapChange={handleTipTapChange}
-            onTipTapBlur={handleTipTapBlur}
-            onColumnDrop={dragDropHandler.handleColumnDrop}
-          />
-        </div>
+        <CanvasStatus 
+          selectedBlockId={selectedBlockId}
+          canvasWidth={canvasWidth}
+          previewMode={previewMode}
+          emailHTML={currentEmailHTML}
+          subjectLine={subject}
+        />
       </div>
-
-      <CanvasStatus 
-        selectedBlockId={selectedBlockId}
-        canvasWidth={canvasWidth}
-        previewMode={previewMode}
-        emailHTML={currentEmailHTML}
-        subjectLine={subject}
-      />
-    </div>
+    </ErrorBoundary>
   );
 });
 
