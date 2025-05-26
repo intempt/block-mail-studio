@@ -3,20 +3,14 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, FileText, Mail, MessageSquare } from 'lucide-react';
+import { Search, FileText, Mail, MessageSquare } from 'lucide-react';
 
 export const SnippetsTab: React.FC = () => {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Content Snippets</h2>
-          <p className="text-gray-600">Reusable content blocks for your campaigns</p>
-        </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Snippet
-        </Button>
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">Content Snippets</h2>
+        <p className="text-gray-600">Reusable content blocks for your campaigns</p>
       </div>
 
       <div className="flex items-center gap-4">

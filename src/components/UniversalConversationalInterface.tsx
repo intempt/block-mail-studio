@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
-import { SimpleConversationalInput } from './SimpleConversationalInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
 import { StreamingMessage } from './StreamingMessage';
 import { ThinkingIndicator } from './ThinkingIndicator';
@@ -49,7 +49,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const [currentMode, setCurrentMode] = useState<'ask' | 'do'>('ask');
 
   useEffect(() => {
-    // Initialize chat completion context
     ChatCompletionService.initializeContext(sessionId, context);
     
     const welcomeMessage: Message = {
@@ -109,12 +108,10 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     setIsThinking(true);
 
     try {
-      // Show thinking indicator
       await new Promise(resolve => setTimeout(resolve, 300));
       setIsThinking(false);
       setIsLoading(true);
 
-      // Create streaming message
       const streamingMessageId = (Date.now() + 1).toString();
       const streamingMessage: Message = {
         id: streamingMessageId,
@@ -126,7 +123,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
       setMessages(prev => [...prev, streamingMessage]);
       
-      // Start streaming response
       const streamGenerator = StreamingChatService.streamResponse(message);
       
       for await (const chunk of streamGenerator) {
@@ -146,7 +142,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         ));
 
         if (chunk.isComplete) {
-          // Get actual AI response for functionality
           try {
             const response = await ChatCompletionService.processUserMessage(sessionId, message, mode);
             
@@ -161,7 +156,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
                 : msg
             ));
 
-            // Update campaign context and chips
             if (response.campaignContext) {
               setCampaignContext(response.campaignContext);
             }
@@ -204,45 +198,15 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     await handleSendMessage(chip.label, currentMode);
   };
 
-  const handleRefreshChips = async () => {
-    const conversationHistory = ChatCompletionService.getConversationHistory(sessionId);
-    if (conversationHistory.length < 2) return;
-    
-    // Generate new contextual chips based on conversation
-    const recentContext = conversationHistory.slice(-2).map(msg => msg.content).join(' ');
-    const refreshedChips = getInitialChips(context).map((chip, index) => ({
-      ...chip,
-      id: `refresh-${Date.now()}-${index}`,
-      type: 'contextual' as const
-    }));
-    
-    setChips(refreshedChips);
-  };
-
-  const resetToFreshStart = () => {
-    ChatCompletionService.clearContext(sessionId);
-    ChatCompletionService.initializeContext(sessionId, context);
-    setCampaignContext(null);
-    setMessages([{
-      id: `reset-${Date.now()}`,
-      type: 'ai',
-      content: getWelcomeMessage(context),
-      timestamp: new Date()
-    }]);
-    setChips(getInitialChips(context));
-  };
-
   const handleLoadIntoEditor = (emailData: any) => {
     console.log('Loading email into editor:', emailData);
     
     if (onEmailBuilderOpen && emailData) {
-      // Properly map the email data structure to the expected parameters
       const emailHTML = emailData.html || emailData.emailHTML || '';
       const subjectLine = emailData.subject || emailData.subjectLine || '';
       
       console.log('Mapped data - HTML:', emailHTML.substring(0, 100) + '...', 'Subject:', subjectLine);
       
-      // Call the email builder with proper parameters
       onEmailBuilderOpen(emailHTML, subjectLine);
     } else {
       console.error('Missing email data or callback:', { emailData, onEmailBuilderOpen });
@@ -257,7 +221,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
   return (
     <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
-      {/* Campaign Progress Indicator */}
       {campaignContext && context === 'messages' && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex-shrink-0">
           <div className="flex items-center gap-2 text-blue-800">
@@ -269,7 +232,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         </div>
       )}
 
-      {/* Chat Messages - Single scrollable area */}
       <div className="flex-1 overflow-y-auto space-y-4 mb-4">
         {messages.map((message) => (
           <div key={message.id} className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -329,7 +291,6 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         {isThinking && <ThinkingIndicator />}
       </div>
 
-      {/* Conversational Chips - Fixed bottom area */}
       <div className="flex-shrink-0 mb-4">
         <ConversationalChipGenerator
           chips={chips}
@@ -341,25 +302,15 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         />
       </div>
 
-      {/* Context-Specific Input - Fixed bottom */}
       <div className="flex-shrink-0">
-        {context === 'messages' ? (
-          <EnhancedChatInput
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            placeholder={placeholderText[context]}
-            context={context}
-            onModeChange={setCurrentMode}
-          />
-        ) : (
-          <SimpleConversationalInput
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            placeholder={placeholderText[context]}
-            context={context}
-            disableDoMode={true}
-          />
-        )}
+        <EnhancedChatInput
+          onSendMessage={handleSendMessage}
+          isLoading={isLoading}
+          placeholder={placeholderText[context]}
+          context={context}
+          onModeChange={setCurrentMode}
+          disableDoMode={context !== 'messages'}
+        />
       </div>
     </div>
   );

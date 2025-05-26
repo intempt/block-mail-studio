@@ -62,7 +62,12 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
 
   const getModePlaceholder = () => {
     const currentMode = (isDoMode && !disableDoMode) ? 'do' : 'ask';
-    return `${currentMode === 'ask' ? 'Ask about' : 'Create'} ${placeholder.toLowerCase()}`;
+    const contextText = {
+      messages: 'campaign ideas',
+      journeys: 'journey workflows', 
+      snippets: 'content snippets'
+    };
+    return `${currentMode === 'ask' ? 'Ask about' : 'Create'} ${contextText[context]}...`;
   };
 
   return (

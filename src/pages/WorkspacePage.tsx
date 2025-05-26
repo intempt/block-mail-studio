@@ -55,19 +55,33 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
   const config = getContextConfig();
 
+  const handleCreateMessage = () => {
+    if (onEmailBuilderOpen) {
+      onEmailBuilderOpen();
+    }
+  };
+
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Page Header - No Create button */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
-          <p className="text-gray-600">{config.description}</p>
+        {/* Page Header with conditional Create Message button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{config.title}</h1>
+            <p className="text-gray-600">{config.description}</p>
+          </div>
+          {activeTab === 'messages' && (
+            <Button onClick={handleCreateMessage} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Message
+            </Button>
+          )}
         </div>
 
         {/* PROMPT-FIRST: Universal Chat Interface at the top */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <div className="p-6">
-            <div className="text-center mb-6">
+            <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">{config.chatTitle}</h2>
               <p className="text-gray-600">{config.chatDescription}</p>
             </div>
