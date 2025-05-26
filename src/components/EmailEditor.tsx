@@ -16,11 +16,19 @@ import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Eye, Send } from 'lucide-react';
+import {
+  ArrowLeft,
+  Eye,
+  Send,
+  Layers,
+  Palette,
+  BarChart3
+} from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
-import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
-import { RibbonInterface } from './ribbon/RibbonInterface';
-import { StatusBar } from './ribbon/StatusBar';
+import { EmailBlockCanvas } from './EmailBlockCanvas';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
+import { GlobalStylesPanel } from './GlobalStylesPanel';
+import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
@@ -40,6 +48,8 @@ interface LayoutConfig {
   alignItems: 'start' | 'center' | 'end';
   justifyContent: 'start' | 'center' | 'space-between';
 }
+
+type LeftPanelTab = 'blocks' | 'design' | 'performance';
 
 interface EmailEditorProps {
   content: string;
@@ -65,10 +75,8 @@ export default function EmailEditor({
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
   const [universalContent] = useState<UniversalContent[]>([]);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-
-  const canvasRef = useRef<EmailBlockCanvasRef>(null);
 
   // Stable layout config
   const layoutConfig = useMemo<LayoutConfig>(() => ({
@@ -207,58 +215,148 @@ export default function EmailEditor({
     onContentChange(newContent);
   };
 
-  const handleBlockSelect = (blockId: string | null) => {
-    setSelectedBlockId(blockId);
-  };
-
-  const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
-    setPreviewMode(mode);
+  const renderLeftPanel = () => {
+    console.log('EmailEditor: Rendering left panel', { leftPanel });
+    try {
+      switch (leftPanel) {
+        case 'blocks':
+          console.log('EmailEditor: Rendering blocks panel');
+          return (
+            <EnhancedEmailBlockPalette
+              onBlockAdd={handleBlockAdd}
+              onSnippetAdd={handleSnippetAdd}
+              universalContent={universalContent}
+              onUniversalContentAdd={handleUniversalContentAdd}
+              compactMode={false}
+              snippetRefreshTrigger={0}
+            />
+          );
+        case 'design':
+          console.log('EmailEditor: Rendering design panel');
+          return (
+            <GlobalStylesPanel
+              onStylesChange={handleGlobalStylesChange}
+            />
+          );
+        case 'performance':
+          console.log('EmailEditor: Rendering performance panel');
+          return (
+            <PerformanceBrandPanel
+              emailHTML={content}
+              subjectLine={subject}
+              editor={editor}
+            />
+          );
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('EmailEditor: Error rendering left panel:', error);
+      return <div>Error loading panel</div>;
+    }
   };
 
   console.log('EmailEditor: About to render main component');
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Professional Ribbon Interface */}
-      <RibbonInterface
-        onContentChange={handleContentChangeFromCanvas}
-        onBlockAdd={handleBlockAdd}
-        onSnippetAdd={handleSnippetAdd}
-        onGlobalStylesChange={handleGlobalStylesChange}
-        selectedBlockId={selectedBlockId}
-        emailHTML={content}
-        subjectLine={subject}
-        editor={editor}
-        canvasRef={canvasRef}
-      />
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          <h1 className="text-xl font-semibold text-gray-900">Email Builder</h1>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Button onClick={handlePreview} variant="outline" size="sm">
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button onClick={handlePublish} className="bg-blue-600 hover:bg-blue-700" size="sm">
+            <Send className="w-4 h-4 mr-2" />
+            Publish
+          </Button>
+        </div>
+      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-        {/* Canvas Area */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left Sidebar */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+          <div className="border-b border-gray-200 flex-shrink-0">
+            <div className="grid grid-cols-3">
+              <button
+                onClick={() => setLeftPanel('blocks')}
+                className={`px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'blocks'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <Layers className="w-4 h-4" />
+                  <span className="text-xs">Blocks</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setLeftPanel('design')}
+                className={`px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'design'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <Palette className="w-4 h-4" />
+                  <span className="text-xs">Design</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setLeftPanel('performance')}
+                className={`px-3 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  leftPanel === 'performance'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="text-xs">Analytics</span>
+                </div>
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-auto min-h-0">
+            <div className="h-full">
+              {renderLeftPanel()}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
         <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
           <div className="max-w-4xl mx-auto">
             <EmailBlockCanvas
-              ref={canvasRef}
               onContentChange={handleContentChangeFromCanvas}
-              onBlockSelect={handleBlockSelect}
+              onBlockSelect={() => {}}
               previewWidth={600}
-              previewMode={previewMode}
+              previewMode="desktop"
               compactMode={false}
               subject={subject}
               onSubjectChange={onSubjectChange}
             />
           </div>
         </div>
-
-        {/* Professional Status Bar */}
-        <StatusBar
-          selectedBlockId={selectedBlockId}
-          canvasWidth={previewMode === 'mobile' ? 375 : 600}
-          previewMode={previewMode}
-          wordCount={content.split(' ').length}
-          blockCount={emailBlocks.length}
-          onPreviewModeChange={handlePreviewModeChange}
-        />
       </div>
 
       {/* Modals */}
