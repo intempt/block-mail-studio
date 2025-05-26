@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
-import { EmailBlock } from '@/types/emailBlocks';
+import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { useDragDropHandler } from './canvas/DragDropHandler';
 import { CanvasStatus } from './canvas/CanvasStatus';
@@ -140,6 +140,63 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setBlocks(initialBlocks);
   }, []);
 
+  const renderBlockToHTML = useCallback((block: EmailBlock): string => {
+    switch (block.type) {
+      case 'text':
+        return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
+      case 'button':
+        return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.link || '#'}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">${block.content.text || 'Button'}</a></div>`;
+      case 'image':
+        return `<div style="text-align: center; margin: 20px 0;"><img src="${block.content.src || ''}" alt="${block.content.alt || ''}" style="max-width: 100%; height: auto;" /></div>`;
+      case 'spacer':
+        return `<div style="height: ${block.content.height || '20px'};"></div>`;
+      case 'divider':
+        return `<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />`;
+      case 'columns':
+        return renderColumnsToHTML(block as ColumnsBlock);
+      default:
+        return '';
+    }
+  }, []);
+
+  const renderColumnsToHTML = useCallback((block: ColumnsBlock): string => {
+    const getColumnWidths = (ratio: string) => {
+      const ratioMap: Record<string, string[]> = {
+        '100': ['100%'],
+        '50-50': ['50%', '50%'],
+        '33-67': ['33%', '67%'],
+        '67-33': ['67%', '33%'],
+        '25-75': ['25%', '75%'],
+        '75-25': ['75%', '25%'],
+        '33-33-33': ['33.33%', '33.33%', '33.33%'],
+        '25-50-25': ['25%', '50%', '25%'],
+        '25-25-50': ['25%', '25%', '50%'],
+        '50-25-25': ['50%', '25%', '25%'],
+        '25-25-25-25': ['25%', '25%', '25%', '25%']
+      };
+      return ratioMap[ratio] || ['100%'];
+    };
+
+    const columnWidths = getColumnWidths(block.content.columnRatio);
+    
+    const columnsHTML = block.content.columns.map((column, index) => {
+      const columnBlocks = column.blocks.map(renderBlockToHTML).join('');
+      return `
+        <td style="width: ${columnWidths[index]}; vertical-align: top; padding: 0 8px;">
+          ${columnBlocks}
+        </td>
+      `;
+    }).join('');
+
+    return `
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
+        <tr>
+          ${columnsHTML}
+        </tr>
+      </table>
+    `;
+  }, [renderBlockToHTML]);
+
   useEffect(() => {
     const generateHTML = () => {
       if (blocks.length === 0) {
@@ -149,22 +206,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         return;
       }
 
-      const blockElements = blocks.map(block => {
-        switch (block.type) {
-          case 'text':
-            return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
-          case 'button':
-            return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.link || '#'}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">${block.content.text || 'Button'}</a></div>`;
-          case 'image':
-            return `<div style="text-align: center; margin: 20px 0;"><img src="${block.content.src || ''}" alt="${block.content.alt || ''}" style="max-width: 100%; height: auto;" /></div>`;
-          case 'spacer':
-            return `<div style="height: ${block.content.height || '20px'};"></div>`;
-          case 'divider':
-            return `<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />`;
-          default:
-            return '';
-        }
-      }).join('');
+      const blockElements = blocks.map(renderBlockToHTML).join('');
 
       const fullHTML = `
         <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
@@ -177,7 +219,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     };
 
     generateHTML();
-  }, [blocks, onContentChange]);
+  }, [blocks, onContentChange, renderBlockToHTML]);
 
   const handleBlockClick = useCallback((blockId: string) => {
     setSelectedBlockId(blockId);
@@ -263,6 +305,16 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         return { height: '20px', mobileHeight: '20px' };
       case 'divider':
         return { style: 'solid', thickness: '1px', color: '#ddd', width: '100%', alignment: 'center' };
+      case 'columns':
+        return {
+          columnCount: 2,
+          columnRatio: '50-50',
+          columns: [
+            { id: `col-1-${Date.now()}`, blocks: [], width: '50%' },
+            { id: `col-2-${Date.now()}`, blocks: [], width: '50%' }
+          ],
+          gap: '16px'
+        };
       default:
         return {};
     }

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { createDragData, parseDragData } from '@/utils/dragDropUtils';
 import { EmailBlock } from '@/types/emailBlocks';
@@ -69,7 +70,7 @@ export const useDragDropHandler = ({
             columnCount: data.layoutData.columns as 1 | 2 | 3 | 4,
             columnRatio: data.layoutData.ratio,
             columns: Array.from({ length: data.layoutData.columns }, (_, i) => ({
-              id: `col-${i}`,
+              id: `col-${i}-${Date.now()}`,
               blocks: [],
               width: `${100 / data.layoutData.columns}%`
             })),
@@ -200,13 +201,12 @@ export const useDragDropHandler = ({
       setBlocks(prev => prev.map(block => {
         if (block.id === layoutBlockId && block.type === 'columns') {
           const updatedColumns = [...(block.content.columns || [])];
-          if (!updatedColumns[columnIndex]) {
-            updatedColumns[columnIndex] = { id: `col-${columnIndex}`, blocks: [], width: '50%' };
+          if (updatedColumns[columnIndex]) {
+            updatedColumns[columnIndex] = {
+              ...updatedColumns[columnIndex],
+              blocks: [...updatedColumns[columnIndex].blocks, newBlock]
+            };
           }
-          if (!updatedColumns[columnIndex].blocks) {
-            updatedColumns[columnIndex].blocks = [];
-          }
-          updatedColumns[columnIndex].blocks.push(newBlock);
           
           return {
             ...block,
@@ -218,6 +218,8 @@ export const useDragDropHandler = ({
         }
         return block;
       }));
+      
+      console.log('Block added to column:', newBlock);
     } catch (error) {
       console.error('Error handling column drop:', error);
     }
