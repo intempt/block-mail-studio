@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -28,6 +29,8 @@ import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { GlobalStylesCard } from './GlobalStylesCard';
 import { ButtonsLinksCard } from './ButtonsLinksCard';
+import { EmailSettingsCard } from './EmailSettingsCard';
+import { TextHeadingsCard } from './TextHeadingsCard';
 
 interface BlockItem {
   id: string;
@@ -41,13 +44,6 @@ interface LayoutOption {
   columns: number;
   ratio: string;
   preview: string[];
-}
-
-interface HeadingOption {
-  id: string;
-  name: string;
-  tag: string;
-  size: string;
 }
 
 interface OmnipresentRibbonProps {
@@ -99,16 +95,6 @@ const layoutOptions: LayoutOption[] = [
   { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
 ];
 
-const headingOptions: HeadingOption[] = [
-  { id: 'h1', name: 'H1', tag: 'h1', size: 'text-3xl' },
-  { id: 'h2', name: 'H2', tag: 'h2', size: 'text-2xl' },
-  { id: 'h3', name: 'H3', tag: 'h3', size: 'text-xl' },
-  { id: 'h4', name: 'H4', tag: 'h4', size: 'text-lg' },
-  { id: 'h5', name: 'H5', tag: 'h5', size: 'text-base' },
-  { id: 'h6', name: 'H6', tag: 'h6', size: 'text-sm' },
-  { id: 'custom', name: 'Custom', tag: 'p', size: 'text-base' }
-];
-
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onBlockAdd,
   onSnippetAdd,
@@ -134,6 +120,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showGlobalStyles, setShowGlobalStyles] = useState(false);
   const [showButtonsLinks, setShowButtonsLinks] = useState(false);
+  const [showEmailSettings, setShowEmailSettings] = useState(false);
+  const [showTextHeadings, setShowTextHeadings] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
@@ -155,18 +143,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     onBlockAdd('columns', layoutConfig);
   };
 
-  const handleHeadingInsert = (heading: HeadingOption) => {
-    if (editor) {
-      const content = `<${heading.tag}>Your ${heading.name} heading here</${heading.tag}>`;
-      editor.commands.insertContent(content);
-    } else {
-      onBlockAdd('text', { 
-        textStyle: heading.id === 'custom' ? 'normal' : heading.id,
-        html: `<${heading.tag}>Your ${heading.name} heading here</${heading.tag}>`
-      });
-    }
-  };
-
   const deviceConfig = {
     desktop: { icon: Monitor, width: 1200, label: 'Desktop' },
     tablet: { icon: Tablet, width: 768, label: 'Tablet' },
@@ -185,25 +161,31 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     </div>
   );
 
+  const closeAllPanels = () => {
+    setShowGlobalStyles(false);
+    setShowButtonsLinks(false);
+    setShowEmailSettings(false);
+    setShowTextHeadings(false);
+  };
+
   const handleGlobalStylesToggle = () => {
+    if (!showGlobalStyles) closeAllPanels();
     setShowGlobalStyles(!showGlobalStyles);
-    // Close other panels when opening this one
-    if (!showGlobalStyles) {
-      setShowButtonsLinks(false);
-    }
   };
 
   const handleButtonsLinksToggle = () => {
+    if (!showButtonsLinks) closeAllPanels();
     setShowButtonsLinks(!showButtonsLinks);
-    // Close other panels when opening this one
-    if (!showButtonsLinks) {
-      setShowGlobalStyles(false);
-    }
   };
 
-  const handleOpenAdvancedStyles = () => {
-    // This would open the full GlobalStylesPanel in a sidebar
-    console.log('Opening advanced global styles panel');
+  const handleEmailSettingsToggle = () => {
+    if (!showEmailSettings) closeAllPanels();
+    setShowEmailSettings(!showEmailSettings);
+  };
+
+  const handleTextHeadingsToggle = () => {
+    if (!showTextHeadings) closeAllPanels();
+    setShowTextHeadings(!showTextHeadings);
   };
 
   if (isCollapsed) {
@@ -344,19 +326,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-16" />
 
-          {/* Text Section */}
+          {/* Global Styles Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Text</div>
+            <div className="text-xs font-medium text-gray-600 mb-2">Global Styles</div>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant={showGlobalStyles ? 'default' : 'outline'}
                 size="sm"
                 className="h-16 px-3"
-                onClick={() => onBlockAdd('text')}
+                onClick={handleGlobalStylesToggle}
               >
                 <div className="flex flex-col items-center">
-                  <Type className="w-4 h-4" />
-                  <span className="text-xs mt-1">Paragraph</span>
+                  <Palette className="w-4 h-4" />
+                  <span className="text-xs mt-1">Styles</span>
                 </div>
               </Button>
             </div>
@@ -364,26 +346,41 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-16" />
 
-          {/* Headings Section */}
+          {/* Email Settings Section */}
           <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Headings</div>
+            <div className="text-xs font-medium text-gray-600 mb-2">Email Settings</div>
             <div className="flex gap-2">
-              {headingOptions.map((heading) => (
-                <Button
-                  key={heading.id}
-                  variant="outline"
-                  size="sm"
-                  className="flex flex-col items-center p-2 h-16 w-12 cursor-pointer"
-                  onClick={() => handleHeadingInsert(heading)}
-                >
-                  <span className={`font-bold ${heading.size === 'text-3xl' ? 'text-lg' : 
-                    heading.size === 'text-2xl' ? 'text-base' : 
-                    heading.size === 'text-xl' ? 'text-sm' : 'text-xs'}`}>
-                    {heading.name}
-                  </span>
-                  <span className="text-xs mt-1">{heading.tag.toUpperCase()}</span>
-                </Button>
-              ))}
+              <Button
+                variant={showEmailSettings ? 'default' : 'outline'}
+                size="sm"
+                className="h-16 px-3"
+                onClick={handleEmailSettingsToggle}
+              >
+                <div className="flex flex-col items-center">
+                  <Settings className="w-4 h-4" />
+                  <span className="text-xs mt-1">Settings</span>
+                </div>
+              </Button>
+            </div>
+          </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* Text & Headings Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Text & Headings</div>
+            <div className="flex gap-2">
+              <Button
+                variant={showTextHeadings ? 'default' : 'outline'}
+                size="sm"
+                className="h-16 px-3"
+                onClick={handleTextHeadingsToggle}
+              >
+                <div className="flex flex-col items-center">
+                  <Type className="w-4 h-4" />
+                  <span className="text-xs mt-1">Configure</span>
+                </div>
+              </Button>
             </div>
           </div>
 
@@ -432,26 +429,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               </Button>
             </div>
           </div>
-
-          <Separator orientation="vertical" className="h-16" />
-
-          {/* Global Styles Section */}
-          <div className="flex-shrink-0">
-            <div className="text-xs font-medium text-gray-600 mb-2">Global Styles</div>
-            <div className="flex gap-2">
-              <Button
-                variant={showGlobalStyles ? 'default' : 'outline'}
-                size="sm"
-                className="h-16 px-3"
-                onClick={handleGlobalStylesToggle}
-              >
-                <div className="flex flex-col items-center">
-                  <Palette className="w-4 h-4" />
-                  <span className="text-xs mt-1">Styles</span>
-                </div>
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -460,7 +437,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         isOpen={showGlobalStyles}
         onToggle={handleGlobalStylesToggle}
         onStylesChange={onGlobalStylesChange}
-        onOpenAdvanced={handleOpenAdvancedStyles}
+        onOpenAdvanced={() => {}}
+      />
+
+      <EmailSettingsCard
+        isOpen={showEmailSettings}
+        onToggle={handleEmailSettingsToggle}
+        onStylesChange={onGlobalStylesChange}
+      />
+
+      <TextHeadingsCard
+        isOpen={showTextHeadings}
+        onToggle={handleTextHeadingsToggle}
+        onStylesChange={onGlobalStylesChange}
       />
 
       <ButtonsLinksCard
