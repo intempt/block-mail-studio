@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -95,34 +94,87 @@ export default function EmailEditor({
     conversionRate: 2.8
   });
 
-  // Add AI suggestions state
+  // Enhanced AI suggestions with more comprehensive options
   const [aiSuggestions, setAiSuggestions] = useState([
     {
       id: '1',
       type: 'subject' as const,
       title: 'Optimize Subject Line',
-      description: 'Make your subject line more compelling and action-oriented',
+      description: 'Make your subject line more compelling and action-oriented to improve open rates',
       impact: 'high' as const,
       confidence: 87,
-      suggestion: 'Add urgency words like "Limited Time" or personalization tokens'
+      suggestion: 'Add urgency words like "Limited Time" or personalization tokens like [First Name]',
+      category: 'Engagement'
     },
     {
       id: '2',
       type: 'cta' as const,
       title: 'Enhance Call-to-Action',
-      description: 'Improve button text for better click-through rates',
+      description: 'Improve button text and placement for better click-through rates',
       impact: 'high' as const,
       confidence: 92,
-      suggestion: 'Use action verbs like "Get Started Now" instead of "Click Here"'
+      suggestion: 'Use action verbs like "Get Started Now" instead of "Click Here" and make buttons more prominent',
+      category: 'Conversion'
     },
     {
       id: '3',
+      type: 'accessibility' as const,
+      title: 'Add Alt Text to Images',
+      description: 'Some images are missing alt text, affecting accessibility and deliverability',
+      impact: 'high' as const,
+      confidence: 95,
+      suggestion: 'Add descriptive alt text to all images for better accessibility and spam filter compliance',
+      category: 'Accessibility'
+    },
+    {
+      id: '4',
       type: 'copy' as const,
       title: 'Improve Content Flow',
-      description: 'Restructure content for better readability',
+      description: 'Restructure content for better readability and engagement',
       impact: 'medium' as const,
       confidence: 78,
-      suggestion: 'Break long paragraphs into shorter, scannable chunks'
+      suggestion: 'Break long paragraphs into shorter, scannable chunks with bullet points',
+      category: 'Readability'
+    },
+    {
+      id: '5',
+      type: 'design' as const,
+      title: 'Optimize Color Contrast',
+      description: 'Some text elements may not meet accessibility contrast requirements',
+      impact: 'medium' as const,
+      confidence: 73,
+      suggestion: 'Increase contrast ratio to 4.5:1 or higher for better readability',
+      category: 'Design'
+    },
+    {
+      id: '6',
+      type: 'performance' as const,
+      title: 'Compress Images',
+      description: 'Large images can slow loading times and affect deliverability',
+      impact: 'medium' as const,
+      confidence: 85,
+      suggestion: 'Optimize images to under 100KB each and use web-friendly formats',
+      category: 'Performance'
+    },
+    {
+      id: '7',
+      type: 'tone' as const,
+      title: 'Maintain Brand Voice',
+      description: 'Some sections could better reflect your brand personality',
+      impact: 'low' as const,
+      confidence: 68,
+      suggestion: 'Use more conversational tone in the introduction to match brand guidelines',
+      category: 'Brand Voice'
+    },
+    {
+      id: '8',
+      type: 'design' as const,
+      title: 'Mobile Optimization',
+      description: 'Layout could be improved for mobile viewing experience',
+      impact: 'medium' as const,
+      confidence: 81,
+      suggestion: 'Increase button sizes to minimum 44px height for better mobile usability',
+      category: 'Mobile'
     }
   ]);
 
@@ -283,16 +335,48 @@ export default function EmailEditor({
 
   const handleRefreshAnalysis = () => {
     console.log('Refreshing performance and brand analysis...');
-    // Simulate refreshed data
+    // Simulate refreshed data with more dynamic changes
     setPerformanceMetrics(prev => ({
-      ...prev,
-      overallScore: Math.min(100, (prev.overallScore || 0) + Math.floor(Math.random() * 10) - 5)
+      overallScore: Math.min(100, Math.max(60, (prev.overallScore || 0) + Math.floor(Math.random() * 20) - 10)),
+      deliverabilityScore: Math.min(100, Math.max(60, (prev.deliverabilityScore || 0) + Math.floor(Math.random() * 15) - 7)),
+      mobileScore: Math.min(100, Math.max(70, (prev.mobileScore || 0) + Math.floor(Math.random() * 10) - 5)),
+      spamScore: Math.max(0, Math.min(50, (prev.spamScore || 0) + Math.floor(Math.random() * 10) - 5))
     }));
+    
+    setBrandMetrics(prev => ({
+      ...prev,
+      brandVoiceScore: Math.min(100, Math.max(60, prev.brandVoiceScore + Math.floor(Math.random() * 10) - 5)),
+      engagementScore: Math.min(100, Math.max(60, prev.engagementScore + Math.floor(Math.random() * 10) - 5))
+    }));
+
+    // Simulate new suggestions appearing
+    const newSuggestions = [
+      {
+        id: `new_${Date.now()}`,
+        type: 'copy' as const,
+        title: 'Personalization Opportunity',
+        description: 'Add dynamic content based on subscriber preferences',
+        impact: 'high' as const,
+        confidence: 89,
+        suggestion: 'Include merge tags for recent purchases or browsing history',
+        category: 'Personalization'
+      }
+    ];
+    
+    setAiSuggestions(prev => [...prev, ...newSuggestions]);
   };
 
   const handleApplySuggestion = (suggestion: any) => {
     setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     console.log(`Applied: ${suggestion.title}`);
+    
+    // Simulate performance improvement after applying suggestion
+    if (suggestion.impact === 'high') {
+      setPerformanceMetrics(prev => ({
+        ...prev,
+        overallScore: Math.min(100, (prev.overallScore || 0) + 5)
+      }));
+    }
   };
 
   console.log('EmailEditor: About to render main component');
