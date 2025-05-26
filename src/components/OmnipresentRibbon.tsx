@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
@@ -23,7 +24,8 @@ import {
   ChevronDown,
   ChevronUp,
   Settings,
-  Lightbulb
+  Lightbulb,
+  Edit3
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -129,6 +131,23 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+  // Email-standard device configurations
+  const emailDeviceConfig = {
+    mobile: { icon: Smartphone, width: 375, label: 'Mobile Email' },
+    desktop: { icon: Monitor, width: 600, label: 'Desktop Email' }
+  };
+
+  // Email industry standard widths
+  const emailWidthPresets = [
+    { label: 'Mobile S', width: 320 },
+    { label: 'Mobile M', width: 375 },
+    { label: 'Mobile L', width: 414 },
+    { label: 'Email Standard', width: 600 },
+    { label: 'Email Wide', width: 640 }
+  ];
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
     e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
@@ -189,6 +208,30 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     setShowAISuggestions(!showAISuggestions);
   };
 
+  const handleTitleSave = () => {
+    setIsEditingTitle(false);
+    // Auto-save functionality can be added here
+    console.log('Campaign title saved:', campaignTitle);
+  };
+
+  const handleTitleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleTitleSave();
+    } else if (e.key === 'Escape') {
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleWidthPresetSelect = (width: number) => {
+    onWidthChange(width);
+    // Set device mode based on width
+    if (width <= 414) {
+      onDeviceChange('mobile');
+    } else {
+      onDeviceChange('desktop');
+    }
+  };
+
   if (isCollapsed) {
     return (
       <div className="bg-white border-b border-gray-200 flex items-center justify-between px-6 py-2">
@@ -211,7 +254,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     <div className="bg-white border-b border-gray-200 relative">
       {/* Top Bar */}
       <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
-        {/* Left Section */}
+        {/* Left Section - Editable Campaign Title */}
         <div className="flex items-center gap-4">
           {onBack && (
             <Button
@@ -224,42 +267,84 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               Back
             </Button>
           )}
-          <h1 className="text-xl font-semibold text-gray-900">Email Builder</h1>
+          
+          <div className="flex items-center gap-2">
+            {isEditingTitle ? (
+              <Input
+                value={campaignTitle}
+                onChange={(e) => setCampaignTitle(e.target.value)}
+                onBlur={handleTitleSave}
+                onKeyDown={handleTitleKeyPress}
+                className="text-xl font-semibold border-none p-0 h-auto focus:ring-0 focus:border-none"
+                autoFocus
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold text-gray-900">{campaignTitle}</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingTitle(true)}
+                  className="text-gray-400 hover:text-gray-600 h-6 w-6 p-0"
+                >
+                  <Edit3 className="w-3 h-3" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Center Section - Device Controls with Icons and Width Slider */}
+        {/* Center Section - Email-Standard Device Controls and Width Presets */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-            {Object.entries(deviceConfig).map(([device, config]) => {
+            {Object.entries(emailDeviceConfig).map(([device, config]) => {
               const IconComponent = config.icon;
-              const isActive = deviceMode === device;
+              const isActive = (device === 'mobile' && canvasWidth <= 414) || 
+                              (device === 'desktop' && canvasWidth > 414);
               
               return (
                 <Button
                   key={device}
                   variant={isActive ? 'default' : 'ghost'}
                   size="sm"
-                  onClick={() => onDeviceChange(device as 'desktop' | 'tablet' | 'mobile')}
+                  onClick={() => handleWidthPresetSelect(config.width)}
                   className={`flex items-center gap-2 h-8 px-3 ${
                     isActive ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
                   }`}
                 >
                   <IconComponent className="w-4 h-4" />
+                  <span className="text-xs">{config.label}</span>
                 </Button>
               );
             })}
           </div>
           
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 min-w-[60px]">{canvasWidth}px</span>
-            <Slider
-              value={[canvasWidth]}
-              onValueChange={(value) => onWidthChange(value[0])}
-              min={320}
-              max={1200}
-              step={10}
-              className="w-32"
-            />
+            <div className="flex gap-1">
+              {emailWidthPresets.map((preset) => (
+                <Button
+                  key={preset.width}
+                  variant={canvasWidth === preset.width ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleWidthPresetSelect(preset.width)}
+                  className="h-7 px-2 text-xs"
+                >
+                  {preset.width}px
+                </Button>
+              ))}
+            </div>
+            
+            <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
+              <span className="text-xs text-gray-500 min-w-[60px]">{canvasWidth}px</span>
+              <Slider
+                value={[canvasWidth]}
+                onValueChange={(value) => onWidthChange(value[0])}
+                min={320}
+                max={640}
+                step={10}
+                className="w-24"
+              />
+            </div>
           </div>
         </div>
         
