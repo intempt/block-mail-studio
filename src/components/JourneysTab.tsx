@@ -1,22 +1,11 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { GitBranch, Users, Clock, Plus } from 'lucide-react';
+import { GitBranch, Users, Clock } from 'lucide-react';
 
 export const JourneysTab: React.FC = () => {
-  const handleCreateJourney = () => {
-    // Placeholder for future journey creation functionality
-    console.log('Create Journey clicked - feature coming soon');
-  };
-
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-gray-900">Customer Journeys</h2>
-        <p className="text-gray-600">Create automated message sequences and user flows</p>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -61,17 +50,6 @@ export const JourneysTab: React.FC = () => {
             </div>
           </div>
         </Card>
-      </div>
-
-      {/* CREATE JOURNEY BUTTON - AT BOTTOM OF TAB */}
-      <div className="pt-4 border-t border-gray-200">
-        <Button 
-          onClick={handleCreateJourney}
-          className="bg-blue-600 hover:bg-blue-700 w-full"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Journey
-        </Button>
       </div>
     </div>
   );

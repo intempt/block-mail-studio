@@ -10,9 +10,7 @@ import {
   Bell,
   Eye,
   Edit,
-  Copy,
-  Trash2,
-  Plus
+  Copy
 } from 'lucide-react';
 
 interface Message {
@@ -88,110 +86,76 @@ const getStatusColor = (status: string) => {
 };
 
 export const MessagesTable: React.FC<MessagesTableProps> = ({ onEmailBuilderOpen }) => {
-  const handleCreateMessage = () => {
-    console.log('Create Message button clicked');
-    console.log('onEmailBuilderOpen callback:', onEmailBuilderOpen);
-    
-    if (onEmailBuilderOpen) {
-      console.log('Calling onEmailBuilderOpen');
-      onEmailBuilderOpen();
-    } else {
-      console.error('onEmailBuilderOpen callback not provided');
-    }
-  };
-
   return (
-    <Card className="mt-6">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Messages</h3>
-          <Button size="sm" variant="outline">
-            View All
-          </Button>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Message</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Performance</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Modified</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockMessages.map((message) => (
-                <tr key={message.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-blue-600">
-                        {getTypeIcon(message.type)}
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">{message.name}</div>
-                        <div className="text-sm text-gray-500">{message.format.toUpperCase()}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <Badge variant="outline" className="capitalize">
-                      {message.type}
-                    </Badge>
-                  </td>
-                  <td className="py-4 px-4">
-                    <Badge className={getStatusColor(message.status)}>
-                      {message.status}
-                    </Badge>
-                  </td>
-                  <td className="py-4 px-4">
-                    {message.opens !== undefined ? (
-                      <div className="text-sm">
-                        <div className="text-gray-900">{message.opens} opens</div>
-                        <div className="text-gray-500">{message.clicks} clicks</div>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="py-4 px-4 text-sm text-gray-500">
-                    {message.lastModified}
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* CREATE MESSAGE BUTTON - NOW AT BOTTOM OF TAB */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <Button 
-            onClick={handleCreateMessage}
-            className="bg-blue-600 hover:bg-blue-700 w-full"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Message
-          </Button>
-        </div>
-      </div>
-    </Card>
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-200">
+            <th className="text-left py-3 px-4 font-medium text-gray-700">Message</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-700">Type</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-700">Status</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-700">Performance</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-700">Modified</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {mockMessages.map((message) => (
+            <tr key={message.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <td className="py-4 px-4">
+                <div className="flex items-center space-x-3">
+                  <div className="text-blue-600">
+                    {getTypeIcon(message.type)}
+                  </div>
+                  <div>
+                    <div className="font-medium text-gray-900">{message.name}</div>
+                    <div className="text-sm text-gray-500">{message.format.toUpperCase()}</div>
+                  </div>
+                </div>
+              </td>
+              <td className="py-4 px-4">
+                <Badge variant="outline" className="capitalize">
+                  {message.type}
+                </Badge>
+              </td>
+              <td className="py-4 px-4">
+                <Badge className={getStatusColor(message.status)}>
+                  {message.status}
+                </Badge>
+              </td>
+              <td className="py-4 px-4">
+                {message.opens !== undefined ? (
+                  <div className="text-sm">
+                    <div className="text-gray-900">{message.opens} opens</div>
+                    <div className="text-gray-500">{message.clicks} clicks</div>
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </td>
+              <td className="py-4 px-4 text-sm text-gray-500">
+                {message.lastModified}
+              </td>
+              <td className="py-4 px-4">
+                <div className="flex items-center space-x-2">
+                  <Button variant="ghost" size="sm">
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 };

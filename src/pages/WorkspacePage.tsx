@@ -2,10 +2,13 @@
 import React, { useState } from 'react';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { UniversalConversationalInterface } from '@/components/UniversalConversationalInterface';
 import { JourneysTab } from '@/components/JourneysTab';
 import { SnippetsTab } from '@/components/SnippetsTab';
 import { MessagesTable } from '@/components/MessagesTable';
+import { Search, Plus } from 'lucide-react';
 
 interface WorkspacePageProps {
   onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
@@ -49,6 +52,26 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           breadcrumbText: 'Journeys'
         };
     }
+  };
+
+  const handleCreateMessage = () => {
+    console.log('Create Message button clicked in WorkspacePage');
+    console.log('onEmailBuilderOpen callback:', onEmailBuilderOpen);
+    
+    if (onEmailBuilderOpen) {
+      console.log('Calling onEmailBuilderOpen from WorkspacePage');
+      onEmailBuilderOpen();
+    } else {
+      console.error('onEmailBuilderOpen callback not provided to WorkspacePage');
+    }
+  };
+
+  const handleCreateJourney = () => {
+    console.log('Create Journey clicked - feature coming soon');
+  };
+
+  const handleCreateSnippet = () => {
+    console.log('Create Snippet clicked - feature coming soon');
   };
 
   const config = getContextConfig();
@@ -101,20 +124,89 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
           </TabsList>
 
           <TabsContent value="journeys" className="space-y-6 mt-6">
+            {/* Search Bar */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search journeys..."
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline">Filter</Button>
+            </div>
+            
             <JourneysTab />
+            
+            {/* Create Journey Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleCreateJourney}
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Journey
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-6 mt-6">
+            {/* Search Bar */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search messages..."
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline">Filter</Button>
+            </div>
+            
             <div className="bg-white rounded-lg border border-gray-200">
               <div className="p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Messages</h3>
-                <MessagesTable onEmailBuilderOpen={onEmailBuilderOpen} />
+                <MessagesTable />
               </div>
+            </div>
+            
+            {/* Create Message Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleCreateMessage}
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Message
+              </Button>
             </div>
           </TabsContent>
 
           <TabsContent value="snippets" className="space-y-6 mt-6">
+            {/* Search Bar */}
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search snippets..."
+                  className="pl-10"
+                />
+              </div>
+              <Button variant="outline">Filter</Button>
+            </div>
+            
             <SnippetsTab />
+            
+            {/* Create Snippet Button */}
+            <div className="pt-4 border-t border-gray-200">
+              <Button 
+                onClick={handleCreateSnippet}
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Snippet
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
