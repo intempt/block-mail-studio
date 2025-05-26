@@ -2,9 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Code, Eye, Save, Undo } from 'lucide-react';
 
 interface EmailCodeEditorProps {
@@ -57,8 +56,8 @@ export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Code className="w-5 h-5" />
@@ -102,7 +101,7 @@ export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-4 min-h-0">
         <Textarea
           value={htmlCode}
           onChange={(e) => handleCodeChange(e.target.value)}
@@ -110,6 +109,6 @@ export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({
           placeholder="Enter your HTML code here..."
         />
       </div>
-    </Card>
+    </div>
   );
 };
