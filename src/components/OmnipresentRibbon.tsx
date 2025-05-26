@@ -31,6 +31,7 @@ import { ButtonsLinksCard } from './ButtonsLinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
 import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
+import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
 
 interface BlockItem {
@@ -94,6 +95,8 @@ interface OmnipresentRibbonProps {
   onPreview: () => void;
   onSaveTemplate: (template: any) => void;
   onPublish: () => void;
+  canvasRef?: React.RefObject<any>;
+  onSubjectLineChange?: (subject: string) => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -116,7 +119,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onWidthChange,
   onPreview,
   onSaveTemplate,
-  onPublish
+  onPublish,
+  canvasRef,
+  onSubjectLineChange
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showButtons, setShowButtons] = useState(false);
@@ -448,13 +453,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       )}
 
-      <AISuggestionsCard
+      <EnhancedAISuggestionsWidget
         isOpen={showAISuggestions}
         onToggle={handleAISuggestionsToggle}
         emailHTML={emailHTML}
         subjectLine={subjectLine}
+        canvasRef={canvasRef}
+        onSubjectLineChange={onSubjectLineChange}
         onApplySuggestion={(suggestion) => {
-          console.log('Applying suggestion:', suggestion);
+          console.log('Applied suggestion:', suggestion);
         }}
       />
     </div>
