@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
@@ -5,7 +6,6 @@ import { EnhancedChatInput } from './EnhancedChatInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
 import { ThinkingIndicator } from './ThinkingIndicator';
 import { ChatCompletionService } from '@/services/chatCompletionService';
-import { StreamingMessage } from './StreamingMessage';
 import { MarkdownFormatter } from './MarkdownFormatter';
 
 interface Message {
@@ -19,7 +19,6 @@ interface Message {
     html: string;
     previewText: string;
   };
-  isStreaming?: boolean;
 }
 
 interface ConversationalChip {
@@ -66,9 +65,9 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
 
   const getWelcomeMessage = (context: string): string => {
     const messages = {
-      messages: "Hello! I'm your GrowthOS assistant for campaign creation. I can help you build email campaigns, SMS blasts, and push notifications from strategy to execution. What type of campaign would you like to create?",
-      journeys: "Welcome to GrowthOS customer journeys! I can help you map customer experiences, design touchpoints, and plan automation flows. What journey challenge can I help you solve?",
-      snippets: "Hi! I'm here to help with content optimization and copywriting. I can assist with subject lines, CTAs, personalization, and A/B testing strategies. What content challenge are you working on?"
+      messages: "I can help you build email campaigns, SMS blasts, and push notifications from strategy to execution. What type of campaign would you like to create?",
+      journeys: "I can help you map customer experiences, design touchpoints, and plan automation flows. What journey challenge can I help you solve?",
+      snippets: "I can assist with subject lines, CTAs, personalization, and A/B testing strategies. What content challenge are you working on?"
     };
     return messages[context] || messages.messages;
   };

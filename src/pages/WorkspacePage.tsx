@@ -102,14 +102,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
           <TabsContent value="journeys" className="space-y-6 mt-6">
             {/* Search Bar - no filter */}
-            <div className="flex items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search journeys..."
-                  className="pl-10"
-                />
-              </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search journeys..."
+                className="pl-10"
+              />
             </div>
             
             <JourneysTab />
@@ -128,14 +126,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
           <TabsContent value="messages" className="space-y-6 mt-6">
             {/* Search Bar - no filter */}
-            <div className="flex items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search messages..."
-                  className="pl-10"
-                />
-              </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search messages..."
+                className="pl-10"
+              />
             </div>
             
             <div className="bg-white rounded-lg border border-gray-200">
@@ -158,14 +154,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
           <TabsContent value="snippets" className="space-y-6 mt-6">
             {/* Search Bar - no filter */}
-            <div className="flex items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search snippets..."
-                  className="pl-10"
-                />
-              </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search snippets..."
+                className="pl-10"
+              />
             </div>
             
             <SnippetsTab />
