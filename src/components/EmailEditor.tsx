@@ -22,11 +22,10 @@ import {
 } from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
-import { RibbonInterface } from './RibbonInterface';
+import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { StatusBar } from './StatusBar';
 import { HeaderAnalyticsBar } from './HeaderAnalyticsBar';
-import { EnhancedTopBar } from './EnhancedTopBar';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -418,20 +417,6 @@ export default function EmailEditor({
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Enhanced Top Bar */}
-      <EnhancedTopBar
-        onBack={onBack}
-        canvasWidth={canvasWidth}
-        deviceMode={deviceMode}
-        onDeviceChange={handleDeviceChange}
-        onWidthChange={handleWidthChange}
-        onPreview={handlePreview}
-        onSaveTemplate={handleSaveAsTemplate}
-        onPublish={handlePublish}
-        emailHTML={content}
-        subjectLine={subject}
-      />
-
       {/* Analytics Header Bar */}
       <HeaderAnalyticsBar
         performanceMetrics={performanceMetrics}
@@ -442,8 +427,8 @@ export default function EmailEditor({
         onApplySuggestion={handleApplySuggestion}
       />
 
-      {/* Ribbon Interface */}
-      <RibbonInterface
+      {/* Omnipresent Ribbon Interface */}
+      <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
         universalContent={universalContent}
@@ -456,6 +441,14 @@ export default function EmailEditor({
         onTemplateLibraryOpen={handleTemplateLibraryOpen}
         onPreviewModeChange={handlePreviewModeChange}
         previewMode={previewMode}
+        onBack={onBack}
+        canvasWidth={canvasWidth}
+        deviceMode={deviceMode}
+        onDeviceChange={handleDeviceChange}
+        onWidthChange={handleWidthChange}
+        onPreview={handlePreview}
+        onSaveTemplate={handleSaveAsTemplate}
+        onPublish={handlePublish}
       />
 
       {/* Main Content */}

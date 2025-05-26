@@ -1,0 +1,404 @@
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Type, 
+  Image, 
+  MousePointer, 
+  Minus, 
+  Video, 
+  Share2, 
+  Table,
+  Layout,
+  Link,
+  ArrowLeft,
+  Eye,
+  Send,
+  Monitor,
+  Tablet,
+  Smartphone,
+  Save,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react';
+import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
+
+interface BlockItem {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}
+
+interface LayoutOption {
+  id: string;
+  name: string;
+  columns: number;
+  ratio: string;
+  preview: string[];
+}
+
+interface HeadingOption {
+  id: string;
+  name: string;
+  tag: string;
+  size: string;
+}
+
+interface OmnipresentRibbonProps {
+  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
+  universalContent: UniversalContent[];
+  onUniversalContentAdd: (content: UniversalContent) => void;
+  onGlobalStylesChange: (styles: any) => void;
+  emailHTML: string;
+  subjectLine: string;
+  editor?: any;
+  snippetRefreshTrigger?: number;
+  onTemplateLibraryOpen?: () => void;
+  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
+  previewMode?: 'desktop' | 'mobile';
+  onBack?: () => void;
+  canvasWidth: number;
+  deviceMode: 'desktop' | 'tablet' | 'mobile' | 'custom';
+  onDeviceChange: (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => void;
+  onWidthChange: (width: number) => void;
+  onPreview: () => void;
+  onSaveTemplate: (template: any) => void;
+  onPublish: () => void;
+}
+
+const blockItems: BlockItem[] = [
+  { id: 'text', name: 'Text', icon: <Type className="w-4 h-4" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-4 h-4" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-4 h-4" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Minus className="w-4 h-4" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-4 h-4" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-4 h-4" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-4 h-4" /> },
+  { id: 'html', name: 'HTML', icon: <Table className="w-4 h-4" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-4 h-4" /> }
+];
+
+const layoutOptions: LayoutOption[] = [
+  { id: '1-column', name: '1 Col', columns: 1, ratio: '100', preview: ['100%'] },
+  { id: '2-column-50-50', name: '50/50', columns: 2, ratio: '50-50', preview: ['50%', '50%'] },
+  { id: '2-column-33-67', name: '33/67', columns: 2, ratio: '33-67', preview: ['33%', '67%'] },
+  { id: '2-column-67-33', name: '67/33', columns: 2, ratio: '67-33', preview: ['67%', '33%'] },
+  { id: '2-column-25-75', name: '25/75', columns: 2, ratio: '25-75', preview: ['25%', '75%'] },
+  { id: '2-column-75-25', name: '75/25', columns: 2, ratio: '75-25', preview: ['75%', '25%'] },
+  { id: '3-column-equal', name: '33/33/33', columns: 3, ratio: '33-33-33', preview: ['33%', '33%', '33%'] },
+  { id: '3-column-25-50-25', name: '25/50/25', columns: 3, ratio: '25-50-25', preview: ['25%', '50%', '25%'] },
+  { id: '3-column-25-25-50', name: '25/25/50', columns: 3, ratio: '25-25-50', preview: ['25%', '25%', '50%'] },
+  { id: '3-column-50-25-25', name: '50/25/25', columns: 3, ratio: '50-25-25', preview: ['50%', '25%', '25%'] },
+  { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
+];
+
+const headingOptions: HeadingOption[] = [
+  { id: 'h1', name: 'H1', tag: 'h1', size: 'text-3xl' },
+  { id: 'h2', name: 'H2', tag: 'h2', size: 'text-2xl' },
+  { id: 'h3', name: 'H3', tag: 'h3', size: 'text-xl' },
+  { id: 'h4', name: 'H4', tag: 'h4', size: 'text-lg' },
+  { id: 'h5', name: 'H5', tag: 'h5', size: 'text-base' },
+  { id: 'h6', name: 'H6', tag: 'h6', size: 'text-sm' },
+  { id: 'custom', name: 'Custom', tag: 'p', size: 'text-base' }
+];
+
+export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
+  onBlockAdd,
+  onSnippetAdd,
+  universalContent,
+  onUniversalContentAdd,
+  onGlobalStylesChange,
+  emailHTML,
+  subjectLine,
+  editor,
+  snippetRefreshTrigger = 0,
+  onTemplateLibraryOpen,
+  onPreviewModeChange,
+  previewMode = 'desktop',
+  onBack,
+  canvasWidth,
+  deviceMode,
+  onDeviceChange,
+  onWidthChange,
+  onPreview,
+  onSaveTemplate,
+  onPublish
+}) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const handleDragStart = (e: React.DragEvent, blockType: string) => {
+    e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
+  const handleLayoutSelect = (layout: LayoutOption) => {
+    const columns = Array.from({ length: layout.columns }, (_, index) => ({
+      id: `col-${index}`,
+      blocks: [],
+      width: layout.preview[index] || '100%'
+    }));
+
+    const layoutConfig = {
+      ...layout,
+      columns
+    };
+
+    onBlockAdd('columns', layoutConfig);
+  };
+
+  const handleHeadingInsert = (heading: HeadingOption) => {
+    if (editor) {
+      const content = `<${heading.tag}>Your ${heading.name} heading here</${heading.tag}>`;
+      editor.commands.insertContent(content);
+    } else {
+      onBlockAdd('text', { 
+        textStyle: heading.id === 'custom' ? 'normal' : heading.id,
+        html: `<${heading.tag}>Your ${heading.name} heading here</${heading.tag}>`
+      });
+    }
+  };
+
+  const deviceConfig = {
+    desktop: { icon: Monitor, width: 1200, label: 'Desktop' },
+    tablet: { icon: Tablet, width: 768, label: 'Tablet' },
+    mobile: { icon: Smartphone, width: 375, label: 'Mobile' }
+  };
+
+  const renderLayoutPreview = (layout: LayoutOption) => (
+    <div className="flex gap-1 h-4 mb-1">
+      {layout.preview.map((width, index) => (
+        <div
+          key={index}
+          className="bg-blue-200 rounded-sm border border-blue-300"
+          style={{ width }}
+        />
+      ))}
+    </div>
+  );
+
+  if (isCollapsed) {
+    return (
+      <div className="bg-white border-b border-gray-200 flex items-center justify-between px-6 py-2">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">Ribbon Hidden</Badge>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsCollapsed(false)}
+          className="text-gray-600"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border-b border-gray-200">
+      {/* Top Bar */}
+      <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
+        {/* Left Section */}
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          <h1 className="text-xl font-semibold text-gray-900">Email Builder</h1>
+        </div>
+        
+        {/* Center Section - Device Controls */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+            {Object.entries(deviceConfig).map(([device, config]) => {
+              const IconComponent = config.icon;
+              const isActive = deviceMode === device;
+              
+              return (
+                <Button
+                  key={device}
+                  variant={isActive ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => onDeviceChange(device as 'desktop' | 'tablet' | 'mobile')}
+                  className={`flex items-center gap-2 h-8 px-3 ${
+                    isActive ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  }`}
+                >
+                  <IconComponent className="w-4 h-4" />
+                  <span className="text-xs font-medium">{config.label}</span>
+                </Button>
+              );
+            })}
+          </div>
+          <Badge variant="outline" className="text-xs font-mono">
+            {canvasWidth}px
+          </Badge>
+        </div>
+        
+        {/* Right Section */}
+        <div className="flex items-center gap-3">
+          <Button onClick={onPreview} variant="outline" size="sm">
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button onClick={() => onSaveTemplate({})} variant="outline" size="sm">
+            <Save className="w-4 h-4 mr-2" />
+            Save Template
+          </Button>
+          <Button onClick={onPublish} className="bg-blue-600 hover:bg-blue-700" size="sm">
+            <Send className="w-4 h-4 mr-2" />
+            Publish
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(true)}
+            className="text-gray-600"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Ribbon Content */}
+      <div className="px-6 py-4">
+        <div className="flex items-center gap-8 overflow-x-auto">
+          {/* Blocks Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Blocks</div>
+            <div className="flex gap-2">
+              {blockItems.map((block) => (
+                <Button
+                  key={block.id}
+                  variant="outline"
+                  size="sm"
+                  className="flex flex-col items-center p-2 h-16 w-16 cursor-grab active:cursor-grabbing"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, block.id)}
+                  onClick={() => onBlockAdd(block.id)}
+                >
+                  {block.icon}
+                  <span className="text-xs mt-1">{block.name}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* Layouts Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Layouts</div>
+            <div className="flex gap-2">
+              {layoutOptions.map((layout) => (
+                <Button
+                  key={layout.id}
+                  variant="outline"
+                  size="sm"
+                  className="flex flex-col items-center p-2 h-16 w-16 cursor-pointer"
+                  onClick={() => handleLayoutSelect(layout)}
+                >
+                  {renderLayoutPreview(layout)}
+                  <span className="text-xs">{layout.name}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* Text Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Text</div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-16 px-3"
+                onClick={() => onBlockAdd('text')}
+              >
+                <div className="flex flex-col items-center">
+                  <Type className="w-4 h-4" />
+                  <span className="text-xs mt-1">Paragraph</span>
+                </div>
+              </Button>
+            </div>
+          </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* Headings Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Headings</div>
+            <div className="flex gap-2">
+              {headingOptions.map((heading) => (
+                <Button
+                  key={heading.id}
+                  variant="outline"
+                  size="sm"
+                  className="flex flex-col items-center p-2 h-16 w-12 cursor-pointer"
+                  onClick={() => handleHeadingInsert(heading)}
+                >
+                  <span className={`font-bold ${heading.size === 'text-3xl' ? 'text-lg' : 
+                    heading.size === 'text-2xl' ? 'text-base' : 
+                    heading.size === 'text-xl' ? 'text-sm' : 'text-xs'}`}>
+                    {heading.name}
+                  </span>
+                  <span className="text-xs mt-1">{heading.tag.toUpperCase()}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <Separator orientation="vertical" className="h-16" />
+
+          {/* Links & Buttons Section */}
+          <div className="flex-shrink-0">
+            <div className="text-xs font-medium text-gray-600 mb-2">Links & Buttons</div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-16 px-3"
+                onClick={() => {
+                  if (editor) {
+                    editor.commands.insertContent('<a href="#">Link text</a>');
+                  }
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <Link className="w-4 h-4" />
+                  <span className="text-xs mt-1">Link</span>
+                </div>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-16 px-3"
+                onClick={() => onBlockAdd('button')}
+              >
+                <div className="flex flex-col items-center">
+                  <MousePointer className="w-4 h-4" />
+                  <span className="text-xs mt-1">Button</span>
+                </div>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default OmnipresentRibbon;
