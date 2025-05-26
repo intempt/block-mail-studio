@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -82,6 +83,20 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     }
   };
 
+  const handleSaveTemplate = () => {
+    const templateName = subjectLine.trim() || 'New Email Template';
+    
+    onSaveTemplate({
+      name: templateName,
+      description: `Email template saved on ${new Date().toLocaleDateString()}`,
+      html: emailHTML,
+      subject: subjectLine,
+      category: 'Custom',
+      tags: ['canvas-created'],
+      isFavorite: false
+    });
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
@@ -162,7 +177,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onSaveTemplate({ name: 'New Template', html: emailHTML, subject: subjectLine })}
+              onClick={handleSaveTemplate}
             >
               Save Template
             </Button>
