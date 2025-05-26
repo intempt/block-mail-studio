@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -121,7 +120,7 @@ export default function EmailEditor({
 
   const editor = useEditor({
     extensions,
-    content: emailHTML,
+    content: initialHTML,
     onUpdate: handleEditorUpdate,
     immediatelyRender: false,
   }, [extensions]);
