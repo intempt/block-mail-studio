@@ -1,3 +1,4 @@
+
 import { OpenAIEmailService } from './openAIEmailService';
 
 interface ConversationMessage {
@@ -382,7 +383,7 @@ Important: Phrase chips as natural user responses without emojis.`;
     return hasType && (hasPurpose || hasConversationContext) && (isCreateRequest || isGenerationStage);
   }
 
-  private static wrapEmailWithBlocks(html: string): string => {
+  private static wrapEmailWithBlocks(html: string): string {
     // If HTML already has email-block structure, return as is
     if (html.includes('email-block')) {
       return html;
