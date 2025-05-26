@@ -61,7 +61,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
-      <div className="space-y-8">
+      <div className="space-y-8 max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>

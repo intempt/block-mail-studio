@@ -17,6 +17,7 @@ interface ConversationalChipGeneratorProps {
   onRefreshChips: () => void;
   onResetToStarter: () => void;
   isLoading?: boolean;
+  currentMode?: 'ask' | 'do';
 }
 
 export const ConversationalChipGenerator: React.FC<ConversationalChipGeneratorProps> = ({
@@ -24,7 +25,8 @@ export const ConversationalChipGenerator: React.FC<ConversationalChipGeneratorPr
   onChipSelect,
   onRefreshChips,
   onResetToStarter,
-  isLoading = false
+  isLoading = false,
+  currentMode = 'ask'
 }) => {
   if (chips.length === 0) return null;
 
@@ -35,6 +37,11 @@ export const ConversationalChipGenerator: React.FC<ConversationalChipGeneratorPr
           <span className="text-sm font-medium text-gray-700">Quick responses:</span>
           <Badge variant="outline" className="text-xs">
             {chips[0]?.type === 'starter' ? 'Getting Started' : 'Continue Chat'}
+          </Badge>
+          <Badge variant="outline" className={`text-xs ${
+            currentMode === 'ask' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
+          }`}>
+            {currentMode === 'ask' ? '💭 Ask Mode' : '⚡ Do Mode'}
           </Badge>
         </div>
         

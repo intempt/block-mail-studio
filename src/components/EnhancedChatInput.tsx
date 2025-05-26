@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toggle } from '@/components/ui/toggle';
@@ -16,6 +16,7 @@ interface EnhancedChatInputProps {
   placeholder?: string;
   disableDoMode?: boolean;
   context?: 'messages' | 'journeys' | 'snippets';
+  onModeChange?: (mode: 'ask' | 'do') => void;
 }
 
 export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
@@ -23,7 +24,8 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
   isLoading = false,
   placeholder = "Describe your needs...",
   disableDoMode = false,
-  context = 'messages'
+  context = 'messages',
+  onModeChange
 }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isDoMode, setIsDoMode] = useState(false);
@@ -44,9 +46,20 @@ export const EnhancedChatInput: React.FC<EnhancedChatInputProps> = ({
 
   const handleToggleMode = () => {
     if (!disableDoMode) {
-      setIsDoMode(!isDoMode);
+      const newMode = !isDoMode;
+      setIsDoMode(newMode);
+      if (onModeChange) {
+        onModeChange(newMode ? 'do' : 'ask');
+      }
     }
   };
+
+  // Notify parent of mode changes
+  useEffect(() => {
+    if (onModeChange) {
+      onModeChange(isDoMode && !disableDoMode ? 'do' : 'ask');
+    }
+  }, [isDoMode, disableDoMode, onModeChange]);
 
   const getModePlaceholder = () => {
     const currentMode = (isDoMode && !disableDoMode) ? 'do' : 'ask';
