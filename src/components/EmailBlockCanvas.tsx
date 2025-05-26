@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
 import { EmailSnippet } from '@/types/snippets';
@@ -5,7 +6,6 @@ import { DirectSnippetService } from '@/services/directSnippetService';
 import { useDragDropHandler } from './canvas/DragDropHandler';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { CanvasStatus } from './canvas/CanvasStatus';
-import { toast } from 'sonner';
 import './EmailBlockCanvas.css';
 
 export interface EmailBlockCanvasRef {
@@ -192,7 +192,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       if (block) {
         const snippet = DirectSnippetService.createSnippetFromBlock(block);
         
-        toast.success(`"${snippet.name}" has been saved to your snippets.`);
+        console.log(`"${snippet.name}" has been saved to your snippets.`);
 
         onSnippetSaved?.();
       }
