@@ -72,6 +72,27 @@ export default function EmailEditor({
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
+  // Add performance and brand metrics state
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    overallScore: null as number | null,
+    deliverabilityScore: null as number | null,
+    mobileScore: null as number | null,
+    spamScore: null as number | null
+  });
+
+  const [brandMetrics, setBrandMetrics] = useState({
+    brandVoiceScore: 0,
+    engagementScore: 0,
+    toneConsistency: 0,
+    readabilityScore: 0
+  });
+
+  const [performancePrediction, setPerformancePrediction] = useState({
+    openRate: 0,
+    clickRate: 0,
+    conversionRate: 0
+  });
+
   // Stable layout config
   const layoutConfig = useMemo<LayoutConfig>(() => ({
     direction: 'column',
@@ -228,6 +249,12 @@ export default function EmailEditor({
     setZoom(newZoom);
   };
 
+  const handleRefreshAnalysis = () => {
+    // Trigger analysis refresh - this could integrate with existing analysis components
+    console.log('Refreshing performance and brand analysis...');
+    // In a real implementation, this would trigger the analysis components to re-run
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -292,7 +319,7 @@ export default function EmailEditor({
         </div>
       </div>
 
-      {/* Status Bar */}
+      {/* Enhanced Status Bar with Performance and Brand Metrics */}
       <StatusBar
         canvasWidth={canvasWidth}
         previewMode={previewMode}
@@ -300,6 +327,10 @@ export default function EmailEditor({
         wordCount={wordCount}
         zoom={zoom}
         onZoomChange={handleZoomChange}
+        performanceMetrics={performanceMetrics}
+        brandMetrics={brandMetrics}
+        performancePrediction={performancePrediction}
+        onRefreshAnalysis={handleRefreshAnalysis}
       />
 
       {/* Modals */}

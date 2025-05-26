@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -163,9 +162,6 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
             <TabsTrigger value="design" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               Design
             </TabsTrigger>
-            <TabsTrigger value="review" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-              Review
-            </TabsTrigger>
             <TabsTrigger value="view" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               View
             </TabsTrigger>
@@ -210,16 +206,6 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
             <div className="h-80 overflow-hidden">
               <GlobalStylesPanel
                 onStylesChange={onGlobalStylesChange}
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="review" className="mt-0">
-            <div className="h-80 overflow-hidden">
-              <PerformanceBrandPanel
-                emailHTML={emailHTML}
-                subjectLine={subjectLine}
-                editor={editor}
               />
             </div>
           </TabsContent>
