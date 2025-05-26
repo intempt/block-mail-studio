@@ -1,9 +1,7 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Sparkles, 
@@ -15,45 +13,21 @@ import {
   BarChart3
 } from 'lucide-react';
 import { directAIService } from '@/services/directAIService';
-import { SubjectLineAnalysisResult } from '@/services/EmailAIService';
 
 interface CanvasSubjectLineProps {
   value: string;
   onChange: (value: string) => void;
   emailContent?: string;
-  onAnalysisComplete?: (analysis: SubjectLineAnalysisResult) => void;
 }
 
 export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
   value,
   onChange,
-  emailContent = '',
-  onAnalysisComplete
+  emailContent = ''
 }) => {
-  const [analysis, setAnalysis] = useState<SubjectLineAnalysisResult | null>(null);
   const [variants, setVariants] = useState<string[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingVariants, setIsGeneratingVariants] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
-
-  const analyzeSubjectLine = useCallback(async () => {
-    if (!value.trim()) {
-      setAnalysis(null);
-      return;
-    }
-
-    setIsAnalyzing(true);
-    try {
-      const result = await directAIService.analyzeSubjectLine(value, emailContent);
-      setAnalysis(result);
-      onAnalysisComplete?.(result);
-    } catch (error) {
-      console.error('Error analyzing subject line:', error);
-      setAnalysis(null);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [value, emailContent, onAnalysisComplete]);
 
   const generateVariants = async () => {
     if (!value.trim()) return;
@@ -81,27 +55,9 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
     navigator.clipboard.writeText(text);
   };
 
-  // Auto-analyze when value changes (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (value.trim()) {
-        analyzeSubjectLine();
-      }
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [value, analyzeSubjectLine]);
-
   const characterCount = value.length;
   const isTooLong = characterCount > 50;
   const isTooShort = characterCount < 10 && characterCount > 0;
-
-  const getScoreColor = (score: number | null) => {
-    if (score === null || score === undefined) return 'text-gray-600';
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
 
   return (
     <div className="p-4 space-y-3 bg-white">
@@ -111,11 +67,6 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
           Subject Line
         </h3>
         <div className="flex items-center gap-2">
-          {analysis?.score !== null && analysis?.score !== undefined && (
-            <Badge variant="outline" className={`text-xs ${getScoreColor(analysis.score)}`}>
-              Score: {analysis.score || '--'}
-            </Badge>
-          )}
           <Button
             variant="outline"
             size="sm"
@@ -134,17 +85,12 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
       </div>
 
       <div className="space-y-2">
-        <div className="relative">
-          <Input
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="Enter your email subject line..."
-            className="text-sm pr-10 border-gray-200 focus:border-blue-300 focus:ring-blue-200"
-          />
-          {isAnalyzing && (
-            <RefreshCw className="w-4 h-4 animate-spin absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500" />
-          )}
-        </div>
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Enter your email subject line..."
+          className="text-sm border-gray-200 focus:border-blue-300 focus:ring-blue-200"
+        />
         
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
@@ -165,43 +111,6 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
             )}
           </div>
         </div>
-
-        {/* Analysis Results */}
-        {analysis && (
-          <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              <div className="text-center p-2 bg-white rounded border">
-                <div className="font-semibold text-blue-600">
-                  {analysis.predictions?.openRate?.toFixed(1) || '--'}%
-                </div>
-                <div className="text-gray-600">Est. Open</div>
-              </div>
-              <div className="text-center p-2 bg-white rounded border">
-                <div className="font-semibold text-purple-600">
-                  {analysis.score || '--'}
-                </div>
-                <div className="text-gray-600">Score</div>
-              </div>
-              <div className="text-center p-2 bg-white rounded border">
-                <div className="font-semibold text-orange-600">
-                  {analysis.predictions?.deliverabilityScore || '--'}
-                </div>
-                <div className="text-gray-600">Delivery</div>
-              </div>
-            </div>
-
-            {analysis.suggestions && analysis.suggestions.length > 0 && (
-              <div className="bg-blue-50 p-2 rounded border">
-                <div className="text-xs font-medium text-blue-900 mb-1">💡 Recommendations:</div>
-                <div className="space-y-1">
-                  {analysis.suggestions.slice(0, 2).map((rec, index) => (
-                    <div key={index} className="text-xs text-blue-800">• {rec}</div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* A/B Test Variants */}
         {showVariants && (

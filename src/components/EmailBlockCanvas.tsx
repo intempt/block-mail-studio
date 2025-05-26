@@ -39,6 +39,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
+  const [currentEmailHTML, setCurrentEmailHTML] = useState('');
 
   useImperativeHandle(ref, () => ({
     findAndReplaceText: (current: string, replacement: string) => {
@@ -142,7 +143,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   useEffect(() => {
     const generateHTML = () => {
       if (blocks.length === 0) {
-        onContentChange('');
+        const emptyHTML = '';
+        onContentChange(emptyHTML);
+        setCurrentEmailHTML(emptyHTML);
         return;
       }
 
@@ -170,6 +173,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       `;
 
       onContentChange(fullHTML);
+      setCurrentEmailHTML(fullHTML);
     };
 
     generateHTML();
@@ -314,7 +318,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           <CanvasSubjectLine
             value={subject}
             onChange={onSubjectChange}
-            emailContent=""
+            emailContent={currentEmailHTML}
           />
         </div>
 
@@ -344,6 +348,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         selectedBlockId={selectedBlockId}
         canvasWidth={canvasWidth}
         previewMode={previewMode}
+        emailHTML={currentEmailHTML}
+        subjectLine={subject}
       />
     </div>
   );
