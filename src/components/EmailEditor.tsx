@@ -25,6 +25,7 @@ import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { RibbonInterface } from './RibbonInterface';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { StatusBar } from './StatusBar';
+import { HeaderAnalyticsBar } from './HeaderAnalyticsBar';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -74,24 +75,55 @@ export default function EmailEditor({
 
   // Add performance and brand metrics state
   const [performanceMetrics, setPerformanceMetrics] = useState({
-    overallScore: null as number | null,
-    deliverabilityScore: null as number | null,
-    mobileScore: null as number | null,
-    spamScore: null as number | null
+    overallScore: 87 as number | null,
+    deliverabilityScore: 91 as number | null,
+    mobileScore: 94 as number | null,
+    spamScore: 12 as number | null
   });
 
   const [brandMetrics, setBrandMetrics] = useState({
-    brandVoiceScore: 0,
-    engagementScore: 0,
-    toneConsistency: 0,
-    readabilityScore: 0
+    brandVoiceScore: 88,
+    engagementScore: 82,
+    toneConsistency: 95,
+    readabilityScore: 91
   });
 
   const [performancePrediction, setPerformancePrediction] = useState({
-    openRate: 0,
-    clickRate: 0,
-    conversionRate: 0
+    openRate: 26.3,
+    clickRate: 4.1,
+    conversionRate: 2.8
   });
+
+  // Add AI suggestions state
+  const [aiSuggestions, setAiSuggestions] = useState([
+    {
+      id: '1',
+      type: 'subject' as const,
+      title: 'Optimize Subject Line',
+      description: 'Make your subject line more compelling and action-oriented',
+      impact: 'high' as const,
+      confidence: 87,
+      suggestion: 'Add urgency words like "Limited Time" or personalization tokens'
+    },
+    {
+      id: '2',
+      type: 'cta' as const,
+      title: 'Enhance Call-to-Action',
+      description: 'Improve button text for better click-through rates',
+      impact: 'high' as const,
+      confidence: 92,
+      suggestion: 'Use action verbs like "Get Started Now" instead of "Click Here"'
+    },
+    {
+      id: '3',
+      type: 'copy' as const,
+      title: 'Improve Content Flow',
+      description: 'Restructure content for better readability',
+      impact: 'medium' as const,
+      confidence: 78,
+      suggestion: 'Break long paragraphs into shorter, scannable chunks'
+    }
+  ]);
 
   // Stable layout config
   const layoutConfig = useMemo<LayoutConfig>(() => ({
@@ -255,6 +287,20 @@ export default function EmailEditor({
     // In a real implementation, this would trigger the analysis components to re-run
   };
 
+  const handleApplySuggestion = (suggestion: any) => {
+    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
+    console.log(`Applied: ${suggestion.title}`);
+  };
+
+  const handleRefreshAnalysis = () => {
+    console.log('Refreshing performance and brand analysis...');
+    // Simulate refreshed data
+    setPerformanceMetrics(prev => ({
+      ...prev,
+      overallScore: Math.min(100, (prev.overallScore || 0) + Math.floor(Math.random() * 10) - 5)
+    }));
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -287,6 +333,16 @@ export default function EmailEditor({
           </Button>
         </div>
       </div>
+
+      {/* Analytics Header Bar */}
+      <HeaderAnalyticsBar
+        performanceMetrics={performanceMetrics}
+        brandMetrics={brandMetrics}
+        performancePrediction={performancePrediction}
+        suggestions={aiSuggestions}
+        onRefreshAnalysis={handleRefreshAnalysis}
+        onApplySuggestion={handleApplySuggestion}
+      />
 
       {/* Ribbon Interface */}
       <RibbonInterface
