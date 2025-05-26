@@ -4,19 +4,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  File, 
+  FileText, 
   Plus, 
   Layout, 
   Palette, 
   BarChart3, 
   Eye,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Type,
+  Home
 } from 'lucide-react';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { TemplateStylePanel } from './TemplateStylePanel';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 
@@ -52,23 +55,23 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   const [activeTab, setActiveTab] = useState('insert');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const renderFileTab = () => (
+  const renderTemplatesTab = () => (
     <div className="flex items-center gap-4 p-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Templates</span>
+        <span className="text-sm font-medium text-gray-700">Template Library</span>
         <Button variant="outline" size="sm" onClick={onTemplateLibraryOpen}>
-          <File className="w-4 h-4 mr-2" />
-          Browse
+          <FileText className="w-4 h-4 mr-2" />
+          Browse Templates
         </Button>
       </div>
       <div className="h-6 w-px bg-gray-300" />
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Document</span>
+        <span className="text-sm font-medium text-gray-700">Actions</span>
         <Button variant="outline" size="sm">
-          Save
+          Save Template
         </Button>
         <Button variant="outline" size="sm">
-          Export
+          Export HTML
         </Button>
       </div>
     </div>
@@ -77,7 +80,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   const renderLayoutTab = () => (
     <div className="flex items-center gap-4 p-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Preview</span>
+        <span className="text-sm font-medium text-gray-700">Preview Mode</span>
         <div className="flex border rounded-md">
           <Button
             variant={previewMode === 'desktop' ? 'default' : 'ghost'}
@@ -145,8 +148,11 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between px-6 py-1 border-b border-gray-100">
           <TabsList className="bg-transparent gap-6">
-            <TabsTrigger value="file" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-              File
+            <TabsTrigger value="templates" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              Templates
+            </TabsTrigger>
+            <TabsTrigger value="home" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+              Home
             </TabsTrigger>
             <TabsTrigger value="insert" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               Insert
@@ -175,8 +181,12 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
         </div>
 
         <div className="min-h-[80px]">
-          <TabsContent value="file" className="mt-0">
-            {renderFileTab()}
+          <TabsContent value="templates" className="mt-0">
+            {renderTemplatesTab()}
+          </TabsContent>
+
+          <TabsContent value="home" className="mt-0">
+            <TemplateStylePanel onStylesChange={onGlobalStylesChange} />
           </TabsContent>
 
           <TabsContent value="insert" className="mt-0">

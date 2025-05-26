@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -25,9 +24,7 @@ import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { RibbonInterface } from './RibbonInterface';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
-import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
-import { GlobalStylesPanel } from './GlobalStylesPanel';
-import { PerformanceBrandPanel } from './PerformanceBrandPanel';
+import { StatusBar } from './StatusBar';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -72,7 +69,6 @@ export default function EmailEditor({
   const [showPreview, setShowPreview] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
@@ -214,48 +210,11 @@ export default function EmailEditor({
     onContentChange(newContent);
   };
 
-  const renderLeftPanel = () => {
-    console.log('EmailEditor: Rendering left panel', { leftPanel });
-    try {
-      switch (leftPanel) {
-        case 'blocks':
-          console.log('EmailEditor: Rendering blocks panel');
-          return (
-            <EnhancedEmailBlockPalette
-              onBlockAdd={handleBlockAdd}
-              onSnippetAdd={handleSnippetAdd}
-              universalContent={universalContent}
-              onUniversalContentAdd={handleUniversalContentAdd}
-              compactMode={false}
-              snippetRefreshTrigger={0}
-            />
-          );
-        case 'design':
-          console.log('EmailEditor: Rendering design panel');
-          return (
-            <GlobalStylesPanel
-              onStylesChange={handleGlobalStylesChange}
-            />
-          );
-        case 'performance':
-          console.log('EmailEditor: Rendering performance panel');
-          return (
-            <PerformanceBrandPanel
-              emailHTML={content}
-              subjectLine={subject}
-              editor={editor}
-            />
-          );
-        default:
-          return null;
-      }
-    } catch (error) {
-      console.error('EmailEditor: Error rendering left panel:', error);
-      return <div>Error loading panel</div>;
-    }
-  };
-
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [canvasWidth] = useState(600);
+  const [blockCount] = useState(0);
+  const [wordCount] = useState(0);
+  const [zoom, setZoom] = useState(100);
 
   const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
     setPreviewMode(mode);
@@ -263,6 +222,10 @@ export default function EmailEditor({
 
   const handleTemplateLibraryOpen = () => {
     setShowTemplateLibrary(true);
+  };
+
+  const handleZoomChange = (newZoom: number) => {
+    setZoom(newZoom);
   };
 
   console.log('EmailEditor: About to render main component');
@@ -320,7 +283,7 @@ export default function EmailEditor({
           <EmailBlockCanvas
             onContentChange={handleContentChangeFromCanvas}
             onBlockSelect={() => {}}
-            previewWidth={600}
+            previewWidth={canvasWidth}
             previewMode={previewMode}
             compactMode={false}
             subject={subject}
@@ -328,6 +291,16 @@ export default function EmailEditor({
           />
         </div>
       </div>
+
+      {/* Status Bar */}
+      <StatusBar
+        canvasWidth={canvasWidth}
+        previewMode={previewMode}
+        blockCount={blockCount}
+        wordCount={wordCount}
+        zoom={zoom}
+        onZoomChange={handleZoomChange}
+      />
 
       {/* Modals */}
       {showPreview && (
