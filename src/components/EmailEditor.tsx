@@ -126,7 +126,6 @@ export default function EmailEditor({
       if (initialHTML) {
         console.log('EmailEditor: Setting initial content');
         editor.commands.setContent(initialHTML);
-        setEmailHTML(initialHTML);
       }
       setEditorReady(true);
     }
