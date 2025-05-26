@@ -278,17 +278,17 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
       {/* Ribbon Content */}
       <div className="px-3 py-2">
-        <div className="flex items-center gap-4 overflow-x-auto">
+        <div className="flex items-center gap-2 overflow-x-auto">
           {/* Blocks Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Blocks</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center p-1 h-12 w-12 cursor-grab active:cursor-grabbing"
+                  className="flex flex-col items-center p-0.5 h-8 w-8 cursor-grab active:cursor-grabbing hover:bg-gray-100"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
@@ -299,18 +299,18 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-12" />
+          <Separator orientation="vertical" className="h-8" />
 
           {/* Layouts Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Layouts</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="flex flex-col items-center p-1 h-12 w-12 cursor-pointer"
+                  className="flex flex-col items-center p-0.5 h-8 w-8 cursor-pointer hover:bg-gray-100"
                   onClick={() => handleLayoutSelect(layout)}
                 >
                   <DynamicLayoutIcon layout={layout} />
@@ -319,16 +319,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-12" />
+          <Separator orientation="vertical" className="h-8" />
 
           {/* Email Settings Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Email Settings</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <Button
-                variant={showEmailSettings ? 'default' : 'outline'}
+                variant={showEmailSettings ? 'default' : 'ghost'}
                 size="sm"
-                className="h-12 px-2"
+                className="h-8 px-2 hover:bg-gray-100"
                 onClick={handleEmailSettingsToggle}
               >
                 <Settings className="w-4 h-4" />
@@ -336,16 +336,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-12" />
+          <Separator orientation="vertical" className="h-8" />
 
           {/* Text & Headings Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Text & Headings</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <Button
-                variant={showTextHeadings ? 'default' : 'outline'}
+                variant={showTextHeadings ? 'default' : 'ghost'}
                 size="sm"
-                className="h-12 px-2"
+                className="h-8 px-2 hover:bg-gray-100"
                 onClick={handleTextHeadingsToggle}
               >
                 <Type className="w-4 h-4" />
@@ -353,16 +353,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-12" />
+          <Separator orientation="vertical" className="h-8" />
 
           {/* Buttons & Links Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">Buttons & Links</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <Button
-                variant={showButtonsLinks ? 'default' : 'outline'}
+                variant={showButtonsLinks ? 'default' : 'ghost'}
                 size="sm"
-                className="h-12 px-2"
+                className="h-8 px-2 hover:bg-gray-100"
                 onClick={handleButtonsLinksToggle}
               >
                 <MousePointer className="w-4 h-4" />
@@ -370,16 +370,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-12" />
+          <Separator orientation="vertical" className="h-8" />
 
           {/* AI Suggestions Section */}
           <div className="flex-shrink-0">
             <div className="text-[10px] font-medium text-gray-600 mb-1">AI Suggestions</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <Button
-                variant={showAISuggestions ? 'default' : 'outline'}
+                variant={showAISuggestions ? 'default' : 'ghost'}
                 size="sm"
-                className="h-12 px-2"
+                className="h-8 px-2 hover:bg-gray-100"
                 onClick={handleAISuggestionsToggle}
               >
                 <Lightbulb className="w-4 h-4" />
