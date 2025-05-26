@@ -35,6 +35,7 @@ interface EnhancedEmailBlockPaletteProps {
   onUniversalContentAdd: (content: UniversalContent) => void;
   compactMode?: boolean;
   snippetRefreshTrigger?: number;
+  onLayoutDrag?: (e: React.DragEvent, layoutConfig: any) => void;
 }
 
 const blockItems: BlockItem[] = [
@@ -55,7 +56,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   universalContent,
   onUniversalContentAdd,
   compactMode = false,
-  snippetRefreshTrigger = 0
+  snippetRefreshTrigger = 0,
+  onLayoutDrag
 }) => {
   console.log('EnhancedEmailBlockPalette rendering');
   
@@ -76,6 +78,13 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   const handleLayoutSelect = (layout: any) => {
     console.log('Layout selected:', layout);
     onBlockAdd('columns', layout);
+  };
+
+  const handleLayoutDragStart = (e: React.DragEvent, layout: any) => {
+    console.log('Layout drag started:', layout);
+    if (onLayoutDrag) {
+      onLayoutDrag(e, layout);
+    }
   };
 
   const handleSnippetSelect = (snippet: EmailSnippet) => {
@@ -185,6 +194,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                 <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
                   <LayoutConfigPanel 
                     onLayoutSelect={handleLayoutSelect}
+                    onLayoutDrag={handleLayoutDragStart}
                     compactMode={compactMode}
                   />
                 </div>

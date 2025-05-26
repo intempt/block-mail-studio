@@ -251,6 +251,24 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setEditingBlockId(null);
   }, []);
 
+  const handleMoveBlockUp = useCallback((blockId: string) => {
+    const blockIndex = blocks.findIndex(block => block.id === blockId);
+    if (blockIndex > 0) {
+      const newBlocks = [...blocks];
+      [newBlocks[blockIndex - 1], newBlocks[blockIndex]] = [newBlocks[blockIndex], newBlocks[blockIndex - 1]];
+      setBlocks(newBlocks);
+    }
+  }, [blocks]);
+
+  const handleMoveBlockDown = useCallback((blockId: string) => {
+    const blockIndex = blocks.findIndex(block => block.id === blockId);
+    if (blockIndex < blocks.length - 1) {
+      const newBlocks = [...blocks];
+      [newBlocks[blockIndex], newBlocks[blockIndex + 1]] = [newBlocks[blockIndex + 1], newBlocks[blockIndex]];
+      setBlocks(newBlocks);
+    }
+  }, [blocks]);
+
   const getDefaultContent = useCallback((blockType: string) => {
     switch (blockType) {
       case 'text':
@@ -340,6 +358,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             onTipTapChange={handleTipTapChange}
             onTipTapBlur={handleTipTapBlur}
             onColumnDrop={dragDropHandler.handleColumnDrop}
+            onMoveBlockUp={handleMoveBlockUp}
+            onMoveBlockDown={handleMoveBlockDown}
           />
         </div>
       </div>
