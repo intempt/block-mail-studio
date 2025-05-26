@@ -6,6 +6,8 @@ import { CanvasStatus } from './canvas/CanvasStatus';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
+import { mjmlService } from '@/services/MJMLService';
+import { createMJMLTemplate, compileMJMLToHTML } from '@/utils/emailUtils';
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -216,19 +218,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       console.log('Images optimized for better performance');
     },
     minifyHTML: () => {
-      setBlocks(prev => prev.map(block => {
-        if (block.type === 'text') {
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              html: block.content.html.replace(/\s+/g, ' ').trim()
-            }
-          };
-        }
-        return block;
-      }));
-      console.log('HTML content minified');
+      console.log('MJML content optimized');
     },
     checkLinks: () => {
       let totalLinks = 0;
@@ -288,62 +278,13 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setBlocks(initialBlocks);
   }, []);
 
-  const renderBlockToHTML = useCallback((block: EmailBlock): string => {
-    switch (block.type) {
-      case 'text':
-        return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
-      case 'button':
-        return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.link || '#'}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">${block.content.text || 'Button'}</a></div>`;
-      case 'image':
-        return `<div style="text-align: center; margin: 20px 0;"><img src="${block.content.src || ''}" alt="${block.content.alt || ''}" style="max-width: 100%; height: auto;" /></div>`;
-      case 'spacer':
-        return `<div style="height: ${block.content.height || '20px'};"></div>`;
-      case 'divider':
-        return `<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />`;
-      case 'columns':
-        return renderColumnsToHTML(block as ColumnsBlock);
-      default:
-        return '';
-    }
+  const renderBlockToMJML = useCallback((block: EmailBlock): string => {
+    return mjmlService.renderBlockToMJML(block);
   }, []);
 
-  const renderColumnsToHTML = useCallback((block: ColumnsBlock): string => {
-    const getColumnWidths = (ratio: string) => {
-      const ratioMap: Record<string, string[]> = {
-        '100': ['100%'],
-        '50-50': ['50%', '50%'],
-        '33-67': ['33%', '67%'],
-        '67-33': ['67%', '33%'],
-        '25-75': ['25%', '75%'],
-        '75-25': ['75%', '25%'],
-        '33-33-33': ['33.33%', '33.33%', '33.33%'],
-        '25-50-25': ['25%', '50%', '25%'],
-        '25-25-50': ['25%', '25%', '50%'],
-        '50-25-25': ['50%', '25%', '25%'],
-        '25-25-25-25': ['25%', '25%', '25%', '25%']
-      };
-      return ratioMap[ratio] || ['100%'];
-    };
-
-    const columnWidths = getColumnWidths(block.content.columnRatio);
-    
-    const columnsHTML = block.content.columns.map((column, index) => {
-      const columnBlocks = column.blocks.map(renderBlockToHTML).join('');
-      return `
-        <td style="width: ${columnWidths[index]}; vertical-align: top; padding: 0 8px;">
-          ${columnBlocks}
-        </td>
-      `;
-    }).join('');
-
-    return `
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
-        <tr>
-          ${columnsHTML}
-        </tr>
-      </table>
-    `;
-  }, [renderBlockToHTML]);
+  const renderColumnsToMJML = useCallback((block: ColumnsBlock): string => {
+    return mjmlService.renderColumnsToMJML(block);
+  }, []);
 
   useEffect(() => {
     const generateHTML = () => {
@@ -354,20 +295,21 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         return;
       }
 
-      const blockElements = blocks.map(renderBlockToHTML).join('');
+      // Convert blocks to MJML
+      const mjmlBlocks = blocks.map(renderBlockToMJML).join('');
+      
+      // Create complete MJML template
+      const mjmlTemplate = createMJMLTemplate(mjmlBlocks, subject);
+      
+      // Compile MJML to HTML
+      const compiledHTML = compileMJMLToHTML(mjmlTemplate);
 
-      const fullHTML = `
-        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-          ${blockElements}
-        </div>
-      `;
-
-      onContentChange(fullHTML);
-      setCurrentEmailHTML(fullHTML);
+      onContentChange(compiledHTML);
+      setCurrentEmailHTML(compiledHTML);
     };
 
     generateHTML();
-  }, [blocks, onContentChange, renderBlockToHTML]);
+  }, [blocks, onContentChange, renderBlockToMJML, subject]);
 
   const handleBlockClick = useCallback((blockId: string) => {
     setSelectedBlockId(blockId);

@@ -1,6 +1,6 @@
 
 import { describe, it, expect } from 'vitest';
-import { generateUniqueId, createEmailHTML, stripTiptapAttributes } from '@/utils/emailUtils';
+import { generateUniqueId, createMJMLTemplate, compileMJMLToHTML } from '@/utils/emailUtils';
 
 describe('emailUtils', () => {
   describe('generateUniqueId', () => {
@@ -10,37 +10,45 @@ describe('emailUtils', () => {
     });
   });
 
-  describe('createEmailHTML', () => {
-    it('should wrap content in a complete HTML document', () => {
-      const content = '<div>Test content</div>';
-      const html = createEmailHTML(content);
+  describe('createMJMLTemplate', () => {
+    it('should wrap content in a complete MJML document', () => {
+      const content = '<mj-text>Test content</mj-text>';
+      const mjml = createMJMLTemplate(content);
       
-      expect(html).toContain('<!DOCTYPE html>');
-      expect(html).toContain('<html lang="en">');
-      expect(html).toContain('<head>');
-      expect(html).toContain('<body>');
-      expect(html).toContain(content);
+      expect(mjml).toContain('<mjml>');
+      expect(mjml).toContain('<mj-head>');
+      expect(mjml).toContain('<mj-body>');
+      expect(mjml).toContain(content);
     });
 
-    it('should include email-specific CSS styles', () => {
-      const html = createEmailHTML('<div>Test</div>');
+    it('should include email-specific MJML attributes', () => {
+      const mjml = createMJMLTemplate('<mj-text>Test</mj-text>');
       
-      expect(html).toContain('email-container');
-      expect(html).toContain('max-width: 600px');
-      expect(html).toContain('-webkit-text-size-adjust');
+      expect(mjml).toContain('mj-attributes');
+      expect(mjml).toContain('font-family="Arial, sans-serif"');
+      expect(mjml).toContain('background-color="#f8fafc"');
     });
   });
 
-  describe('stripTiptapAttributes', () => {
-    it('should remove TipTap-specific attributes', () => {
-      const htmlWithTiptap = '<div data-pm-slice="test" class="ProseMirror" contenteditable="true" spellcheck="false">Content</div>';
-      const cleaned = stripTiptapAttributes(htmlWithTiptap);
+  describe('compileMJMLToHTML', () => {
+    it('should compile valid MJML to HTML', () => {
+      const mjml = `
+        <mjml>
+          <mj-body>
+            <mj-section>
+              <mj-column>
+                <mj-text>Hello World</mj-text>
+              </mj-column>
+            </mj-section>
+          </mj-body>
+        </mjml>
+      `;
       
-      expect(cleaned).not.toContain('data-pm-slice');
-      expect(cleaned).not.toContain('class="ProseMirror');
-      expect(cleaned).not.toContain('contenteditable');
-      expect(cleaned).not.toContain('spellcheck');
-      expect(cleaned).toContain('Content');
+      const html = compileMJMLToHTML(mjml);
+      
+      expect(html).toContain('<!doctype html>');
+      expect(html).toContain('Hello World');
+      expect(html).toContain('<table');
     });
   });
 });

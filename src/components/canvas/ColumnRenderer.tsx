@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
+import { mjmlService } from '@/services/MJMLService';
 
 interface ColumnRendererProps {
   block: ColumnsBlock;
@@ -52,6 +53,7 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
               <div className="font-medium">Column {index + 1}</div>
               <div className="text-xs opacity-75">{columnWidths[index]}</div>
               <div className="text-xs opacity-60">Drop blocks here</div>
+              <div className="text-xs opacity-50 mt-1">MJML: mj-column</div>
             </div>
             
             <div className="space-y-2">
@@ -63,6 +65,10 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
             </div>
           </div>
         ))}
+      </div>
+      
+      <div className="text-xs text-gray-400 mt-2 text-center">
+        MJML Structure: mj-section → mj-column ({block.content.columnRatio})
       </div>
     </div>
   );
