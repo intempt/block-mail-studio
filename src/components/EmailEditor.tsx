@@ -40,7 +40,9 @@ const OmnipresentRibbon = React.lazy(() =>
 );
 
 const EmailTemplateLibrary = React.lazy(() => 
-  import('./EmailTemplateLibrary').catch(() => ({
+  import('./EmailTemplateLibrary').then(module => ({
+    default: module.EmailTemplateLibrary
+  })).catch(() => ({
     default: () => <div>Template library unavailable</div>
   }))
 );

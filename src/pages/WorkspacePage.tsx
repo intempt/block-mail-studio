@@ -9,7 +9,11 @@ const EmailEditor = lazy(() =>
   import('@/components/EmailEditor').then(module => ({ default: module.default }))
 );
 
-export default function WorkspacePage() {
+interface WorkspacePageProps {
+  onEmailBuilderOpen?: (emailHTML?: string, subject?: string) => void;
+}
+
+export default function WorkspacePage({ onEmailBuilderOpen }: WorkspacePageProps) {
   const [emailContent, setEmailContent] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [forceLoad, setForceLoad] = useState(false);
