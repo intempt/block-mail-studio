@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { EmailBlock } from '@/types/emailBlocks';
+import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
 
 interface ColumnRendererProps {
-  block: EmailBlock;
+  block: ColumnsBlock;
   onColumnDrop: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
   renderBlock: (block: EmailBlock) => React.ReactNode;
 }
@@ -13,6 +13,11 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
   onColumnDrop,
   renderBlock
 }) => {
+  // Type guard to ensure we have a columns block
+  if (block.type !== 'columns') {
+    return <div className="error">Invalid block type for ColumnRenderer</div>;
+  }
+
   const getColumnWidths = (ratio: string) => {
     const ratioMap: Record<string, string[]> = {
       '100': ['100%'],
