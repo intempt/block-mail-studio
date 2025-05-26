@@ -1,11 +1,11 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Bot, User, Zap, Target } from 'lucide-react';
 import { EnhancedChatInput } from './EnhancedChatInput';
 import { ConversationalChipGenerator } from './ConversationalChipGenerator';
 import { StreamingMessage } from './StreamingMessage';
 import { ThinkingIndicator } from './ThinkingIndicator';
+import { ScrollToBottomButton } from './ScrollToBottomButton';
 import { ChatCompletionService } from '@/services/chatCompletionService';
 import { StreamingChatService } from '@/services/streamingChatService';
 import { MarkdownFormatter } from './MarkdownFormatter';
@@ -47,6 +47,9 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   const [sessionId] = useState(() => `session-${Date.now()}`);
   const [campaignContext, setCampaignContext] = useState<any>(null);
   const [currentMode, setCurrentMode] = useState<'ask' | 'do'>('ask');
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ChatCompletionService.initializeContext(sessionId, context);
@@ -213,6 +216,48 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
     }
   };
 
+  // Add scroll detection effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      
+      // Show button when user is more than 200px from bottom
+      setShowScrollButton(distanceFromBottom > 200);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Auto-scroll to bottom for new messages
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      
+      // Only auto-scroll if user is near the bottom (within 300px)
+      if (distanceFromBottom < 300) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        setUnreadCount(0);
+      } else {
+        // User is scrolled up, increment unread count
+        setUnreadCount(prev => prev + 1);
+      }
+    }
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      setUnreadCount(0);
+    }
+  };
+
   const placeholderText = {
     journeys: 'your customer journey challenge...',
     messages: 'your campaign idea...',
@@ -220,9 +265,9 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[70vh] overflow-hidden">
+    <div className="flex flex-col space-y-6 relative">
       {campaignContext && context === 'messages' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex-shrink-0">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex-shrink-0">
           <div className="flex items-center gap-2 text-blue-800">
             <Target className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -232,7 +277,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+      <div className="space-y-4">
         {messages.map((message) => (
           <div key={message.id} className={`flex gap-4 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
             {(message.type === 'ai' || message.type === 'system') && (
@@ -289,9 +334,10 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
         ))}
         
         {isThinking && <ThinkingIndicator />}
+        <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex-shrink-0 mb-4">
+      <div className="space-y-4">
         <ConversationalChipGenerator
           chips={chips}
           onChipSelect={handleChipSelect}
@@ -300,9 +346,7 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           isLoading={isLoading}
           currentMode={currentMode}
         />
-      </div>
 
-      <div className="flex-shrink-0">
         <EnhancedChatInput
           onSendMessage={handleSendMessage}
           isLoading={isLoading}
@@ -312,6 +356,12 @@ export const UniversalConversationalInterface: React.FC<UniversalConversationalI
           disableDoMode={context !== 'messages'}
         />
       </div>
+
+      <ScrollToBottomButton
+        isVisible={showScrollButton}
+        unreadCount={unreadCount}
+        onClick={scrollToBottom}
+      />
     </div>
   );
 };
