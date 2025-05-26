@@ -1,10 +1,6 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo
-} from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Link } from '@tiptap/extension-link';
@@ -15,92 +11,21 @@ import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
-import {
-  ArrowLeft,
-  Eye,
-  Send,
-  Copy,
-  RefreshCw,
-  Layers,
-  Palette,
-  Settings,
-  BarChart3
-} from 'lucide-react';
-import { EmailCodeEditor } from './EmailCodeEditor';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { ArrowLeft, Eye, Send, Bold, Italic, Underline as UnderlineIcon } from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
-import { EmailBlockCanvas } from './EmailBlockCanvas';
-import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
-import { GlobalStylesPanel } from './GlobalStylesPanel';
-import { PropertyEditorPanel } from './PropertyEditorPanel';
-import { PerformanceBrandPanel } from './PerformanceBrandPanel';
-import { EmailTemplateLibrary } from './EmailTemplateLibrary';
-import { EnhancedEmailSubjectLine } from './EnhancedEmailSubjectLine';
-import { EmailTemplate } from './TemplateManager';
-import { DirectTemplateService } from '@/services/directTemplateService';
-import { UniversalContent } from '@/types/emailBlocks';
-import { EmailSnippet } from '@/types/snippets';
-import { EmailBlock } from '@/types/emailBlocks';
+import { BlockInserter } from './BlockInserter';
 
-interface Block {
-  id: string;
-  type: string;
-  content: string;
-  styles: Record<string, string>;
-}
-
-interface LayoutConfig {
-  direction: 'row' | 'column';
-  alignItems: 'start' | 'center' | 'end';
-  justifyContent: 'start' | 'center' | 'space-between';
-}
-
-type LeftPanelTab = 'blocks' | 'design' | 'properties' | 'performance';
-
-interface EmailEditorProps {
-  content: string;
-  subject: string;
-  onContentChange: (content: string) => void;
-  onSubjectChange: (subject: string) => void;
-  onBack?: () => void;
-}
-
-export default function EmailEditor({ 
-  content,
-  subject,
-  onContentChange,
-  onSubjectChange,
-  onBack 
-}: EmailEditorProps) {
-  console.log('EmailEditor: Component starting to render');
-
-  // Local UI state only - no content state
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
+export default function EmailEditor() {
+  const navigate = useNavigate();
+  const [content, setContent] = useState('<p>Start writing your email...</p>');
+  const [subject, setSubject] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [leftPanel, setLeftPanel] = useState<LeftPanelTab>('blocks');
-  const [universalContent] = useState<UniversalContent[]>([]);
 
-  // Stable layout config
-  const layoutConfig = useMemo<LayoutConfig>(() => ({
-    direction: 'column',
-    alignItems: 'center',
-    justifyContent: 'start'
-  }), []);
-
-  console.log('EmailEditor: State initialized, creating extensions');
-
-  // Stable extensions array
-  const extensions = useMemo(() => {
-    console.log('EmailEditor: Creating TipTap extensions');
-    return [
-      StarterKit.configure({
-        history: false,
-      }),
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
       Underline,
       Link,
       Image,
@@ -112,223 +37,49 @@ export default function EmailEditor({
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
-    ];
-  }, []);
-
-  // Stable update handler
-  const handleEditorUpdate = useCallback(({ editor }) => {
-    const newContent = editor.getHTML();
-    onContentChange(newContent);
-  }, [onContentChange]);
-
-  console.log('EmailEditor: About to create TipTap editor');
-
-  // Create editor once with stable configuration
-  const editor = useEditor({
-    extensions,
-    content: '', // Start with empty content
-    onUpdate: handleEditorUpdate,
-    immediatelyRender: false,
+    ],
+    content: content,
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
   });
 
-  console.log('EmailEditor: TipTap editor created', { editor: !!editor });
-
-  // Update editor content when prop changes
-  useEffect(() => {
-    if (editor && editor.getHTML() !== content) {
-      console.log('EmailEditor: Updating editor content from prop');
-      editor.commands.setContent(content);
-    }
-  }, [editor, content]);
-
-  // Load templates once
-  useEffect(() => {
-    console.log('EmailEditor: Loading templates');
-    const initialTemplates = DirectTemplateService.getAllTemplates();
-    setTemplates(initialTemplates);
-  }, []);
-
-  // Update selected block when selectedBlockId changes
-  useEffect(() => {
-    if (selectedBlockId) {
-      const block = emailBlocks.find(b => b.id === selectedBlockId);
-      setSelectedBlock(block || null);
-    } else {
-      setSelectedBlock(null);
-    }
-  }, [selectedBlockId, emailBlocks]);
-
-  const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
-    if (!editor) return;
-
-    const newBlock: Block = {
-      id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: blockType,
-      content: `New ${blockType} block`,
-      styles: {}
-    };
-
-    setBlocks(prev => [...prev, newBlock]);
-  };
-
-  const handleBlocksChange = (newBlocks: Block[]) => {
-    setBlocks(newBlocks);
-  };
-
-  const handleBlockUpdate = (block: EmailBlock) => {
-    setEmailBlocks(prev => 
-      prev.map(b => b.id === block.id ? block : b)
-    );
-    if (selectedBlock && selectedBlock.id === block.id) {
-      setSelectedBlock(block);
-    }
-  };
-
-  const handleBlockDelete = (blockId: string) => {
-    setBlocks(prev => prev.filter(block => block.id !== blockId));
-    setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
-    setSelectedBlockId(null);
-  };
-
-  const handleGlobalStylesChange = (styles: any) => {
-    // Apply styles to all blocks or the canvas
-    console.log('Applying global styles:', styles);
+  const handleBack = () => {
+    navigate('/');
   };
 
   const handlePreview = () => {
     setShowPreview(true);
   };
 
-  const handlePublish = async () => {
-    // Save template on publish
-    const existingTemplateNames = templates.map(t => t.name);
-    const newTemplate = DirectTemplateService.savePublishedTemplate(
-      content,
-      subject,
-      existingTemplateNames
-    );
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowTemplateLibrary(false);
+  const handlePublish = () => {
+    console.log('Publishing email:', { subject, content });
+    alert('Email published successfully!');
   };
-
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(content);
-  };
-
-  const handleSyncFromCode = () => {
-    if (editor) {
-      editor.commands.setContent(content);
-    }
-  };
-
-  const handleTemplateLoad = (template: EmailTemplate) => {
-    onContentChange(template.html);
-    onSubjectChange(template.subject);
-  };
-
-  const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    const newTemplate = DirectTemplateService.saveTemplate(template);
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowTemplateLibrary(false);
-  };
-
-  const handleSnippetAdd = (snippet: EmailSnippet) => {
-    // Handle snippet addition
-    console.log('Adding snippet:', snippet);
-  };
-
-  const handleUniversalContentAdd = (content: UniversalContent) => {
-    // Handle universal content addition
-    console.log('Adding universal content:', content);
-  };
-
-  const handleBlockSelect = (block: any) => {
-    if (block) {
-      setSelectedBlockId(block.id);
-    } else {
-      setSelectedBlockId(null);
-    }
-  };
-
-  const handleContentChangeFromCanvas = (newContent: string) => {
-    onContentChange(newContent);
-  };
-
-  const renderLeftPanel = () => {
-    console.log('EmailEditor: Rendering left panel', { leftPanel });
-    try {
-      switch (leftPanel) {
-        case 'blocks':
-          console.log('EmailEditor: Rendering blocks panel');
-          return (
-            <EnhancedEmailBlockPalette
-              onBlockAdd={handleBlockAdd}
-              onSnippetAdd={handleSnippetAdd}
-              universalContent={universalContent}
-              onUniversalContentAdd={handleUniversalContentAdd}
-              compactMode={false}
-              snippetRefreshTrigger={0}
-            />
-          );
-        case 'design':
-          console.log('EmailEditor: Rendering design panel');
-          return (
-            <GlobalStylesPanel
-              onStylesChange={handleGlobalStylesChange}
-            />
-          );
-        case 'properties':
-          console.log('EmailEditor: Rendering properties panel');
-          return (
-            <PropertyEditorPanel
-              selectedBlock={selectedBlock}
-              onBlockUpdate={handleBlockUpdate}
-            />
-          );
-        case 'performance':
-          console.log('EmailEditor: Rendering performance panel');
-          return (
-            <PerformanceBrandPanel
-              emailHTML={content}
-              subjectLine={subject}
-              editor={editor}
-            />
-          );
-        default:
-          return null;
-      }
-    } catch (error) {
-      console.error('EmailEditor: Error rendering left panel:', error);
-      return <div>Error loading panel</div>;
-    }
-  };
-
-  console.log('EmailEditor: About to render main component');
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {onBack && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          )}
-          <h1 className="text-xl font-semibold text-gray-900">Email Builder</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Workspace
+          </Button>
+          <h1 className="text-xl font-semibold text-gray-900">Email Editor</h1>
         </div>
         
         <div className="flex items-center gap-3">
-          <EnhancedEmailSubjectLine
+          <Input
+            placeholder="Subject line..."
             value={subject}
-            onChange={onSubjectChange}
-            emailContent={content}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-64"
           />
           <Button onClick={handlePreview} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-2" />
@@ -342,136 +93,70 @@ export default function EmailEditor({
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
-        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-          <div className="border-b border-gray-200">
-            <div className="flex">
-              <button
-                onClick={() => setLeftPanel('blocks')}
-                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  leftPanel === 'blocks'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Layers className="w-4 h-4" />
-                  Blocks
-                </div>
-              </button>
-              <button
-                onClick={() => setLeftPanel('design')}
-                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  leftPanel === 'design'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Palette className="w-4 h-4" />
-                  Design
-                </div>
-              </button>
+        {/* Left Sidebar - Tools */}
+        <div className="w-64 bg-white border-r border-gray-200 p-4">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Add Content</h3>
+              <BlockInserter editor={editor} />
             </div>
-            <div className="flex">
-              <button
-                onClick={() => setLeftPanel('properties')}
-                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  leftPanel === 'properties'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Properties
-                </div>
-              </button>
-              <button
-                onClick={() => setLeftPanel('performance')}
-                className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  leftPanel === 'performance'
-                    ? 'border-blue-500 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  Analytics
-                </div>
-              </button>
+            
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Formatting</h3>
+              <div className="flex gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleBold().run()}
+                  className={editor?.isActive('bold') ? 'bg-gray-200' : ''}
+                >
+                  <Bold className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleItalic().run()}
+                  className={editor?.isActive('italic') ? 'bg-gray-200' : ''}
+                >
+                  <Italic className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                  className={editor?.isActive('underline') ? 'bg-gray-200' : ''}
+                >
+                  <UnderlineIcon className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex-1 overflow-hidden">
-            {renderLeftPanel()}
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Canvas */}
-          <div className="flex-1 overflow-auto bg-gray-100 p-6">
-            <div className="max-w-2xl mx-auto">
-              <EmailBlockCanvas
-                onContentChange={handleContentChangeFromCanvas}
-                onBlockSelect={handleBlockSelect}
-                previewWidth={600}
-                previewMode="desktop"
-                compactMode={false}
-              />
-            </div>
-          </div>
+        {/* Main Editor */}
+        <div className="flex-1 overflow-auto p-6">
+          <Card className="max-w-2xl mx-auto p-6 min-h-96">
+            <EditorContent 
+              editor={editor} 
+              className="prose max-w-none min-h-80 outline-none"
+            />
+          </Card>
+        </div>
 
-          {/* Right Panel - Code Editor */}
-          <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
-            <div className="border-b border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">HTML Code</h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSyncFromCode}
-                    className="text-xs"
-                  >
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                    Sync
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyCode}
-                    className="text-xs"
-                  >
-                    <Copy className="w-3 h-3 mr-1" />
-                    Copy
-                  </Button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex-1 overflow-hidden">
-              <EmailCodeEditor
-                editor={editor}
-                initialHtml={content}
-              />
-            </div>
-          </div>
+        {/* Right Sidebar - Code View */}
+        <div className="w-80 bg-white border-l border-gray-200 p-4">
+          <h3 className="text-sm font-medium text-gray-900 mb-2">HTML Output</h3>
+          <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-96">
+            {content}
+          </pre>
         </div>
       </div>
 
-      {/* Modals */}
+      {/* Preview Modal */}
       {showPreview && (
         <EmailPreview
           html={content}
-          previewMode={previewMode}
-        />
-      )}
-
-      {showTemplateLibrary && (
-        <EmailTemplateLibrary
-          editor={editor}
+          previewMode="desktop"
         />
       )}
     </div>
