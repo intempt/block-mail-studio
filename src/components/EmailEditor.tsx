@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -24,8 +25,6 @@ import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
-import { StatusBar } from './StatusBar';
-import { HeaderAnalyticsBar } from './HeaderAnalyticsBar';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -46,17 +45,6 @@ interface LayoutConfig {
 }
 
 type LeftPanelTab = 'blocks' | 'design' | 'performance';
-
-interface Suggestion {
-  id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone' | 'design' | 'accessibility' | 'performance';
-  title: string;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-  confidence: number;
-  suggestion: string;
-  category?: string;
-}
 
 interface EmailEditorProps {
   content: string;
@@ -88,111 +76,6 @@ export default function EmailEditor({
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-
-  // Add performance and brand metrics state
-  const [performanceMetrics, setPerformanceMetrics] = useState({
-    overallScore: 87 as number | null,
-    deliverabilityScore: 91 as number | null,
-    mobileScore: 94 as number | null,
-    spamScore: 12 as number | null
-  });
-
-  const [brandMetrics, setBrandMetrics] = useState({
-    brandVoiceScore: 88,
-    engagementScore: 82,
-    toneConsistency: 95,
-    readabilityScore: 91
-  });
-
-  const [performancePrediction, setPerformancePrediction] = useState({
-    openRate: 26.3,
-    clickRate: 4.1,
-    conversionRate: 2.8
-  });
-
-  // Enhanced AI suggestions with proper typing
-  const [aiSuggestions, setAiSuggestions] = useState<Suggestion[]>([
-    {
-      id: '1',
-      type: 'subject',
-      title: 'Optimize Subject Line',
-      description: 'Make your subject line more compelling and action-oriented to improve open rates',
-      impact: 'high',
-      confidence: 87,
-      suggestion: 'Add urgency words like "Limited Time" or personalization tokens like [First Name]',
-      category: 'Engagement'
-    },
-    {
-      id: '2',
-      type: 'cta',
-      title: 'Enhance Call-to-Action',
-      description: 'Improve button text and placement for better click-through rates',
-      impact: 'high',
-      confidence: 92,
-      suggestion: 'Use action verbs like "Get Started Now" instead of "Click Here" and make buttons more prominent',
-      category: 'Conversion'
-    },
-    {
-      id: '3',
-      type: 'accessibility',
-      title: 'Add Alt Text to Images',
-      description: 'Some images are missing alt text, affecting accessibility and deliverability',
-      impact: 'high',
-      confidence: 95,
-      suggestion: 'Add descriptive alt text to all images for better accessibility and spam filter compliance',
-      category: 'Accessibility'
-    },
-    {
-      id: '4',
-      type: 'copy',
-      title: 'Improve Content Flow',
-      description: 'Restructure content for better readability and engagement',
-      impact: 'medium',
-      confidence: 78,
-      suggestion: 'Break long paragraphs into shorter, scannable chunks with bullet points',
-      category: 'Readability'
-    },
-    {
-      id: '5',
-      type: 'design',
-      title: 'Optimize Color Contrast',
-      description: 'Some text elements may not meet accessibility contrast requirements',
-      impact: 'medium',
-      confidence: 73,
-      suggestion: 'Increase contrast ratio to 4.5:1 or higher for better readability',
-      category: 'Design'
-    },
-    {
-      id: '6',
-      type: 'performance',
-      title: 'Compress Images',
-      description: 'Large images can slow loading times and affect deliverability',
-      impact: 'medium',
-      confidence: 85,
-      suggestion: 'Optimize images to under 100KB each and use web-friendly formats',
-      category: 'Performance'
-    },
-    {
-      id: '7',
-      type: 'tone',
-      title: 'Maintain Brand Voice',
-      description: 'Some sections could better reflect your brand personality',
-      impact: 'low',
-      confidence: 68,
-      suggestion: 'Use more conversational tone in the introduction to match brand guidelines',
-      category: 'Brand Voice'
-    },
-    {
-      id: '8',
-      type: 'design',
-      title: 'Mobile Optimization',
-      description: 'Layout could be improved for mobile viewing experience',
-      impact: 'medium',
-      confidence: 81,
-      suggestion: 'Increase button sizes to minimum 44px height for better mobile usability',
-      category: 'Mobile'
-    }
-  ]);
 
   // Stable layout config
   const layoutConfig = useMemo<LayoutConfig>(() => ({
@@ -352,9 +235,6 @@ export default function EmailEditor({
     onContentChange(newContent);
   };
 
-  const [blockCount] = useState(0);
-  const [zoom, setZoom] = useState(100);
-
   const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
     setPreviewMode(mode);
   };
@@ -363,70 +243,10 @@ export default function EmailEditor({
     setShowTemplateLibrary(true);
   };
 
-  const handleZoomChange = (newZoom: number) => {
-    setZoom(newZoom);
-  };
-
-  const handleRefreshAnalysis = () => {
-    console.log('Refreshing performance and brand analysis...');
-    // Simulate refreshed data with more dynamic changes
-    setPerformanceMetrics(prev => ({
-      overallScore: Math.min(100, Math.max(60, (prev.overallScore || 0) + Math.floor(Math.random() * 20) - 10)),
-      deliverabilityScore: Math.min(100, Math.max(60, (prev.deliverabilityScore || 0) + Math.floor(Math.random() * 15) - 7)),
-      mobileScore: Math.min(100, Math.max(70, (prev.mobileScore || 0) + Math.floor(Math.random() * 10) - 5)),
-      spamScore: Math.max(0, Math.min(50, (prev.spamScore || 0) + Math.floor(Math.random() * 10) - 5))
-    }));
-    
-    setBrandMetrics(prev => ({
-      ...prev,
-      brandVoiceScore: Math.min(100, Math.max(60, prev.brandVoiceScore + Math.floor(Math.random() * 10) - 5)),
-      engagementScore: Math.min(100, Math.max(60, prev.engagementScore + Math.floor(Math.random() * 10) - 5))
-    }));
-
-    // Simulate new suggestions appearing
-    const newSuggestions: Suggestion[] = [
-      {
-        id: `new_${Date.now()}`,
-        type: 'copy',
-        title: 'Personalization Opportunity',
-        description: 'Add dynamic content based on subscriber preferences',
-        impact: 'high',
-        confidence: 89,
-        suggestion: 'Include merge tags for recent purchases or browsing history',
-        category: 'Personalization'
-      }
-    ];
-    
-    setAiSuggestions(prev => [...prev, ...newSuggestions]);
-  };
-
-  const handleApplySuggestion = (suggestion: Suggestion) => {
-    setAiSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    console.log(`Applied: ${suggestion.title}`);
-    
-    // Simulate performance improvement after applying suggestion
-    if (suggestion.impact === 'high') {
-      setPerformanceMetrics(prev => ({
-        ...prev,
-        overallScore: Math.min(100, (prev.overallScore || 0) + 5)
-      }));
-    }
-  };
-
   console.log('EmailEditor: About to render main component');
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Analytics Header Bar */}
-      <HeaderAnalyticsBar
-        performanceMetrics={performanceMetrics}
-        brandMetrics={brandMetrics}
-        performancePrediction={performancePrediction}
-        suggestions={aiSuggestions}
-        onRefreshAnalysis={handleRefreshAnalysis}
-        onApplySuggestion={handleApplySuggestion}
-      />
-
       {/* Omnipresent Ribbon Interface */}
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
@@ -465,19 +285,6 @@ export default function EmailEditor({
           />
         </div>
       </div>
-
-      {/* Enhanced Status Bar with Performance and Brand Metrics */}
-      <StatusBar
-        canvasWidth={canvasWidth}
-        previewMode={previewMode}
-        blockCount={blockCount}
-        zoom={zoom}
-        onZoomChange={handleZoomChange}
-        performanceMetrics={performanceMetrics}
-        brandMetrics={brandMetrics}
-        performancePrediction={performancePrediction}
-        onRefreshAnalysis={handleRefreshAnalysis}
-      />
 
       {/* Modals */}
       {showPreview && (
