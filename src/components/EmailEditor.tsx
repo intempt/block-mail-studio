@@ -109,25 +109,17 @@ export default function EmailEditor({
     ];
   }, []);
 
-  // Handle content changes from editor
-  const handleEditorUpdate = useCallback(({ editor }: any) => {
-    console.log('EmailEditor: Editor content updated');
-    const newHTML = editor.getHTML();
-    setEmailHTML(newHTML);
-  }, []);
-
   console.log('EmailEditor: About to create TipTap editor');
 
   const editor = useEditor({
     extensions,
     content: initialHTML,
-    onUpdate: handleEditorUpdate,
+    onUpdate: ({ editor }) => setEmailHTML(editor.getHTML()),
     immediatelyRender: false,
   });
 
   console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
-  // Set initial content when editor is ready
   useEffect(() => {
     console.log('EmailEditor: useEffect for editor ready', { editor: !!editor, editorReady, initialHTML });
     if (editor && !editorReady) {
@@ -140,7 +132,6 @@ export default function EmailEditor({
     }
   }, [editor, initialHTML, editorReady]);
 
-  // Set initial subject when component mounts
   useEffect(() => {
     console.log('EmailEditor: useEffect for initial subject', { initialSubject, subjectLine });
     if (initialSubject && !subjectLine) {
