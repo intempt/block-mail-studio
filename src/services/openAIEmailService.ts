@@ -1,5 +1,5 @@
-
 import { ApiKeyService } from './apiKeyService';
+import { toast } from 'sonner';
 
 export interface OpenAIEmailAnalysisRequest {
   emailHTML: string;
@@ -78,35 +78,32 @@ class OpenAIServiceError extends Error {
 export class OpenAIEmailService {
   private static extractJSONFromResponse(response: string): any {
     try {
-      // Remove markdown code blocks if present
       let cleanResponse = response.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      
-      // Try to find JSON within the response
       const jsonMatch = cleanResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         cleanResponse = jsonMatch[0];
       }
-      
-      // Parse and validate JSON
       const parsed = JSON.parse(cleanResponse);
       if (typeof parsed === 'object' && parsed !== null) {
         return parsed;
       }
-      
       throw new Error('Invalid JSON structure');
     } catch (error) {
       console.error('JSON parsing failed:', error);
+      toast.error('Failed to parse AI response');
       throw new OpenAIServiceError('Failed to parse AI response');
     }
   }
 
   private static validateAPIResponse(data: any): void {
     if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
+      toast.error('Invalid API response structure');
       throw new OpenAIServiceError('Invalid API response structure');
     }
     
     const content = data.choices[0]?.message?.content;
     if (!content) {
+      toast.error('No content in API response');
       throw new OpenAIServiceError('No content in API response');
     }
   }
@@ -114,9 +111,12 @@ export class OpenAIEmailService {
   static async callOpenAI(prompt: string, retries: number = 2, expectJSON: boolean = true): Promise<any> {
     const apiKey = ApiKeyService.getOpenAIKey();
 
-    if (!ApiKeyService.isKeyAvailable()) {
-      throw new OpenAIServiceError('OpenAI API key not available. Please configure your API key in the settings.');
+    if (!ApiKeyService.validateKey()) {
+      toast.error('OpenAI API key not configured properly');
+      throw new OpenAIServiceError('OpenAI API key not available or invalid');
     }
+
+    toast.loading('Analyzing with OpenAI...', { id: 'openai-analysis' });
 
     let lastError: Error | null = null;
 
@@ -136,8 +136,8 @@ export class OpenAIEmailService {
               {
                 role: 'system',
                 content: expectJSON 
-                  ? `You are an expert email marketing specialist. Always return valid JSON without markdown formatting or code blocks. Be concise and practical.`
-                  : `You are a helpful email marketing expert. Respond directly and helpfully.`
+                  ? `You are an expert email marketing specialist analyzing real email content. Always return valid JSON without markdown formatting. Provide genuine analysis based on the actual content provided.`
+                  : `You are a helpful email marketing expert. Respond directly and helpfully based on the actual content.`
               },
               {
                 role: 'user',
@@ -145,7 +145,7 @@ export class OpenAIEmailService {
               }
             ],
             temperature: 0.3,
-            max_tokens: expectJSON ? 1500 : 500
+            max_tokens: expectJSON ? 2000 : 800
           })
         });
 
@@ -154,11 +154,16 @@ export class OpenAIEmailService {
           let errorMessage = `API error: ${response.status} ${response.statusText}`;
           
           if (response.status === 401) {
-            errorMessage = 'Invalid OpenAI API key. Please check your API key configuration.';
+            errorMessage = 'Invalid OpenAI API key';
+            toast.error('Invalid OpenAI API key');
           } else if (response.status === 429) {
-            errorMessage = 'OpenAI API rate limit exceeded. Please try again in a moment.';
+            errorMessage = 'OpenAI rate limit exceeded';
+            toast.error('Rate limit exceeded - please try again in a moment');
           } else if (response.status >= 500) {
-            errorMessage = 'OpenAI service is temporarily unavailable. Please try again later.';
+            errorMessage = 'OpenAI service temporarily unavailable';
+            toast.error('OpenAI service unavailable - please try again later');
+          } else {
+            toast.error(`OpenAI API error: ${response.status}`);
           }
           
           throw new OpenAIServiceError(`${errorMessage} - ${errorText}`);
@@ -168,6 +173,8 @@ export class OpenAIEmailService {
         this.validateAPIResponse(data);
         
         const content = data.choices[0].message.content;
+        
+        toast.success('Email analysis completed', { id: 'openai-analysis' });
         
         if (expectJSON) {
           return this.extractJSONFromResponse(content);
@@ -179,24 +186,35 @@ export class OpenAIEmailService {
         lastError = error instanceof Error ? error : new Error('Unknown error');
         console.error(`OpenAI API attempt ${attempt + 1} failed:`, lastError);
         
-        // Don't retry on authentication or client errors
         if (error instanceof OpenAIServiceError && 
             (error.message.includes('Invalid OpenAI API key') || 
              error.message.includes('API error: 4'))) {
+          toast.dismiss('openai-analysis');
           throw error;
         }
         
         if (attempt < retries) {
+          toast.loading(`Retrying analysis (${attempt + 2}/${retries + 1})...`, { id: 'openai-analysis' });
           await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         }
       }
     }
 
+    toast.error('All API attempts failed', { id: 'openai-analysis' });
     throw lastError || new OpenAIServiceError('All API attempts failed');
   }
 
   static async generateEmailContent(request: EmailGenerationRequest): Promise<EmailGenerationResponse> {
-    const prompt = `Generate a professional email with this structure:
+    const prompt = `Generate a professional email with this structure based on the following requirements:
+
+EMAIL CONTENT TO ANALYZE:
+- Email type: ${request.emailType}
+- Tone: ${request.tone}
+- User prompt: ${request.prompt}
+- Industry: ${request.industry || 'general'}
+- Target audience: ${request.targetAudience || 'general'}
+
+Return JSON structure:
 {
   "subject": "Compelling subject line under 50 characters for mobile optimization",
   "previewText": "Preview text under 90 characters optimized for Gmail/Outlook", 
@@ -204,7 +222,7 @@ export class OpenAIEmailService {
   "keyPoints": ["key point 1", "key point 2", "key point 3"]
 }
 
-Email Marketing Best Practices to Follow:
+EMAIL MARKETING BEST PRACTICES TO FOLLOW:
 - Subject line: Under 50 chars, avoid spam triggers, create urgency/curiosity
 - Email width: 600px max for email clients
 - Use email-safe fonts: Arial, Helvetica, Georgia, Times New Roman
@@ -213,11 +231,6 @@ Email Marketing Best Practices to Follow:
 - Single column layout for mobile compatibility
 - Touch-friendly buttons (44px+ height)
 - Clear call-to-action above the fold
-
-Requirements:
-- Email type: ${request.emailType}
-- Tone: ${request.tone}
-- Prompt: ${request.prompt}
 - Use div with class="email-block" for sections
 - Include proper email DOCTYPE and meta tags
 - Ensure CAN-SPAM compliance structure`;
@@ -226,131 +239,92 @@ Requirements:
   }
 
   static async generateSubjectLines(emailContent: string, count: number = 5): Promise<string[]> {
-    const prompt = `Generate ${count} high-performing email subject lines following email marketing best practices:
+    const prompt = `Analyze this REAL EMAIL CONTENT and generate ${count} high-performing subject lines:
 
-EMAIL MARKETING BEST PRACTICES:
-- Keep under 50 characters (mobile optimization)
-- Avoid spam trigger words: "Free", "Act Now", "Limited Time", excessive punctuation
-- Use personalization opportunities: [Name], location-based
-- Create urgency without being pushy
-- Ask questions to increase curiosity
-- Use numbers and specifics when relevant
-- A/B test different emotional approaches
-- Consider preview text synergy
+FULL EMAIL CONTENT TO ANALYZE:
+${emailContent}
 
-SUBJECT LINE PSYCHOLOGY:
-- Curiosity: "The secret to..." "What happens when..."
-- Urgency: "24 hours left" "Ending soon"
-- Benefit-focused: "Save 30% on..." "Get instant access"
-- Personal: "Your [item] is ready" "[Name], this is for you"
-- Social proof: "Join 10,000+ others" "What everyone's talking about"
+Based on the actual content above, generate subject lines that:
+- Reflect the actual email content and purpose
+- Follow email marketing best practices
+- Are under 50 characters for mobile optimization
+- Avoid spam trigger words
+- Create genuine curiosity based on the content
+- Use personalization opportunities where relevant
 
 Return JSON format:
 {
   "subjectLines": [
-    "Subject line 1 (under 50 chars)",
-    "Subject line 2 (different approach)",
-    "Subject line 3 (alternative tone)"
+    "Subject line 1 (under 50 chars, based on actual content)",
+    "Subject line 2 (different approach for same content)",
+    "Subject line 3 (alternative tone for same content)"
   ]
-}
-
-Email content: ${emailContent.slice(0, 500)}...
-Target: Professional email marketing standards with high open rates`;
+}`;
 
     const response = await this.callOpenAI(prompt, 2, true);
     return response.subjectLines || [];
   }
 
   static async optimizeCopy(currentContent: string, optimizationType: 'engagement' | 'conversion' | 'clarity' | 'brevity'): Promise<string> {
-    const prompt = `Optimize this email content for ${optimizationType} following email marketing best practices:
+    const prompt = `Optimize this REAL EMAIL CONTENT for ${optimizationType}:
 
-EMAIL OPTIMIZATION GUIDELINES:
-- Scannable content with bullet points and short paragraphs
-- Clear hierarchy with headings and subheadings
-- Single, prominent call-to-action (CTA)
-- Mobile-first writing (shorter sentences)
-- Benefit-focused rather than feature-focused
-- Personal and conversational tone
-- Urgency without being spammy
-- Social proof and testimonials when relevant
-- Email-safe HTML structure
+CURRENT EMAIL CONTENT:
+${currentContent}
 
-CONVERSION BEST PRACTICES:
-- Above-the-fold value proposition
-- Single clear CTA per email
-- Reduce cognitive load
-- Create sense of urgency
-- Use action-oriented language
-- Include social proof
-- Mobile-optimized formatting
+OPTIMIZATION REQUIREMENTS:
+- Maintain the original message and intent
+- Focus specifically on ${optimizationType} improvements
+- Keep email client compatibility
+- Maintain CAN-SPAM compliance
+- Preserve existing structure while improving content
 
 Return JSON:
 {
-  "optimizedHTML": "improved HTML content with email-safe styling and best practices applied"
-}
-
-Current content: ${currentContent}
-
-Focus on ${optimizationType} while maintaining email client compatibility and CAN-SPAM compliance.`;
+  "optimizedHTML": "improved HTML content with email-safe styling and ${optimizationType} optimization applied"
+}`;
 
     const response = await this.callOpenAI(prompt, 2, true);
     return response.optimizedHTML || response.html || currentContent;
   }
 
   static async conversationalResponse(request: ConversationalRequest): Promise<string> {
-    const prompt = `Respond helpfully to this email marketing question: "${request.userMessage}"
-    
-Context: ${request.conversationContext?.join(' ') || 'None'}
-Current email: ${request.currentEmailContent?.slice(0, 200) || 'None'}
+    const prompt = `Answer this email marketing question based on the provided context:
 
-Provide a helpful and direct response about email marketing. Be concise and actionable.`;
+QUESTION: "${request.userMessage}"
+CONTEXT: ${request.conversationContext?.join(' ') || 'None'}
+CURRENT EMAIL: ${request.currentEmailContent?.slice(0, 500) || 'None'}
 
-    try {
-      return await this.callOpenAI(prompt, 2, false);
-    } catch (error) {
-      console.error('Conversational response failed:', error);
-      throw error;
-    }
+Provide a helpful, specific response about email marketing. Be actionable and direct.`;
+
+    return await this.callOpenAI(prompt, 2, false);
   }
 
   static async analyzeBrandVoice(request: OpenAIEmailAnalysisRequest): Promise<BrandVoiceAnalysis> {
-    const prompt = `Analyze this email for brand voice, engagement, and email marketing best practices:
+    const prompt = `Analyze this COMPLETE EMAIL for brand voice and engagement potential:
+
+SUBJECT LINE: "${request.subjectLine}"
+
+FULL EMAIL CONTENT:
+${request.emailHTML}
+
+Provide comprehensive analysis based on the actual content above:
 
 ANALYSIS CRITERIA:
-1. EMAIL MARKETING COMPLIANCE:
-   - CAN-SPAM compliance (unsubscribe, sender info)
-   - Subject line optimization (length, spam score)
-   - Mobile responsiveness indicators
-   - Email client compatibility
+1. Brand voice consistency and tone
+2. Engagement factors and hooks
+3. Email marketing best practices compliance
+4. Mobile optimization indicators
+5. Call-to-action effectiveness
+6. Content scanability and structure
+7. Personalization opportunities
+8. Deliverability factors
 
-2. ENGAGEMENT FACTORS:
-   - Clear value proposition
-   - Call-to-action effectiveness
-   - Content scanability
-   - Personal vs promotional balance
-   - Social proof inclusion
-
-3. TECHNICAL EMAIL BEST PRACTICES:
-   - Image-to-text ratio (recommend 80/20 rule)
-   - Email width (600px standard)
-   - Touch-friendly design elements
-   - Alt text for accessibility
-   - Email-safe CSS usage
-
-4. DELIVERABILITY FACTORS:
-   - Spam trigger word analysis
-   - Text-to-HTML ratio
-   - Link quantity and quality
-   - Authentication setup indicators
-
-Return JSON:
+Return JSON with genuine analysis based on the actual content:
 {
   "brandVoiceScore": 85,
   "engagementScore": 78,
   "toneConsistency": 92,
   "readabilityScore": 88,
-  "deliverabilityScore": 91,
-  "mobileOptimizationScore": 85,
   "performancePrediction": {
     "openRate": 25,
     "clickRate": 8,
@@ -359,92 +333,65 @@ Return JSON:
   "suggestions": [
     {
       "type": "subject",
-      "title": "Optimize subject line for mobile",
-      "current": "Your current subject line text",
-      "suggested": "Shortened mobile-optimized version",
-      "reason": "Current subject line exceeds 50 characters and may be truncated on mobile",
+      "title": "Specific improvement based on actual subject",
+      "current": "Actual current text from the email",
+      "suggested": "Specific improvement suggestion",
+      "reason": "Why this change would help based on content analysis",
       "impact": "high",
       "confidence": 90
-    },
-    {
-      "type": "cta", 
-      "title": "Strengthen call-to-action",
-      "current": "Click here",
-      "suggested": "Get Your Free Guide Now",
-      "reason": "More specific and action-oriented CTA increases click-through rates",
-      "impact": "medium",
-      "confidence": 85
     }
   ]
-}
-
-Subject: ${request.subjectLine}
-Content: ${request.emailHTML.slice(0, 1500)}...`;
+}`;
 
     return await this.callOpenAI(prompt, 2, true);
   }
 
   static async analyzePerformance(request: OpenAIEmailAnalysisRequest): Promise<PerformanceAnalysis> {
-    const prompt = `Analyze email performance and technical compliance with email marketing standards:
+    const prompt = `Analyze this COMPLETE EMAIL for technical performance and compliance:
 
-EMAIL PERFORMANCE ANALYSIS:
-1. DELIVERABILITY ASSESSMENT:
-   - Spam score analysis
-   - Authentication requirements
-   - Content-to-image ratio
-   - Link analysis and reputation
+SUBJECT LINE: "${request.subjectLine}"
 
-2. MOBILE OPTIMIZATION:
-   - Responsive design indicators
-   - Touch-friendly elements
-   - Font size appropriateness
-   - Single-column layout compliance
+FULL EMAIL HTML CONTENT:
+${request.emailHTML}
 
-3. ACCESSIBILITY COMPLIANCE:
-   - Alt text coverage
-   - Color contrast ratios
-   - Screen reader compatibility
-   - Semantic HTML structure
+Provide detailed technical analysis based on the actual email content above:
 
-4. EMAIL CLIENT COMPATIBILITY:
-   - Outlook compatibility
-   - Gmail rendering
-   - Apple Mail support
-   - Dark mode readiness
+PERFORMANCE ANALYSIS AREAS:
+1. Email client compatibility (Outlook, Gmail, Apple Mail)
+2. Mobile responsiveness and optimization
+3. Deliverability factors and spam risk
+4. Accessibility compliance (WCAG guidelines)
+5. Loading performance and image optimization
+6. HTML structure and email-safe practices
+7. CAN-SPAM compliance check
+8. Dark mode compatibility
 
-Return JSON:
+Return JSON with real analysis based on the actual content:
 {
   "overallScore": 87,
   "deliverabilityScore": 91,
   "mobileScore": 85,
-  "accessibilityScore": 78,
   "spamScore": 15,
-  "emailClientCompatibility": 89,
   "metrics": {
     "loadTime": {"value": 1.2, "status": "good"},
     "accessibility": {"value": 88, "status": "good"}, 
     "imageOptimization": {"value": 92, "status": "good"},
-    "linkCount": {"value": 3, "status": "good"},
-    "textToImageRatio": {"value": 80, "status": "excellent"}
+    "linkCount": {"value": 3, "status": "good"}
   },
   "accessibilityIssues": [
     {
-      "type": "alt-text",
+      "type": "Specific issue found in the actual content",
       "severity": "medium", 
-      "description": "2 images missing alt text",
-      "fix": "Add descriptive alt text for all images"
+      "description": "Actual issue description based on content analysis",
+      "fix": "Specific fix for the identified issue"
     }
   ],
   "optimizationSuggestions": [
-    "Add unsubscribe link in footer for CAN-SPAM compliance",
-    "Optimize images for faster loading",
-    "Test email in Outlook for better compatibility",
-    "Add preheader text for better preview"
+    "Specific suggestion based on actual email analysis",
+    "Another actionable improvement for this email",
+    "Technical optimization based on content review"
   ]
-}
-
-Subject: ${request.subjectLine}
-Content: ${request.emailHTML.slice(0, 1500)}...`;
+}`;
 
     return await this.callOpenAI(prompt, 2, true);
   }

@@ -1,5 +1,6 @@
-
 import { OpenAIEmailService } from './openAIEmailService';
+import { ApiKeyService } from './apiKeyService';
+import { toast } from 'sonner';
 
 export interface UnifiedEmailAnalytics {
   // Email metrics
@@ -74,8 +75,14 @@ class UnifiedEmailAnalyticsService {
       return cached.data;
     }
 
+    // Check if API key is available
+    if (!ApiKeyService.validateKey()) {
+      toast.error('OpenAI API key not configured - cannot perform real analysis');
+      throw new Error('OpenAI API key not available for analysis');
+    }
+
     try {
-      console.log('Unified analytics: Calling OpenAI for full email analysis');
+      console.log('Unified analytics: Calling OpenAI for comprehensive email analysis');
       
       // Get basic metrics
       const basicMetrics = this.calculateBasicMetrics(emailHTML);
@@ -107,29 +114,19 @@ class UnifiedEmailAnalyticsService {
       // Cache the result
       this.cache.set(cacheKey, { data: result, timestamp: Date.now() });
       
+      toast.success('Email analytics completed with real AI analysis');
       return result;
       
     } catch (error) {
       console.error('Unified analytics error:', error);
-      
-      // Return basic metrics only on error
-      return {
-        ...this.calculateBasicMetrics(emailHTML),
-        overallScore: 0,
-        deliverabilityScore: 0,
-        mobileScore: 0,
-        spamScore: 0,
-        performancePrediction: {
-          openRate: 0,
-          clickRate: 0,
-          conversionRate: 0
-        }
-      } as UnifiedEmailAnalytics;
+      toast.error('Failed to analyze email - please check API configuration');
+      throw error;
     }
   }
 
   static clearCache(): void {
     this.cache.clear();
+    toast.info('Analytics cache cleared');
   }
 }
 
