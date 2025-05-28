@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -16,7 +15,7 @@ import Code from '@tiptap/extension-code';
 import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { TextBlock } from '@/types/emailBlocks';
-import { FloatingTipTapToolbar } from './FloatingTipTapToolbar';
+import { AdaptiveTipTapToolbar } from './AdaptiveTipTapToolbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -145,7 +144,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       const relatedTarget = event.relatedTarget as HTMLElement;
       
       // Don't close if clicking on toolbar, dialogs, or other editor UI elements
-      if (relatedTarget?.closest('.floating-toolbar') || 
+      if (relatedTarget?.closest('.adaptive-tiptap-toolbar') || 
           relatedTarget?.closest('.link-dialog') ||
           relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
           relatedTarget?.closest('.radix-select-content') ||
@@ -308,12 +307,13 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         )}
       </div>
 
-      {/* Enhanced Floating Toolbar */}
-      <FloatingTipTapToolbar
+      {/* Enhanced Adaptive Toolbar */}
+      <AdaptiveTipTapToolbar
         editor={editor}
         isVisible={showToolbar && isEditing}
         position={toolbarPosition}
         onLinkClick={() => setShowLinkDialog(true)}
+        containerElement={editorRef.current}
       />
 
       {/* Link Dialog */}

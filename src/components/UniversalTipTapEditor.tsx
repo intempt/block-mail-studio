@@ -7,19 +7,12 @@ import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
+import { Underline } from '@tiptap/extension-underline';
+import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdaptiveTipTapToolbar } from './AdaptiveTipTapToolbar';
 import { 
-  Bold, 
-  Italic, 
-  Link as LinkIcon, 
-  Image as ImageIcon,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Type,
-  Palette,
   ExternalLink,
   Play
 } from 'lucide-react';
@@ -46,6 +39,8 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const [urlValue, setUrlValue] = useState(content);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
@@ -67,9 +62,11 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         types: ['heading', 'paragraph'],
       }),
       TextStyle,
+      Color,
       FontFamily.configure({
         types: ['textStyle'],
       }),
+      Underline,
     ],
     content: isUrlMode ? '' : content,
     onUpdate: ({ editor }) => {
@@ -77,11 +74,52 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         onChange(editor.getHTML());
       }
     },
-    onBlur: () => {
-      onBlur?.();
+    onSelectionUpdate: ({ editor }) => {
+      if (!editor.state.selection.empty) {
+        updateToolbarPosition();
+        setShowToolbar(true);
+      } else {
+        setShowToolbar(false);
+      }
+    },
+    onFocus: () => {
+      if (!isUrlMode) {
+        updateToolbarPosition();
+        setShowToolbar(true);
+      }
+    },
+    onBlur: ({ event }) => {
+      const relatedTarget = event.relatedTarget as HTMLElement;
+      
+      // Don't hide toolbar if clicking on toolbar or its elements
+      if (relatedTarget?.closest('.adaptive-tiptap-toolbar') || 
+          relatedTarget?.closest('[data-radix-popover-content]') ||
+          showLinkDialog || showImageDialog) {
+        return;
+      }
+      
+      setTimeout(() => {
+        setShowToolbar(false);
+        onBlur?.();
+      }, 200);
     },
     immediatelyRender: false,
   });
+
+  const updateToolbarPosition = () => {
+    if (!editor) return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
+
+    setToolbarPosition({
+      top: rect.top + window.scrollY,
+      left: rect.left + rect.width / 2 + window.scrollX
+    });
+  };
 
   useEffect(() => {
     if (editor && !isUrlMode && content !== editor.getHTML()) {
@@ -92,171 +130,50 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     }
   }, [content, editor, isUrlMode]);
 
-  if (!editor && !isUrlMode) return null;
-
-  const addLink = () => {
-    if (linkUrl) {
-      editor?.chain().focus().setLink({ href: linkUrl }).run();
-      setLinkUrl('');
-      setShowLinkDialog(false);
-    }
-  };
-
-  const addImage = () => {
-    if (imageUrl) {
-      editor?.chain().focus().setImage({ src: imageUrl }).run();
-      setImageUrl('');
-      setShowImageDialog(false);
-    }
-  };
-
   const handleUrlChange = (value: string) => {
     setUrlValue(value);
     onChange(value);
   };
 
-  const getToolbarForContentType = () => {
-    if (isUrlMode) {
-      return (
-        <div className="flex items-center gap-2">
-          <ExternalLink className="w-4 h-4 text-gray-500" />
-          {contentType === 'video' && <Play className="w-4 h-4 text-gray-500" />}
-          <span className="text-sm text-gray-600">
-            {contentType === 'video' ? 'Video URL' : 'URL'}
-          </span>
-        </div>
-      );
-    }
-
-    const baseTools = (
-      <>
-        <Button
-          variant={editor.isActive('bold') ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className="h-8 w-8 p-0"
-        >
-          <Bold className="w-4 h-4" />
-        </Button>
-        <Button
-          variant={editor.isActive('italic') ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className="h-8 w-8 p-0"
-        >
-          <Italic className="w-4 h-4" />
-        </Button>
-      </>
-    );
-
-    const alignmentTools = (
-      <>
-        <Button
-          variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className="h-8 w-8 p-0"
-        >
-          <AlignLeft className="w-4 h-4" />
-        </Button>
-        <Button
-          variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          className="h-8 w-8 p-0"
-        >
-          <AlignCenter className="w-4 h-4" />
-        </Button>
-        <Button
-          variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-          size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          className="h-8 w-8 p-0"
-        >
-          <AlignRight className="w-4 h-4" />
-        </Button>
-      </>
-    );
-
-    const linkTool = (
-      <Button
-        variant={editor.isActive('link') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => setShowLinkDialog(true)}
-        className="h-8 w-8 p-0"
-      >
-        <LinkIcon className="w-4 h-4" />
-      </Button>
-    );
-
-    const imageTool = (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setShowImageDialog(true)}
-        className="h-8 w-8 p-0"
-      >
-        <ImageIcon className="w-4 h-4" />
-      </Button>
-    );
-
-    switch (contentType) {
-      case 'text':
-        return (
-          <>
-            {baseTools}
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {alignmentTools}
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {linkTool}
-            {imageTool}
-          </>
-        );
-      case 'button':
-        return (
-          <>
-            {baseTools}
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {linkTool}
-          </>
-        );
-      case 'image':
-        return (
-          <>
-            {imageTool}
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {baseTools}
-          </>
-        );
-      case 'link':
-        return (
-          <>
-            {baseTools}
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {linkTool}
-          </>
-        );
-      default:
-        return baseTools;
+  const handleLinkAdd = () => {
+    if (linkUrl && editor) {
+      editor.chain().focus().setLink({ href: linkUrl }).run();
+      setLinkUrl('');
+      setShowLinkDialog(false);
     }
   };
 
-  return (
-    <div 
-      className="universal-tiptap-editor"
-      style={position ? {
-        position: 'absolute',
-        top: position.y,
-        left: position.x,
-        zIndex: 1000
-      } : {}}
-    >
-      <div className="border rounded-lg overflow-hidden bg-white shadow-lg">
-        <div className="flex gap-1 p-2 border-b bg-gray-50">
-          {getToolbarForContentType()}
-        </div>
-        
-        {isUrlMode ? (
+  const handleImageInsert = () => {
+    if (imageUrl.trim() && editor) {
+      editor.chain().focus().setImage({ 
+        src: imageUrl.trim(), 
+        alt: 'Image' 
+      }).run();
+      setImageUrl('');
+      setShowImageDialog(false);
+    }
+  };
+
+  if (isUrlMode) {
+    return (
+      <div 
+        className="universal-tiptap-editor"
+        style={position ? {
+          position: 'absolute',
+          top: position.y,
+          left: position.x,
+          zIndex: 1000
+        } : {}}
+      >
+        <div className="border rounded-lg overflow-hidden bg-white shadow-lg">
+          <div className="flex gap-1 p-2 border-b bg-gray-50">
+            <ExternalLink className="w-4 h-4 text-gray-500" />
+            {contentType === 'video' && <Play className="w-4 h-4 text-gray-500" />}
+            <span className="text-sm text-gray-600">
+              {contentType === 'video' ? 'Video URL' : 'URL'}
+            </span>
+          </div>
+          
           <div className="p-3">
             <Input
               value={urlValue}
@@ -266,50 +183,94 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
               autoFocus
             />
           </div>
-        ) : (
-          <EditorContent 
-            editor={editor} 
-            className="prose prose-sm max-w-none p-3 focus:outline-none min-h-[60px]"
-            placeholder={placeholder}
-          />
-        )}
+        </div>
+      </div>
+    );
+  }
 
+  return (
+    <div 
+      className="universal-tiptap-editor relative"
+      style={position ? {
+        position: 'absolute',
+        top: position.y,
+        left: position.x,
+        zIndex: 1000
+      } : {}}
+    >
+      <div className="border rounded-lg overflow-hidden bg-white shadow-lg">
+        <EditorContent 
+          editor={editor} 
+          className="prose prose-sm max-w-none p-3 focus:outline-none min-h-[60px]"
+          placeholder={placeholder}
+        />
+
+        {/* Adaptive Toolbar */}
+        <AdaptiveTipTapToolbar
+          editor={editor}
+          isVisible={showToolbar && !showLinkDialog && !showImageDialog}
+          position={toolbarPosition}
+          onLinkClick={() => setShowLinkDialog(true)}
+        />
+
+        {/* Link Dialog */}
         {showLinkDialog && (
-          <div className="p-3 border-t bg-gray-50">
-            <div className="flex gap-2">
-              <Input
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="Enter URL..."
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    addLink();
-                  }
-                }}
-              />
-              <Button size="sm" onClick={addLink}>Add</Button>
-              <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>Cancel</Button>
+          <div className="absolute top-full left-0 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in">
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium text-gray-700">Add Link</div>
+              <div className="flex gap-2">
+                <Input
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleLinkAdd();
+                    } else if (e.key === 'Escape') {
+                      setShowLinkDialog(false);
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleLinkAdd} disabled={!linkUrl.trim()}>
+                  Add
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
+        {/* Image Dialog */}
         {showImageDialog && (
-          <div className="p-3 border-t bg-gray-50">
-            <div className="flex gap-2">
-              <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Enter image URL..."
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    addImage();
-                  }
-                }}
-              />
-              <Button size="sm" onClick={addImage}>Add</Button>
-              <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>Cancel</Button>
+          <div className="absolute top-full left-0 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in">
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium text-gray-700">Insert Image</div>
+              <div className="flex gap-2">
+                <Input
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="Enter image URL..."
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleImageInsert();
+                    } else if (e.key === 'Escape') {
+                      setShowImageDialog(false);
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleImageInsert} disabled={!imageUrl.trim()}>
+                  Add
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
         )}
