@@ -49,46 +49,49 @@ export const TestRunner: React.FC = () => {
     setOverallStats({ totalTests: 0, passedTests: 0, failedTests: 0, totalDuration: 0 });
 
     // Simulate test execution
-    const mockTestSuites = [
+    const mockTestSuites: Array<{
+      name: string;
+      tests: TestResult[];
+    }> = [
       {
         name: 'utils/enhancedBlockFactory.test.ts',
         tests: [
-          { name: 'should create text block', status: 'running' as const },
-          { name: 'should create button block', status: 'pending' as const },
-          { name: 'should create image block', status: 'pending' as const }
+          { name: 'should create text block', status: 'pending' },
+          { name: 'should create button block', status: 'pending' },
+          { name: 'should create image block', status: 'pending' }
         ]
       },
       {
         name: 'utils/dragDropUtils.test.ts',
         tests: [
-          { name: 'should handle drag start', status: 'pending' as const },
-          { name: 'should handle drop', status: 'pending' as const }
+          { name: 'should handle drag start', status: 'pending' },
+          { name: 'should handle drop', status: 'pending' }
         ]
       },
       {
         name: 'utils/emailUtils.test.ts',
         tests: [
-          { name: 'should validate email', status: 'pending' as const },
-          { name: 'should parse HTML', status: 'pending' as const }
+          { name: 'should validate email', status: 'pending' },
+          { name: 'should parse HTML', status: 'pending' }
         ]
       },
       {
         name: 'services/DirectTemplateService.test.ts',
         tests: [
-          { name: 'should load templates', status: 'pending' as const }
+          { name: 'should load templates', status: 'pending' }
         ]
       },
       {
         name: 'components/EmailEditor.test.tsx',
         tests: [
-          { name: 'should render editor', status: 'pending' as const },
-          { name: 'should handle content changes', status: 'pending' as const }
+          { name: 'should render editor', status: 'pending' },
+          { name: 'should handle content changes', status: 'pending' }
         ]
       },
       {
         name: 'migration/baselineFunctionality.test.tsx',
         tests: [
-          { name: 'baseline functionality check', status: 'pending' as const }
+          { name: 'baseline functionality check', status: 'pending' }
         ]
       }
     ];
@@ -99,27 +102,23 @@ export const TestRunner: React.FC = () => {
       
       for (let testIndex = 0; testIndex < suite.tests.length; testIndex++) {
         // Update current test as running
-        const updatedSuites = mockTestSuites.map((s, sIdx) => 
-          sIdx === suiteIndex 
-            ? {
-                ...s,
-                tests: s.tests.map((t, tIdx) => 
-                  tIdx === testIndex 
-                    ? { ...t, status: 'running' as const }
-                    : t
-                )
-              }
-            : s
-        );
+        mockTestSuites[suiteIndex].tests[testIndex] = {
+          ...mockTestSuites[suiteIndex].tests[testIndex],
+          status: 'running'
+        };
         
-        setTestSuites(updatedSuites.map(s => ({
-          name: s.name,
-          tests: s.tests,
-          totalTests: s.tests.length,
-          passedTests: s.tests.filter(t => t.status === 'passed').length,
-          failedTests: s.tests.filter(t => t.status === 'failed').length,
-          duration: Math.random() * 1000
-        })));
+        const updateTestSuites = () => {
+          setTestSuites(mockTestSuites.map(s => ({
+            name: s.name,
+            tests: [...s.tests],
+            totalTests: s.tests.length,
+            passedTests: s.tests.filter(t => t.status === 'passed').length,
+            failedTests: s.tests.filter(t => t.status === 'failed').length,
+            duration: Math.random() * 1000
+          })));
+        };
+        
+        updateTestSuites();
 
         // Simulate test execution time
         await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
@@ -130,20 +129,13 @@ export const TestRunner: React.FC = () => {
 
         // Update test result
         mockTestSuites[suiteIndex].tests[testIndex] = {
-          ...mockTestSuites[suiteIndex].tests[testIndex],
-          status: passed ? 'passed' as const : 'failed' as const,
+          name: mockTestSuites[suiteIndex].tests[testIndex].name,
+          status: passed ? 'passed' : 'failed',
           duration,
           error: passed ? undefined : 'AssertionError: Expected true but received false'
         };
 
-        setTestSuites(mockTestSuites.map(s => ({
-          name: s.name,
-          tests: s.tests,
-          totalTests: s.tests.length,
-          passedTests: s.tests.filter(t => t.status === 'passed').length,
-          failedTests: s.tests.filter(t => t.status === 'failed').length,
-          duration: Math.random() * 1000
-        })));
+        updateTestSuites();
       }
     }
 
