@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,8 +133,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
+  const [triggerAnalysis, setTriggerAnalysis] = useState(false);
 
-  // Load saved content on mount
   useEffect(() => {
     const savedDraft = localStorage.getItem('email-builder-draft');
     if (savedDraft) {
@@ -186,7 +185,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'copy';
 
-    // Enhanced drag image
     const dragPreview = document.createElement('div');
     dragPreview.className = 'bg-white border-2 border-blue-400 rounded-lg p-3 shadow-lg';
     dragPreview.style.transform = 'rotate(2deg)';
@@ -219,11 +217,26 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     setShowAISuggestions(false);
   };
 
+  const handleAISuggestionsClick = () => {
+    if (!showAISuggestions) {
+      closeAllPanels();
+      setShowAISuggestions(true);
+      setTimeout(() => {
+        setTriggerAnalysis(true);
+      }, 100);
+    } else {
+      setTriggerAnalysis(true);
+    }
+  };
+
+  const handleAnalysisTriggered = () => {
+    setTriggerAnalysis(false);
+  };
+
   const handleExport = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     const fileName = campaignTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() || `email_${timestamp}`;
     
-    // Export HTML
     const htmlBlob = new Blob([emailHTML], { type: 'text/html' });
     const htmlUrl = URL.createObjectURL(htmlBlob);
     const htmlLink = document.createElement('a');
@@ -234,7 +247,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     document.body.removeChild(htmlLink);
     URL.revokeObjectURL(htmlUrl);
 
-    // Export JSON
     const emailData = {
       title: campaignTitle,
       subject: subjectLine,
@@ -282,6 +294,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         subjectLine={subjectLine}
         canvasRef={canvasRef}
         onSubjectLineChange={onSubjectLineChange}
+        triggerAnalysis={triggerAnalysis}
+        onAnalysisTriggered={handleAnalysisTriggered}
         onApplySuggestion={(suggestion) => {
           console.log('Applied suggestion:', suggestion);
         }}
@@ -489,11 +503,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 variant={showAISuggestions ? 'default' : 'ghost'}
                 size="sm"
                 className="p-2 hover:bg-gray-100"
-                onClick={() => {
-                  closeAllPanels();
-                  setShowAISuggestions(!showAISuggestions);
-                }}
-                title="AI Suggestions"
+                onClick={handleAISuggestionsClick}
+                title="Complete AI Analysis"
               >
                 <Lightbulb className="w-6 h-6" />
               </Button>
