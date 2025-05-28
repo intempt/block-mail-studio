@@ -42,8 +42,10 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   const [linkUrl, setLinkUrl] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const blurTimeoutRef = useRef<NodeJS.Timeout>();
 
   const editor = useEditor({
     extensions: [
@@ -117,22 +119,49 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       }
     },
     onFocus: () => {
-      if (!isEditing) {
+      console.log('Editor focused');
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+        blurTimeoutRef.current = undefined;
+      }
+      
+      if (!isEditing && !isTransitioning) {
+        console.log('Starting edit mode');
+        setIsTransitioning(true);
         onEditStart();
+        setTimeout(() => setIsTransitioning(false), 100);
       }
     },
     onBlur: ({ event }) => {
+      console.log('Editor blur event triggered');
       const relatedTarget = event.relatedTarget as HTMLElement;
+      
+      // Don't close if clicking on toolbar, dialogs, or other editor UI elements
       if (relatedTarget?.closest('.floating-toolbar') || 
-          relatedTarget?.closest('.link-dialog')) {
+          relatedTarget?.closest('.link-dialog') ||
+          relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
+          relatedTarget?.closest('.radix-select-content') ||
+          relatedTarget?.closest('.popover-content') ||
+          relatedTarget?.closest('.enhanced-text-block') ||
+          showLinkDialog) {
+        console.log('Blur ignored - clicking on UI element');
         return;
       }
       
-      setTimeout(() => {
+      // Clear any existing timeout
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+      
+      // Delay closing to allow for UI interactions
+      blurTimeoutRef.current = setTimeout(() => {
+        console.log('Closing editor after blur timeout');
         setShowToolbar(false);
         setShowLinkDialog(false);
-        onEditEnd();
-      }, 100);
+        if (isEditing) {
+          onEditEnd();
+        }
+      }, 300);
     },
     immediatelyRender: false,
   });
@@ -165,15 +194,27 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
     };
   }, []);
 
-  const handleClick = () => {
-    if (!isEditing) {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Block clicked, isEditing:', isEditing, 'isTransitioning:', isTransitioning);
+    
+    if (!isEditing && !isTransitioning) {
+      console.log('Starting edit mode from click');
+      setIsTransitioning(true);
       onEditStart();
+      
       setTimeout(() => {
         editor?.commands.focus();
-      }, 0);
+        setIsTransitioning(false);
+      }, 50);
+    } else if (isEditing) {
+      editor?.commands.focus();
     }
   };
 
@@ -187,6 +228,13 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (isEditing && e.key === 'Escape') {
+      e.preventDefault();
+      console.log('Escape pressed - closing editor');
+      if (blurTimeoutRef.current) {
+        clearTimeout(blurTimeoutRef.current);
+      }
+      setShowToolbar(false);
+      setShowLinkDialog(false);
       editor?.commands.blur();
       onEditEnd();
     }
@@ -209,7 +257,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     <div 
       className={`enhanced-text-block relative group cursor-text transition-all duration-200 ${
         isSelected ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
-      } ${isEditing ? 'editing shadow-lg' : 'hover:shadow-md'}`}
+      } ${isEditing ? 'editing shadow-lg bg-white' : 'hover:shadow-md'}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       style={{
@@ -235,20 +283,24 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           }}
         />
         
-        {/* Editing Overlay */}
-        {!isEditing && (
-          <div className="absolute inset-0 bg-blue-50 bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 rounded-md" />
+        {/* Editing State Indicator */}
+        {isEditing && (
+          <div className="absolute -top-2 -left-2 z-10">
+            <Badge variant="default" className="text-xs bg-blue-500 text-white animate-pulse">
+              Editing
+            </Badge>
+          </div>
         )}
 
         {/* Status Indicators */}
         {isEditing && (
-          <div className="absolute top-2 right-2 flex gap-2">
+          <div className="absolute top-2 right-2 flex gap-2 z-10">
             {hasUnsavedChanges && (
               <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
                 Saving...
               </Badge>
             )}
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs bg-white">
               {wordCount} words
             </Badge>
           </div>
@@ -265,7 +317,10 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
 
       {/* Link Dialog */}
       {showLinkDialog && (
-        <div className="link-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in">
+        <div 
+          className="link-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
+          onMouseDown={(e) => e.preventDefault()}
+        >
           <div className="flex flex-col gap-3">
             <div className="text-sm font-medium text-gray-700">Add Link</div>
             <div className="flex gap-2">
@@ -295,7 +350,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       )}
 
       {/* Edit Hint */}
-      {!isEditing && (
+      {!isEditing && !isTransitioning && (
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
           <Badge variant="secondary" className="text-xs bg-gray-800 text-white">
             Click to edit
@@ -306,7 +361,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       {/* Keyboard Shortcut Hints */}
       {isEditing && (
         <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
-          <Badge variant="outline" className="text-xs text-gray-500">
+          <Badge variant="outline" className="text-xs text-gray-500 bg-white">
             Press Esc to finish editing
           </Badge>
         </div>

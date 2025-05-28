@@ -110,15 +110,16 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
   return (
     <div
-      className="floating-toolbar fixed z-50 bg-white border border-gray-200 rounded-xl shadow-2xl p-3 flex items-center gap-2 animate-scale-in"
+      className="floating-toolbar fixed z-[100] bg-white border border-gray-200 rounded-xl shadow-2xl p-3 flex items-center gap-2 animate-scale-in"
       style={toolbarStyle}
+      onMouseDown={(e) => e.preventDefault()}
     >
       {/* Text Style */}
       <Select value={getCurrentHeading()} onValueChange={handleHeadingChange}>
-        <SelectTrigger className="w-28 h-8 text-xs">
+        <SelectTrigger className="w-28 h-8 text-xs bg-white">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[110]">
           <SelectItem value="paragraph">Text</SelectItem>
           <SelectItem value="1">Heading 1</SelectItem>
           <SelectItem value="2">Heading 2</SelectItem>
@@ -133,10 +134,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
       {/* Font Family */}
       <Select onValueChange={handleFontFamilyChange}>
-        <SelectTrigger className="w-24 h-8 text-xs">
+        <SelectTrigger className="w-24 h-8 text-xs bg-white">
           <Type className="w-4 h-4" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[110]">
           {fontFamilies.map((font) => (
             <SelectItem key={font.value} value={font.value}>
               {font.label}
@@ -147,10 +148,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
       {/* Font Size */}
       <Select onValueChange={handleFontSizeChange}>
-        <SelectTrigger className="w-20 h-8 text-xs">
+        <SelectTrigger className="w-20 h-8 text-xs bg-white">
           <SelectValue placeholder="Size" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[110]">
           {fontSizes.map((size) => (
             <SelectItem key={size.value} value={size.value}>
               {size.label}
@@ -208,7 +209,7 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
             <Palette className="w-4 h-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-3">
+        <PopoverContent className="w-auto p-3 bg-white border border-gray-200 shadow-lg z-[110]">
           <div className="grid grid-cols-4 gap-2">
             {textColors.map((color) => (
               <button
