@@ -1,336 +1,223 @@
-export interface BlockPosition {
+
+export interface Position {
   x: number;
   y: number;
 }
 
-export interface BlockDimensions {
-  width: string;
-  height: string;
-}
-
-export interface BlockStyling {
-  backgroundColor?: string;
-  textColor?: string;
-  fontSize?: string;
-  fontWeight?: string;
-  fontFamily?: string;
-  letterSpacing?: string;
-  lineHeight?: string;
-  textAlign?: 'left' | 'center' | 'right';
-  padding?: string;
-  margin?: string;
-  borderRadius?: string;
-  border?: string;
-  boxShadow?: string;
-}
-
-export interface ResponsiveSettings {
-  desktop: BlockStyling & BlockDimensions;
-  tablet: BlockStyling & BlockDimensions;
-  mobile: BlockStyling & BlockDimensions;
+export interface Styling {
+  desktop: {
+    width: string;
+    height: string;
+    padding?: string;
+    margin?: string;
+    backgroundColor?: string;
+    border?: string;
+    borderRadius?: string;
+    fontSize?: string;
+    fontFamily?: string;
+    color?: string;
+    textAlign?: string;
+  };
+  tablet: {
+    width: string;
+    height: string;
+    padding?: string;
+    margin?: string;
+    backgroundColor?: string;
+    border?: string;
+    borderRadius?: string;
+    fontSize?: string;
+    fontFamily?: string;
+    color?: string;
+    textAlign?: string;
+  };
+  mobile: {
+    width: string;
+    height: string;
+    padding?: string;
+    margin?: string;
+    backgroundColor?: string;
+    border?: string;
+    borderRadius?: string;
+    fontSize?: string;
+    fontFamily?: string;
+    color?: string;
+    textAlign?: string;
+  };
 }
 
 export interface DisplayOptions {
   showOnDesktop: boolean;
   showOnTablet: boolean;
   showOnMobile: boolean;
-  audienceTargeting?: string[];
 }
 
-export interface BaseBlock {
-  id: string;
-  type: string;
-  content: any;
-  styling: ResponsiveSettings;
-  position: BlockPosition;
-  displayOptions: DisplayOptions;
-  selected?: boolean;
-  sectionId?: string;
-  isStarred?: boolean;
-  snippetId?: string;
+export interface TextContent {
+  html: string;
+  textStyle: 'normal' | 'heading1' | 'heading2' | 'heading3' | 'heading4' | 'heading5' | 'heading6' | 'quote' | 'code';
 }
 
-export interface TextBlock extends BaseBlock {
-  type: 'text';
-  content: {
-    html: string;
-    textStyle: 'normal' | 'heading1' | 'heading2' | 'heading3' | 'heading4';
-    placeholder?: string;
-  };
+export interface ButtonContent {
+  text: string;
+  link: string;
+  style: 'solid' | 'outline' | 'ghost';
+  size: 'small' | 'medium' | 'large';
+  color?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  borderRadius?: string;
+  padding?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  alignment?: 'left' | 'center' | 'right';
 }
 
-export interface ImageBlock extends BaseBlock {
-  type: 'image';
-  content: {
-    src: string;
-    alt: string;
-    link?: string;
-    alignment: 'left' | 'center' | 'right';
-    width: string;
-    isDynamic: boolean;
-    dynamicVariable?: string;
-  };
-}
-
-export interface ButtonBlock extends BaseBlock {
-  type: 'button';
-  content: {
-    text: string;
-    link: string;
-    style: 'solid' | 'outline' | 'text';
-    size: 'small' | 'medium' | 'large';
-  };
-}
-
-export interface SplitBlock extends BaseBlock {
-  type: 'split';
-  content: {
-    leftContent: 'text' | 'image';
-    rightContent: 'text' | 'image';
-    leftData: any;
-    rightData: any;
-    ratio: '50-50' | '60-40' | '40-60' | '70-30' | '30-70';
-  };
-}
-
-export interface ProductBlock extends BaseBlock {
-  type: 'product';
-  content: {
-    mode: 'static' | 'dynamic';
-    products: Array<{
-      id: string;
-      name: string;
-      price: string;
-      image: string;
-      description?: string;
-      ctaText: string;
-      ctaLink: string;
-    }>;
-    feedId?: string;
-    layout: 'grid' | 'list' | 'carousel';
-    showImages: boolean;
-    showNames: boolean;
-    showPrices: boolean;
-    showDescriptions: boolean;
-    columns: number;
-  };
-}
-
-export interface TableBlock extends BaseBlock {
-  type: 'table';
-  content: {
-    rows: number;
-    columns: number;
-    cells: Array<Array<{
-      type: 'text' | 'image';
-      content: string;
-      styling?: BlockStyling;
-    }>>;
-    headerRow: boolean;
-    borderStyle: 'none' | 'solid' | 'dashed' | 'dotted';
-    borderColor: string;
-    borderWidth: string;
-  };
-}
-
-export interface HeaderLinkBarBlock extends BaseBlock {
-  type: 'header-link-bar';
-  content: {
-    logo: {
-      src: string;
-      alt: string;
-      link: string;
-      width: string;
-    };
-    links: Array<{
-      text: string;
-      url: string;
-      showOnDesktop: boolean;
-      showOnMobile: boolean;
-    }>;
-    layout: 'left-logo' | 'center-logo' | 'right-logo';
-    mobileLayout: 'stacked' | 'hamburger' | 'minimal';
-  };
-}
-
-export interface DropShadowBlock extends BaseBlock {
-  type: 'drop-shadow';
-  content: {
-    shadowType: 'light' | 'dark' | 'darker' | 'custom';
-    shadowColor: string;
-    shadowBlur: string;
-    shadowSpread: string;
-    shadowOffsetX: string;
-    shadowOffsetY: string;
-    children: EmailBlock[];
-  };
-}
-
-export interface ReviewQuoteBlock extends BaseBlock {
-  type: 'review-quote';
-  content: {
-    reviewId?: string;
-    reviewText: string;
-    reviewerName: string;
-    rating: number;
-    showRating: boolean;
-    quoteStyle: 'simple' | 'card' | 'testimonial';
-  };
-}
-
-export interface ColumnsBlock extends BaseBlock {
-  type: 'columns';
-  content: {
-    columnCount: 1 | 2 | 3 | 4;
-    columnRatio: string;
-    columns: Array<{
-      id: string;
-      blocks: EmailBlock[];
-      width: string;
-    }>;
-    gap: string;
-  };
-}
-
-export interface VideoBlock extends BaseBlock {
-  type: 'video';
-  content: {
-    videoUrl: string;
-    thumbnail: string;
-    showPlayButton: boolean;
-    platform: 'youtube' | 'vimeo' | 'tiktok' | 'custom';
-    autoThumbnail: boolean;
-  };
-}
-
-export interface SocialBlock extends BaseBlock {
-  type: 'social';
-  content: {
-    platforms: Array<{
-      name: string;
-      url: string;
-      icon: string;
-      iconStyle: 'color' | 'black' | 'white' | 'grey' | 'custom';
-      showLabel: boolean;
-    }>;
-    layout: 'horizontal' | 'vertical';
-    iconSize: string;
-    spacing: string;
-  };
-}
-
-export interface SpacerBlock extends BaseBlock {
-  type: 'spacer';
-  content: {
-    height: string;
-    mobileHeight: string;
-  };
-}
-
-export interface DividerBlock extends BaseBlock {
-  type: 'divider';
-  content: {
-    style: 'solid' | 'dashed' | 'dotted';
-    thickness: string;
-    color: string;
-    width: string;
-    alignment: 'left' | 'center' | 'right';
-  };
-}
-
-export interface HtmlBlock extends BaseBlock {
-  type: 'html';
-  content: {
-    html: string;
-    customCSS?: string;
-  };
-}
-
-export interface MenuBlock extends BaseBlock {
-  type: 'menu';
-  content: {
-    items: Array<{
-      label: string;
-      url: string;
-    }>;
-    layout: 'horizontal' | 'vertical';
-  };
-}
-
-export interface CodeBlock extends BaseBlock {
-  type: 'code';
-  content: {
-    code: string;
-    language: string;
-  };
-}
-
-export type EmailBlock = 
-  | TextBlock 
-  | ImageBlock 
-  | ButtonBlock 
-  | SplitBlock 
-  | ProductBlock
-  | TableBlock
-  | HeaderLinkBarBlock
-  | DropShadowBlock
-  | ReviewQuoteBlock
-  | ColumnsBlock
-  | VideoBlock
-  | SocialBlock
-  | SpacerBlock 
-  | DividerBlock 
-  | HtmlBlock
-  | MenuBlock
-  | CodeBlock;
-
-export interface EmailSection {
-  id: string;
-  name: string;
-  blocks: EmailBlock[];
-  styling: ResponsiveSettings;
-  displayOptions: DisplayOptions;
-  backgroundImage?: string;
-}
-
-export interface TemplateStyles {
-  templateBackground: string;
-  backgroundImage?: string;
-  contentBackground: string;
+export interface ImageContent {
+  src: string;
+  alt: string;
+  alignment: 'left' | 'center' | 'right';
   width: string;
-  cornerRadius: string;
-  margins: string;
-  padding: string;
-  border: string;
-  fontFamily: string;
-  textStyles: {
-    normal: BlockStyling;
-    heading1: BlockStyling;
-    heading2: BlockStyling;
-    heading3: BlockStyling;
-    heading4: BlockStyling;
-  };
-  mobileOptimization: boolean;
-  currency: string;
+  height?: string;
+  link?: string;
+  borderRadius?: string;
+  isDynamic?: boolean;
+  dynamicSrc?: string;
+}
+
+export interface SpacerContent {
+  height: string;
+  mobileHeight?: string;
+  backgroundColor?: string;
+}
+
+export interface DividerContent {
+  style: 'solid' | 'dashed' | 'dotted';
+  thickness: string;
+  color: string;
+  width: string;
+  alignment: 'left' | 'center' | 'right';
+  marginTop?: string;
+  marginBottom?: string;
+}
+
+export interface HtmlContent {
+  html: string;
+  customCSS?: string;
+}
+
+export interface VideoContent {
+  videoUrl: string;
+  thumbnail: string;
+  showPlayButton: boolean;
+  platform: 'youtube' | 'vimeo' | 'custom';
+  autoThumbnail: boolean;
+  width?: string;
+  height?: string;
+  alignment?: 'left' | 'center' | 'right';
+}
+
+export interface SocialPlatform {
+  name: string;
+  url: string;
+  icon: string;
+  iconStyle: 'color' | 'black' | 'white';
+  showLabel: boolean;
+}
+
+export interface SocialContent {
+  platforms: SocialPlatform[];
+  layout: 'horizontal' | 'vertical';
+  iconSize: string;
+  spacing: string;
+  alignment?: 'left' | 'center' | 'right';
+}
+
+export interface TableCell {
+  type: 'text' | 'image' | 'button';
+  content: string;
+}
+
+export interface TableContent {
+  rows: number;
+  columns: number;
+  cells: TableCell[][];
+  headerRow: boolean;
+  borderStyle: 'solid' | 'dashed' | 'dotted' | 'none';
+  borderColor: string;
+  borderWidth: string;
+  cellPadding?: string;
+  backgroundColor?: string;
+  headerBackgroundColor?: string;
+  textAlign?: 'left' | 'center' | 'right';
+}
+
+export interface Column {
+  id: string;
+  blocks: EmailBlock[];
+  width: string;
+}
+
+export interface ColumnsContent {
+  columnCount: number;
+  columnRatio: string;
+  columns: Column[];
+  gap: string;
+  backgroundColor?: string;
+  padding?: string;
+  borderRadius?: string;
+  border?: string;
+}
+
+export type EmailBlockContent = 
+  | TextContent 
+  | ButtonContent 
+  | ImageContent 
+  | SpacerContent 
+  | DividerContent 
+  | HtmlContent 
+  | VideoContent 
+  | SocialContent 
+  | TableContent
+  | ColumnsContent;
+
+export interface EmailBlock {
+  id: string;
+  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns';
+  content: any;
+  styling: Styling;
+  position: Position;
+  displayOptions: DisplayOptions;
+  isStarred?: boolean; // Add the isStarred property
+}
+
+export interface ColumnsBlock extends EmailBlock {
+  type: 'columns';
+  content: ColumnsContent;
 }
 
 export interface UniversalContent {
   id: string;
   name: string;
-  type: 'block' | 'section';
-  content: EmailBlock | EmailSection;
-  createdAt: Date;
-  updatedAt: Date;
-  usageCount: number;
+  type: 'text' | 'image' | 'button' | 'link';
+  content: string;
+  metadata?: {
+    fontSize?: string;
+    color?: string;
+    backgroundColor?: string;
+    alignment?: 'left' | 'center' | 'right';
+    fontWeight?: string;
+    textDecoration?: string;
+  };
 }
 
-export interface EmailCanvas {
-  sections: EmailSection[];
-  templateStyles: TemplateStyles;
-  universalContent: UniversalContent[];
-  settings: {
-    width: string;
-    backgroundColor: string;
-    fontFamily: string;
-  };
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  description: string;
+  thumbnail: string;
+  blocks: EmailBlock[];
+  category: string;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
 }

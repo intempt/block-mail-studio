@@ -21,6 +21,7 @@ interface CanvasRendererProps {
   onDeleteBlock: (blockId: string) => void;
   onDuplicateBlock: (blockId: string) => void;
   onSaveAsSnippet: (blockId: string) => void;
+  onUnstarBlock?: (blockId: string) => void;
   onTipTapChange: (blockId: string, html: string) => void;
   onTipTapBlur: () => void;
   onColumnDrop: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
@@ -43,6 +44,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onDeleteBlock,
   onDuplicateBlock,
   onSaveAsSnippet,
+  onUnstarBlock,
   onTipTapChange,
   onTipTapBlur,
   onColumnDrop,
@@ -139,6 +141,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           block={block}
           isSelected={isSelected}
           onUpdate={onBlockUpdate}
+          onStarBlock={() => onSaveAsSnippet(block.id)}
+          onUnstarBlock={onUnstarBlock}
         />
       </div>
     );

@@ -9,6 +9,8 @@ interface BlockControlsProps {
   onDuplicate: (blockId: string) => void;
   onDragStart: (e: React.DragEvent, blockId: string) => void;
   onSaveAsSnippet?: (blockId: string) => void;
+  isStarred?: boolean;
+  onUnstar?: (blockId: string) => void;
 }
 
 export const BlockControls: React.FC<BlockControlsProps> = ({
@@ -16,11 +18,22 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
   onDelete,
   onDuplicate,
   onDragStart,
-  onSaveAsSnippet
+  onSaveAsSnippet,
+  isStarred = false,
+  onUnstar
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
     console.log('BlockControls: Drag start for block:', blockId);
     onDragStart(e, blockId);
+  };
+
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isStarred && onUnstar) {
+      onUnstar(blockId);
+    } else if (onSaveAsSnippet) {
+      onSaveAsSnippet(blockId);
+    }
   };
 
   return (
@@ -40,14 +53,15 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
         <Button
           size="sm"
           variant="ghost"
-          className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSaveAsSnippet(blockId);
-          }}
-          title="Save as snippet"
+          className={`w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 transition-colors ${
+            isStarred 
+              ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
+              : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-50'
+          }`}
+          onClick={handleStarClick}
+          title={isStarred ? "Remove from snippets" : "Save as snippet"}
         >
-          <Star className="w-4 h-4" />
+          <Star className={`w-4 h-4 ${isStarred ? 'fill-yellow-400' : ''}`} />
         </Button>
       )}
       

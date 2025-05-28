@@ -24,6 +24,7 @@ interface BlockRendererProps {
   onUpdate: (block: EmailBlock) => void;
   onBlockAdd?: (blockType: string, columnId: string) => void;
   onStarBlock?: (block: EmailBlock) => void;
+  onUnstarBlock?: (blockId: string) => void;
   onSnippetRefresh?: () => void;
 }
 
@@ -33,6 +34,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   onUpdate, 
   onBlockAdd,
   onStarBlock,
+  onUnstarBlock,
   onSnippetRefresh
 }) => {
   const getBlockComponent = () => {
@@ -60,14 +62,24 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
     }
   };
 
-  const handleStarBlock = (e: React.MouseEvent) => {
+  const handleStarToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onStarBlock) {
-      onStarBlock(block);
-      // Trigger snippet refresh after starring
-      if (onSnippetRefresh) {
-        setTimeout(() => onSnippetRefresh(), 100);
+    
+    if (block.isStarred) {
+      // Unstar the block
+      if (onUnstarBlock) {
+        onUnstarBlock(block.id);
       }
+    } else {
+      // Star the block
+      if (onStarBlock) {
+        onStarBlock(block);
+      }
+    }
+    
+    // Trigger snippet refresh after starring/unstarring
+    if (onSnippetRefresh) {
+      setTimeout(() => onSnippetRefresh(), 100);
     }
   };
 
@@ -75,8 +87,8 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
     <div className={`block-renderer ${isSelected ? 'selected' : ''} relative group`}>
       {getBlockComponent()}
       
-      {/* Enhanced star button with better UX */}
-      {onStarBlock && (
+      {/* Enhanced star button with proper state management */}
+      {(onStarBlock || onUnstarBlock) && (
         <div className={`absolute top-2 right-2 transition-all duration-200 ${
           isSelected || block.isStarred 
             ? 'opacity-100' 
@@ -85,7 +97,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleStarBlock}
+            onClick={handleStarToggle}
             className="h-8 w-8 p-0 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border border-gray-200"
             title={block.isStarred ? 'Remove from snippets' : 'Save as snippet'}
           >

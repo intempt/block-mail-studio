@@ -16,6 +16,7 @@ interface EmailBlockCanvasProps {
   subject?: string;
   onSubjectChange?: (subject: string) => void;
   showAIAnalytics?: boolean;
+  onSnippetRefresh?: () => void;
 }
 
 export interface EmailBlockCanvasRef {
@@ -34,7 +35,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   compactMode = false,
   subject = '',
   onSubjectChange = () => {},
-  showAIAnalytics = false
+  showAIAnalytics = false,
+  onSnippetRefresh
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -293,7 +295,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           showOnDesktop: true,
           showOnTablet: true,
           showOnMobile: true
-        }
+        },
+        isStarred: false
       }
     ];
     setBlocks(initialBlocks);
@@ -452,7 +455,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     if (blockToDuplicate) {
       const duplicatedBlock: EmailBlock = {
         ...blockToDuplicate,
-        id: `${blockToDuplicate.id}_copy_${Date.now()}`
+        id: `${blockToDuplicate.id}_copy_${Date.now()}`,
+        isStarred: false // New duplicated blocks are not starred
       };
       const blockIndex = blocks.findIndex(block => block.id === blockId);
       const newBlocks = [...blocks];
@@ -476,12 +480,48 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         isFavorite: false
       };
 
+      // Create the snippet
       DirectSnippetService.createSnippet(block, snippet.name, snippet.description);
+      
+      // Update the block's starred state
+      setBlocks(prev => prev.map(b => 
+        b.id === blockId ? { ...b, isStarred: true } : b
+      ));
+      
+      // Trigger snippet refresh
       setSnippetRefreshTrigger(prev => prev + 1);
+      onSnippetRefresh?.();
+      
+      console.log('Block starred and snippet created:', blockId);
     } catch (error) {
       console.error('Error saving snippet:', error);
     }
-  }, [blocks]);
+  }, [blocks, onSnippetRefresh]);
+
+  const handleUnstarBlock = useCallback((blockId: string) => {
+    // Find snippets related to this block and remove them
+    const allSnippets = DirectSnippetService.getCustomSnippets();
+    const relatedSnippet = allSnippets.find(snippet => 
+      snippet.blockData?.id === blockId || 
+      snippet.name.includes(blockId) ||
+      snippet.blockData?.type === blocks.find(b => b.id === blockId)?.type
+    );
+    
+    if (relatedSnippet) {
+      DirectSnippetService.deleteSnippet(relatedSnippet.id);
+    }
+    
+    // Update the block's starred state
+    setBlocks(prev => prev.map(b => 
+      b.id === blockId ? { ...b, isStarred: false } : b
+    ));
+    
+    // Trigger snippet refresh
+    setSnippetRefreshTrigger(prev => prev + 1);
+    onSnippetRefresh?.();
+    
+    console.log('Block unstarred and snippet removed:', blockId);
+  }, [blocks, onSnippetRefresh]);
 
   const handleTipTapChange = useCallback((blockId: string, html: string) => {
     setBlocks(prev => prev.map(block => {
@@ -709,6 +749,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             onDeleteBlock={handleBlockDelete}
             onDuplicateBlock={handleBlockDuplicate}
             onSaveAsSnippet={handleSaveAsSnippet}
+            onUnstarBlock={handleUnstarBlock}
             onTipTapChange={handleTipTapChange}
             onTipTapBlur={handleTipTapBlur}
             onColumnDrop={dragDropHandler.handleColumnDrop}
