@@ -1,9 +1,11 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Bold, 
   Italic, 
@@ -12,7 +14,18 @@ import {
   AlignCenter,
   AlignRight,
   Link as LinkIcon,
-  Palette
+  Palette,
+  List,
+  ListOrdered,
+  Quote,
+  Code,
+  Heading,
+  Highlighter,
+  Image,
+  Sparkles,
+  Wand2,
+  Type,
+  Plus
 } from 'lucide-react';
 
 interface FullTipTapToolbarProps {
@@ -21,6 +34,8 @@ interface FullTipTapToolbarProps {
   position: { top: number; left: number };
   onLinkClick?: () => void;
   containerElement?: HTMLElement | null;
+  onAIAssist?: () => void;
+  onImageInsert?: () => void;
 }
 
 const textColors = [
@@ -29,29 +44,46 @@ const textColors = [
   '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6'
 ];
 
+const highlightColors = [
+  '#FEF3C7', '#FECACA', '#DBEAFE', '#D1FAE5',
+  '#E0E7FF', '#F3E8FF', '#FCE7F3', '#F0FDFA'
+];
+
+const fontSizes = [
+  { label: '12px', value: '12px' },
+  { label: '14px', value: '14px' },
+  { label: '16px', value: '16px' },
+  { label: '18px', value: '18px' },
+  { label: '20px', value: '20px' },
+  { label: '24px', value: '24px' },
+  { label: '32px', value: '32px' }
+];
+
 export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   editor,
   isVisible,
   position,
   onLinkClick,
-  containerElement
+  containerElement,
+  onAIAssist,
+  onImageInsert
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [finalPosition, setFinalPosition] = useState(position);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
 
   const calculateOptimalPosition = useCallback(() => {
     if (!toolbarRef.current || !isVisible) return;
 
     const toolbar = toolbarRef.current;
-    const toolbarRect = toolbar.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
     let { top, left } = position;
 
-    // Fixed toolbar width for full toolbar
-    const toolbarWidth = 450;
+    // Full toolbar width
+    const toolbarWidth = 800;
     const toolbarHeight = 60;
 
     // Position toolbar above selection if there's space, otherwise below
@@ -100,6 +132,15 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     setShowColorPicker(false);
   };
 
+  const handleHighlightChange = (color: string) => {
+    editor.chain().focus().setHighlight({ color }).run();
+    setShowHighlightPicker(false);
+  };
+
+  const handleFontSizeChange = (size: string) => {
+    editor.chain().focus().setFontSize(size).run();
+  };
+
   const toolbarStyle = {
     top: finalPosition.top,
     left: finalPosition.left,
@@ -110,11 +151,61 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   return (
     <div
       ref={toolbarRef}
-      className="full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 animate-scale-in min-w-96"
+      className="full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 animate-scale-in"
       style={toolbarStyle}
       onMouseDown={(e) => e.preventDefault()}
       onClick={(e) => e.stopPropagation()}
     >
+      {/* AI Assistant */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onAIAssist}
+        className="h-8 px-3 text-purple-600 hover:bg-purple-50"
+        title="AI Assistant"
+      >
+        <Sparkles className="w-4 h-4 mr-1" />
+        AI
+      </Button>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Headings */}
+      <Select onValueChange={(value) => {
+        if (value === 'paragraph') {
+          editor.chain().focus().setParagraph().run();
+        } else {
+          const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+          editor.chain().focus().toggleHeading({ level }).run();
+        }
+      }}>
+        <SelectTrigger className="h-8 w-20 text-xs">
+          <SelectValue placeholder="Style" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="paragraph">Normal</SelectItem>
+          <SelectItem value="h1">H1</SelectItem>
+          <SelectItem value="h2">H2</SelectItem>
+          <SelectItem value="h3">H3</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Font Size */}
+      <Select onValueChange={handleFontSizeChange}>
+        <SelectTrigger className="h-8 w-16 text-xs">
+          <SelectValue placeholder="Size" />
+        </SelectTrigger>
+        <SelectContent>
+          {fontSizes.map((size) => (
+            <SelectItem key={size.value} value={size.value}>
+              {size.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
       {/* Text Formatting */}
       <Button
         variant={editor.isActive('bold') ? 'default' : 'ghost'}
@@ -143,6 +234,62 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
       >
         <Underline className="w-4 h-4" />
       </Button>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Text Color */}
+      <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            title="Text Color"
+          >
+            <Palette className="w-4 h-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+          <div className="grid grid-cols-4 gap-1">
+            {textColors.map((color) => (
+              <button
+                key={color}
+                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
+                style={{ backgroundColor: color }}
+                onClick={() => handleTextColorChange(color)}
+                title={color}
+              />
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      {/* Highlight */}
+      <Popover open={showHighlightPicker} onOpenChange={setShowHighlightPicker}>
+        <PopoverTrigger asChild>
+          <Button
+            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+            size="sm"
+            className="h-8 w-8 p-0"
+            title="Highlight"
+          >
+            <Highlighter className="w-4 h-4" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+          <div className="grid grid-cols-4 gap-1">
+            {highlightColors.map((color) => (
+              <button
+                key={color}
+                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
+                style={{ backgroundColor: color }}
+                onClick={() => handleHighlightChange(color)}
+                title={color}
+              />
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
@@ -177,34 +324,51 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Text Color */}
-      <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            title="Text Color"
-          >
-            <Palette className="w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
-          <div className="grid grid-cols-4 gap-1">
-            {textColors.map((color) => (
-              <button
-                key={color}
-                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
-                style={{ backgroundColor: color }}
-                onClick={() => handleTextColorChange(color)}
-                title={color}
-              />
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+      {/* Lists */}
+      <Button
+        variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className="h-8 w-8 p-0"
+        title="Bullet List"
+      >
+        <List className="w-4 h-4" />
+      </Button>
+      <Button
+        variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className="h-8 w-8 p-0"
+        title="Numbered List"
+      >
+        <ListOrdered className="w-4 h-4" />
+      </Button>
 
-      {/* Link */}
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Blockquote & Code */}
+      <Button
+        variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        className="h-8 w-8 p-0"
+        title="Quote"
+      >
+        <Quote className="w-4 h-4" />
+      </Button>
+      <Button
+        variant={editor.isActive('code') ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => editor.chain().focus().toggleCode().run()}
+        className="h-8 w-8 p-0"
+        title="Inline Code"
+      >
+        <Code className="w-4 h-4" />
+      </Button>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* Link & Image */}
       <Button
         variant={editor.isActive('link') ? 'default' : 'ghost'}
         size="sm"
@@ -213,6 +377,29 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         title="Add Link"
       >
         <LinkIcon className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onImageInsert}
+        className="h-8 w-8 p-0"
+        title="Insert Image"
+      >
+        <Image className="w-4 h-4" />
+      </Button>
+
+      <Separator orientation="vertical" className="h-6 mx-1" />
+
+      {/* AI Enhancement */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onAIAssist}
+        className="h-8 px-3 text-blue-600 hover:bg-blue-50"
+        title="AI Enhance"
+      >
+        <Wand2 className="w-4 h-4 mr-1" />
+        Enhance
       </Button>
     </div>
   );
