@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -308,8 +309,6 @@ export default function EmailEditor({
         onPreview={handlePreview}
         onSaveTemplate={handleSaveAsTemplate}
         onPublish={handlePublish}
-        canvasRef={canvasRef}
-        onSubjectLineChange={onSubjectChange}
       />
 
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">

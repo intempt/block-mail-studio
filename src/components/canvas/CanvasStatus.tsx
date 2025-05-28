@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Monitor, Smartphone, Mail, Image, Link, FileText, BarChart3, TrendingUp, RefreshCw, Shield, Clock } from 'lucide-react';
-import { useCallbackEmailAnalysis } from '@/contexts/CallbackEmailAnalysisContext';
+import { useEmailAnalysis } from '@/contexts/EmailAnalysisContext';
 
 interface CanvasStatusProps {
   selectedBlockId: string | null;
@@ -20,7 +20,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   emailHTML = '',
   subjectLine = ''
 }) => {
-  const { analysis, isAnalyzing, lastAnalyzed, analyzeEmailAsync } = useCallbackEmailAnalysis();
+  const { analysis, isAnalyzing, lastAnalyzed, analyzeEmail, refreshAnalysis } = useEmailAnalysis();
   const [hasContent, setHasContent] = useState(false);
 
   // Check if there's content to analyze
@@ -30,13 +30,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     
     // Trigger analysis when content exists
     if (contentExists && subjectLine) {
-      analyzeEmailAsync({
+      analyzeEmail({
         emailHTML,
         subjectLine,
         variant: 'quick'
       });
     }
-  }, [emailHTML, subjectLine, analyzeEmailAsync]);
+  }, [emailHTML, subjectLine, analyzeEmail]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -55,16 +55,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
     return lastAnalyzed.toLocaleDateString();
-  };
-
-  const refreshAnalysis = () => {
-    if (hasContent) {
-      analyzeEmailAsync({
-        emailHTML,
-        subjectLine,
-        variant: 'quick'
-      });
-    }
   };
 
   return (
@@ -144,6 +134,16 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 </span>
                 <span className="font-medium">{analysis.contentMetrics.sizeKB}KB</span>
               </div>
+              
+              {analysis.contentMetrics.imageCount > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Image className="w-3 h-3" />
+                    Images
+                  </span>
+                  <span>{analysis.contentMetrics.imageCount}</span>
+                </div>
+              )}
               
               {analysis.contentMetrics.linkCount > 0 && (
                 <div className="flex items-center justify-between">

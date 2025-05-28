@@ -24,7 +24,7 @@ import {
   Sparkles,
   Type
 } from 'lucide-react';
-import { useCallbackEmailAnalysis } from '@/contexts/CallbackEmailAnalysisContext';
+import { useEmailAnalysis } from '@/contexts/EmailAnalysisContext';
 
 interface UnifiedAISuggestionsPanelProps {
   emailHTML: string;
@@ -42,9 +42,9 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
     isAnalyzing, 
     lastAnalyzed, 
     error, 
-    analyzeEmailAsync, 
-    clearAnalysis 
-  } = useCallbackEmailAnalysis();
+    analyzeEmail, 
+    refreshAnalysis 
+  } = useEmailAnalysis();
 
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -52,7 +52,7 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
   useEffect(() => {
     if (emailHTML.trim() && subjectLine) {
       const timer = setTimeout(() => {
-        analyzeEmailAsync({
+        analyzeEmail({
           emailHTML,
           subjectLine,
           variant: 'comprehensive'
@@ -61,7 +61,7 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
 
       return () => clearTimeout(timer);
     }
-  }, [emailHTML, subjectLine, analyzeEmailAsync]);
+  }, [emailHTML, subjectLine, analyzeEmail]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -112,16 +112,6 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
   const copySuggestion = (suggestion: any) => {
     navigator.clipboard.writeText(suggestion.suggested);
     console.log(`Copied: ${suggestion.title}`);
-  };
-
-  const refreshAnalysis = () => {
-    if (emailHTML.trim() && subjectLine) {
-      analyzeEmailAsync({
-        emailHTML,
-        subjectLine,
-        variant: 'comprehensive'
-      });
-    }
   };
 
   const highPrioritySuggestions = analysis?.suggestions.filter(s => s.impact === 'high') || [];
@@ -236,6 +226,7 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
               )}
             </TabsTrigger>
             <TabsTrigger value="performance" className="text-xs">Performance</TabsTrigger>
+            <TabsTrigger value="accessibility" className="text-xs">Accessibility</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1">
@@ -281,12 +272,24 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
                       <span className="font-medium">{analysis.contentMetrics.wordCount}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-gray-600">Characters</span>
+                      <span className="font-medium">{analysis.contentMetrics.characterCount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-gray-600">Links</span>
                       <span className="font-medium">{analysis.contentMetrics.linkCount}</span>
                     </div>
                     <div className="flex justify-between">
+                      <span className="text-gray-600">Images</span>
+                      <span className="font-medium">{analysis.contentMetrics.imageCount}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-gray-600">Size</span>
                       <span className="font-medium">{analysis.contentMetrics.sizeKB}KB</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Read Time</span>
+                      <span className="font-medium">{analysis.contentMetrics.estimatedReadTime}</span>
                     </div>
                   </div>
                 </Card>
@@ -361,7 +364,11 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
                           <p className="text-xs text-gray-700 mb-2">{suggestion.description}</p>
                           <div className="bg-white p-2 rounded text-xs border">
                             <div className="font-medium text-gray-700 mb-1">Suggested:</div>
-                            <div className="text-blue-700">{suggestion.suggested || 'No specific suggestion'}</div>
+                            <div className="text-blue-700">{suggestion.suggested}</div>
+                          </div>
+                          <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                            <span>Confidence: {suggestion.confidence}%</span>
+                            <span>{suggestion.reason}</span>
                           </div>
                         </Card>
                       ))}
@@ -409,7 +416,7 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
                           <p className="text-xs text-gray-700 mb-2">{suggestion.description}</p>
                           <div className="bg-blue-50 p-2 rounded text-xs">
                             <div className="font-medium text-blue-900 mb-1">Suggested:</div>
-                            <div className="text-blue-700">{suggestion.suggested || 'No specific suggestion'}</div>
+                            <div className="text-blue-700">{suggestion.suggested}</div>
                           </div>
                         </Card>
                       ))}
@@ -419,32 +426,88 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
               </TabsContent>
 
               <TabsContent value="performance" className="mt-0 space-y-3">
+                {/* Performance Metrics */}
                 <Card className="p-4">
                   <h4 className="font-medium flex items-center gap-2 mb-3">
                     <BarChart3 className="w-4 h-4" />
                     Performance Scores
                   </h4>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Overall Score</span>
-                      <span className={`text-sm font-medium ${getScoreColor(analysis.overallScore)}`}>
-                        {analysis.overallScore}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Deliverability</span>
-                      <span className={`text-sm font-medium ${getScoreColor(analysis.deliverabilityScore)}`}>
-                        {analysis.deliverabilityScore}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Mobile Score</span>
-                      <span className={`text-sm font-medium ${getScoreColor(analysis.mobileScore)}`}>
-                        {analysis.mobileScore}
-                      </span>
-                    </div>
+                    {Object.entries(analysis.metrics).map(([key, metric]) => (
+                      <div key={key} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">
+                            {typeof metric.value === 'number' ? 
+                              (key === 'loadTime' ? `${metric.value}s` : metric.value) : 
+                              metric.value
+                            }
+                          </span>
+                          <Badge variant={metric.status === 'good' ? 'default' : 'secondary'} className="text-xs">
+                            {metric.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </Card>
+
+                {/* Optimization Suggestions */}
+                {analysis.optimizationSuggestions.length > 0 && (
+                  <Card className="p-4">
+                    <h4 className="font-medium flex items-center gap-2 mb-3">
+                      <Zap className="w-4 h-4" />
+                      Optimization Opportunities
+                    </h4>
+                    <div className="space-y-2">
+                      {analysis.optimizationSuggestions.map((suggestion, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 rounded text-sm">
+                          <TrendingUp className="w-3 h-3 text-blue-600" />
+                          <span className="text-blue-900">{suggestion}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="accessibility" className="mt-0 space-y-3">
+                {analysis.accessibilityIssues.length > 0 ? (
+                  <Card className="p-4">
+                    <h4 className="font-medium flex items-center gap-2 mb-3">
+                      <Shield className="w-4 h-4" />
+                      Accessibility Issues
+                    </h4>
+                    <div className="space-y-3">
+                      {analysis.accessibilityIssues.map((issue, index) => (
+                        <div key={index} className="p-3 border rounded">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={`text-xs ${
+                              issue.severity === 'high' ? 'bg-red-100 text-red-700' :
+                              issue.severity === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-blue-100 text-blue-700'
+                            }`}>
+                              {issue.severity}
+                            </Badge>
+                            <span className="text-sm font-medium">{issue.type}</span>
+                          </div>
+                          <p className="text-sm text-gray-700 mb-2">{issue.description}</p>
+                          <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                            💡 {issue.fix}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="p-4 text-center">
+                    <Eye className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                    <h4 className="font-medium text-green-700 mb-1">Great Accessibility!</h4>
+                    <p className="text-sm text-gray-600">No major accessibility issues detected.</p>
+                  </Card>
+                )}
               </TabsContent>
             </div>
           </ScrollArea>
@@ -462,7 +525,7 @@ export const UnifiedAISuggestionsPanel: React.FC<UnifiedAISuggestionsPanelProps>
             </p>
             <Button
               variant="outline"
-              onClick={() => emailHTML.trim() && analyzeEmailAsync({ emailHTML, subjectLine, variant: 'comprehensive' })}
+              onClick={() => emailHTML.trim() && analyzeEmail({ emailHTML, subjectLine, variant: 'comprehensive' })}
               disabled={!emailHTML.trim()}
               className="flex items-center gap-2"
             >
