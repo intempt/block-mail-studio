@@ -23,8 +23,6 @@ export const DroppableCanvas: React.FC<DroppableCanvasProps> = ({
   onDuplicateBlock,
   onSaveAsSnippet
 }) => {
-  console.log('DroppableCanvas: Received blocks:', blocks.length, blocks);
-
   return (
     <Droppable droppableId="canvas">
       {(provided, snapshot) => (
@@ -55,22 +53,19 @@ export const DroppableCanvas: React.FC<DroppableCanvasProps> = ({
             </div>
           ) : (
             <div className="space-y-6">
-              {blocks.map((block, index) => {
-                console.log('DroppableCanvas: Mapping block to DraggableBlock:', { block, index });
-                return (
-                  <DraggableBlock
-                    key={block.id}
-                    block={block}
-                    index={index}
-                    isSelected={selectedBlockId === block.id}
-                    onBlockClick={onBlockClick}
-                    onBlockUpdate={onBlockUpdate}
-                    onDeleteBlock={onDeleteBlock}
-                    onDuplicateBlock={onDuplicateBlock}
-                    onSaveAsSnippet={onSaveAsSnippet}
-                  />
-                );
-              })}
+              {blocks.map((block, index) => (
+                <DraggableBlock
+                  key={block.id}
+                  block={block}
+                  index={index}
+                  isSelected={selectedBlockId === block.id}
+                  onBlockClick={onBlockClick}
+                  onBlockUpdate={onBlockUpdate}
+                  onDeleteBlock={onDeleteBlock}
+                  onDuplicateBlock={onDuplicateBlock}
+                  onSaveAsSnippet={onSaveAsSnippet}
+                />
+              ))}
             </div>
           )}
           {provided.placeholder}
