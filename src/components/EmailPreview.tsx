@@ -1,121 +1,57 @@
 
 import React, { useState } from 'react';
-import { DevicePreviewSelector, DeviceConfig } from './DevicePreviewSelector';
-import { DeviceFrame } from './DeviceFrames';
+import { Button } from '@/components/ui/button';
+import { Monitor, Smartphone } from 'lucide-react';
 
 interface EmailPreviewProps {
   html: string;
   previewMode: 'desktop' | 'mobile';
 }
 
-const deviceConfigs: DeviceConfig[] = [
-  {
-    id: 'desktop-gmail',
-    name: 'Gmail Desktop',
-    type: 'desktop',
-    width: 800,
-    height: 600,
-    icon: null,
-    client: 'Gmail',
-    description: 'Gmail web client on desktop'
-  },
-  {
-    id: 'desktop-outlook',
-    name: 'Outlook Desktop',
-    type: 'desktop',
-    width: 850,
-    height: 600,
-    icon: null,
-    client: 'Outlook',
-    description: 'Outlook desktop application'
-  },
-  {
-    id: 'iphone-14',
-    name: 'iPhone 14',
-    type: 'mobile',
-    width: 393,
-    height: 852,
-    icon: null,
-    client: 'Mail',
-    description: 'iPhone 14 native Mail app'
-  },
-  {
-    id: 'iphone-14-gmail',
-    name: 'iPhone Gmail',
-    type: 'mobile',
-    width: 393,
-    height: 852,
-    icon: null,
-    client: 'Gmail',
-    description: 'Gmail app on iPhone 14'
-  },
-  {
-    id: 'android-pixel',
-    name: 'Android Pixel',
-    type: 'mobile',
-    width: 412,
-    height: 915,
-    icon: null,
-    client: 'Gmail',
-    description: 'Gmail app on Android Pixel'
-  },
-  {
-    id: 'ipad',
-    name: 'iPad',
-    type: 'tablet',
-    width: 768,
-    height: 1024,
-    icon: null,
-    client: 'Mail',
-    description: 'iPad native Mail app'
-  }
-];
-
 export const EmailPreview: React.FC<EmailPreviewProps> = ({ html, previewMode }) => {
-  // Set default device based on preview mode
-  const defaultDevice = previewMode === 'desktop' ? 'desktop-gmail' : 'iphone-14';
-  const [selectedDevice, setSelectedDevice] = useState(defaultDevice);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
-  // Update device when preview mode changes
-  React.useEffect(() => {
-    const newDevice = previewMode === 'desktop' ? 'desktop-gmail' : 'iphone-14';
-    setSelectedDevice(newDevice);
-  }, [previewMode]);
-
-  const currentDevice = deviceConfigs.find(d => d.id === selectedDevice) || deviceConfigs[0];
+  const previewWidth = previewMode === 'desktop' ? 700 : 375;
 
   return (
-    <div className="h-full flex flex-col bg-gray-100">
-      {/* Device Selector */}
-      <DevicePreviewSelector
-        selectedDevice={selectedDevice}
-        onDeviceChange={setSelectedDevice}
-        orientation={orientation}
-        onOrientationChange={setOrientation}
-      />
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Simple Preview Controls */}
+      <div className="flex items-center justify-center p-4 bg-white border-b border-gray-200">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-1">
+            {previewMode === 'desktop' ? (
+              <Monitor className="w-4 h-4" />
+            ) : (
+              <Smartphone className="w-4 h-4" />
+            )}
+            <span>
+              {previewMode === 'desktop' ? 'Desktop Email' : 'Mobile Email'} ({previewWidth}px)
+            </span>
+          </div>
+        </div>
+      </div>
 
-      {/* Preview Area */}
-      <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
-        <div className="transform-gpu transition-all duration-300">
-          <DeviceFrame device={currentDevice} orientation={orientation}>
-            <div 
-              className="email-content h-full overflow-auto"
-              dangerouslySetInnerHTML={{ __html: html }}
-              style={{
-                maxWidth: '100%',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                lineHeight: '1.6'
-              }}
-            />
-          </DeviceFrame>
+      {/* Clean Preview Area */}
+      <div className="flex-1 overflow-auto p-8 flex items-start justify-center">
+        <div 
+          className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden transition-all duration-300"
+          style={{ width: previewWidth, maxWidth: '100%' }}
+        >
+          <div 
+            className="email-content overflow-auto"
+            dangerouslySetInnerHTML={{ __html: html }}
+            style={{
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              lineHeight: '1.6'
+            }}
+          />
         </div>
       </div>
 
       {/* Preview Info */}
       <div className="bg-white border-t border-gray-200 p-3 text-center">
-        <div className="text-xs text-gray-600">
-          Previewing on {currentDevice.name} - {currentDevice.description}
+        <div className="text-xs text-gray-500">
+          Preview at {previewMode} width ({previewWidth}px)
         </div>
       </div>
     </div>
