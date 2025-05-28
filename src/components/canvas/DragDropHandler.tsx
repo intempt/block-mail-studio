@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { createDragData, parseDragData, getDragTypeColor, getDragTypeMessage } from '@/utils/dragDropUtils';
 import { EmailBlock } from '@/types/emailBlocks';
+import { DirectSnippetService } from '@/services/directSnippetService';
 
 interface DragDropHandlerProps {
   blocks: EmailBlock[];
@@ -38,6 +38,29 @@ export const useDragDropHandler = ({
       if (!data) return;
       
       console.log('DragDropHandler: Canvas drop data:', data);
+      
+      // Handle snippet drops
+      if (data.isSnippet && data.snippetId) {
+        console.log('DragDropHandler: Dropping snippet:', data.snippetId);
+        const allSnippets = DirectSnippetService.getAllSnippets();
+        const snippet = allSnippets.find(s => s.id === data.snippetId);
+        
+        if (snippet?.blockData) {
+          const newBlock: EmailBlock = {
+            ...snippet.blockData,
+            id: `block-${Date.now()}`, // Generate new unique ID
+          };
+          
+          const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
+          setBlocks(prev => {
+            const newBlocks = [...prev];
+            newBlocks.splice(insertIndex, 0, newBlock);
+            return newBlocks;
+          });
+          console.log('DragDropHandler: Snippet block added:', newBlock);
+        }
+        return;
+      }
       
       if ((data.isLayout || data.blockType === 'columns') && data.layoutData) {
         console.log('DragDropHandler: Creating layout block with data:', data.layoutData);

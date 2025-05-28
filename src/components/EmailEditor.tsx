@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -24,6 +23,7 @@ import {
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
+import { SnippetRibbon } from './SnippetRibbon';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
@@ -284,6 +284,19 @@ export default function EmailEditor({
     setShowTemplateLibrary(true);
   };
 
+  const handleSnippetSelect = (snippet: EmailSnippet) => {
+    console.log('Adding snippet to canvas:', snippet);
+    if (canvasRef.current && snippet.blockData) {
+      // Create a new block from the snippet data
+      const newBlock: EmailBlock = {
+        ...snippet.blockData,
+        id: `block-${Date.now()}`, // Generate new unique ID
+      };
+      canvasRef.current.addBlock(newBlock);
+      setSnippetRefreshTrigger(prev => prev + 1);
+    }
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -309,6 +322,11 @@ export default function EmailEditor({
         onPreview={handlePreview}
         onSaveTemplate={handleSaveAsTemplate}
         onPublish={handlePublish}
+      />
+
+      <SnippetRibbon
+        onSnippetSelect={handleSnippetSelect}
+        refreshTrigger={snippetRefreshTrigger}
       />
 
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">

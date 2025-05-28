@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface BlockRendererProps {
   onUpdate: (block: EmailBlock) => void;
   onBlockAdd?: (blockType: string, columnId: string) => void;
   onStarBlock?: (block: EmailBlock) => void;
+  onSnippetRefresh?: () => void;
 }
 
 export const BlockRenderer: React.FC<BlockRendererProps> = ({ 
@@ -30,7 +32,8 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   isSelected, 
   onUpdate, 
   onBlockAdd,
-  onStarBlock 
+  onStarBlock,
+  onSnippetRefresh
 }) => {
   const getBlockComponent = () => {
     switch (block.type) {
@@ -61,6 +64,10 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
     e.stopPropagation();
     if (onStarBlock) {
       onStarBlock(block);
+      // Trigger snippet refresh after starring
+      if (onSnippetRefresh) {
+        setTimeout(() => onSnippetRefresh(), 100);
+      }
     }
   };
 
