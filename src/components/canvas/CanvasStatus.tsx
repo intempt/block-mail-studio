@@ -69,7 +69,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   return (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
       <div className="px-6 py-3">
-        <div className="flex items-center gap-6 overflow-x-auto">
+        <div className="flex flex-wrap items-center gap-4">
           {/* AI Analytics Header */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <Lightbulb className="w-4 h-4 text-purple-600" />
@@ -79,12 +79,12 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           {/* Performance Metrics */}
           {analytics && (
             <>
-              <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-blue-600" />
                   <span className="text-sm font-medium">Performance</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Badge variant="outline" className={`text-xs ${getScoreColor(analytics.overallScore)}`}>
                     {analytics.overallScore || '--'}/100
                   </Badge>
@@ -111,13 +111,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
               {/* Brand Voice Metrics */}
               {analytics.brandVoiceScore && (
-                <div className="flex items-center gap-4 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="h-4 w-px bg-gray-300" />
                   <div className="flex items-center gap-2">
                     <Brain className="w-4 h-4 text-purple-600" />
                     <span className="text-sm font-medium">Brand Voice</span>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Badge variant="outline" className={`text-xs ${getScoreColor(analytics.brandVoiceScore)}`}>
                       {analytics.brandVoiceScore}/100
                     </Badge>
@@ -135,13 +135,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
               {/* Performance Predictions */}
               {analytics.performancePrediction && (analytics.performancePrediction.openRate > 0 || analytics.performancePrediction.clickRate > 0) && (
-                <div className="flex items-center gap-4 flex-shrink-0">
+                <div className="flex flex-wrap items-center gap-4">
                   <div className="h-4 w-px bg-gray-300" />
                   <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-green-600" />
                     <span className="text-sm font-medium">Predicted</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
                     <span>Open {analytics.performancePrediction.openRate.toFixed(1)}%</span>
                     <span>Click {analytics.performancePrediction.clickRate.toFixed(1)}%</span>
                     <span>Convert {analytics.performancePrediction.conversionRate.toFixed(1)}%</span>
@@ -153,7 +153,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
           {/* Loading State */}
           {isAnalyzing && (
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
               <span className="text-sm text-gray-600">Analyzing...</span>
             </div>
@@ -167,7 +167,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           )}
 
           {/* Refresh Button */}
-          <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+          <div className="flex items-center gap-2 ml-auto">
             {hasContent && (
               <>
                 <div className="h-4 w-px bg-gray-300" />
