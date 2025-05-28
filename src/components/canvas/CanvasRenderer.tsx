@@ -5,6 +5,7 @@ import { ColumnRenderer } from './ColumnRenderer';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
 import { BlockControls } from './BlockControls';
+import { DropZoneIndicator } from '../DropZoneIndicator';
 
 interface CanvasRendererProps {
   blocks: EmailBlock[];
@@ -12,6 +13,7 @@ interface CanvasRendererProps {
   editingBlockId: string | null;
   isDraggingOver: boolean;
   dragOverIndex: number | null;
+  currentDragType?: 'block' | 'layout' | 'reorder' | null;
   onBlockClick: (blockId: string) => void;
   onBlockDoubleClick: (blockId: string, blockType: string) => void;
   onBlockDragStart: (e: React.DragEvent, blockId: string) => void;
@@ -33,6 +35,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   editingBlockId,
   isDraggingOver,
   dragOverIndex,
+  currentDragType = null,
   onBlockClick,
   onBlockDoubleClick,
   onBlockDragStart,
@@ -144,22 +147,67 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   return (
     <div className="canvas-renderer min-h-64">
       {blocks.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-lg font-medium mb-2">Ready to build!</div>
-          <div className="text-sm">Drag a layout from the toolbar above to start building your email</div>
+        <div className="text-center py-12">
+          {isDraggingOver && currentDragType ? (
+            <DropZoneIndicator
+              isVisible={true}
+              dragType={currentDragType}
+              position="middle"
+              className="min-h-48"
+            />
+          ) : (
+            <div className="text-gray-500">
+              <div className="text-lg font-medium mb-2">Ready to build!</div>
+              <div className="text-sm">Drag a layout from the toolbar above to start building your email</div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Top drop zone */}
+          {isDraggingOver && dragOverIndex === 0 && currentDragType && (
+            <DropZoneIndicator
+              isVisible={true}
+              dragType={currentDragType}
+              position="top"
+              className="mb-4"
+            />
+          )}
+
           {blocks.map((block, index) => (
             <React.Fragment key={block.id}>
-              {isDraggingOver && dragOverIndex === index && (
-                <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200 animate-pulse" />
+              {/* Drop zone above current block */}
+              {isDraggingOver && dragOverIndex === index && dragOverIndex !== 0 && currentDragType && (
+                <DropZoneIndicator
+                  isVisible={true}
+                  dragType={currentDragType}
+                  position="top"
+                  className="mb-4"
+                />
               )}
+              
               {renderBlock(block, index)}
+              
+              {/* Drop zone below current block */}
+              {isDraggingOver && dragOverIndex === index + 1 && currentDragType && (
+                <DropZoneIndicator
+                  isVisible={true}
+                  dragType={currentDragType}
+                  position="bottom"
+                  className="mt-4"
+                />
+              )}
             </React.Fragment>
           ))}
-          {isDraggingOver && dragOverIndex === blocks.length && (
-            <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200 animate-pulse" />
+
+          {/* Bottom drop zone */}
+          {isDraggingOver && dragOverIndex === blocks.length && currentDragType && (
+            <DropZoneIndicator
+              isVisible={true}
+              dragType={currentDragType}
+              position="bottom"
+              className="mt-4"
+            />
           )}
         </div>
       )}

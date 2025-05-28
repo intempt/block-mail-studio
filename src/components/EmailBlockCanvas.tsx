@@ -39,6 +39,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [currentEmailHTML, setCurrentEmailHTML] = useState('');
 
@@ -625,7 +626,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     dragOverIndex,
     setDragOverIndex,
     isDraggingOver,
-    setIsDraggingOver
+    setIsDraggingOver,
+    setCurrentDragType
   });
 
   const canvasWidth = useMemo(() => {
@@ -633,17 +635,41 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     return previewMode === 'mobile' ? 375 : previewWidth;
   }, [compactMode, previewMode, previewWidth]);
 
-  const canvasStyle = useMemo(() => ({
-    width: `${canvasWidth}px`,
-    minHeight: '600px',
-    margin: '0 auto',
-    backgroundColor: 'white',
-    border: '1px solid #e5e7eb',
-    borderRadius: '12px',
-    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-    position: 'relative' as const,
-    overflow: 'hidden'
-  }), [canvasWidth]);
+  const canvasStyle = useMemo(() => {
+    const baseStyle = {
+      width: `${canvasWidth}px`,
+      minHeight: '600px',
+      margin: '0 auto',
+      backgroundColor: 'white',
+      border: '1px solid #e5e7eb',
+      borderRadius: '12px',
+      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+      position: 'relative' as const,
+      overflow: 'hidden'
+    };
+
+    // Add enhanced visual feedback when dragging
+    if (isDraggingOver && currentDragType) {
+      const colorMap = {
+        block: '#3b82f6',
+        layout: '#8b5cf6', 
+        reorder: '#f59e0b'
+      };
+      
+      const color = colorMap[currentDragType];
+      
+      return {
+        ...baseStyle,
+        backgroundColor: `${color}08`,
+        border: `2px dashed ${color}`,
+        boxShadow: `inset 0 0 30px ${color}20, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
+        transform: 'scale(1.02)',
+        transition: 'all 0.3s ease-in-out'
+      };
+    }
+
+    return baseStyle;
+  }, [canvasWidth, isDraggingOver, currentDragType]);
 
   return (
     <div className="relative">
@@ -671,6 +697,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             editingBlockId={editingBlockId}
             isDraggingOver={isDraggingOver}
             dragOverIndex={dragOverIndex}
+            currentDragType={currentDragType}
             onBlockClick={handleBlockClick}
             onBlockDoubleClick={handleBlockDoubleClick}
             onBlockDragStart={dragDropHandler.handleBlockDragStart}

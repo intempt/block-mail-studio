@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { createDragData, parseDragData } from '@/utils/dragDropUtils';
+import { createDragData, parseDragData, getDragTypeColor, getDragTypeMessage } from '@/utils/dragDropUtils';
 import { EmailBlock } from '@/types/emailBlocks';
 
 interface DragDropHandlerProps {
@@ -11,6 +12,7 @@ interface DragDropHandlerProps {
   setDragOverIndex: React.Dispatch<React.SetStateAction<number | null>>;
   isDraggingOver: boolean;
   setIsDraggingOver: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentDragType?: React.Dispatch<React.SetStateAction<'block' | 'layout' | 'reorder' | null>>;
 }
 
 export const useDragDropHandler = ({
@@ -21,13 +23,15 @@ export const useDragDropHandler = ({
   dragOverIndex,
   setDragOverIndex,
   isDraggingOver,
-  setIsDraggingOver
+  setIsDraggingOver,
+  setCurrentDragType
 }: DragDropHandlerProps) => {
   const handleCanvasDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(false);
     setDragOverIndex(null);
+    setCurrentDragType?.(null);
 
     try {
       const data = parseDragData(e.dataTransfer.getData('application/json'));
@@ -105,6 +109,23 @@ export const useDragDropHandler = ({
     e.stopPropagation();
     setIsDraggingOver(true);
     
+    // Determine drag type for visual feedback
+    try {
+      const data = parseDragData(e.dataTransfer.getData('application/json'));
+      if (data) {
+        if (data.isReorder) {
+          setCurrentDragType?.('reorder');
+        } else if (data.isLayout || data.blockType === 'columns') {
+          setCurrentDragType?.('layout');
+        } else {
+          setCurrentDragType?.('block');
+        }
+      }
+    } catch (error) {
+      // Fallback to default
+      setCurrentDragType?.('block');
+    }
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const blockElements = e.currentTarget.querySelectorAll('.email-block');
@@ -126,6 +147,7 @@ export const useDragDropHandler = ({
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setIsDraggingOver(false);
       setDragOverIndex(null);
+      setCurrentDragType?.(null);
     }
   };
 
@@ -133,6 +155,7 @@ export const useDragDropHandler = ({
     const dragData = createDragData({ blockId, isReorder: true });
     e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'move';
+    setCurrentDragType?.('reorder');
   };
 
   const handleBlockDrop = (e: React.DragEvent, targetIndex: number) => {
@@ -157,6 +180,8 @@ export const useDragDropHandler = ({
       }
     } catch (error) {
       console.error('Error handling block reorder:', error);
+    } finally {
+      setCurrentDragType?.(null);
     }
   };
 
@@ -207,6 +232,8 @@ export const useDragDropHandler = ({
       console.log('DragDropHandler: Block added to column:', newBlock);
     } catch (error) {
       console.error('DragDropHandler: Error handling column drop:', error);
+    } finally {
+      setCurrentDragType?.(null);
     }
   };
 
