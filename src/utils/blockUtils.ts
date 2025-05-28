@@ -123,11 +123,83 @@ export const createEmailBlock = (blockType: string): EmailBlock => {
         }
       };
 
-    default:
+    case 'video':
       return {
         ...baseBlock,
-        type: blockType,
-        content: {}
+        type: 'video',
+        content: {
+          videoUrl: '',
+          thumbnail: 'https://via.placeholder.com/400x300?text=Video+Thumbnail',
+          showPlayButton: true,
+          platform: 'youtube',
+          autoThumbnail: true
+        }
+      };
+
+    case 'social':
+      return {
+        ...baseBlock,
+        type: 'social',
+        content: {
+          platforms: [
+            {
+              name: 'Facebook',
+              url: 'https://facebook.com',
+              icon: 'facebook',
+              iconStyle: 'color',
+              showLabel: false
+            }
+          ],
+          layout: 'horizontal',
+          iconSize: '24px',
+          spacing: '8px'
+        }
+      };
+
+    case 'html':
+      return {
+        ...baseBlock,
+        type: 'html',
+        content: {
+          html: '<p>Custom HTML content</p>',
+          customCSS: ''
+        }
+      };
+
+    case 'table':
+      return {
+        ...baseBlock,
+        type: 'table',
+        content: {
+          rows: 2,
+          columns: 2,
+          cells: [
+            [
+              { type: 'text', content: 'Header 1' },
+              { type: 'text', content: 'Header 2' }
+            ],
+            [
+              { type: 'text', content: 'Cell 1' },
+              { type: 'text', content: 'Cell 2' }
+            ]
+          ],
+          headerRow: true,
+          borderStyle: 'solid',
+          borderColor: '#e0e0e0',
+          borderWidth: '1px'
+        }
+      };
+
+    default:
+      // For unknown block types, default to text block
+      return {
+        ...baseBlock,
+        type: 'text',
+        content: {
+          html: `<p>Unknown block type: ${blockType}</p>`,
+          textStyle: 'normal',
+          placeholder: 'Click to edit...'
+        }
       };
   }
 };
