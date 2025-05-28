@@ -36,7 +36,7 @@ import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
 import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
-import { SmartLightbulb } from './SmartLightbulb';
+import { SubtleLightbulb } from './SubtleLightbulb';
 import { createDragData } from '@/utils/dragDropUtils';
 import { generateUniqueId } from '@/utils/blockUtils';
 
@@ -335,14 +335,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
-          <SmartLightbulb
-            emailHTML={emailHTML}
-            subjectLine={subjectLine}
-            onAnalyze={() => {
-              console.log('Smart analysis triggered');
-            }}
-          />
-          
           <Button onClick={onPreview} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-2" />
             Preview
@@ -460,18 +452,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 <Link className="w-6 h-6" />
               </Button>
 
-              <Button
-                variant={showAISuggestions ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-gray-100"
-                onClick={() => {
+              {/* Enhanced AI Lightbulb - Replace the original lightbulb with SubtleLightbulb */}
+              <SubtleLightbulb
+                emailHTML={emailHTML}
+                subjectLine={subjectLine}
+                onAnalyze={() => {
                   closeAllPanels();
                   setShowAISuggestions(!showAISuggestions);
                 }}
-                title="AI Suggestions"
-              >
-                <Lightbulb className="w-6 h-6" />
-              </Button>
+                className="p-2"
+              />
             </div>
           </div>
         </div>
