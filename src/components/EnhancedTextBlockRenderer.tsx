@@ -127,7 +127,18 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     }
   };
 
+  // Provide default styling values to avoid TypeScript errors
   const styling = block.styling?.desktop || {};
+  const defaultStyling = {
+    backgroundColor: styling.backgroundColor || 'transparent',
+    padding: styling.padding || '12px',
+    margin: styling.margin || '8px 0',
+    borderRadius: styling.borderRadius || '4px',
+    border: styling.border || (isSelected ? '1px solid #3b82f6' : '1px solid transparent'),
+    textColor: styling.textColor || '#000000',
+    fontSize: styling.fontSize || '14px',
+    fontWeight: styling.fontWeight || '400'
+  };
 
   return (
     <div 
@@ -136,11 +147,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       } ${isEditing ? 'editing' : ''}`}
       onClick={handleClick}
       style={{
-        backgroundColor: styling.backgroundColor,
-        padding: styling.padding || '12px',
-        margin: styling.margin || '8px 0',
-        borderRadius: styling.borderRadius || '4px',
-        border: styling.border || (isSelected ? '1px solid #3b82f6' : '1px solid transparent'),
+        backgroundColor: defaultStyling.backgroundColor,
+        padding: defaultStyling.padding,
+        margin: defaultStyling.margin,
+        borderRadius: defaultStyling.borderRadius,
+        border: defaultStyling.border,
         minHeight: '40px'
       }}
     >
@@ -151,9 +162,9 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
             isEditing ? 'cursor-text' : 'cursor-pointer'
           }`}
           style={{
-            color: styling.textColor,
-            fontSize: styling.fontSize,
-            fontWeight: styling.fontWeight,
+            color: defaultStyling.textColor,
+            fontSize: defaultStyling.fontSize,
+            fontWeight: defaultStyling.fontWeight,
           }}
         />
         
