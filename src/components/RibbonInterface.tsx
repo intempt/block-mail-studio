@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { PerformanceBrandPanel } from './PerformanceBrandPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { TemplateStylePanel } from './TemplateStylePanel';
+import { SubtleLightbulb } from './SubtleLightbulb';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 
@@ -166,14 +168,21 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
               View
             </TabsTrigger>
           </TabsList>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(true)}
-            className="text-gray-600"
-          >
-            <ChevronUp className="w-4 h-4" />
-          </Button>
+          
+          <div className="flex items-center gap-2">
+            <SubtleLightbulb 
+              emailHTML={emailHTML}
+              subjectLine={subjectLine}
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(true)}
+              className="text-gray-600"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="min-h-[80px]">
