@@ -128,16 +128,16 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   };
 
   // Provide default styling values to avoid TypeScript errors
-  const styling = block.styling?.desktop || {};
+  const styling = block.styling?.desktop;
   const defaultStyling = {
-    backgroundColor: styling.backgroundColor || 'transparent',
-    padding: styling.padding || '12px',
-    margin: styling.margin || '8px 0',
-    borderRadius: styling.borderRadius || '4px',
-    border: styling.border || (isSelected ? '1px solid #3b82f6' : '1px solid transparent'),
-    textColor: styling.textColor || '#000000',
-    fontSize: styling.fontSize || '14px',
-    fontWeight: styling.fontWeight || '400'
+    backgroundColor: styling?.backgroundColor || 'transparent',
+    padding: styling?.padding || '12px',
+    margin: styling?.margin || '8px 0',
+    borderRadius: styling?.borderRadius || '4px',
+    border: styling?.border || (isSelected ? '1px solid #3b82f6' : '1px solid transparent'),
+    textColor: styling?.textColor || '#000000',
+    fontSize: styling?.fontSize || '14px',
+    fontWeight: styling?.fontWeight || '400'
   };
 
   return (
