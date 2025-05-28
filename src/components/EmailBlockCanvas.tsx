@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
-import { CanvasRenderer } from './canvas/CanvasRenderer';
-import { useDragDropHandler } from './canvas/DragDropHandler';
 import { CanvasStatus } from './canvas/CanvasStatus';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
+import { DragDropProvider } from './drag-drop/DragDropProvider';
+import { DroppableCanvas } from './drag-drop/DroppableCanvas';
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -37,9 +37,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [currentEmailHTML, setCurrentEmailHTML] = useState('');
 
@@ -618,103 +615,88 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     };
   }, []);
 
-  const dragDropHandler = useDragDropHandler({
-    blocks,
-    setBlocks,
-    getDefaultContent,
-    getDefaultStyles,
-    dragOverIndex,
-    setDragOverIndex,
-    isDraggingOver,
-    setIsDraggingOver,
-    setCurrentDragType
-  });
+  const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
+    console.log('EmailBlockCanvas: Adding block:', blockType, layoutConfig);
+    
+    if (blockType === 'columns' && layoutConfig) {
+      const newBlock: EmailBlock = {
+        id: `layout-${Date.now()}`,
+        type: 'columns',
+        content: layoutConfig,
+        styling: getDefaultStyles('columns'),
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        }
+      };
+      
+      setBlocks(prev => [...prev, newBlock]);
+    } else {
+      const newBlock: EmailBlock = {
+        id: `block-${Date.now()}`,
+        type: blockType as any,
+        content: getDefaultContent(blockType),
+        styling: getDefaultStyles(blockType),
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        }
+      };
+      
+      setBlocks(prev => [...prev, newBlock]);
+    }
+  }, []);
 
   const canvasWidth = useMemo(() => {
     if (compactMode) return previewMode === 'mobile' ? 320 : 480;
     return previewMode === 'mobile' ? 375 : previewWidth;
   }, [compactMode, previewMode, previewWidth]);
 
-  const canvasStyle = useMemo(() => {
-    const baseStyle = {
-      width: `${canvasWidth}px`,
-      minHeight: '600px',
-      margin: '0 auto',
-      backgroundColor: 'white',
-      border: '1px solid #e5e7eb',
-      borderRadius: '12px',
-      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      position: 'relative' as const,
-      overflow: 'hidden'
-    };
-
-    // Enhanced visual feedback when dragging
-    if (isDraggingOver && currentDragType) {
-      const colorMap = {
-        block: '#3b82f6',
-        layout: '#8b5cf6', 
-        reorder: '#f59e0b'
-      };
-      
-      const color = colorMap[currentDragType];
-      
-      return {
-        ...baseStyle,
-        backgroundColor: `${color}08`,
-        border: `3px dashed ${color}`,
-        boxShadow: `inset 0 0 40px ${color}25, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
-        transform: 'scale(1.01)',
-        transition: 'all 0.3s ease-in-out'
-      };
-    }
-
-    return baseStyle;
-  }, [canvasWidth, isDraggingOver, currentDragType]);
+  const canvasStyle = useMemo(() => ({
+    width: `${canvasWidth}px`,
+    minHeight: '600px',
+    margin: '0 auto',
+    backgroundColor: 'white',
+    border: '1px solid #e5e7eb',
+    borderRadius: '12px',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    position: 'relative' as const,
+    overflow: 'hidden'
+  }), [canvasWidth]);
 
   return (
     <div className="relative">
-      <div
-        style={canvasStyle}
-        className="email-canvas"
-        onDrop={dragDropHandler.handleCanvasDrop}
-        onDragOver={dragDropHandler.handleCanvasDragOver}
-        onDragEnter={dragDropHandler.handleCanvasDragEnter}
-        onDragLeave={dragDropHandler.handleCanvasDragLeave}
+      <DragDropProvider 
+        blocks={blocks} 
+        onBlocksChange={setBlocks}
+        onBlockAdd={handleBlockAdd}
       >
-        {/* Subject Line Section */}
-        <div className="border-b border-gray-100 bg-white">
-          <CanvasSubjectLine
-            value={subject}
-            onChange={onSubjectChange}
-            emailContent={currentEmailHTML}
-          />
-        </div>
+        <div style={canvasStyle} className="email-canvas">
+          {/* Subject Line Section */}
+          <div className="border-b border-gray-100 bg-white">
+            <CanvasSubjectLine
+              value={subject}
+              onChange={onSubjectChange}
+              emailContent={currentEmailHTML}
+            />
+          </div>
 
-        {/* Email Content */}
-        <div className="p-6">
-          <CanvasRenderer
+          {/* Email Content */}
+          <DroppableCanvas
             blocks={blocks}
             selectedBlockId={selectedBlockId}
-            editingBlockId={editingBlockId}
-            isDraggingOver={isDraggingOver}
-            dragOverIndex={dragOverIndex}
-            currentDragType={currentDragType}
             onBlockClick={handleBlockClick}
-            onBlockDoubleClick={handleBlockDoubleClick}
-            onBlockDragStart={dragDropHandler.handleBlockDragStart}
-            onBlockDrop={dragDropHandler.handleBlockDrop}
+            onBlockUpdate={handleBlockUpdate}
             onDeleteBlock={handleBlockDelete}
             onDuplicateBlock={handleBlockDuplicate}
             onSaveAsSnippet={handleSaveAsSnippet}
-            onTipTapChange={handleTipTapChange}
-            onTipTapBlur={handleTipTapBlur}
-            onColumnDrop={dragDropHandler.handleColumnDrop}
-            onBlockEditStart={handleBlockEditStart}
-            onBlockEditEnd={handleBlockEditEnd}
-            onBlockUpdate={handleBlockUpdate}
           />
         </div>
-      </div>
+      </DragDropProvider>
 
       <CanvasStatus 
         selectedBlockId={selectedBlockId}
