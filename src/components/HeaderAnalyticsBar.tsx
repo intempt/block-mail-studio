@@ -23,55 +23,16 @@ import {
   Smartphone,
   AlertTriangle
 } from 'lucide-react';
-
-interface PerformanceMetrics {
-  overallScore: number | null;
-  deliverabilityScore: number | null;
-  mobileScore: number | null;
-  spamScore: number | null;
-}
-
-interface BrandMetrics {
-  brandVoiceScore: number;
-  engagementScore: number;
-  toneConsistency: number;
-  readabilityScore: number;
-}
-
-interface PerformancePrediction {
-  openRate: number;
-  clickRate: number;
-  conversionRate: number;
-}
-
-interface Suggestion {
-  id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone' | 'design' | 'accessibility' | 'performance';
-  title: string;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-  confidence: number;
-  suggestion: string;
-  category?: string;
-}
+import { useEmailAnalysis } from '@/contexts/EmailAnalysisContext';
 
 interface HeaderAnalyticsBarProps {
-  performanceMetrics?: PerformanceMetrics;
-  brandMetrics?: BrandMetrics;
-  performancePrediction?: PerformancePrediction;
-  suggestions?: Suggestion[];
-  onRefreshAnalysis?: () => void;
-  onApplySuggestion?: (suggestion: Suggestion) => void;
+  onApplySuggestion?: (suggestion: any) => void;
 }
 
 export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
-  performanceMetrics,
-  brandMetrics,
-  performancePrediction,
-  suggestions = [],
-  onRefreshAnalysis,
   onApplySuggestion
 }) => {
+  const { analysis, isAnalyzing, refreshAnalysis } = useEmailAnalysis();
   const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
 
   const getScoreColor = (score: number | null) => {
@@ -103,17 +64,17 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
     }
   };
 
-  const applySuggestion = (suggestion: Suggestion) => {
+  const applySuggestion = (suggestion: any) => {
     onApplySuggestion?.(suggestion);
   };
 
-  const copySuggestion = (suggestion: Suggestion) => {
-    navigator.clipboard.writeText(suggestion.suggestion);
+  const copySuggestion = (suggestion: any) => {
+    navigator.clipboard.writeText(suggestion.suggested);
     console.log(`Copied: ${suggestion.title}`);
   };
 
-  const highPrioritySuggestions = suggestions.filter(s => s.impact === 'high');
-  const otherSuggestions = suggestions.filter(s => s.impact !== 'high');
+  const highPrioritySuggestions = analysis?.suggestions.filter(s => s.impact === 'high') || [];
+  const allSuggestions = analysis?.suggestions || [];
 
   return (
     <div className="bg-white border-b border-gray-200">
@@ -121,32 +82,32 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
       <div className="px-6 py-3">
         <div className="flex items-center gap-6 overflow-x-auto">
           {/* Performance Metrics */}
-          {performanceMetrics && (
+          {analysis && (
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium">Performance</span>
               </div>
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className={`text-xs ${getScoreColor(performanceMetrics.overallScore)}`}>
-                  {performanceMetrics.overallScore || '--'}/100
+                <Badge variant="outline" className={`text-xs ${getScoreColor(analysis.overallScore)}`}>
+                  {analysis.overallScore}/100
                 </Badge>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600">Deliverability:</span>
-                  <span className={`text-xs font-medium ${getScoreColor(performanceMetrics.deliverabilityScore)}`}>
-                    {performanceMetrics.deliverabilityScore || '--'}
+                  <span className={`text-xs font-medium ${getScoreColor(analysis.deliverabilityScore)}`}>
+                    {analysis.deliverabilityScore}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600">Mobile:</span>
-                  <span className={`text-xs font-medium ${getScoreColor(performanceMetrics.mobileScore)}`}>
-                    {performanceMetrics.mobileScore || '--'}
+                  <span className={`text-xs font-medium ${getScoreColor(analysis.mobileScore)}`}>
+                    {analysis.mobileScore}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  <span className={`text-xs font-medium ${performanceMetrics.spamScore !== null ? performanceMetrics.spamScore > 20 ? 'text-red-600' : 'text-green-600' : 'text-gray-600'}`}>
-                    {performanceMetrics.spamScore !== null ? `${performanceMetrics.spamScore}% spam` : '--'}
+                  <span className={`text-xs font-medium ${analysis.spamScore > 20 ? 'text-red-600' : 'text-green-600'}`}>
+                    {analysis.spamScore}% spam
                   </span>
                 </div>
               </div>
@@ -154,7 +115,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
           )}
 
           {/* Brand Voice Metrics */}
-          {brandMetrics && (
+          {analysis && (
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="h-4 w-px bg-gray-300" />
               <div className="flex items-center gap-2">
@@ -162,13 +123,13 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
                 <span className="text-sm font-medium">Brand Voice</span>
               </div>
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className={`text-xs ${getScoreColor(brandMetrics.brandVoiceScore)}`}>
-                  {brandMetrics.brandVoiceScore}/100
+                <Badge variant="outline" className={`text-xs ${getScoreColor(analysis.brandVoiceScore)}`}>
+                  {analysis.brandVoiceScore}/100
                 </Badge>
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600">Engagement:</span>
-                  <span className={`text-xs font-medium ${getScoreColor(brandMetrics.engagementScore)}`}>
-                    {brandMetrics.engagementScore}
+                  <span className={`text-xs font-medium ${getScoreColor(analysis.engagementScore)}`}>
+                    {analysis.engagementScore}
                   </span>
                 </div>
               </div>
@@ -176,7 +137,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
           )}
 
           {/* Performance Predictions */}
-          {performancePrediction && (performancePrediction.openRate > 0 || performancePrediction.clickRate > 0) && (
+          {analysis && (analysis.performancePrediction.openRate > 0 || analysis.performancePrediction.clickRate > 0) && (
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="h-4 w-px bg-gray-300" />
               <div className="flex items-center gap-2">
@@ -184,15 +145,15 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
                 <span className="text-sm font-medium">Predicted</span>
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <span>Open {performancePrediction.openRate}%</span>
-                <span>Click {performancePrediction.clickRate}%</span>
-                <span>Convert {performancePrediction.conversionRate}%</span>
+                <span>Open {analysis.performancePrediction.openRate.toFixed(1)}%</span>
+                <span>Click {analysis.performancePrediction.clickRate.toFixed(1)}%</span>
+                <span>Convert {analysis.performancePrediction.conversionRate.toFixed(1)}%</span>
               </div>
             </div>
           )}
 
-          {/* Enhanced AI Suggestions - Always Visible */}
-          {suggestions.length > 0 && (
+          {/* AI Suggestions */}
+          {allSuggestions.length > 0 && (
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="h-4 w-px bg-gray-300" />
               <div className="flex items-center gap-2">
@@ -204,7 +165,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
                 </div>
                 <span className="text-sm font-medium">AI Suggestions</span>
                 <Badge variant="outline" className="text-xs">
-                  {suggestions.length}
+                  {allSuggestions.length}
                 </Badge>
                 {highPrioritySuggestions.length > 0 && (
                   <Badge className="text-xs bg-red-100 text-red-700 border-red-200">
@@ -253,29 +214,32 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
           )}
 
           {/* Refresh Analysis Button */}
-          {onRefreshAnalysis && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="h-4 w-px bg-gray-300" />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onRefreshAnalysis}
-                className="h-6 px-2 text-xs"
-              >
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="h-4 w-px bg-gray-300" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshAnalysis}
+              disabled={isAnalyzing}
+              className="h-6 px-2 text-xs"
+            >
+              {isAnalyzing ? (
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+              ) : (
                 <RefreshCw className="w-3 h-3 mr-1" />
-                Refresh
-              </Button>
-            </div>
-          )}
+              )}
+              {isAnalyzing ? 'Analyzing...' : 'Refresh'}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Expanded Suggestions Panel */}
-      {suggestionsExpanded && suggestions.length > 0 && (
+      {suggestionsExpanded && allSuggestions.length > 0 && (
         <div className="border-t border-gray-100 bg-gray-50">
           <div className="px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
-              {suggestions.map((suggestion) => (
+              {allSuggestions.map((suggestion) => (
                 <Card key={suggestion.id} className="p-3 bg-white border hover:shadow-sm transition-shadow">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -312,7 +276,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
                   
                   <div className="bg-blue-50 p-2 rounded text-xs">
                     <span className="font-medium text-blue-900">Suggestion: </span>
-                    <span className="text-blue-700">{suggestion.suggestion}</span>
+                    <span className="text-blue-700">{suggestion.suggested}</span>
                   </div>
                   
                   <div className="mt-2 flex items-center justify-between">
