@@ -165,7 +165,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
               const buttonText = columnBlock.content.text || '';
               const buttonTextNormalized = normalizeText(buttonText);
               
-              if (blockTextNormalized.includes(normalizeText(current))) {
+              // FIX: Use buttonTextNormalized instead of blockTextNormalized
+              if (buttonTextNormalized.includes(normalizeText(current))) {
                 console.log('FindAndReplaceText: Found match in column button block');
                 
                 replacementsMade++;

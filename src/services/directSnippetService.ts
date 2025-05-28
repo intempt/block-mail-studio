@@ -5,8 +5,24 @@ import { EmailBlock } from '@/types/emailBlocks';
 export class DirectSnippetService {
   private static snippetCounter = 0;
   private static sessionSnippets: EmailSnippet[] = [];
+  private static listeners: (() => void)[] = [];
 
-  // Create snippet from EmailBlock
+  // Add listener for snippet changes
+  static addChangeListener(listener: () => void) {
+    this.listeners.push(listener);
+  }
+
+  // Remove listener
+  static removeChangeListener(listener: () => void) {
+    this.listeners = this.listeners.filter(l => l !== listener);
+  }
+
+  // Notify listeners of changes
+  private static notifyListeners() {
+    this.listeners.forEach(listener => listener());
+  }
+
+  // Create snippet from EmailBlock with improved tracking
   static createSnippet(block: EmailBlock, name: string, description: string): EmailSnippet {
     this.snippetCounter++;
     
@@ -28,7 +44,12 @@ export class DirectSnippetService {
 
     // Add to session snippets
     this.sessionSnippets.push(snippet);
+    
+    // Notify listeners about the change
+    this.notifyListeners();
+    
     console.log('Snippet saved to session:', snippet);
+    console.log('Total snippets now:', this.sessionSnippets.length);
 
     return snippet;
   }
@@ -44,19 +65,33 @@ export class DirectSnippetService {
     };
 
     this.sessionSnippets.push(newSnippet);
+    this.notifyListeners();
     return newSnippet;
   }
 
   // Get all snippets including session snippets
   static getAllSnippets(): EmailSnippet[] {
-    console.log('Getting snippets:', [...this.getDefaultSnippets(), ...this.sessionSnippets]);
-    return [...this.getDefaultSnippets(), ...this.sessionSnippets];
+    const allSnippets = [...this.getDefaultSnippets(), ...this.sessionSnippets];
+    console.log('Getting all snippets:', allSnippets.length, 'total');
+    return allSnippets;
+  }
+
+  // Get only custom snippets for the ribbon
+  static getCustomSnippets(): EmailSnippet[] {
+    return this.sessionSnippets;
   }
 
   // Delete snippet from session
   static deleteSnippet(id: string): void {
     console.log('Delete snippet called:', id);
+    const beforeCount = this.sessionSnippets.length;
     this.sessionSnippets = this.sessionSnippets.filter(s => s.id !== id);
+    const afterCount = this.sessionSnippets.length;
+    
+    if (beforeCount !== afterCount) {
+      this.notifyListeners();
+      console.log(`Snippet ${id} deleted. Count: ${beforeCount} -> ${afterCount}`);
+    }
   }
 
   // Update snippet name
@@ -65,13 +100,20 @@ export class DirectSnippetService {
     if (snippet) {
       snippet.name = newName;
       snippet.updatedAt = new Date();
+      this.notifyListeners();
       console.log('Snippet name updated:', { id, newName });
     }
   }
 
-  // No-op - no persistent storage
+  // Increment usage count
   static incrementUsage(id: string): void {
-    console.log('Increment usage called (no-op):', id);
+    const snippet = this.sessionSnippets.find(s => s.id === id);
+    if (snippet) {
+      snippet.usageCount++;
+      snippet.updatedAt = new Date();
+      this.notifyListeners();
+      console.log('Snippet usage incremented:', id);
+    }
   }
 
   // Generate default snippets on demand
@@ -134,6 +176,18 @@ export class DirectSnippetService {
         isFavorite: false
       }
     ];
+  }
+
+  // Clear all custom snippets
+  static clearCustomSnippets(): void {
+    this.sessionSnippets = [];
+    this.notifyListeners();
+    console.log('All custom snippets cleared');
+  }
+
+  // Get snippet by ID
+  static getSnippetById(id: string): EmailSnippet | undefined {
+    return this.getAllSnippets().find(s => s.id === id);
   }
 }
 

@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,10 @@ import {
   List,
   ListOrdered,
   Undo,
-  Redo
+  Redo,
+  Sparkles,
+  Image as ImageIcon,
+  Wand2
 } from 'lucide-react';
 
 interface FloatingTipTapToolbarProps {
@@ -61,6 +65,15 @@ const bgColors = [
   '#BFDBFE', '#DDD6FE', '#FBCFE8', '#A7F3D0'
 ];
 
+const aiOperations = [
+  { label: 'Improve Writing', action: 'improve' },
+  { label: 'Fix Grammar', action: 'grammar' },
+  { label: 'Make Professional', action: 'professional' },
+  { label: 'Make Casual', action: 'casual' },
+  { label: 'Shorten Text', action: 'shorten' },
+  { label: 'Expand Text', action: 'expand' }
+];
+
 const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   editor,
   isVisible,
@@ -69,6 +82,10 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showBgColorPicker, setShowBgColorPicker] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageAlt, setImageAlt] = useState('');
 
   if (!editor || !isVisible) return null;
 
@@ -103,6 +120,38 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
     setShowBgColorPicker(false);
   };
 
+  const handleImageInsert = () => {
+    if (imageUrl.trim()) {
+      console.log('Inserting image:', { src: imageUrl, alt: imageAlt });
+      editor.chain().focus().setImage({ 
+        src: imageUrl.trim(), 
+        alt: imageAlt.trim() || 'Image' 
+      }).run();
+      setImageUrl('');
+      setImageAlt('');
+      setShowImageDialog(false);
+    }
+  };
+
+  const handleAIOperation = (operation: string) => {
+    const selectedText = editor.state.selection.empty ? 
+      editor.getText() : 
+      editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+    
+    console.log('AI Operation:', operation, 'on text:', selectedText);
+    
+    // Simulate AI processing - in real implementation, call AI service
+    const processedText = `[AI ${operation}] ${selectedText}`;
+    
+    if (editor.state.selection.empty) {
+      editor.chain().focus().selectAll().insertContent(processedText).run();
+    } else {
+      editor.chain().focus().insertContent(processedText).run();
+    }
+    
+    setShowAIDialog(false);
+  };
+
   const getCurrentHeading = () => {
     if (editor.isActive('heading', { level: 1 })) return '1';
     if (editor.isActive('heading', { level: 2 })) return '2';
@@ -118,7 +167,7 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
     left: position.left,
     transform: 'translateX(-50%)',
     maxWidth: 'calc(100vw - 32px)',
-    minWidth: '400px'
+    minWidth: '450px'
   };
 
   return (
@@ -380,19 +429,106 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
       <Separator orientation="vertical" className="h-6" />
 
-      {/* Link */}
-      <Button
-        variant={editor.isActive('link') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => {
-          console.log('Opening link dialog');
-          onLinkClick?.();
-        }}
-        className="h-8 w-8 p-0"
-        title="Add Link"
-      >
-        <LinkIcon className="w-4 h-4" />
-      </Button>
+      {/* Media & AI */}
+      <div className="flex gap-1">
+        {/* Link */}
+        <Button
+          variant={editor.isActive('link') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => {
+            console.log('Opening link dialog');
+            onLinkClick?.();
+          }}
+          className="h-8 w-8 p-0"
+          title="Add Link"
+        >
+          <LinkIcon className="w-4 h-4" />
+        </Button>
+
+        {/* Image */}
+        <Popover open={showImageDialog} onOpenChange={setShowImageDialog}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Insert Image"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-4 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="space-y-3">
+              <div className="text-sm font-medium">Insert Image</div>
+              <div className="space-y-2">
+                <Input
+                  placeholder="Image URL..."
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  className="w-full"
+                />
+                <Input
+                  placeholder="Alt text (optional)..."
+                  value={imageAlt}
+                  onChange={(e) => setImageAlt(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowImageDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleImageInsert}
+                  disabled={!imageUrl.trim()}
+                >
+                  Insert
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* AI Operations */}
+        <Popover open={showAIDialog} onOpenChange={setShowAIDialog}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+              title="AI Operations"
+            >
+              <Sparkles className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="space-y-2">
+              <div className="text-sm font-medium flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                AI Operations
+              </div>
+              <div className="grid gap-1">
+                {aiOperations.map((operation) => (
+                  <Button
+                    key={operation.action}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleAIOperation(operation.action)}
+                    className="justify-start h-8 text-xs hover:bg-purple-50"
+                  >
+                    {operation.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <Separator orientation="vertical" className="h-6" />
 
