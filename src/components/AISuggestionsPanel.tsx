@@ -14,6 +14,8 @@ import {
   TrendingUp,
   Brain
 } from 'lucide-react';
+import { directAIService } from '@/services/directAIService';
+import { CentralizedAIAnalysisService } from '@/services/CentralizedAIAnalysisService';
 
 interface Suggestion {
   id: string;
@@ -44,59 +46,41 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
 
     setIsLoading(true);
     try {
-      // Generate comprehensive suggestions from multiple sources
-      const mockSuggestions: Suggestion[] = [
+      console.log('Generating real AI suggestions...');
+      
+      // Use the centralized AI service to get comprehensive analysis
+      const analysis = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
+      const unifiedSuggestions = CentralizedAIAnalysisService.convertToUnifiedSuggestions(analysis);
+      
+      // Convert to the format expected by this component
+      const formattedSuggestions: Suggestion[] = unifiedSuggestions.map(suggestion => ({
+        id: suggestion.id,
+        type: suggestion.type as 'subject' | 'copy' | 'cta' | 'tone' | 'design',
+        title: suggestion.title,
+        description: suggestion.reason,
+        impact: suggestion.impact,
+        confidence: suggestion.confidence,
+        suggestion: suggestion.suggested
+      }));
+
+      setSuggestions(formattedSuggestions);
+      console.log('Generated real AI suggestions:', formattedSuggestions);
+      
+    } catch (error) {
+      console.error('Error generating AI suggestions:', error);
+      // Fallback to basic suggestions if API fails
+      const fallbackSuggestions: Suggestion[] = [
         {
-          id: '1',
+          id: 'fallback_1',
           type: 'subject',
           title: 'Optimize Subject Line',
-          description: 'Make your subject line more compelling and action-oriented',
+          description: 'Make your subject line more compelling',
           impact: 'high',
-          confidence: 87,
-          suggestion: 'Add urgency words like "Limited Time" or personalization tokens'
-        },
-        {
-          id: '2',
-          type: 'cta',
-          title: 'Enhance Call-to-Action',
-          description: 'Improve button text for better click-through rates',
-          impact: 'high',
-          confidence: 92,
-          suggestion: 'Use action verbs like "Get Started Now" instead of "Click Here"'
-        },
-        {
-          id: '3',
-          type: 'copy',
-          title: 'Improve Content Flow',
-          description: 'Restructure content for better readability',
-          impact: 'medium',
-          confidence: 78,
-          suggestion: 'Break long paragraphs into shorter, scannable chunks'
-        },
-        {
-          id: '4',
-          type: 'design',
-          title: 'Visual Hierarchy',
-          description: 'Improve visual elements for better engagement',
-          impact: 'medium',
-          confidence: 83,
-          suggestion: 'Add more white space and use contrasting colors for CTAs'
-        },
-        {
-          id: '5',
-          type: 'tone',
-          title: 'Brand Voice Alignment',
-          description: 'Adjust tone to better match your brand personality',
-          impact: 'low',
-          confidence: 74,
-          suggestion: 'Use more conversational language to build connection'
+          confidence: 75,
+          suggestion: 'Consider adding urgency or personalization to your subject line'
         }
       ];
-
-      setSuggestions(mockSuggestions);
-    } catch (error) {
-      console.error('Error generating suggestions:', error);
-      console.log("Failed to generate suggestions. Please try again.");
+      setSuggestions(fallbackSuggestions);
     } finally {
       setIsLoading(false);
     }
@@ -220,8 +204,18 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
           ) : !isLoading ? (
             <div className="text-center py-8">
               <Lightbulb className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-1">No suggestions yet</p>
-              <p className="text-xs text-gray-500">Add email content to get AI-powered recommendations</p>
+              <p className="text-sm text-gray-600 mb-3">
+                Add email content to get AI suggestions
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={generateSuggestions}
+                className="h-7"
+              >
+                <Sparkles className="w-3 h-3 mr-1" />
+                Generate Suggestions
+              </Button>
             </div>
           ) : null}
         </div>
