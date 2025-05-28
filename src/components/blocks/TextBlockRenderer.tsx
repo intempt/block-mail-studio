@@ -15,20 +15,20 @@ export const TextBlockRenderer: React.FC<TextBlockRendererProps> = ({ block, isS
     styling: block.styling 
   });
 
-  const styling = block.styling?.desktop || {};
+  const styling = block.styling?.desktop;
 
   return (
     <div
       className="text-block-renderer"
       style={{
-        backgroundColor: styling.backgroundColor || 'transparent',
-        padding: styling.padding || '20px',
-        margin: styling.margin || '0',
-        borderRadius: styling.borderRadius || '8px',
-        border: styling.border || (isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0'),
-        color: styling.textColor || '#374151',
-        fontSize: styling.fontSize || '14px',
-        fontWeight: styling.fontWeight || '400',
+        backgroundColor: styling?.backgroundColor || 'transparent',
+        padding: styling?.padding || '20px',
+        margin: styling?.margin || '0',
+        borderRadius: styling?.borderRadius || '8px',
+        border: styling?.border || (isSelected ? '2px solid #3b82f6' : '1px solid #e2e8f0'),
+        color: styling?.textColor || '#374151',
+        fontSize: styling?.fontSize || '14px',
+        fontWeight: styling?.fontWeight || '400',
       }}
     >
       {block.content.html ? (
