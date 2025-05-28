@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +24,8 @@ import {
   Edit3,
   Trash2,
   Minus,
-  Code
+  Code,
+  BarChart3
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -99,7 +101,8 @@ interface OmnipresentRibbonProps {
   onPublish: () => void;
   canvasRef?: React.RefObject<any>;
   onSubjectLineChange?: (subject: string) => void;
-  onToggleAIAnalytics?: () => void;
+  onToggleAISuggestions?: () => void;
+  onToggleAnalytics?: () => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -125,7 +128,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPublish,
   canvasRef,
   onSubjectLineChange,
-  onToggleAIAnalytics
+  onToggleAISuggestions,
+  onToggleAnalytics
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -230,9 +234,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       setTriggerAnalysis(true);
     }
     
-    // Toggle both AI header suggestions and footer analytics
-    if (onToggleAIAnalytics) {
-      onToggleAIAnalytics();
+    // Only toggle AI suggestions panel, not analytics
+    if (onToggleAISuggestions) {
+      onToggleAISuggestions();
+    }
+  };
+
+  const handleAnalyticsClick = () => {
+    // Only toggle analytics, not suggestions
+    if (onToggleAnalytics) {
+      onToggleAnalytics();
     }
   };
 
@@ -511,9 +522,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 size="sm"
                 className="p-2 hover:bg-gray-100"
                 onClick={handleAISuggestionsClick}
-                title="Complete AI Analysis"
+                title="AI Suggestions"
               >
                 <Lightbulb className="w-6 h-6" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2 hover:bg-gray-100"
+                onClick={handleAnalyticsClick}
+                title="Analytics"
+              >
+                <BarChart3 className="w-6 h-6" />
               </Button>
             </div>
           </div>

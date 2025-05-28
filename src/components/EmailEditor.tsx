@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -71,11 +70,13 @@ export default function EmailEditor({
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
-  const [showAIAnalytics, setShowAIAnalytics] = useState(false);
-
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [showSubjectAI, setShowSubjectAI] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const canvasRef = useRef<any>(null);
 
@@ -299,8 +300,16 @@ export default function EmailEditor({
     }
   };
 
-  const handleToggleAIAnalytics = () => {
-    setShowAIAnalytics(prev => !prev);
+  const handleToggleAISuggestions = () => {
+    setShowAISuggestions(prev => !prev);
+  };
+
+  const handleToggleSubjectAI = () => {
+    setShowSubjectAI(prev => !prev);
+  };
+
+  const handleToggleAnalytics = () => {
+    setShowAnalytics(prev => !prev);
   };
 
   console.log('EmailEditor: About to render main component');
@@ -328,7 +337,8 @@ export default function EmailEditor({
         onPreview={handlePreview}
         onSaveTemplate={handleSaveAsTemplate}
         onPublish={handlePublish}
-        onToggleAIAnalytics={handleToggleAIAnalytics}
+        onToggleAISuggestions={handleToggleAISuggestions}
+        onToggleAnalytics={handleToggleAnalytics}
       />
 
       <SnippetRibbon
@@ -347,7 +357,9 @@ export default function EmailEditor({
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
-            showAIAnalytics={showAIAnalytics}
+            showAIAnalytics={showAnalytics}
+            showSubjectAI={showSubjectAI}
+            onToggleSubjectAI={handleToggleSubjectAI}
           />
         </div>
       </div>

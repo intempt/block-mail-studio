@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -29,20 +28,22 @@ interface EnhancedEmailSubjectLineProps {
   onChange: (value: string) => void;
   emailContent?: string;
   onAnalysisComplete?: (analysis: SubjectLineAnalysisResult) => void;
+  showAI?: boolean;
+  onToggleAI?: () => void;
 }
 
 export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> = ({
   value,
   onChange,
   emailContent = '',
-  onAnalysisComplete
+  onAnalysisComplete,
+  showAI = false,
+  onToggleAI
 }) => {
   const [analysis, setAnalysis] = useState<SubjectLineAnalysisResult | null>(null);
   const [variants, setVariants] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingVariants, setIsGeneratingVariants] = useState(false);
-  const [showVariants, setShowVariants] = useState(false);
-  const [showAnalysisDetails, setShowAnalysisDetails] = useState(false);
 
   const analyzeSubjectLine = useCallback(async () => {
     if (!value.trim()) {
@@ -71,7 +72,6 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     if (!value.trim()) return;
 
     setIsGeneratingVariants(true);
-    setShowVariants(true);
     
     try {
       console.log('Email marketing variant generation:', value);
@@ -88,26 +88,24 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
 
   const applyVariant = (variant: string) => {
     onChange(variant);
-    setShowVariants(false);
   };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
   };
 
-  // Auto-analyze when value changes (debounced)
+  // Auto-analyze when showAI is enabled and value changes
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (value.trim()) {
+    if (showAI && value.trim()) {
+      const timer = setTimeout(() => {
         analyzeSubjectLine();
-      }
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [value, analyzeSubjectLine]);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [showAI, value, analyzeSubjectLine]);
 
   const characterCount = value.length;
-  const isTooLong = characterCount > 50; // Email marketing standard
+  const isTooLong = characterCount > 50;
   const isTooShort = characterCount < 10 && characterCount > 0;
   const isOptimal = characterCount >= 30 && characterCount <= 50;
 
@@ -146,18 +144,13 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               </Badge>
             )}
             <Button
-              variant="outline"
+              variant={showAI ? 'default' : 'outline'}
               size="sm"
-              onClick={generateVariants}
-              disabled={isGeneratingVariants || !value.trim()}
+              onClick={onToggleAI}
               className="h-7"
             >
-              {isGeneratingVariants ? (
-                <RefreshCw className="w-3 h-3 animate-spin mr-1" />
-              ) : (
-                <Sparkles className="w-3 h-3 mr-1" />
-              )}
-              A/B Variants
+              <Sparkles className="w-3 h-3 mr-1" />
+              Subject AI
             </Button>
           </div>
         </div>
@@ -185,22 +178,10 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
                 <span>{emailStatus.text}</span>
               </div>
             </div>
-            
-            {analysis && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAnalysisDetails(!showAnalysisDetails)}
-                className="h-5 text-xs text-gray-500"
-              >
-                <Eye className="w-3 h-3 mr-1" />
-                Details
-              </Button>
-            )}
           </div>
 
-          {/* Email Marketing Analysis Results */}
-          {analysis && (
+          {/* AI Analysis Results - Only show when AI is enabled */}
+          {showAI && analysis && (
             <div className="space-y-2 p-3 bg-slate-50 rounded-lg">
               <div className="grid grid-cols-4 gap-2 text-xs">
                 <div className="text-center p-2 bg-white rounded">
@@ -230,7 +211,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
                 </div>
               </div>
 
-              {showAnalysisDetails && analysis.suggestions && analysis.suggestions.length > 0 && (
+              {analysis && analysis.suggestions && analysis.suggestions.length > 0 && (
                 <div className="bg-blue-50 p-2 rounded">
                   <div className="text-xs font-medium text-blue-900 mb-1 flex items-center gap-1">
                     <Shield className="w-3 h-3" />
@@ -246,21 +227,27 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
             </div>
           )}
 
-          {/* A/B Test Variants for Email Marketing */}
-          {showVariants && (
+          {/* A/B Test Variants - Only show when AI is enabled */}
+          {showAI && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-medium text-gray-700 flex items-center gap-1">
                   <BarChart3 className="w-3 h-3" />
-                  Email Marketing A/B Variants:
+                  A/B Variants:
                 </h4>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setShowVariants(false)}
-                  className="h-6 w-6 p-0"
+                  onClick={generateVariants}
+                  disabled={isGeneratingVariants || !value.trim()}
+                  className="h-6 px-2 text-xs"
                 >
-                  ×
+                  {isGeneratingVariants ? (
+                    <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                  ) : (
+                    <Zap className="w-3 h-3 mr-1" />
+                  )}
+                  Generate
                 </Button>
               </div>
               
@@ -269,7 +256,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
                   <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-blue-600" />
                   <p className="text-xs text-gray-600">Generating email marketing optimized variants...</p>
                 </div>
-              ) : (
+              ) : variants.length > 0 ? (
                 <ScrollArea className="max-h-48">
                   <div className="space-y-1">
                     {variants.map((variant, index) => {
@@ -314,7 +301,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
                     })}
                   </div>
                 </ScrollArea>
-              )}
+              ) : null}
             </div>
           )}
         </div>
