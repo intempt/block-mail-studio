@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
-import { AdaptiveTipTapToolbar } from './AdaptiveTipTapToolbar';
+import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -60,7 +60,7 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
   return (
     <>
-      <AdaptiveTipTapToolbar
+      <FullTipTapToolbar
         editor={editor}
         isVisible={isVisible && !showLinkDialog}
         position={position}

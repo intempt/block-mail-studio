@@ -11,7 +11,7 @@ import { Underline } from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { AdaptiveTipTapToolbar } from './AdaptiveTipTapToolbar';
+import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { 
   ExternalLink,
   Play
@@ -92,7 +92,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       const relatedTarget = event.relatedTarget as HTMLElement;
       
       // Don't hide toolbar if clicking on toolbar or its elements
-      if (relatedTarget?.closest('.adaptive-tiptap-toolbar') || 
+      if (relatedTarget?.closest('.full-tiptap-toolbar') || 
           relatedTarget?.closest('[data-radix-popover-content]') ||
           showLinkDialog || showImageDialog) {
         return;
@@ -205,8 +205,8 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           placeholder={placeholder}
         />
 
-        {/* Adaptive Toolbar */}
-        <AdaptiveTipTapToolbar
+        {/* Full Toolbar */}
+        <FullTipTapToolbar
           editor={editor}
           isVisible={showToolbar && !showLinkDialog && !showImageDialog}
           position={toolbarPosition}

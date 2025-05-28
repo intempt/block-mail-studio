@@ -15,7 +15,7 @@ import Code from '@tiptap/extension-code';
 import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { TextBlock } from '@/types/emailBlocks';
-import { AdaptiveTipTapToolbar } from './AdaptiveTipTapToolbar';
+import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -144,7 +144,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       const relatedTarget = event.relatedTarget as HTMLElement;
       
       // Don't close if clicking on toolbar, dialogs, or other editor UI elements
-      if (relatedTarget?.closest('.adaptive-tiptap-toolbar') || 
+      if (relatedTarget?.closest('.full-tiptap-toolbar') || 
           relatedTarget?.closest('.link-dialog') ||
           relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
           relatedTarget?.closest('.radix-select-content') ||
@@ -307,8 +307,8 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         )}
       </div>
 
-      {/* Enhanced Adaptive Toolbar */}
-      <AdaptiveTipTapToolbar
+      {/* Full TipTap Toolbar */}
+      <FullTipTapToolbar
         editor={editor}
         isVisible={showToolbar && isEditing}
         position={toolbarPosition}
