@@ -32,43 +32,18 @@ interface SnippetRibbonProps {
 
 const getBlockIcon = (blockType: string) => {
   const iconMap = {
-    text: <Type className="w-4 h-4" />,
-    image: <Image className="w-4 h-4" />,
-    button: <MousePointer className="w-4 h-4" />,
-    spacer: <MoveVertical className="w-4 h-4" />,
-    divider: <Minus className="w-4 h-4" />,
-    video: <Video className="w-4 h-4" />,
-    social: <Share2 className="w-4 h-4" />,
-    html: <FileCode className="w-4 h-4" />,
-    table: <Table className="w-4 h-4" />,
-    columns: <Table className="w-4 h-4" />
+    text: <Type className="w-5 h-5" />,
+    image: <Image className="w-5 h-5" />,
+    button: <MousePointer className="w-5 h-5" />,
+    spacer: <MoveVertical className="w-5 h-5" />,
+    divider: <Minus className="w-5 h-5" />,
+    video: <Video className="w-5 h-5" />,
+    social: <Share2 className="w-5 h-5" />,
+    html: <FileCode className="w-5 h-5" />,
+    table: <Table className="w-5 h-5" />,
+    columns: <Table className="w-5 h-5" />
   };
-  return iconMap[blockType] || <Type className="w-4 h-4" />;
-};
-
-const getSnippetPreview = (snippet: EmailSnippet) => {
-  const { blockData, blockType } = snippet;
-  
-  switch (blockType) {
-    case 'text':
-      const textContent = blockData?.content?.html || blockData?.content?.text || 'Text Block';
-      const cleanText = textContent.replace(/<[^>]*>/g, '').slice(0, 30);
-      return cleanText || 'Text Block';
-    
-    case 'button':
-      const buttonText = blockData?.content?.text || 'Button';
-      return buttonText;
-    
-    case 'image':
-      return 'Image Block';
-    
-    case 'columns':
-      const columnCount = blockData?.content?.columnCount || 2;
-      return `${columnCount} Columns`;
-    
-    default:
-      return `${blockType.charAt(0).toUpperCase() + blockType.slice(1)} Block`;
-  }
+  return iconMap[blockType] || <Type className="w-5 h-5" />;
 };
 
 export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
@@ -167,58 +142,30 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
       {!isCollapsed && (
         <div className="p-3">
           <ScrollArea className="w-full">
-            <div className="flex gap-3 pb-2">
+            <div className="flex gap-2 pb-2">
               {snippets.map((snippet) => (
                 <Card 
                   key={snippet.id}
-                  className="flex-shrink-0 w-40 h-20 p-2 cursor-grab hover:shadow-lg transition-all duration-200 group bg-gradient-to-br from-white to-gray-50 relative"
+                  className="flex-shrink-0 w-24 h-20 p-2 cursor-grab hover:shadow-lg transition-all duration-200 group bg-gradient-to-br from-white to-gray-50 relative hover:scale-105"
                   draggable
                   onDragStart={(e) => handleDragStart(e, snippet)}
                   onClick={() => handleSnippetUse(snippet)}
+                  title={snippet.blockType}
                 >
-                  <div className="h-full flex flex-col justify-between">
-                    {/* Header with icon and actions - FIXED POSITIONING */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-1">
-                        <div className="text-purple-600">
-                          {getBlockIcon(snippet.blockType)}
-                        </div>
-                        <span className="text-xs text-gray-500 uppercase font-medium">
-                          {snippet.blockType}
-                        </span>
-                      </div>
-                      
-                      {/* FIXED: Moved buttons to right with proper spacing and visibility */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 ml-2 absolute top-1 right-1 bg-white/90 rounded shadow-sm">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => handleEditName(snippet, e)}
-                          className="h-5 w-5 p-0 text-gray-400 hover:text-blue-500 hover:bg-blue-50"
-                          title="Edit name"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => handleDeleteSnippet(snippet.id, e)}
-                          className="h-5 w-5 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50"
-                          title="Delete snippet"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
+                  <div className="h-full flex flex-col items-center justify-center text-center">
+                    {/* Centered Icon */}
+                    <div className="text-purple-600 mb-1">
+                      {getBlockIcon(snippet.blockType)}
                     </div>
-
-                    {/* Name (editable) */}
-                    <div className="flex-1 flex items-center mt-1">
+                    
+                    {/* Snippet Name */}
+                    <div className="flex-1 flex items-center justify-center w-full">
                       {editingId === snippet.id ? (
-                        <div className="flex items-center gap-1 w-full">
+                        <div className="w-full">
                           <Input
                             value={editingName}
                             onChange={(e) => setEditingName(e.target.value)}
-                            className="h-5 text-xs p-1 border-blue-300 focus:border-blue-500"
+                            className="h-4 text-xs p-1 border-blue-300 focus:border-blue-500 text-center"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') handleSaveName();
                               if (e.key === 'Escape') handleCancelEdit();
@@ -226,7 +173,7 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                             autoFocus
                             onClick={(e) => e.stopPropagation()}
                           />
-                          <div className="flex gap-0.5">
+                          <div className="flex gap-0.5 justify-center mt-1">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -234,9 +181,9 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                                 e.stopPropagation();
                                 handleSaveName();
                               }}
-                              className="h-4 w-4 p-0 text-green-600 hover:bg-green-50"
+                              className="h-3 w-3 p-0 text-green-600 hover:bg-green-50"
                             >
-                              <Check className="w-3 h-3" />
+                              <Check className="w-2 h-2" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -245,23 +192,42 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                                 e.stopPropagation();
                                 handleCancelEdit();
                               }}
-                              className="h-4 w-4 p-0 text-red-600 hover:bg-red-50"
+                              className="h-3 w-3 p-0 text-red-600 hover:bg-red-50"
                             >
-                              <X className="w-3 h-3" />
+                              <X className="w-2 h-2" />
                             </Button>
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full pr-8">
-                          <div className="text-xs font-medium text-gray-800 truncate">
+                        <div className="w-full">
+                          <div className="text-xs font-medium text-gray-800 truncate leading-tight">
                             {snippet.name}
-                          </div>
-                          <div className="text-xs text-gray-500 truncate mt-0.5">
-                            {getSnippetPreview(snippet)}
                           </div>
                         </div>
                       )}
                     </div>
+                  </div>
+
+                  {/* Action buttons - positioned at top right */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute top-1 right-1 flex gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleEditName(snippet, e)}
+                      className="h-4 w-4 p-0 text-gray-400 hover:text-blue-500 hover:bg-blue-50 bg-white/90 rounded shadow-sm"
+                      title="Edit name"
+                    >
+                      <Edit2 className="w-2.5 h-2.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDeleteSnippet(snippet.id, e)}
+                      className="h-4 w-4 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 bg-white/90 rounded shadow-sm"
+                      title="Delete snippet"
+                    >
+                      <Trash2 className="w-2.5 h-2.5" />
+                    </Button>
                   </div>
                 </Card>
               ))}
