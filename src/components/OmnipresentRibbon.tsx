@@ -332,26 +332,30 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
         
-        {/* Simple Desktop/Mobile Toggle */}
+        {/* Fixed Desktop/Mobile Toggle with Better Text Visibility */}
         <div className="flex items-center gap-4">
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
-              variant={previewMode === 'desktop' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onPreviewModeChange?.('desktop')}
-              className={`flex items-center gap-2 h-8 px-3 ${
-                previewMode === 'desktop' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+                previewMode === 'desktop' 
+                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
             >
               <Monitor className="w-4 h-4" />
               <span className="text-sm">Desktop</span>
             </Button>
             <Button
-              variant={previewMode === 'mobile' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => onPreviewModeChange?.('mobile')}
-              className={`flex items-center gap-2 h-8 px-3 ${
-                previewMode === 'mobile' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+                previewMode === 'mobile' 
+                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
             >
               <Smartphone className="w-4 h-4" />
