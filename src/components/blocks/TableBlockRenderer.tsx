@@ -2,8 +2,7 @@
 import React, { useState } from 'react';
 import { TableBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { TableCellEditor } from '../TableCellEditor';
 
 interface TableBlockRendererProps {
   block: TableBlock;
@@ -90,28 +89,26 @@ export const TableBlockRenderer: React.FC<TableBlockRendererProps> = ({
                     key={colIndex}
                     style={{
                       border: getBorderStyle(),
-                      padding: '8px',
+                      padding: '4px',
                       fontWeight: isHeader ? 'bold' : 'normal',
-                      backgroundColor: isHeader ? '#f5f5f5' : 'transparent'
+                      backgroundColor: isHeader ? '#f5f5f5' : 'transparent',
+                      position: 'relative'
                     }}
                     onClick={() => setEditingCell({ row: rowIndex, col: colIndex })}
                     className="cursor-pointer hover:bg-gray-50"
                   >
                     {isEditing ? (
-                      <Input
-                        value={cell.content}
-                        onChange={(e) => updateCellContent(rowIndex, colIndex, e.target.value)}
+                      <TableCellEditor
+                        content={cell.content}
+                        onChange={(content) => updateCellContent(rowIndex, colIndex, content)}
                         onBlur={() => setEditingCell(null)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            setEditingCell(null);
-                          }
-                        }}
                         autoFocus
-                        className="w-full border-none p-0 bg-transparent"
                       />
                     ) : (
-                      cell.content
+                      <div 
+                        dangerouslySetInnerHTML={{ __html: cell.content }}
+                        className="min-h-[24px]"
+                      />
                     )}
                   </CellTag>
                 );

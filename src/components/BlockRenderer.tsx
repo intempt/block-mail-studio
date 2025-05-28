@@ -40,23 +40,23 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   const getBlockComponent = () => {
     switch (block.type) {
       case 'text':
-        return <TextBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <TextBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'image':
-        return <MJMLImageBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLImageBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'button':
-        return <ButtonBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <ButtonBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'spacer':
-        return <SpacerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <SpacerBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'divider':
-        return <DividerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <DividerBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'video':
-        return <MJMLVideoBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLVideoBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'social':
-        return <MJMLSocialBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLSocialBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'html':
-        return <MJMLHtmlBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLHtmlBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'table':
-        return <MJMLTableBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLTableBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       default:
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
     }

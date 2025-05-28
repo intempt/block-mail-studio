@@ -106,7 +106,7 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
                     <div key={innerBlock.id} className="border border-gray-100 rounded p-2 hover:border-gray-300 transition-colors">
                       {innerBlock.type === 'text' ? (
                         <EnhancedTextBlockRenderer
-                          block={innerBlock}
+                          block={innerBlock as any}
                           isSelected={false}
                           isEditing={editingBlockId === innerBlock.id}
                           onUpdate={onBlockUpdate}

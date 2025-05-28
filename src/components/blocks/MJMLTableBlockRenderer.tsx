@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { TableBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { TableCellEditor } from '../TableCellEditor';
 
 interface MJMLTableBlockRendererProps {
   block: TableBlock;
@@ -99,29 +99,27 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
                       key={colIndex}
                       style={{
                         border: getBorderStyle(),
-                        padding: '12px 8px',
+                        padding: '8px',
                         fontWeight: isHeader ? 'bold' : 'normal',
                         backgroundColor: isHeader ? '#f8fafc' : 'transparent',
-                        minWidth: '80px'
+                        minWidth: '80px',
+                        position: 'relative'
                       }}
                       onClick={() => setEditingCell({ row: rowIndex, col: colIndex })}
                       className="cursor-pointer hover:bg-gray-50 transition-colors"
                     >
                       {isEditing ? (
-                        <Input
-                          value={cell.content}
-                          onChange={(e) => updateCellContent(rowIndex, colIndex, e.target.value)}
+                        <TableCellEditor
+                          content={cell.content}
+                          onChange={(content) => updateCellContent(rowIndex, colIndex, content)}
                           onBlur={() => setEditingCell(null)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              setEditingCell(null);
-                            }
-                          }}
                           autoFocus
-                          className="w-full border-none p-0 bg-transparent focus:ring-0"
                         />
                       ) : (
-                        <span className="block w-full">{cell.content}</span>
+                        <div 
+                          dangerouslySetInnerHTML={{ __html: cell.content }}
+                          className="min-h-[24px] w-full"
+                        />
                       )}
                     </CellTag>
                   );
@@ -143,7 +141,6 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
         </div>
       )}
 
-      {/* MJML compliance indicator */}
       {isSelected && (
         <div className="absolute bottom-2 left-2">
           <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
