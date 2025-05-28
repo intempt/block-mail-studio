@@ -21,6 +21,7 @@ export interface Styling {
     boxShadow?: string;
     fontWeight?: string;
     textDecoration?: string;
+    lineHeight?: string;
   };
   tablet: {
     width: string;
@@ -38,6 +39,7 @@ export interface Styling {
     boxShadow?: string;
     fontWeight?: string;
     textDecoration?: string;
+    lineHeight?: string;
   };
   mobile: {
     width: string;
@@ -55,6 +57,7 @@ export interface Styling {
     boxShadow?: string;
     fontWeight?: string;
     textDecoration?: string;
+    lineHeight?: string;
   };
 }
 
@@ -67,6 +70,7 @@ export interface DisplayOptions {
 export interface TextContent {
   html: string;
   textStyle: 'normal' | 'heading1' | 'heading2' | 'heading3' | 'heading4' | 'heading5' | 'heading6' | 'quote' | 'code';
+  placeholder?: string;
 }
 
 export interface ButtonContent {
@@ -318,4 +322,12 @@ export interface EmailTemplate {
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+// Legacy type aliases for compatibility
+export type BlockStyling = Styling;
+export interface ResponsiveSettings {
+  desktop: any;
+  tablet: any;
+  mobile: any;
 }

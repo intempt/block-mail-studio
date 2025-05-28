@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -21,6 +21,9 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
   onBlur,
   autoFocus = false
 }) => {
+  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
+  const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -37,7 +40,18 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    onSelectionUpdate: ({ editor }) => {
+      const { from, to } = editor.state.selection;
+      if (from !== to) {
+        setIsToolbarVisible(true);
+        // Position toolbar above the selection
+        setToolbarPosition({ top: -50, left: 0 });
+      } else {
+        setIsToolbarVisible(false);
+      }
+    },
     onBlur: () => {
+      setIsToolbarVisible(false);
       onBlur();
     },
     immediatelyRender: false,
@@ -59,7 +73,11 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
 
   return (
     <div className="table-cell-editor relative">
-      <FloatingTipTapToolbar editor={editor} />
+      <FloatingTipTapToolbar 
+        editor={editor} 
+        isVisible={isToolbarVisible}
+        position={toolbarPosition}
+      />
       <EditorContent 
         editor={editor} 
         className="prose prose-sm max-w-none p-2 focus:outline-none min-h-[32px] text-sm"

@@ -36,23 +36,23 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
   const renderPropertyEditor = () => {
     switch (selectedBlock.type) {
       case 'text':
-        return <TextBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <TextBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'image':
-        return <ImageBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <ImageBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'button':
-        return <ButtonBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <ButtonBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'spacer':
-        return <SpacerBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <SpacerBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'divider':
-        return <DividerBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <DividerBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'video':
-        return <VideoBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <VideoBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'social':
-        return <SocialBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <SocialBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'html':
-        return <HtmlBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <HtmlBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'table':
-        return <TableBlockPropertyEditor block={selectedBlock} onUpdate={onBlockUpdate} />;
+        return <TableBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       default:
         return (
           <div className="p-4 text-center text-gray-500">
