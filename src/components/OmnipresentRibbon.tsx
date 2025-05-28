@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -15,13 +15,10 @@ import {
   Layout,
   Link,
   ArrowLeft,
-  Eye,
-  Send,
+  Download,
   Monitor,
   Smartphone,
   Save,
-  ChevronDown,
-  ChevronUp,
   Settings,
   Lightbulb,
   Edit3,
@@ -129,7 +126,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   canvasRef,
   onSubjectLineChange
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
@@ -138,6 +134,21 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
+
+  // Load saved content on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('email-builder-draft');
+    if (savedDraft) {
+      try {
+        const { title } = JSON.parse(savedDraft);
+        if (title) {
+          setCampaignTitle(title);
+        }
+      } catch (error) {
+        console.error('Error loading saved draft:', error);
+      }
+    }
+  }, []);
 
   const createLayoutConfig = (layout: LayoutOption) => {
     const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
@@ -208,67 +219,59 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     setShowAISuggestions(false);
   };
 
-  const handleButtonsToggle = () => {
-    if (!showButtons) closeAllPanels();
-    setShowButtons(!showButtons);
+  const handleExport = () => {
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fileName = campaignTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() || `email_${timestamp}`;
+    
+    // Export HTML
+    const htmlBlob = new Blob([emailHTML], { type: 'text/html' });
+    const htmlUrl = URL.createObjectURL(htmlBlob);
+    const htmlLink = document.createElement('a');
+    htmlLink.href = htmlUrl;
+    htmlLink.download = `${fileName}.html`;
+    document.body.appendChild(htmlLink);
+    htmlLink.click();
+    document.body.removeChild(htmlLink);
+    URL.revokeObjectURL(htmlUrl);
+
+    // Export JSON
+    const emailData = {
+      title: campaignTitle,
+      subject: subjectLine,
+      html: emailHTML,
+      exportedAt: new Date().toISOString()
+    };
+    const jsonBlob = new Blob([JSON.stringify(emailData, null, 2)], { type: 'application/json' });
+    const jsonUrl = URL.createObjectURL(jsonBlob);
+    const jsonLink = document.createElement('a');
+    jsonLink.href = jsonUrl;
+    jsonLink.download = `${fileName}.json`;
+    document.body.appendChild(jsonLink);
+    jsonLink.click();
+    document.body.removeChild(jsonLink);
+    URL.revokeObjectURL(jsonUrl);
+
+    console.log('Email exported as HTML and JSON');
   };
 
-  const handleLinksToggle = () => {
-    if (!showLinks) closeAllPanels();
-    setShowLinks(!showLinks);
-  };
-
-  const handleEmailSettingsToggle = () => {
-    if (!showEmailSettings) closeAllPanels();
-    setShowEmailSettings(!showEmailSettings);
-  };
-
-  const handleTextHeadingsToggle = () => {
-    if (!showTextHeadings) closeAllPanels();
-    setShowTextHeadings(!showTextHeadings);
-  };
-
-  const handleAISuggestionsToggle = () => {
-    if (!showAISuggestions) closeAllPanels();
-    setShowAISuggestions(!showAISuggestions);
-  };
-
-  const handleTitleSave = () => {
-    setIsEditingTitle(false);
-    console.log('Campaign title saved:', campaignTitle);
-  };
-
-  const handleTitleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleTitleSave();
-    } else if (e.key === 'Escape') {
-      setIsEditingTitle(false);
-    }
+  const handleSave = () => {
+    const draftData = {
+      title: campaignTitle,
+      subject: subjectLine,
+      html: emailHTML,
+      savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('email-builder-draft', JSON.stringify(draftData));
+    console.log('Email saved to localStorage');
   };
 
   const handleDeleteCanvas = () => {
-    if (confirm('Are you sure you want to clear all content?')) {
-      console.log('Clearing canvas content');
+    if (confirm('Are you sure you want to clear all content? This will also clear your saved draft.')) {
+      localStorage.removeItem('email-builder-draft');
+      console.log('Canvas cleared and draft removed');
     }
   };
-
-  if (isCollapsed) {
-    return (
-      <div className="bg-white border-b border-gray-200 flex items-center justify-between px-6 py-2">
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">Ribbon Hidden</Badge>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsCollapsed(false)}
-          className="text-gray-600"
-        >
-          <ChevronDown className="w-4 h-4" />
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white border-b border-gray-200 relative">
@@ -357,34 +360,22 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              if (confirm('Are you sure you want to clear all content?')) {
-                console.log('Clearing canvas content');
-              }
-            }}
+            onClick={handleDeleteCanvas}
             className="flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Delete Canvas
+            Delete
           </Button>
         </div>
         
         <div className="flex items-center gap-3">
-          <Button onClick={onPreview} variant="outline" size="sm">
-            <Eye className="w-4 h-4 mr-2" />
-            Preview
+          <Button onClick={handleExport} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Export
           </Button>
-          <Button onClick={() => onSaveTemplate({})} className="bg-blue-600 hover:bg-blue-700" size="sm">
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700" size="sm">
             <Save className="w-4 h-4 mr-2" />
             Save
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(true)}
-            className="text-gray-600"
-          >
-            <ChevronUp className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -543,7 +534,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               onClick={() => setShowLinks(false)}
               className="text-gray-500"
             >
-              <ChevronDown className="w-4 h-4" />
+              ×
             </Button>
           </div>
           <div className="text-sm text-gray-600">
