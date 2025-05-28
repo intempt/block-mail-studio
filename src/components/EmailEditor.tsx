@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -26,6 +25,7 @@ import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { SnippetRibbon } from './SnippetRibbon';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { CanvasStatus } from './canvas/CanvasStatus';
 import { EmailTemplate } from './TemplateManager';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -71,7 +71,8 @@ export default function EmailEditor({
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
-  const [showAIAnalytics, setShowAIAnalytics] = useState(false);
+  const [showAIAnalytics, setShowAIAnalytics] = useState(true); // Default to true to show analytics
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
 
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
@@ -303,6 +304,10 @@ export default function EmailEditor({
     setShowAIAnalytics(prev => !prev);
   };
 
+  const handleBlockSelect = (blockId: string | null) => {
+    setSelectedBlockId(blockId);
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -341,15 +346,26 @@ export default function EmailEditor({
           <EmailBlockCanvas
             ref={canvasRef}
             onContentChange={handleContentChangeFromCanvas}
-            onBlockSelect={() => {}}
+            onBlockSelect={handleBlockSelect}
             previewWidth={canvasWidth}
             previewMode={previewMode}
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
-            showAIAnalytics={showAIAnalytics}
+            showAIAnalytics={false} // Don't show in canvas since we're showing in footer
           />
         </div>
+      </div>
+
+      {/* AI Analytics Footer - Always visible */}
+      <div className="bg-white border-t border-gray-200 shadow-lg">
+        <CanvasStatus 
+          selectedBlockId={selectedBlockId}
+          canvasWidth={canvasWidth}
+          previewMode={previewMode}
+          emailHTML={content}
+          subjectLine={subject}
+        />
       </div>
 
       {showPreview && (
