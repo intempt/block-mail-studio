@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -106,8 +105,7 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
     setEditingName(snippet.name);
   };
 
-  const handleSaveName = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSaveName = () => {
     if (editingId && editingName.trim()) {
       DirectSnippetService.updateSnippetName(editingId, editingName.trim());
       setSnippets(prev => prev.map(s => 
@@ -118,8 +116,7 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
     setEditingName('');
   };
 
-  const handleCancelEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCancelEdit = () => {
     setEditingId(null);
     setEditingName('');
   };
@@ -211,8 +208,8 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                             onChange={(e) => setEditingName(e.target.value)}
                             className="h-5 text-xs p-1"
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveName(e);
-                              if (e.key === 'Escape') handleCancelEdit(e);
+                              if (e.key === 'Enter') handleSaveName();
+                              if (e.key === 'Escape') handleCancelEdit();
                             }}
                             autoFocus
                             onClick={(e) => e.stopPropagation()}
@@ -220,7 +217,10 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleSaveName}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveName();
+                            }}
                             className="h-4 w-4 p-0 text-green-600"
                           >
                             <Check className="w-3 h-3" />
@@ -228,7 +228,10 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={handleCancelEdit}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelEdit();
+                            }}
                             className="h-4 w-4 p-0 text-red-600"
                           >
                             <X className="w-3 h-3" />

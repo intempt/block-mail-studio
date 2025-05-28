@@ -5,6 +5,8 @@ export interface DragData {
   isReorder?: boolean;
   layoutData?: any;
   isLayout?: boolean;
+  isSnippet?: boolean;
+  snippetId?: string;
 }
 
 export const createDragData = (data: DragData): string => {
