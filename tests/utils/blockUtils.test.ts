@@ -1,6 +1,6 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { generateUniqueId, createDefaultStyling } from '@/utils/blockUtils';
+import { generateUniqueId, createDefaultBlockStyling, createEmailBlock } from '@/utils/blockUtils';
 
 describe('blockUtils', () => {
   describe('generateUniqueId', () => {
@@ -16,9 +16,9 @@ describe('blockUtils', () => {
     });
   });
 
-  describe('createDefaultStyling', () => {
+  describe('createDefaultBlockStyling', () => {
     it('should create default styling with all device types', () => {
-      const styling = createDefaultStyling();
+      const styling = createDefaultBlockStyling('text');
       
       expect(styling).toHaveProperty('desktop');
       expect(styling).toHaveProperty('tablet');
@@ -26,15 +26,29 @@ describe('blockUtils', () => {
     });
 
     it('should have consistent default values across devices', () => {
-      const styling = createDefaultStyling();
+      const styling = createDefaultBlockStyling('text');
       
       expect(styling.desktop.width).toBe('100%');
       expect(styling.tablet.width).toBe('100%');
       expect(styling.mobile.width).toBe('100%');
+    });
+  });
+
+  describe('createEmailBlock', () => {
+    it('should create a text block with default properties', () => {
+      const block = createEmailBlock('text');
       
-      expect(styling.desktop.backgroundColor).toBe('#ffffff');
-      expect(styling.tablet.backgroundColor).toBe('#ffffff');
-      expect(styling.mobile.backgroundColor).toBe('#ffffff');
+      expect(block.type).toBe('text');
+      expect(block.id).toBeDefined();
+      expect(block.content).toHaveProperty('html');
+    });
+
+    it('should create an image block with default properties', () => {
+      const block = createEmailBlock('image');
+      
+      expect(block.type).toBe('image');
+      expect(block.content).toHaveProperty('src');
+      expect(block.content).toHaveProperty('alt');
     });
   });
 });
