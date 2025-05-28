@@ -56,6 +56,12 @@ const textColors = [
   '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6'
 ];
 
+const bgColors = [
+  '#FFFFFF', '#F3F4F6', '#FEF3C7', '#DBEAFE',
+  '#FECACA', '#FED7AA', '#FEF08A', '#BBF7D0',
+  '#BFDBFE', '#DDD6FE', '#FBCFE8', '#A7F3D0'
+];
+
 export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   editor,
   isVisible,
@@ -77,17 +83,25 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   };
 
   const handleFontSizeChange = (size: string) => {
-    // Use TipTap's TextStyle extension to set font size
+    console.log('Setting font size:', size);
     editor.chain().focus().setMark('textStyle', { fontSize: size }).run();
   };
 
   const handleFontFamilyChange = (family: string) => {
+    console.log('Setting font family:', family);
     editor.chain().focus().setFontFamily(family).run();
   };
 
   const handleTextColorChange = (color: string) => {
+    console.log('Setting text color:', color);
     editor.chain().focus().setColor(color).run();
     setShowColorPicker(false);
+  };
+
+  const handleBgColorChange = (color: string) => {
+    console.log('Setting background color:', color);
+    editor.chain().focus().setHighlight({ color }).run();
+    setShowBgColorPicker(false);
   };
 
   const getCurrentHeading = () => {
@@ -113,10 +127,11 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
       className="floating-toolbar fixed z-[100] bg-white border border-gray-200 rounded-xl shadow-2xl p-3 flex items-center gap-2 animate-scale-in"
       style={toolbarStyle}
       onMouseDown={(e) => e.preventDefault()}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Text Style */}
       <Select value={getCurrentHeading()} onValueChange={handleHeadingChange}>
-        <SelectTrigger className="w-28 h-8 text-xs bg-white">
+        <SelectTrigger className="w-28 h-8 text-xs bg-white border border-gray-300">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-white border border-gray-200 shadow-lg z-[110]">
@@ -134,7 +149,7 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
       {/* Font Family */}
       <Select onValueChange={handleFontFamilyChange}>
-        <SelectTrigger className="w-24 h-8 text-xs bg-white">
+        <SelectTrigger className="w-24 h-8 text-xs bg-white border border-gray-300">
           <Type className="w-4 h-4" />
         </SelectTrigger>
         <SelectContent className="bg-white border border-gray-200 shadow-lg z-[110]">
@@ -148,7 +163,7 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
       {/* Font Size */}
       <Select onValueChange={handleFontSizeChange}>
-        <SelectTrigger className="w-20 h-8 text-xs bg-white">
+        <SelectTrigger className="w-20 h-8 text-xs bg-white border border-gray-300">
           <SelectValue placeholder="Size" />
         </SelectTrigger>
         <SelectContent className="bg-white border border-gray-200 shadow-lg z-[110]">
@@ -167,7 +182,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('bold') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={() => {
+            console.log('Toggling bold');
+            editor.chain().focus().toggleBold().run();
+          }}
           className="h-8 w-8 p-0"
           title="Bold (Ctrl+B)"
         >
@@ -177,7 +195,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('italic') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={() => {
+            console.log('Toggling italic');
+            editor.chain().focus().toggleItalic().run();
+          }}
           className="h-8 w-8 p-0"
           title="Italic (Ctrl+I)"
         >
@@ -187,7 +208,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('underline') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={() => {
+            console.log('Toggling underline');
+            editor.chain().focus().toggleUnderline().run();
+          }}
           className="h-8 w-8 p-0"
           title="Underline (Ctrl+U)"
         >
@@ -197,32 +221,62 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
       <Separator orientation="vertical" className="h-6" />
 
-      {/* Text Color */}
-      <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            title="Text Color"
-          >
-            <Palette className="w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-3 bg-white border border-gray-200 shadow-lg z-[110]">
-          <div className="grid grid-cols-4 gap-2">
-            {textColors.map((color) => (
-              <button
-                key={color}
-                className="w-8 h-8 rounded-md border-2 border-gray-200 hover:border-gray-400 transition-colors"
-                style={{ backgroundColor: color }}
-                onClick={() => handleTextColorChange(color)}
-                title={color}
-              />
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+      {/* Text & Background Color */}
+      <div className="flex gap-1">
+        <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Text Color"
+            >
+              <Palette className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="text-xs font-medium mb-2">Text Color</div>
+            <div className="grid grid-cols-4 gap-2">
+              {textColors.map((color) => (
+                <button
+                  key={color}
+                  className="w-8 h-8 rounded-md border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: color }}
+                  onClick={() => handleTextColorChange(color)}
+                  title={color}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Popover open={showBgColorPicker} onOpenChange={setShowBgColorPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Background Color"
+            >
+              <div className="w-4 h-4 bg-yellow-200 border border-gray-300 rounded"></div>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="text-xs font-medium mb-2">Background Color</div>
+            <div className="grid grid-cols-4 gap-2">
+              {bgColors.map((color) => (
+                <button
+                  key={color}
+                  className="w-8 h-8 rounded-md border-2 border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: color }}
+                  onClick={() => handleBgColorChange(color)}
+                  title={color}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <Separator orientation="vertical" className="h-6" />
 
@@ -231,7 +285,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          onClick={() => {
+            console.log('Setting text align left');
+            editor.chain().focus().setTextAlign('left').run();
+          }}
           className="h-8 w-8 p-0"
           title="Align Left"
         >
@@ -241,7 +298,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          onClick={() => {
+            console.log('Setting text align center');
+            editor.chain().focus().setTextAlign('center').run();
+          }}
           className="h-8 w-8 p-0"
           title="Center"
         >
@@ -251,7 +311,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          onClick={() => {
+            console.log('Setting text align right');
+            editor.chain().focus().setTextAlign('right').run();
+          }}
           className="h-8 w-8 p-0"
           title="Align Right"
         >
@@ -266,7 +329,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={() => {
+            console.log('Toggling bullet list');
+            editor.chain().focus().toggleBulletList().run();
+          }}
           className="h-8 w-8 p-0"
           title="Bullet List"
         >
@@ -276,7 +342,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={() => {
+            console.log('Toggling ordered list');
+            editor.chain().focus().toggleOrderedList().run();
+          }}
           className="h-8 w-8 p-0"
           title="Numbered List"
         >
@@ -286,7 +355,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          onClick={() => {
+            console.log('Toggling blockquote');
+            editor.chain().focus().toggleBlockquote().run();
+          }}
           className="h-8 w-8 p-0"
           title="Quote"
         >
@@ -296,7 +368,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('code') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onClick={() => {
+            console.log('Toggling inline code');
+            editor.chain().focus().toggleCode().run();
+          }}
           className="h-8 w-8 p-0"
           title="Inline Code"
         >
@@ -310,7 +385,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
       <Button
         variant={editor.isActive('link') ? 'default' : 'ghost'}
         size="sm"
-        onClick={onLinkClick}
+        onClick={() => {
+          console.log('Opening link dialog');
+          onLinkClick?.();
+        }}
         className="h-8 w-8 p-0"
         title="Add Link"
       >
@@ -324,7 +402,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
+          onClick={() => {
+            console.log('Undoing');
+            editor.chain().focus().undo().run();
+          }}
           disabled={!editor.can().undo()}
           className="h-8 w-8 p-0"
           title="Undo (Ctrl+Z)"
@@ -335,7 +416,10 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
+          onClick={() => {
+            console.log('Redoing');
+            editor.chain().focus().redo().run();
+          }}
           disabled={!editor.can().redo()}
           className="h-8 w-8 p-0"
           title="Redo (Ctrl+Y)"

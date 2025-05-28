@@ -18,16 +18,9 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
   onDragStart,
   onSaveAsSnippet
 }) => {
-  const handleDragStart = (e: React.MouseEvent) => {
-    // Convert mouse event to drag event for the handler
-    const dragEvent = {
-      ...e,
-      dataTransfer: {
-        setData: () => {},
-        effectAllowed: 'move'
-      }
-    } as any;
-    onDragStart(dragEvent, blockId);
+  const handleDragStart = (e: React.DragEvent) => {
+    console.log('BlockControls: Drag start for block:', blockId);
+    onDragStart(e, blockId);
   };
 
   return (
@@ -36,7 +29,8 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
         size="sm"
         variant="ghost"
         className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 cursor-grab hover:cursor-grabbing hover:bg-gray-50"
-        onMouseDown={handleDragStart}
+        draggable={true}
+        onDragStart={handleDragStart}
         title="Drag to reorder"
       >
         <GripVertical className="w-4 h-4 text-gray-600" />

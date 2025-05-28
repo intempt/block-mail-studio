@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -13,6 +12,8 @@ import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
 import Blockquote from '@tiptap/extension-blockquote';
 import Code from '@tiptap/extension-code';
+import Highlight from '@tiptap/extension-highlight';
+import { FontSize } from '@/extensions/FontSizeExtension';
 import { TextBlock } from '@/types/emailBlocks';
 import { FloatingTipTapToolbar } from './FloatingTipTapToolbar';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,12 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       Color,
       FontFamily.configure({
         types: ['textStyle'],
+      }),
+      FontSize.configure({
+        types: ['textStyle'],
+      }),
+      Highlight.configure({
+        multicolor: true,
       }),
       Underline,
       BulletList.configure({
@@ -141,7 +148,9 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           relatedTarget?.closest('.link-dialog') ||
           relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
           relatedTarget?.closest('.radix-select-content') ||
+          relatedTarget?.closest('[data-radix-select-content]') ||
           relatedTarget?.closest('.popover-content') ||
+          relatedTarget?.closest('[data-radix-popover-content]') ||
           relatedTarget?.closest('.enhanced-text-block') ||
           showLinkDialog) {
         console.log('Blur ignored - clicking on UI element');
