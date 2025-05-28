@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,8 @@ import { VideoBlockRenderer } from './blocks/VideoBlockRenderer';
 import { SocialBlockRenderer } from './blocks/SocialBlockRenderer';
 import { HtmlBlockRenderer } from './blocks/HtmlBlockRenderer';
 import { TableBlockRenderer } from './blocks/TableBlockRenderer';
+import { MJMLImageBlockRenderer } from './blocks/MJMLImageBlockRenderer';
+import { MJMLVideoBlockRenderer } from './blocks/MJMLVideoBlockRenderer';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -33,7 +34,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       case 'text':
         return <TextBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'image':
-        return <ImageBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLImageBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'button':
         return <ButtonBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'spacer':
@@ -41,7 +42,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       case 'divider':
         return <DividerBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'video':
-        return <VideoBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLVideoBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'social':
         return <SocialBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'html':
