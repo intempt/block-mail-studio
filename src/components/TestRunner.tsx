@@ -129,25 +129,14 @@ export const TestRunner: React.FC = () => {
         const duration = 50 + Math.random() * 200;
 
         // Update test result
-        const finalSuites = mockTestSuites.map((s, sIdx) => 
-          sIdx === suiteIndex 
-            ? {
-                ...s,
-                tests: s.tests.map((t, tIdx) => 
-                  tIdx === testIndex 
-                    ? { 
-                        ...t, 
-                        status: passed ? 'passed' as const : 'failed' as const,
-                        duration,
-                        error: passed ? undefined : 'AssertionError: Expected true but received false'
-                      }
-                    : t
-                )
-              }
-            : s
-        );
+        mockTestSuites[suiteIndex].tests[testIndex] = {
+          ...mockTestSuites[suiteIndex].tests[testIndex],
+          status: passed ? 'passed' as const : 'failed' as const,
+          duration,
+          error: passed ? undefined : 'AssertionError: Expected true but received false'
+        };
 
-        setTestSuites(finalSuites.map(s => ({
+        setTestSuites(mockTestSuites.map(s => ({
           name: s.name,
           tests: s.tests,
           totalTests: s.tests.length,
