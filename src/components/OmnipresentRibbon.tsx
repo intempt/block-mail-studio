@@ -26,7 +26,7 @@ import {
   Lightbulb,
   Edit3,
   Trash2,
-  Separator as SeparatorIcon,
+  Minus,
   Code
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -59,7 +59,7 @@ const blockItems: BlockItem[] = [
   { id: 'image', name: 'Image', icon: <Image className="w-6 h-6" /> },
   { id: 'button', name: 'Button', icon: <MousePointer className="w-6 h-6" /> },
   { id: 'spacer', name: 'Spacer', icon: <Space className="w-6 h-6" /> },
-  { id: 'divider', name: 'Divider', icon: <SeparatorIcon className="w-6 h-6" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-6 h-6" /> },
   { id: 'video', name: 'Video', icon: <Video className="w-6 h-6" /> },
   { id: 'social', name: 'Social', icon: <Share2 className="w-6 h-6" /> },
   { id: 'html', name: 'HTML', icon: <Code className="w-6 h-6" /> },
