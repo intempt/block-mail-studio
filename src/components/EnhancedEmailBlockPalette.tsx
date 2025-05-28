@@ -25,6 +25,15 @@ import { LayoutConfigPanel } from './LayoutConfigPanel';
 import { SnippetManager } from './SnippetManager';
 import { DraggablePaletteItem } from './drag-drop/DraggablePaletteItem';
 
+interface EnhancedEmailBlockPaletteProps {
+  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
+  universalContent?: UniversalContent[];
+  onUniversalContentAdd?: (content: UniversalContent) => void;
+  compactMode?: boolean;
+  snippetRefreshTrigger?: number;
+}
+
 interface BlockItem {
   id: string;
   name: string;
@@ -75,7 +84,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const renderBlocksSection = () => (
-    <Droppable droppableId="palette-blocks" type="BLOCK_ADD" isDropDisabled={true}>
+    <Droppable droppableId="palette-blocks" isDropDisabled={true}>
       {(provided) => (
         <div
           ref={provided.innerRef}

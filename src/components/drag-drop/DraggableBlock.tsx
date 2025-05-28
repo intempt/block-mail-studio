@@ -27,7 +27,7 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   onSaveAsSnippet
 }) => {
   return (
-    <Draggable draggableId={block.id} index={index} type="BLOCK_REORDER">
+    <Draggable draggableId={block.id} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
