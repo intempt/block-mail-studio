@@ -6,6 +6,7 @@ import { Toaster } from 'sonner';
 import Index from '@/pages/Index';
 import Messages from '@/pages/Messages';
 import WorkspacePage from '@/pages/WorkspacePage';
+import EditorPage from '@/pages/EditorPage';
 import NotFound from '@/pages/NotFound';
 import './App.css';
 
@@ -20,6 +21,7 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/workspace" element={<WorkspacePage />} />
+            <Route path="/editor" element={<EditorPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster 
