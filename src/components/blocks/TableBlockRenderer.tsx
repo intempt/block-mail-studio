@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { TableBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
-import { TableCellEditor } from '../table/TableCellEditor';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface TableBlockRendererProps {
   block: TableBlock;
@@ -67,29 +68,6 @@ export const TableBlockRenderer: React.FC<TableBlockRendererProps> = ({
     return `${borderWidth} ${borderStyle} ${borderColor}`;
   };
 
-  const handleCellKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const nextCol = e.shiftKey ? col - 1 : col + 1;
-      const nextRow = nextCol < 0 ? row - 1 : nextCol >= block.content.columns ? row + 1 : row;
-      const finalCol = nextCol < 0 ? block.content.columns - 1 : nextCol >= block.content.columns ? 0 : nextCol;
-      
-      if (nextRow >= 0 && nextRow < block.content.rows && finalCol >= 0 && finalCol < block.content.columns) {
-        setEditingCell({ row: nextRow, col: finalCol });
-      }
-    } else if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const nextRow = row + 1;
-      if (nextRow < block.content.rows) {
-        setEditingCell({ row: nextRow, col });
-      } else {
-        setEditingCell(null);
-      }
-    } else if (e.key === 'Escape') {
-      setEditingCell(null);
-    }
-  };
-
   return (
     <div className={`table-block ${isSelected ? 'ring-2 ring-blue-500' : ''} p-2`}>
       <table 
@@ -112,23 +90,29 @@ export const TableBlockRenderer: React.FC<TableBlockRendererProps> = ({
                     key={colIndex}
                     style={{
                       border: getBorderStyle(),
-                      padding: '0',
+                      padding: '8px',
                       fontWeight: isHeader ? 'bold' : 'normal',
-                      backgroundColor: isHeader ? '#f5f5f5' : 'transparent',
-                      minWidth: '100px',
-                      verticalAlign: 'top'
+                      backgroundColor: isHeader ? '#f5f5f5' : 'transparent'
                     }}
-                    className="cursor-pointer"
+                    onClick={() => setEditingCell({ row: rowIndex, col: colIndex })}
+                    className="cursor-pointer hover:bg-gray-50"
                   >
-                    <TableCellEditor
-                      content={cell.content}
-                      onUpdate={(content) => updateCellContent(rowIndex, colIndex, content)}
-                      onKeyDown={(e) => handleCellKeyDown(e, rowIndex, colIndex)}
-                      isEditing={isEditing}
-                      onBlur={() => setEditingCell(null)}
-                      onFocus={() => setEditingCell({ row: rowIndex, col: colIndex })}
-                      isHeader={isHeader}
-                    />
+                    {isEditing ? (
+                      <Input
+                        value={cell.content}
+                        onChange={(e) => updateCellContent(rowIndex, colIndex, e.target.value)}
+                        onBlur={() => setEditingCell(null)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            setEditingCell(null);
+                          }
+                        }}
+                        autoFocus
+                        className="w-full border-none p-0 bg-transparent"
+                      />
+                    ) : (
+                      cell.content
+                    )}
                   </CellTag>
                 );
               })}
