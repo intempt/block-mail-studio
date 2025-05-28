@@ -99,6 +99,7 @@ interface OmnipresentRibbonProps {
   onPublish: () => void;
   canvasRef?: React.RefObject<any>;
   onSubjectLineChange?: (subject: string) => void;
+  onToggleAIAnalytics?: () => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -123,7 +124,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onSaveTemplate,
   onPublish,
   canvasRef,
-  onSubjectLineChange
+  onSubjectLineChange,
+  onToggleAIAnalytics
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -226,6 +228,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       }, 100);
     } else {
       setTriggerAnalysis(true);
+    }
+    
+    // Toggle both AI header suggestions and footer analytics
+    if (onToggleAIAnalytics) {
+      onToggleAIAnalytics();
     }
   };
 

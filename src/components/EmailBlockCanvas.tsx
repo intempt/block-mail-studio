@@ -15,6 +15,7 @@ interface EmailBlockCanvasProps {
   compactMode?: boolean;
   subject?: string;
   onSubjectChange?: (subject: string) => void;
+  showAIAnalytics?: boolean;
 }
 
 export interface EmailBlockCanvasRef {
@@ -32,7 +33,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   previewMode = 'desktop',
   compactMode = false,
   subject = '',
-  onSubjectChange = () => {}
+  onSubjectChange = () => {},
+  showAIAnalytics = false
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -163,7 +165,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
               const buttonText = columnBlock.content.text || '';
               const buttonTextNormalized = normalizeText(buttonText);
               
-              if (buttonTextNormalized.includes(normalizeText(current))) {
+              if (blockTextNormalized.includes(normalizeText(current))) {
                 console.log('FindAndReplaceText: Found match in column button block');
                 
                 replacementsMade++;
@@ -716,13 +718,16 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         </div>
       </div>
 
-      <CanvasStatus 
-        selectedBlockId={selectedBlockId}
-        canvasWidth={canvasWidth}
-        previewMode={previewMode}
-        emailHTML={currentEmailHTML}
-        subjectLine={subject}
-      />
+      {/* Only render CanvasStatus when showAIAnalytics is true */}
+      {showAIAnalytics && (
+        <CanvasStatus 
+          selectedBlockId={selectedBlockId}
+          canvasWidth={canvasWidth}
+          previewMode={previewMode}
+          emailHTML={currentEmailHTML}
+          subjectLine={subject}
+        />
+      )}
     </div>
   );
 });

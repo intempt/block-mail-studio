@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -70,6 +71,7 @@ export default function EmailEditor({
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [universalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
+  const [showAIAnalytics, setShowAIAnalytics] = useState(false);
 
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
@@ -297,6 +299,10 @@ export default function EmailEditor({
     }
   };
 
+  const handleToggleAIAnalytics = () => {
+    setShowAIAnalytics(prev => !prev);
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -322,6 +328,7 @@ export default function EmailEditor({
         onPreview={handlePreview}
         onSaveTemplate={handleSaveAsTemplate}
         onPublish={handlePublish}
+        onToggleAIAnalytics={handleToggleAIAnalytics}
       />
 
       <SnippetRibbon
@@ -340,6 +347,7 @@ export default function EmailEditor({
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
+            showAIAnalytics={showAIAnalytics}
           />
         </div>
       </div>
