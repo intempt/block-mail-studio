@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -384,7 +385,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-9 h-9" })}
+                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-12 h-12" })}
                 </Button>
               ))}
             </div>
@@ -409,7 +410,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-9 h-9" />
+                  <DynamicLayoutIcon layout={layout} className="w-12 h-12" />
                 </Button>
               ))}
             </div>
@@ -430,7 +431,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-9 h-9" />
+                <Settings className="w-12 h-12" />
               </Button>
 
               <Button
@@ -443,7 +444,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-9 h-9" />
+                <Type className="w-12 h-12" />
               </Button>
 
               <Button
@@ -456,7 +457,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Buttons & Links"
               >
-                <MousePointer className="w-9 h-9" />
+                <MousePointer className="w-12 h-12" />
               </Button>
 
               <Button
@@ -469,7 +470,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Links"
               >
-                <Link className="w-9 h-9" />
+                <Link className="w-12 h-12" />
               </Button>
             </div>
           </div>
@@ -521,3 +522,4 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 };
 
 export default OmnipresentRibbon;
+
