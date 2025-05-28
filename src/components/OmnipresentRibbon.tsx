@@ -381,9 +381,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar - Centered */}
       <div className="px-3 py-2">
-        <div className="flex items-center gap-3 overflow-x-auto">
+        <div className="flex items-center justify-center gap-3 overflow-x-auto">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
