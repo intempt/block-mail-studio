@@ -8,19 +8,22 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
 import { FloatingTipTapToolbar } from './FloatingTipTapToolbar';
+import { EmailContext } from '@/services/tiptapAIService';
 
 interface TableCellEditorProps {
   content: string;
   onChange: (html: string) => void;
   onBlur: () => void;
   autoFocus?: boolean;
+  emailContext?: EmailContext;
 }
 
 export const TableCellEditor: React.FC<TableCellEditorProps> = ({
   content,
   onChange,
   onBlur,
-  autoFocus = false
+  autoFocus = false,
+  emailContext = {}
 }) => {
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
@@ -119,6 +122,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
         editor={editor} 
         isVisible={isToolbarVisible}
         position={toolbarPosition}
+        emailContext={emailContext}
       />
       <EditorContent 
         editor={editor} 

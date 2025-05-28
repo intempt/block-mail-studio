@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -26,14 +25,17 @@ import {
   Redo,
   Sparkles,
   Image as ImageIcon,
-  Wand2
+  Wand2,
+  Loader2
 } from 'lucide-react';
+import { TipTapAIService, AI_OPERATIONS, EmailContext } from '@/services/tiptapAIService';
 
 interface FloatingTipTapToolbarProps {
   editor: Editor | null;
   isVisible: boolean;
   position: { top: number; left: number };
   onLinkClick?: () => void;
+  emailContext?: EmailContext;
 }
 
 const fontSizes = [
@@ -65,20 +67,12 @@ const bgColors = [
   '#BFDBFE', '#DDD6FE', '#FBCFE8', '#A7F3D0'
 ];
 
-const aiOperations = [
-  { label: 'Improve Writing', action: 'improve' },
-  { label: 'Fix Grammar', action: 'grammar' },
-  { label: 'Make Professional', action: 'professional' },
-  { label: 'Make Casual', action: 'casual' },
-  { label: 'Shorten Text', action: 'shorten' },
-  { label: 'Expand Text', action: 'expand' }
-];
-
 const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   editor,
   isVisible,
   position,
-  onLinkClick
+  onLinkClick,
+  emailContext = {}
 }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showBgColorPicker, setShowBgColorPicker] = useState(false);
@@ -86,6 +80,9 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const [suggestedOperations, setSuggestedOperations] = useState<string[]>([]);
 
   if (!editor || !isVisible) return null;
 
@@ -133,62 +130,74 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
     }
   };
 
-  const handleAIOperation = (operation: string) => {
-    if (!editor) return;
+  const handleAIOperation = async (operation: string) => {
+    if (!editor || isAIProcessing) return;
 
     const { from, to } = editor.state.selection;
     const selectedText = editor.state.doc.textBetween(from, to);
     
+    if (!selectedText.trim()) {
+      console.warn('No text selected for AI operation');
+      return;
+    }
+
     console.log('AI Operation:', operation, 'on text:', selectedText);
     
-    // Simulate AI processing with more realistic transformations
-    let processedText = selectedText;
+    setIsAIProcessing(true);
+    setStreamingText('');
     
-    switch (operation) {
-      case 'improve':
-        processedText = selectedText.replace(/\b(good|nice|ok)\b/gi, 'excellent')
-          .replace(/\b(bad|poor)\b/gi, 'suboptimal')
-          .replace(/\s+/g, ' ');
-        break;
-      case 'grammar':
-        processedText = selectedText.replace(/\bi\b/g, 'I')
-          .replace(/\bdont\b/g, "don't")
-          .replace(/\bcant\b/g, "can't")
-          .replace(/\bwont\b/g, "won't");
-        break;
-      case 'professional':
-        processedText = selectedText.replace(/\b(hey|hi)\b/gi, 'Dear')
-          .replace(/\b(thanks|thx)\b/gi, 'Thank you')
-          .replace(/\b(gonna)\b/gi, 'going to')
-          .replace(/\b(wanna)\b/gi, 'want to');
-        break;
-      case 'casual':
-        processedText = selectedText.replace(/\bDear\b/gi, 'Hey')
-          .replace(/\bThank you\b/gi, 'Thanks')
-          .replace(/\bgoing to\b/gi, 'gonna')
-          .replace(/\bwant to\b/gi, 'wanna');
-        break;
-      case 'shorten':
-        processedText = selectedText.split(' ').slice(0, Math.max(1, Math.floor(selectedText.split(' ').length * 0.7))).join(' ');
-        break;
-      case 'expand':
-        processedText = selectedText.replace(/\./g, '. Additionally,')
-          .replace(/\band\b/g, ', furthermore,');
-        break;
-      default:
-        processedText = `[AI ${operation}] ${selectedText}`;
+    try {
+      // Use the real AI service
+      const result = await TipTapAIService.enhanceText(
+        selectedText, 
+        operation as any, 
+        emailContext
+      );
+      
+      // Apply the processed text to the selection
+      if (from !== to) {
+        // Replace selected text
+        editor.chain().focus().deleteSelection().insertContent(result.content).run();
+      } else {
+        // If no selection, replace all content
+        editor.chain().focus().selectAll().deleteSelection().insertContent(result.content).run();
+      }
+      
+      setShowAIDialog(false);
+    } catch (error) {
+      console.error('AI operation failed:', error);
+      // Fallback to simple improvement if AI fails
+      const fallbackText = selectedText.charAt(0).toUpperCase() + selectedText.slice(1);
+      if (from !== to) {
+        editor.chain().focus().deleteSelection().insertContent(fallbackText).run();
+      }
+    } finally {
+      setIsAIProcessing(false);
+      setStreamingText('');
     }
+  };
+
+  const handleAIDialogOpen = async () => {
+    setShowAIDialog(true);
     
-    // Apply the processed text to the selection
-    if (from !== to) {
-      // Replace selected text
-      editor.chain().focus().deleteSelection().insertContent(processedText).run();
+    // Get text context for suggestions
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to);
+    
+    if (selectedText.trim()) {
+      try {
+        const analysis = await TipTapAIService.analyzeTextContext(
+          selectedText, 
+          emailContext.emailHTML
+        );
+        setSuggestedOperations(analysis.suggestedOperations);
+      } catch (error) {
+        console.error('Failed to analyze text context:', error);
+        setSuggestedOperations(['improve', 'grammar']);
+      }
     } else {
-      // If no selection, replace all content
-      editor.chain().focus().selectAll().deleteSelection().insertContent(processedText).run();
+      setSuggestedOperations(['improve', 'grammar']);
     }
-    
-    setShowAIDialog(false);
   };
 
   const getCurrentHeading = () => {
@@ -533,7 +542,7 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
           </PopoverContent>
         </Popover>
 
-        {/* AI Operations */}
+        {/* Enhanced AI Operations */}
         <Popover open={showAIDialog} onOpenChange={setShowAIDialog}>
           <PopoverTrigger asChild>
             <Button
@@ -541,29 +550,75 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
               size="sm"
               className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               title="AI Operations"
+              onClick={handleAIDialogOpen}
+              disabled={isAIProcessing}
             >
-              <Sparkles className="w-4 h-4" />
+              {isAIProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-64 p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
-            <div className="space-y-2">
+          <PopoverContent className="w-72 p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="space-y-3">
               <div className="text-sm font-medium flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-600" />
-                AI Operations
+                AI Text Operations
               </div>
-              <div className="grid gap-1">
-                {aiOperations.map((operation) => (
-                  <Button
-                    key={operation.action}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleAIOperation(operation.action)}
-                    className="justify-start h-8 text-xs hover:bg-purple-50"
-                  >
-                    {operation.label}
-                  </Button>
-                ))}
+              
+              {suggestedOperations.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-xs text-gray-600">Suggested for your text:</div>
+                  <div className="grid gap-1">
+                    {suggestedOperations.slice(0, 3).map((operationType) => {
+                      const operation = AI_OPERATIONS.find(op => op.type === operationType);
+                      if (!operation) return null;
+                      
+                      return (
+                        <Button
+                          key={operation.type}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAIOperation(operation.type)}
+                          className="justify-start h-8 text-xs hover:bg-purple-50 border-purple-200"
+                          disabled={isAIProcessing}
+                        >
+                          <Wand2 className="w-3 h-3 mr-2 text-purple-600" />
+                          {operation.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Separator className="my-2" />
+                </div>
+              )}
+              
+              <div className="space-y-1">
+                <div className="text-xs text-gray-600">All operations:</div>
+                <div className="grid gap-1 max-h-48 overflow-y-auto">
+                  {AI_OPERATIONS.map((operation) => (
+                    <Button
+                      key={operation.type}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAIOperation(operation.type)}
+                      className="justify-start h-8 text-xs hover:bg-purple-50"
+                      disabled={isAIProcessing}
+                      title={operation.description}
+                    >
+                      {operation.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
+              
+              {isAIProcessing && (
+                <div className="text-xs text-purple-600 flex items-center gap-2">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Processing with AI...
+                </div>
+              )}
             </div>
           </PopoverContent>
         </Popover>
