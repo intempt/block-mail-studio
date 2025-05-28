@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,6 +7,7 @@ import { UniversalConversationalInterface } from '@/components/UniversalConversa
 import { JourneysTab } from '@/components/JourneysTab';
 import { SnippetsTab } from '@/components/SnippetsTab';
 import { MessagesTable } from '@/components/MessagesTable';
+import { TestRunner } from '@/components/TestRunner';
 import { Search, Plus, Zap } from 'lucide-react';
 
 interface WorkspacePageProps {
@@ -143,7 +143,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-100">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-100">
             <TabsTrigger 
               value="journeys" 
               className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
@@ -161,6 +161,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
               className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
             >
               Snippets
+            </TabsTrigger>
+            <TabsTrigger 
+              value="tests"
+              className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
+            >
+              Tests
             </TabsTrigger>
           </TabsList>
 
@@ -237,6 +243,12 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
                 <Plus className="w-4 h-4 mr-2" />
                 Create Snippet
               </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tests" className="space-y-6 mt-6">
+            <div className="bg-white rounded-lg border border-gray-200">
+              <TestRunner />
             </div>
           </TabsContent>
         </Tabs>
