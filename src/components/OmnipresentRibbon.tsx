@@ -19,7 +19,6 @@ import {
   Smartphone,
   Save,
   Settings,
-  Lightbulb,
   Edit3,
   Trash2,
   Minus,
@@ -130,7 +129,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [showLinks, setShowLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
-  const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
@@ -214,12 +212,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     setShowLinks(false);
     setShowEmailSettings(false);
     setShowTextHeadings(false);
-    setShowAISuggestions(false);
-  };
-
-  const handleAISuggestionsClick = () => {
-    closeAllPanels();
-    setShowAISuggestions(!showAISuggestions);
   };
 
   const handleExport = () => {
@@ -276,18 +268,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   return (
     <div className="bg-white border-b border-gray-200 relative">
-      <EnhancedAISuggestionsWidget
-        isOpen={showAISuggestions}
-        onToggle={() => setShowAISuggestions(!showAISuggestions)}
-        emailHTML={emailHTML}
-        subjectLine={subjectLine}
-        canvasRef={canvasRef}
-        onSubjectLineChange={onSubjectLineChange}
-        onApplySuggestion={(suggestion) => {
-          console.log('Applied suggestion:', suggestion);
-        }}
-      />
-
       {/* Top Header */}
       <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-4">
@@ -489,16 +469,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 title="Links"
               >
                 <Link className="w-6 h-6" />
-              </Button>
-
-              <Button
-                variant={showAISuggestions ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
-                onClick={handleAISuggestionsClick}
-                title="AI Suggestions"
-              >
-                <Lightbulb className="w-6 h-6" />
               </Button>
             </div>
           </div>
