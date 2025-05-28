@@ -124,8 +124,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onSaveTemplate,
   onPublish,
   canvasRef,
-  onSubjectLineChange,
-  onToggleAIAnalytics
+  onSubjectLineChange
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -135,7 +134,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
-  const [triggerAnalysis, setTriggerAnalysis] = useState(false);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem('email-builder-draft');
@@ -220,24 +218,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleAISuggestionsClick = () => {
-    if (!showAISuggestions) {
-      closeAllPanels();
-      setShowAISuggestions(true);
-      setTimeout(() => {
-        setTriggerAnalysis(true);
-      }, 100);
-    } else {
-      setTriggerAnalysis(true);
-    }
-    
-    // Toggle both AI header suggestions and footer analytics
-    if (onToggleAIAnalytics) {
-      onToggleAIAnalytics();
-    }
-  };
-
-  const handleAnalysisTriggered = () => {
-    setTriggerAnalysis(false);
+    closeAllPanels();
+    setShowAISuggestions(!showAISuggestions);
   };
 
   const handleExport = () => {
@@ -301,8 +283,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         subjectLine={subjectLine}
         canvasRef={canvasRef}
         onSubjectLineChange={onSubjectLineChange}
-        triggerAnalysis={triggerAnalysis}
-        onAnalysisTriggered={handleAnalysisTriggered}
         onApplySuggestion={(suggestion) => {
           console.log('Applied suggestion:', suggestion);
         }}
@@ -511,7 +491,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 size="sm"
                 className="p-2 hover:bg-gray-100"
                 onClick={handleAISuggestionsClick}
-                title="Complete AI Analysis"
+                title="AI Suggestions"
               >
                 <Lightbulb className="w-6 h-6" />
               </Button>

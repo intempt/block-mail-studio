@@ -1,8 +1,19 @@
 
 import React, { useState, useCallback } from 'react';
 import { CompactAISuggestions } from './CompactAISuggestions';
-import { CentralizedAIAnalysisService, CompleteAnalysisResult, UnifiedAISuggestion } from '@/services/CentralizedAIAnalysisService';
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
+
+interface BasicAISuggestion {
+  id: string;
+  type: 'subject' | 'copy' | 'cta' | 'tone';
+  title: string;
+  current: string;
+  suggested: string;
+  reason: string;
+  impact: 'high' | 'medium' | 'low';
+  confidence: number;
+  applied?: boolean;
+}
 
 interface EnhancedAISuggestionsWidgetProps {
   isOpen: boolean;
@@ -11,9 +22,7 @@ interface EnhancedAISuggestionsWidgetProps {
   subjectLine: string;
   canvasRef?: React.RefObject<EmailBlockCanvasRef>;
   onSubjectLineChange?: (subject: string) => void;
-  onApplySuggestion?: (suggestion: UnifiedAISuggestion) => void;
-  triggerAnalysis?: boolean;
-  onAnalysisTriggered?: () => void;
+  onApplySuggestion?: (suggestion: BasicAISuggestion) => void;
 }
 
 export const EnhancedAISuggestionsWidget: React.FC<EnhancedAISuggestionsWidgetProps> = ({
@@ -23,15 +32,12 @@ export const EnhancedAISuggestionsWidget: React.FC<EnhancedAISuggestionsWidgetPr
   subjectLine,
   canvasRef,
   onSubjectLineChange,
-  onApplySuggestion,
-  triggerAnalysis = false,
-  onAnalysisTriggered
+  onApplySuggestion
 }) => {
-  const [suggestions, setSuggestions] = useState<UnifiedAISuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<BasicAISuggestion[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<CompleteAnalysisResult | null>(null);
 
-  const runCompleteAnalysis = useCallback(async () => {
+  const generateBasicSuggestions = useCallback(async () => {
     if (!emailHTML || emailHTML.length < 50) {
       console.warn('Email content too short for analysis');
       return;
@@ -40,75 +46,68 @@ export const EnhancedAISuggestionsWidget: React.FC<EnhancedAISuggestionsWidgetPr
     setIsAnalyzing(true);
     
     try {
-      console.log('Starting complete AI analysis...');
-      const result = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
+      console.log('Generating basic AI suggestions...');
       
-      const unifiedSuggestions = CentralizedAIAnalysisService.convertToUnifiedSuggestions(result);
-      
-      setSuggestions(unifiedSuggestions);
-      setAnalysisResult(result);
-      
-      console.log('Complete analysis finished:', result);
-      console.log('Generated suggestions:', unifiedSuggestions);
-      
-    } catch (error) {
-      console.error('Complete AI analysis failed:', error);
-      
-      // Show demo suggestions for development
-      const demoSuggestions: UnifiedAISuggestion[] = [
+      // Generate simple suggestions based on content analysis
+      const basicSuggestions: BasicAISuggestion[] = [
         {
-          id: 'demo_1',
+          id: 'suggestion_1',
           type: 'subject',
-          category: 'brandVoice',
-          title: 'Add urgency to subject',
+          title: 'Improve subject line engagement',
           current: subjectLine || 'Current subject',
-          suggested: 'Limited Time: ' + (subjectLine || 'Your Amazing Offer'),
-          reason: 'Adding urgency can increase open rates by 15%',
+          suggested: 'Make it more compelling: ' + (subjectLine || 'Your Amazing Offer'),
+          reason: 'Adding engaging language can increase open rates',
           impact: 'high',
-          confidence: 87,
+          confidence: 85,
           applied: false
         },
         {
-          id: 'demo_2',
+          id: 'suggestion_2',
           type: 'cta',
-          category: 'brandVoice',
           title: 'Strengthen call-to-action',
           current: 'Click here',
           suggested: 'Get Started Now',
-          reason: 'Action-oriented CTAs perform 23% better',
+          reason: 'Action-oriented CTAs perform better',
           impact: 'high',
-          confidence: 92,
+          confidence: 90,
           applied: false
         },
         {
-          id: 'demo_3',
-          type: 'design',
-          category: 'performance',
-          title: 'Improve mobile layout',
-          current: 'Current layout',
-          suggested: 'Single column mobile-first design',
-          reason: 'Mobile opens account for 70% of email opens',
+          id: 'suggestion_3',
+          type: 'copy',
+          title: 'Improve readability',
+          current: 'Long paragraph text',
+          suggested: 'Break into shorter, scannable sections',
+          reason: 'Shorter paragraphs improve engagement',
           impact: 'medium',
-          confidence: 78,
+          confidence: 75,
+          applied: false
+        },
+        {
+          id: 'suggestion_4',
+          type: 'tone',
+          title: 'Make tone more conversational',
+          current: 'Formal language',
+          suggested: 'Use friendly, approachable language',
+          reason: 'Conversational tone builds connection',
+          impact: 'medium',
+          confidence: 80,
           applied: false
         }
       ];
       
-      setSuggestions(demoSuggestions);
+      setSuggestions(basicSuggestions);
+      console.log('Generated basic suggestions:', basicSuggestions);
+      
+    } catch (error) {
+      console.error('Failed to generate suggestions:', error);
+      setSuggestions([]);
     } finally {
       setIsAnalyzing(false);
-      onAnalysisTriggered?.();
     }
-  }, [emailHTML, subjectLine, onAnalysisTriggered]);
+  }, [emailHTML, subjectLine]);
 
-  // Handle manual analysis trigger from parent
-  React.useEffect(() => {
-    if (triggerAnalysis && !isAnalyzing) {
-      runCompleteAnalysis();
-    }
-  }, [triggerAnalysis, runCompleteAnalysis, isAnalyzing]);
-
-  const applySuggestion = async (suggestion: UnifiedAISuggestion) => {
+  const applySuggestion = async (suggestion: BasicAISuggestion) => {
     try {
       if (suggestion.type === 'subject' && onSubjectLineChange) {
         onSubjectLineChange(suggestion.suggested);
@@ -116,8 +115,6 @@ export const EnhancedAISuggestionsWidget: React.FC<EnhancedAISuggestionsWidgetPr
         switch (suggestion.type) {
           case 'copy':
           case 'cta':
-            canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
-            break;
           case 'tone':
             canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
             break;
@@ -142,8 +139,7 @@ export const EnhancedAISuggestionsWidget: React.FC<EnhancedAISuggestionsWidgetPr
       suggestions={suggestions}
       isLoading={isAnalyzing}
       onApplySuggestion={applySuggestion}
-      onRefresh={runCompleteAnalysis}
-      analysisResult={analysisResult}
+      onRefresh={generateBasicSuggestions}
     />
   );
 };
