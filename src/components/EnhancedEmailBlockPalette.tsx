@@ -1,10 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Droppable } from 'react-beautiful-dnd';
 import { 
   Type, 
   Image, 
@@ -23,13 +23,21 @@ import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { LayoutConfigPanel } from './LayoutConfigPanel';
 import { SnippetManager } from './SnippetManager';
-import { DraggablePaletteItem } from './drag-drop/DraggablePaletteItem';
 
 interface BlockItem {
   id: string;
   name: string;
   description: string;
   icon: React.ReactNode;
+}
+
+interface EnhancedEmailBlockPaletteProps {
+  onBlockAdd: (blockType: string, layoutConfig?: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
+  universalContent: UniversalContent[];
+  onUniversalContentAdd: (content: UniversalContent) => void;
+  compactMode?: boolean;
+  snippetRefreshTrigger?: number;
 }
 
 const blockItems: BlockItem[] = [
@@ -62,6 +70,12 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
+  const handleDragStart = (e: React.DragEvent, blockType: string) => {
+    console.log('Dragging block:', blockType);
+    e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
+    e.dataTransfer.effectAllowed = 'copy';
+  };
+
   const handleLayoutSelect = (layout: any) => {
     console.log('Layout selected:', layout);
     onBlockAdd('columns', layout);
@@ -74,31 +88,35 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     }
   };
 
-  const renderBlocksSection = () => (
-    <Droppable droppableId="palette-blocks" type="BLOCK_ADD" isDropDisabled={true}>
-      {(provided) => (
-        <div
-          ref={provided.innerRef}
-          {...provided.droppableProps}
-          className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}
-        >
-          {blockItems.map((block, index) => (
-            <DraggablePaletteItem
-              key={block.id}
-              blockId={block.id}
-              blockName={block.name}
-              blockDescription={block.description}
-              icon={block.icon}
-              index={index}
-              compactMode={compactMode}
-              onClick={() => onBlockAdd(block.id)}
-            />
-          ))}
-          {provided.placeholder}
+  const renderBlockItem = (block: BlockItem) => {
+    const gridClasses = compactMode ? "p-2" : "p-3";
+    
+    return (
+      <Card
+        key={block.id}
+        className={`cursor-grab hover:shadow-md transition-all duration-200 group ${gridClasses} active:cursor-grabbing`}
+        draggable
+        onDragStart={(e) => handleDragStart(e, block.id)}
+        onClick={() => onBlockAdd(block.id)}
+      >
+        <div className="text-center space-y-2">
+          <div className="flex justify-center text-slate-600 group-hover:text-blue-600 transition-colors">
+            {block.icon}
+          </div>
+          <div>
+            <div className={`font-medium text-slate-800 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+              {block.name}
+            </div>
+            {!compactMode && (
+              <div className="text-xs text-slate-500 mt-1 line-clamp-2">
+                {block.description}
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </Droppable>
-  );
+      </Card>
+    );
+  };
 
   const renderSnippetsTab = () => {
     try {
@@ -156,7 +174,9 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      {renderBlocksSection()}
+                      <div className={`grid ${compactMode ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-3'} mb-4`}>
+                        {blockItems.map(renderBlockItem)}
+                      </div>
                     </CollapsibleContent>
                   </Collapsible>
                 </div>

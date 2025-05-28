@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -153,12 +154,47 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     };
   };
 
-  const handleBlockClick = (blockType: string) => {
-    console.log('OmnipresentRibbon: Block clicked:', blockType);
-    onBlockAdd(blockType);
+  const handleDragStart = (e: React.DragEvent, blockType: string) => {
+    console.log('OmnipresentRibbon: Starting block drag:', blockType);
+    const dragData = createDragData({ blockType });
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.effectAllowed = 'copy';
   };
 
-  const handleLayoutClick = (layout: LayoutOption) => {
+  const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
+    console.log('OmnipresentRibbon: Starting layout drag:', layout.name);
+    setDraggedLayout(layout.id);
+    
+    const layoutConfig = createLayoutConfig(layout);
+    const dragData = createDragData({
+      blockType: 'columns',
+      isLayout: true,
+      layoutData: layoutConfig
+    });
+
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.effectAllowed = 'copy';
+
+    // Enhanced drag image
+    const dragPreview = document.createElement('div');
+    dragPreview.className = 'bg-white border-2 border-blue-400 rounded-lg p-3 shadow-lg';
+    dragPreview.style.transform = 'rotate(2deg)';
+    dragPreview.innerHTML = `
+      <div class="text-sm font-medium text-blue-700 mb-2">${layout.name}</div>
+      <div class="flex gap-1 h-6">
+        ${layout.preview.map(width => `<div class="bg-blue-200 rounded border" style="width: ${width}"></div>`).join('')}
+      </div>
+    `;
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 60, 30);
+    setTimeout(() => document.body.removeChild(dragPreview), 0);
+  };
+
+  const handleLayoutDragEnd = () => {
+    setDraggedLayout(null);
+  };
+
+  const handleLayoutSelect = (layout: LayoutOption) => {
     console.log('OmnipresentRibbon: Layout clicked:', layout.name);
     const layoutConfig = createLayoutConfig(layout);
     onBlockAdd('columns', layoutConfig);
@@ -356,7 +392,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       {/* Toolbar */}
       <div className="px-3 py-2">
         <div className="flex items-center gap-3 overflow-x-auto">
-          {/* Content Blocks - Now using click instead of drag from ribbon */}
+          {/* Content Blocks */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               {blockItems.map((block) => (
@@ -364,8 +400,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={block.id}
                   variant="ghost"
                   size="sm"
-                  className="p-2 hover:bg-gray-100 transition-all duration-200"
-                  onClick={() => handleBlockClick(block.id)}
+                  className="p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200"
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, block.id)}
+                  onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
                   {block.icon}
@@ -376,7 +414,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
-          {/* Layout Options - Now using click instead of drag from ribbon */}
+          {/* Layout Options */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               {layoutOptions.map((layout) => (
@@ -384,8 +422,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={layout.id}
                   variant="ghost"
                   size="sm"
-                  className="p-2 hover:bg-gray-100 transition-all duration-200"
-                  onClick={() => handleLayoutClick(layout)}
+                  className={`p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200 ${
+                    draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
+                  }`}
+                  draggable
+                  onDragStart={(e) => handleLayoutDragStart(e, layout)}
+                  onDragEnd={handleLayoutDragEnd}
+                  onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
                   <DynamicLayoutIcon layout={layout} className="w-6 h-5" />
