@@ -24,7 +24,7 @@ export const DroppableCanvas: React.FC<DroppableCanvasProps> = ({
   onSaveAsSnippet
 }) => {
   return (
-    <Droppable droppableId="canvas">
+    <Droppable droppableId="canvas" type="BLOCK_REORDER">
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}

@@ -512,41 +512,18 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     ));
   }, []);
 
-  const getDefaultContent = useCallback((blockType: string): any => {
+  const getDefaultContent = useCallback((blockType: string) => {
     switch (blockType) {
       case 'text':
-        return { 
-          html: '<p>Start typing your content here...</p>', 
-          textStyle: 'normal' as const 
-        };
+        return { html: '<p>Start typing your content here...</p>', textStyle: 'normal' };
       case 'button':
-        return { 
-          text: 'Click Here', 
-          link: '#', 
-          style: 'solid' as const, 
-          size: 'medium' as const 
-        };
+        return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
       case 'image':
-        return { 
-          src: 'https://via.placeholder.com/400x200?text=Image', 
-          alt: 'Image', 
-          alignment: 'center' as const, 
-          width: '100%', 
-          isDynamic: false 
-        };
+        return { src: '', alt: '', alignment: 'center', width: '100%', isDynamic: false };
       case 'spacer':
-        return { 
-          height: '20px', 
-          mobileHeight: '20px' 
-        };
+        return { height: '20px', mobileHeight: '20px' };
       case 'divider':
-        return { 
-          style: 'solid' as const, 
-          thickness: '1px', 
-          color: '#ddd', 
-          width: '100%', 
-          alignment: 'center' as const 
-        };
+        return { style: 'solid', thickness: '1px', color: '#ddd', width: '100%', alignment: 'center' };
       case 'html':
         return { 
           html: '<p>Add your custom HTML here...</p>', 
@@ -574,7 +551,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             ]
           ],
           headerRow: true,
-          borderStyle: 'solid' as const,
+          borderStyle: 'solid',
           borderColor: '#ddd',
           borderWidth: '1px'
         };
@@ -585,25 +562,25 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
               name: 'Facebook',
               url: 'https://facebook.com',
               icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/facebook.svg',
-              iconStyle: 'color' as const,
+              iconStyle: 'color',
               showLabel: false
             },
             {
               name: 'Twitter',
               url: 'https://twitter.com',
               icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/twitter.svg',
-              iconStyle: 'color' as const,
+              iconStyle: 'color',
               showLabel: false
             },
             {
               name: 'Instagram',
               url: 'https://instagram.com',
               icon: 'https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/instagram.svg',
-              iconStyle: 'color' as const,
+              iconStyle: 'color',
               showLabel: false
             }
           ],
-          layout: 'horizontal' as const,
+          layout: 'horizontal',
           iconSize: '32px',
           spacing: '16px'
         };
@@ -612,12 +589,12 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           videoUrl: '',
           thumbnail: 'https://via.placeholder.com/400x225?text=Video+Thumbnail',
           showPlayButton: true,
-          platform: 'custom' as const,
+          platform: 'custom',
           autoThumbnail: false
         };
       case 'columns':
         return {
-          columnCount: 2 as const,
+          columnCount: 2,
           columnRatio: '50-50',
           columns: [
             { id: `col-1-${Date.now()}`, blocks: [], width: '50%' },

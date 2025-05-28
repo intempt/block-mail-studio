@@ -25,7 +25,7 @@ export const DraggablePaletteItem: React.FC<DraggablePaletteItemProps> = ({
   const gridClasses = compactMode ? "p-2" : "p-3";
   
   return (
-    <Draggable draggableId={`palette-${blockId}`} index={index}>
+    <Draggable draggableId={`palette-${blockId}`} index={index} type="BLOCK_ADD">
       {(provided, snapshot) => (
         <Card
           ref={provided.innerRef}
