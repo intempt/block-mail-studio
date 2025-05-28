@@ -26,6 +26,8 @@ export const DraggableBlock: React.FC<DraggableBlockProps> = ({
   onDuplicateBlock,
   onSaveAsSnippet
 }) => {
+  console.log('DraggableBlock: Rendering block:', { id: block.id, type: block.type, content: block.content });
+
   return (
     <Draggable draggableId={block.id} index={index}>
       {(provided, snapshot) => (

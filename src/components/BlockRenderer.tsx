@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,12 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   onBlockAdd,
   onStarBlock 
 }) => {
+  console.log('BlockRenderer: Rendering block type:', block.type, 'with content:', block.content);
+
   const getBlockComponent = () => {
     switch (block.type) {
       case 'text':
+        console.log('BlockRenderer: Rendering text block with HTML:', block.content.html);
         return <TextBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'image':
         return <MJMLImageBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
@@ -53,6 +57,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       case 'table':
         return <MJMLTableBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       default:
+        console.error('BlockRenderer: Unknown block type:', (block as any).type);
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
     }
   };
