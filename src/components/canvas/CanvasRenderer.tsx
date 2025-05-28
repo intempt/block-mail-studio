@@ -59,7 +59,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return (
         <div
           key={block.id}
-          className={`email-block group relative mb-4 ${isSelected ? 'selected' : ''}`}
+          className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-purple-400 ring-opacity-50' : ''}`}
           draggable
           onDragStart={(e) => onBlockDragStart(e, block.id)}
           onDrop={(e) => onBlockDrop(e, index)}
@@ -120,7 +120,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     return (
       <div
         key={block.id}
-        className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-blue-500 ring-opacity-30' : ''} hover:shadow-md transition-all duration-200`}
+        className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-blue-400 ring-opacity-50' : ''} hover:shadow-lg transition-all duration-200 rounded-lg`}
         draggable
         onDragStart={(e) => onBlockDragStart(e, block.id)}
         onDrop={(e) => onBlockDrop(e, index)}
@@ -147,7 +147,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   return (
     <div className="canvas-renderer min-h-64">
       {blocks.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-16">
           {isDraggingOver && currentDragType ? (
             <DropZoneIndicator
               isVisible={true}
@@ -157,13 +157,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             />
           ) : (
             <div className="text-gray-500">
-              <div className="text-lg font-medium mb-2">Ready to build!</div>
+              <div className="text-xl font-medium mb-3">Ready to build!</div>
               <div className="text-sm">Drag a layout from the toolbar above to start building your email</div>
             </div>
           )}
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {/* Top drop zone */}
           {isDraggingOver && dragOverIndex === 0 && currentDragType && (
             <DropZoneIndicator
@@ -206,7 +206,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               isVisible={true}
               dragType={currentDragType}
               position="bottom"
-              className="mt-4"
+              className="mt-6"
             />
           )}
         </div>

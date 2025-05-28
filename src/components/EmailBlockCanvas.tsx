@@ -648,7 +648,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       overflow: 'hidden'
     };
 
-    // Add enhanced visual feedback when dragging
+    // Enhanced visual feedback when dragging
     if (isDraggingOver && currentDragType) {
       const colorMap = {
         block: '#3b82f6',
@@ -661,9 +661,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       return {
         ...baseStyle,
         backgroundColor: `${color}08`,
-        border: `2px dashed ${color}`,
-        boxShadow: `inset 0 0 30px ${color}20, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
-        transform: 'scale(1.02)',
+        border: `3px dashed ${color}`,
+        boxShadow: `inset 0 0 40px ${color}25, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
+        transform: 'scale(1.01)',
         transition: 'all 0.3s ease-in-out'
       };
     }
@@ -678,6 +678,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         className="email-canvas"
         onDrop={dragDropHandler.handleCanvasDrop}
         onDragOver={dragDropHandler.handleCanvasDragOver}
+        onDragEnter={dragDropHandler.handleCanvasDragEnter}
         onDragLeave={dragDropHandler.handleCanvasDragLeave}
       >
         {/* Subject Line Section */}

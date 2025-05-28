@@ -109,42 +109,83 @@ export const useDragDropHandler = ({
     e.stopPropagation();
     setIsDraggingOver(true);
     
-    // Determine drag type for visual feedback
-    try {
-      const data = parseDragData(e.dataTransfer.getData('application/json'));
-      if (data) {
-        if (data.isReorder) {
+    // More reliable drag type detection using dataTransfer types
+    const types = Array.from(e.dataTransfer.types);
+    if (types.includes('application/json')) {
+      try {
+        const dragDataString = e.dataTransfer.getData('application/json');
+        if (dragDataString) {
+          const data = parseDragData(dragDataString);
+          if (data) {
+            if (data.isReorder) {
+              setCurrentDragType?.('reorder');
+            } else if (data.isLayout || data.blockType === 'columns') {
+              setCurrentDragType?.('layout');
+            } else {
+              setCurrentDragType?.('block');
+            }
+          }
+        }
+      } catch (error) {
+        // If we can't parse, detect from effectAllowed
+        if (e.dataTransfer.effectAllowed === 'move') {
           setCurrentDragType?.('reorder');
-        } else if (data.isLayout || data.blockType === 'columns') {
-          setCurrentDragType?.('layout');
         } else {
           setCurrentDragType?.('block');
         }
       }
-    } catch (error) {
-      // Fallback to default
-      setCurrentDragType?.('block');
     }
     
+    // Enhanced drop index calculation
     const rect = e.currentTarget.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const blockElements = e.currentTarget.querySelectorAll('.email-block');
     
+    if (blockElements.length === 0) {
+      setDragOverIndex(0);
+      return;
+    }
+    
     let insertIndex = blocks.length;
+    let closestDistance = Infinity;
+    
     for (let i = 0; i < blockElements.length; i++) {
       const blockRect = blockElements[i].getBoundingClientRect();
-      const blockY = blockRect.top - rect.top + blockRect.height / 2;
-      if (y < blockY) {
-        insertIndex = i;
+      const blockTop = blockRect.top - rect.top;
+      const blockBottom = blockRect.bottom - rect.top;
+      const blockCenter = blockTop + (blockRect.height / 2);
+      
+      // Check if we're above this block
+      if (y < blockCenter) {
+        const distance = Math.abs(y - blockTop);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          insertIndex = i;
+        }
         break;
+      }
+      
+      // Check if we're below the last block
+      if (i === blockElements.length - 1 && y > blockBottom) {
+        insertIndex = i + 1;
       }
     }
     
     setDragOverIndex(insertIndex);
   };
 
+  const handleCanvasDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+  };
+
   const handleCanvasDragLeave = (e: React.DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    // Only hide if we're actually leaving the canvas bounds
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
       setIsDraggingOver(false);
       setDragOverIndex(null);
       setCurrentDragType?.(null);
@@ -240,6 +281,7 @@ export const useDragDropHandler = ({
   return {
     handleCanvasDrop,
     handleCanvasDragOver,
+    handleCanvasDragEnter,
     handleCanvasDragLeave,
     handleBlockDragStart,
     handleBlockDrop,
