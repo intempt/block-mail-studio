@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { VideoBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
   const handleVideoSelect = (videoData: {
     videoUrl: string;
     thumbnail: string;
-    platform: string;
+    platform: "youtube" | "vimeo" | "tiktok" | "custom";
     showPlayButton: boolean;
     autoThumbnail: boolean;
   }) => {

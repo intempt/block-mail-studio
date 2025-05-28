@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ImageUploader } from '../ImageUploader';
-import { Play, AlertTriangle, ExternalLink } from 'lucide-react';
+import { SimpleImageUploader } from '../SimpleImageUploader';
+import { Play, AlertTriangle } from 'lucide-react';
 
 interface VideoSelectionDialogProps {
   isOpen: boolean;
@@ -16,14 +16,14 @@ interface VideoSelectionDialogProps {
   onVideoSelect: (videoData: {
     videoUrl: string;
     thumbnail: string;
-    platform: string;
+    platform: "youtube" | "vimeo" | "tiktok" | "custom";
     showPlayButton: boolean;
     autoThumbnail: boolean;
   }) => void;
   currentVideo?: {
     videoUrl: string;
     thumbnail: string;
-    platform: string;
+    platform: "youtube" | "vimeo" | "tiktok" | "custom";
     showPlayButton: boolean;
     autoThumbnail: boolean;
   };
@@ -38,7 +38,7 @@ export const VideoSelectionDialog: React.FC<VideoSelectionDialogProps> = ({
   const [videoData, setVideoData] = useState({
     videoUrl: currentVideo?.videoUrl || '',
     thumbnail: currentVideo?.thumbnail || '',
-    platform: currentVideo?.platform || 'youtube',
+    platform: currentVideo?.platform || 'youtube' as const,
     showPlayButton: currentVideo?.showPlayButton ?? true,
     autoThumbnail: currentVideo?.autoThumbnail ?? true
   });
@@ -46,7 +46,7 @@ export const VideoSelectionDialog: React.FC<VideoSelectionDialogProps> = ({
   const [detectedPlatform, setDetectedPlatform] = useState<string | null>(null);
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
 
-  const detectPlatform = useCallback((url: string) => {
+  const detectPlatform = useCallback((url: string): "youtube" | "vimeo" | "tiktok" | "custom" => {
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
       return 'youtube';
     } else if (url.includes('vimeo.com')) {
@@ -78,7 +78,6 @@ export const VideoSelectionDialog: React.FC<VideoSelectionDialogProps> = ({
       case 'youtube':
         return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
       case 'vimeo':
-        // For Vimeo, we'd need to make an API call, but for demo purposes:
         return `https://vumbnail.com/${videoId}.jpg`;
       default:
         return null;
@@ -156,7 +155,9 @@ export const VideoSelectionDialog: React.FC<VideoSelectionDialogProps> = ({
             <Label>Platform</Label>
             <Select
               value={videoData.platform}
-              onValueChange={(value) => setVideoData(prev => ({ ...prev, platform: value }))}
+              onValueChange={(value: "youtube" | "vimeo" | "tiktok" | "custom") => 
+                setVideoData(prev => ({ ...prev, platform: value }))
+              }
             >
               <SelectTrigger className="mt-2">
                 <SelectValue />
@@ -193,7 +194,7 @@ export const VideoSelectionDialog: React.FC<VideoSelectionDialogProps> = ({
             </TabsContent>
 
             <TabsContent value="custom" className="space-y-4">
-              <ImageUploader
+              <SimpleImageUploader
                 onUploadSuccess={handleThumbnailUpload}
                 onUploadError={(error) => console.error('Thumbnail upload error:', error)}
                 maxSize={1024 * 1024} // 1MB limit

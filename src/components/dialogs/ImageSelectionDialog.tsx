@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ImageUploader } from '../ImageUploader';
-import { AlertTriangle, ExternalLink } from 'lucide-react';
+import { SimpleImageUploader } from '../SimpleImageUploader';
+import { AlertTriangle } from 'lucide-react';
 
 interface ImageSelectionDialogProps {
   isOpen: boolean;
@@ -94,7 +93,7 @@ export const ImageSelectionDialog: React.FC<ImageSelectionDialogProps> = ({
 
           <TabsContent value="upload" className="space-y-4">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-              <ImageUploader
+              <SimpleImageUploader
                 onUploadStart={handleUploadStart}
                 onUploadSuccess={handleUploadSuccess}
                 onUploadError={(error) => {
