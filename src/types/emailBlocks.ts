@@ -1,4 +1,3 @@
-
 export interface Position {
   x: number;
   y: number;
@@ -76,7 +75,7 @@ export interface TextContent {
 export interface ButtonContent {
   text: string;
   link: string;
-  style: 'solid' | 'outline' | 'ghost';
+  style: 'solid' | 'outline' | 'ghost' | 'text';
   size: 'small' | 'medium' | 'large';
   color?: string;
   backgroundColor?: string;
@@ -126,7 +125,7 @@ export interface VideoContent {
   videoUrl: string;
   thumbnail: string;
   showPlayButton: boolean;
-  platform: 'youtube' | 'vimeo' | 'custom';
+  platform: 'youtube' | 'vimeo' | 'custom' | 'tiktok';
   autoThumbnail: boolean;
   width?: string;
   height?: string;
@@ -195,6 +194,8 @@ export interface MenuContent {
   items: Array<{
     text: string;
     link: string;
+    label?: string;
+    url?: string;
   }>;
   layout: 'horizontal' | 'vertical';
   alignment?: 'left' | 'center' | 'right';
@@ -204,6 +205,7 @@ export interface SplitContent {
   leftColumn: EmailBlock[];
   rightColumn: EmailBlock[];
   splitRatio: string;
+  ratio?: string;
 }
 
 export type EmailBlockContent = 
@@ -223,12 +225,13 @@ export type EmailBlockContent =
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split';
+  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
   content: any;
   styling: Styling;
   position: Position;
   displayOptions: DisplayOptions;
   isStarred?: boolean;
+  selected?: boolean;
 }
 
 // Specific typed block interfaces

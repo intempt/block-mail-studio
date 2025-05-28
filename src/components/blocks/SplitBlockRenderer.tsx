@@ -17,7 +17,8 @@ export const SplitBlockRenderer: React.FC<SplitBlockRendererProps> = ({ block, i
     '70-30': ['70%', '30%'],
     '30-70': ['30%', '70%']
   };
-  const [leftWidth, rightWidth] = ratios[block.content.ratio];
+  const ratio = block.content.splitRatio || block.content.ratio || '50-50';
+  const [leftWidth, rightWidth] = ratios[ratio] || ratios['50-50'];
 
   return (
     <div

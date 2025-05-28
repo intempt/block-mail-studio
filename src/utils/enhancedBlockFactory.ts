@@ -1,6 +1,6 @@
-import { EmailBlock, BlockStyling, ResponsiveSettings, DisplayOptions } from '@/types/emailBlocks';
+import { EmailBlock, Styling, DisplayOptions } from '@/types/emailBlocks';
 
-const createDefaultStyling = (): ResponsiveSettings => ({
+const createDefaultStyling = (): Styling => ({
   desktop: {
     width: '100%',
     height: 'auto',
@@ -64,7 +64,6 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
     styling: createDefaultStyling(),
     position: { x: 0, y: 0 },
     displayOptions: createDefaultDisplayOptions(),
-    selected: false,
     sectionId,
   };
 
@@ -216,7 +215,6 @@ export const duplicateBlock = (block: EmailBlock): EmailBlock => {
   return {
     ...block,
     id: generateUniqueId(),
-    selected: false,
   };
 };
 

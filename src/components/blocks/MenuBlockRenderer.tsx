@@ -25,10 +25,10 @@ export const MenuBlockRenderer: React.FC<MenuBlockRendererProps> = ({ block, isS
         {block.content.items.map((item, index) => (
           <a
             key={index}
-            href={item.url}
+            href={item.link || item.url || '#'}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
-            {item.label}
+            {item.text || item.label || 'Menu Item'}
           </a>
         ))}
       </nav>
