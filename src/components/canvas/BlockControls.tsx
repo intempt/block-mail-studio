@@ -18,51 +18,69 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
   onDragStart,
   onSaveAsSnippet
 }) => {
+  const handleDragStart = (e: React.MouseEvent) => {
+    // Convert mouse event to drag event for the handler
+    const dragEvent = {
+      ...e,
+      dataTransfer: {
+        setData: () => {},
+        effectAllowed: 'move'
+      }
+    } as any;
+    onDragStart(dragEvent, blockId);
+  };
+
   return (
-    <div className="absolute -left-8 top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col gap-1">
+    <div className="absolute -left-10 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col gap-1 z-10">
       <Button
         size="sm"
         variant="ghost"
-        className="w-6 h-6 p-0 bg-white shadow-sm cursor-grab"
-        onMouseDown={(e) => onDragStart(e as any, blockId)}
+        className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 cursor-grab hover:cursor-grabbing hover:bg-gray-50"
+        onMouseDown={handleDragStart}
+        title="Drag to reorder"
       >
-        <GripVertical className="w-3 h-3" />
+        <GripVertical className="w-4 h-4 text-gray-600" />
       </Button>
+      
       {onSaveAsSnippet && (
         <Button
           size="sm"
           variant="ghost"
-          className="w-6 h-6 p-0 bg-white shadow-sm text-yellow-600 hover:text-yellow-700"
+          className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50"
           onClick={(e) => {
             e.stopPropagation();
             onSaveAsSnippet(blockId);
           }}
           title="Save as snippet"
         >
-          <Star className="w-3 h-3" />
+          <Star className="w-4 h-4" />
         </Button>
       )}
+      
       <Button
         size="sm"
         variant="ghost"
-        className="w-6 h-6 p-0 bg-white shadow-sm"
+        className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
         onClick={(e) => {
           e.stopPropagation();
           onDuplicate(blockId);
         }}
+        title="Duplicate block"
       >
-        <Copy className="w-3 h-3" />
+        <Copy className="w-4 h-4" />
       </Button>
+      
       <Button
         size="sm"
         variant="ghost"
-        className="w-6 h-6 p-0 bg-white shadow-sm text-red-600 hover:text-red-700"
+        className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-red-600 hover:text-red-700 hover:bg-red-50"
         onClick={(e) => {
           e.stopPropagation();
           onDelete(blockId);
         }}
+        title="Delete block"
       >
-        <Trash2 className="w-3 h-3" />
+        <Trash2 className="w-4 h-4" />
       </Button>
     </div>
   );

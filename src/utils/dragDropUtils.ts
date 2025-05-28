@@ -42,3 +42,33 @@ export const isValidDropTarget = (
       return false;
   }
 };
+
+export const getDropIndicatorStyle = (isActive: boolean, position: 'top' | 'bottom' | 'middle' = 'middle') => {
+  if (!isActive) return {};
+  
+  const baseStyle = {
+    transition: 'all 0.2s ease-in-out',
+    borderRadius: '4px'
+  };
+
+  switch (position) {
+    case 'top':
+      return {
+        ...baseStyle,
+        borderTop: '3px solid #3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)'
+      };
+    case 'bottom':
+      return {
+        ...baseStyle,
+        borderBottom: '3px solid #3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)'
+      };
+    default:
+      return {
+        ...baseStyle,
+        border: '2px dashed #3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.05)'
+      };
+  }
+};

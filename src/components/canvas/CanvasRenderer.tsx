@@ -4,6 +4,7 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
+import { BlockControls } from './BlockControls';
 
 interface CanvasRendererProps {
   blocks: EmailBlock[];
@@ -53,37 +54,62 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     // Handle columns blocks specially
     if (block.type === 'columns') {
       return (
-        <ColumnRenderer
+        <div
           key={block.id}
-          block={block}
-          onColumnDrop={onColumnDrop}
-          renderBlock={(innerBlock) => (
-            <BlockRenderer 
-              block={innerBlock}
-              isSelected={false}
-              onUpdate={onBlockUpdate}
-            />
-          )}
-          editingBlockId={editingBlockId}
-          onBlockEditStart={onBlockEditStart}
-          onBlockEditEnd={onBlockEditEnd}
-          onBlockUpdate={onBlockUpdate}
-        />
+          className={`email-block group relative mb-4 ${isSelected ? 'selected' : ''}`}
+          draggable
+          onDragStart={(e) => onBlockDragStart(e, block.id)}
+          onDrop={(e) => onBlockDrop(e, index)}
+          onDragOver={(e) => e.preventDefault()}
+          onClick={() => onBlockClick(block.id)}
+          onDoubleClick={() => onBlockDoubleClick(block.id, block.type)}
+        >
+          <BlockControls
+            blockId={block.id}
+            onDelete={onDeleteBlock}
+            onDuplicate={onDuplicateBlock}
+            onDragStart={onBlockDragStart}
+            onSaveAsSnippet={onSaveAsSnippet}
+          />
+          <ColumnRenderer
+            block={block}
+            onColumnDrop={onColumnDrop}
+            renderBlock={(innerBlock) => (
+              <BlockRenderer 
+                block={innerBlock}
+                isSelected={false}
+                onUpdate={onBlockUpdate}
+              />
+            )}
+            editingBlockId={editingBlockId}
+            onBlockEditStart={onBlockEditStart}
+            onBlockEditEnd={onBlockEditEnd}
+            onBlockUpdate={onBlockUpdate}
+          />
+        </div>
       );
     }
 
     // Handle text blocks with enhanced editor
     if (block.type === 'text') {
       return (
-        <EnhancedTextBlockRenderer
-          key={block.id}
-          block={block}
-          isSelected={isSelected}
-          isEditing={isEditing}
-          onUpdate={onBlockUpdate}
-          onEditStart={() => onBlockEditStart(block.id)}
-          onEditEnd={onBlockEditEnd}
-        />
+        <div key={block.id} className="group relative">
+          <BlockControls
+            blockId={block.id}
+            onDelete={onDeleteBlock}
+            onDuplicate={onDuplicateBlock}
+            onDragStart={onBlockDragStart}
+            onSaveAsSnippet={onSaveAsSnippet}
+          />
+          <EnhancedTextBlockRenderer
+            block={block}
+            isSelected={isSelected}
+            isEditing={isEditing}
+            onUpdate={onBlockUpdate}
+            onEditStart={() => onBlockEditStart(block.id)}
+            onEditEnd={onBlockEditEnd}
+          />
+        </div>
       );
     }
 
@@ -91,7 +117,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     return (
       <div
         key={block.id}
-        className={`email-block mb-4 ${isSelected ? 'selected' : ''}`}
+        className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-blue-500 ring-opacity-30' : ''} hover:shadow-md transition-all duration-200`}
         draggable
         onDragStart={(e) => onBlockDragStart(e, block.id)}
         onDrop={(e) => onBlockDrop(e, index)}
@@ -99,6 +125,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         onClick={() => onBlockClick(block.id)}
         onDoubleClick={() => onBlockDoubleClick(block.id, block.type)}
       >
+        <BlockControls
+          blockId={block.id}
+          onDelete={onDeleteBlock}
+          onDuplicate={onDuplicateBlock}
+          onDragStart={onBlockDragStart}
+          onSaveAsSnippet={onSaveAsSnippet}
+        />
         <BlockRenderer 
           block={block}
           isSelected={isSelected}
@@ -120,13 +153,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           {blocks.map((block, index) => (
             <React.Fragment key={block.id}>
               {isDraggingOver && dragOverIndex === index && (
-                <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200" />
+                <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200 animate-pulse" />
               )}
               {renderBlock(block, index)}
             </React.Fragment>
           ))}
           {isDraggingOver && dragOverIndex === blocks.length && (
-            <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200" />
+            <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200 animate-pulse" />
           )}
         </div>
       )}
