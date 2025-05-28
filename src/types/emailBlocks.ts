@@ -16,7 +16,11 @@ export interface Styling {
     fontSize?: string;
     fontFamily?: string;
     color?: string;
+    textColor?: string;
     textAlign?: string;
+    boxShadow?: string;
+    fontWeight?: string;
+    textDecoration?: string;
   };
   tablet: {
     width: string;
@@ -29,7 +33,11 @@ export interface Styling {
     fontSize?: string;
     fontFamily?: string;
     color?: string;
+    textColor?: string;
     textAlign?: string;
+    boxShadow?: string;
+    fontWeight?: string;
+    textDecoration?: string;
   };
   mobile: {
     width: string;
@@ -42,7 +50,11 @@ export interface Styling {
     fontSize?: string;
     fontFamily?: string;
     color?: string;
+    textColor?: string;
     textAlign?: string;
+    boxShadow?: string;
+    fontWeight?: string;
+    textDecoration?: string;
   };
 }
 
@@ -82,6 +94,7 @@ export interface ImageContent {
   borderRadius?: string;
   isDynamic?: boolean;
   dynamicSrc?: string;
+  dynamicVariable?: string;
 }
 
 export interface SpacerContent {
@@ -168,6 +181,27 @@ export interface ColumnsContent {
   border?: string;
 }
 
+export interface CodeContent {
+  code: string;
+  language: string;
+  theme?: string;
+}
+
+export interface MenuContent {
+  items: Array<{
+    text: string;
+    link: string;
+  }>;
+  layout: 'horizontal' | 'vertical';
+  alignment?: 'left' | 'center' | 'right';
+}
+
+export interface SplitContent {
+  leftColumn: EmailBlock[];
+  rightColumn: EmailBlock[];
+  splitRatio: string;
+}
+
 export type EmailBlockContent = 
   | TextContent 
   | ButtonContent 
@@ -178,21 +212,85 @@ export type EmailBlockContent =
   | VideoContent 
   | SocialContent 
   | TableContent
-  | ColumnsContent;
+  | ColumnsContent
+  | CodeContent
+  | MenuContent
+  | SplitContent;
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns';
+  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split';
   content: any;
   styling: Styling;
   position: Position;
   displayOptions: DisplayOptions;
-  isStarred?: boolean; // Add the isStarred property
+  isStarred?: boolean;
+}
+
+// Specific typed block interfaces
+export interface TextBlock extends EmailBlock {
+  type: 'text';
+  content: TextContent;
+}
+
+export interface ButtonBlock extends EmailBlock {
+  type: 'button';
+  content: ButtonContent;
+}
+
+export interface ImageBlock extends EmailBlock {
+  type: 'image';
+  content: ImageContent;
+}
+
+export interface SpacerBlock extends EmailBlock {
+  type: 'spacer';
+  content: SpacerContent;
+}
+
+export interface DividerBlock extends EmailBlock {
+  type: 'divider';
+  content: DividerContent;
+}
+
+export interface HtmlBlock extends EmailBlock {
+  type: 'html';
+  content: HtmlContent;
+}
+
+export interface VideoBlock extends EmailBlock {
+  type: 'video';
+  content: VideoContent;
+}
+
+export interface SocialBlock extends EmailBlock {
+  type: 'social';
+  content: SocialContent;
+}
+
+export interface TableBlock extends EmailBlock {
+  type: 'table';
+  content: TableContent;
 }
 
 export interface ColumnsBlock extends EmailBlock {
   type: 'columns';
   content: ColumnsContent;
+}
+
+export interface CodeBlock extends EmailBlock {
+  type: 'code';
+  content: CodeContent;
+}
+
+export interface MenuBlock extends EmailBlock {
+  type: 'menu';
+  content: MenuContent;
+}
+
+export interface SplitBlock extends EmailBlock {
+  type: 'split';
+  content: SplitContent;
 }
 
 export interface UniversalContent {

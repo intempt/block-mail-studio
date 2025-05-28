@@ -64,9 +64,17 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
     setDragOverColumnIndex(null);
     onColumnDrop(e, block.id, columnIndex);
   };
+
+  // Safe styling with proper type conversion
+  const columnStyling = block.styling?.desktop ? {
+    backgroundColor: block.styling.desktop.backgroundColor,
+    padding: block.styling.desktop.padding,
+    borderRadius: block.styling.desktop.borderRadius,
+    border: block.styling.desktop.border
+  } : {};
   
   return (
-    <div className="columns-block border border-gray-200 rounded-lg p-4 bg-white" style={block.styling?.desktop}>
+    <div className="columns-block border border-gray-200 rounded-lg p-4 bg-white" style={columnStyling}>
       <div className="flex gap-4">
         {block.content.columns?.map((column: any, index: number) => {
           const isHighlighted = dragOverColumnIndex === index;

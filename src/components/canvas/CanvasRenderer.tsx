@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EmailBlock } from '@/types/emailBlocks';
+import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
@@ -58,6 +58,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
 
     // Handle columns blocks specially
     if (block.type === 'columns') {
+      // Type assertion with proper check
+      const columnsBlock = block as ColumnsBlock;
       return (
         <div
           key={block.id}
@@ -75,9 +77,11 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onDuplicate={onDuplicateBlock}
             onDragStart={onBlockDragStart}
             onSaveAsSnippet={onSaveAsSnippet}
+            isStarred={block.isStarred}
+            onUnstar={onUnstarBlock}
           />
           <ColumnRenderer
-            block={block}
+            block={columnsBlock}
             onColumnDrop={onColumnDrop}
             renderBlock={(innerBlock) => (
               <BlockRenderer 
@@ -105,6 +109,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onDuplicate={onDuplicateBlock}
             onDragStart={onBlockDragStart}
             onSaveAsSnippet={onSaveAsSnippet}
+            isStarred={block.isStarred}
+            onUnstar={onUnstarBlock}
           />
           <EnhancedTextBlockRenderer
             block={block}
@@ -136,6 +142,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           onDuplicate={onDuplicateBlock}
           onDragStart={onBlockDragStart}
           onSaveAsSnippet={onSaveAsSnippet}
+          isStarred={block.isStarred}
+          onUnstar={onUnstarBlock}
         />
         <BlockRenderer 
           block={block}
