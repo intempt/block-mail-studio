@@ -382,8 +382,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar - Centered with bigger icons */}
-      <div className="px-3 py-2">
+      {/* Toolbar - Centered with bigger icons but reduced height */}
+      <div className="px-3 py-1">
         <div className="flex items-center justify-center gap-3 overflow-x-auto">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
