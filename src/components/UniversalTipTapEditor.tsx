@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -9,9 +8,17 @@ import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
 import { Underline } from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
+import Blockquote from '@tiptap/extension-blockquote';
+import Code from '@tiptap/extension-code';
+import Highlight from '@tiptap/extension-highlight';
+import { FontSize } from '@/extensions/FontSizeExtension';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FullTipTapToolbar } from './FullTipTapToolbar';
+import { EmailContext } from '@/services/tiptapAIService';
 import { 
   ExternalLink,
   Play
@@ -24,6 +31,7 @@ interface UniversalTipTapEditorProps {
   onBlur?: () => void;
   placeholder?: string;
   position?: { x: number; y: number };
+  emailContext?: string;
 }
 
 export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
@@ -32,7 +40,8 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   onChange,
   onBlur,
   placeholder,
-  position
+  position,
+  emailContext
 }) => {
   const [linkUrl, setLinkUrl] = useState('');
   const [imageUrl, setImageUrl] = useState('');
@@ -66,7 +75,34 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       FontFamily.configure({
         types: ['textStyle'],
       }),
+      FontSize.configure({
+        types: ['textStyle'],
+      }),
+      Highlight.configure({
+        multicolor: true,
+      }),
       Underline,
+      BulletList.configure({
+        HTMLAttributes: {
+          class: 'list-disc ml-6',
+        },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: {
+          class: 'list-decimal ml-6',
+        },
+      }),
+      ListItem,
+      Blockquote.configure({
+        HTMLAttributes: {
+          class: 'border-l-4 border-blue-400 pl-4 italic text-gray-700',
+        },
+      }),
+      Code.configure({
+        HTMLAttributes: {
+          class: 'bg-gray-100 px-2 py-1 rounded text-sm font-mono',
+        },
+      }),
     ],
     content: isUrlMode ? '' : content,
     onUpdate: ({ editor }) => {
@@ -154,6 +190,13 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     }
   };
 
+  // Create email context for AI operations
+  const aiEmailContext: EmailContext = {
+    blockType: contentType,
+    emailHTML: emailContext,
+    targetAudience: 'general'
+  };
+
   if (isUrlMode) {
     return (
       <div 
@@ -205,12 +248,14 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           placeholder={placeholder}
         />
 
-        {/* Full Toolbar */}
+        {/* Full Toolbar with AI Integration */}
         <FullTipTapToolbar
           editor={editor}
           isVisible={showToolbar && !showLinkDialog && !showImageDialog}
           position={toolbarPosition}
           onLinkClick={() => setShowLinkDialog(true)}
+          onImageInsert={() => setShowImageDialog(true)}
+          emailContext={aiEmailContext}
         />
 
         {/* Link Dialog */}

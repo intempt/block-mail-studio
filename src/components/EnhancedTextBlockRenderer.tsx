@@ -13,9 +13,11 @@ import ListItem from '@tiptap/extension-list-item';
 import Blockquote from '@tiptap/extension-blockquote';
 import Code from '@tiptap/extension-code';
 import Highlight from '@tiptap/extension-highlight';
+import Image from '@tiptap/extension-image';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { TextBlock } from '@/types/emailBlocks';
 import { FullTipTapToolbar } from './FullTipTapToolbar';
+import { EmailContext } from '@/services/tiptapAIService';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +29,7 @@ interface EnhancedTextBlockRendererProps {
   onUpdate: (block: TextBlock) => void;
   onEditStart: () => void;
   onEditEnd: () => void;
+  emailContext?: string;
 }
 
 export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps> = ({
@@ -35,12 +38,15 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   isEditing,
   onUpdate,
   onEditStart,
-  onEditEnd
+  onEditEnd,
+  emailContext
 }) => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -55,6 +61,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-blue-600 underline cursor-pointer hover:text-blue-800 transition-colors',
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'max-w-full h-auto',
         },
       }),
       TextAlign.configure({
@@ -146,13 +157,14 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       // Don't close if clicking on toolbar, dialogs, or other editor UI elements
       if (relatedTarget?.closest('.full-tiptap-toolbar') || 
           relatedTarget?.closest('.link-dialog') ||
+          relatedTarget?.closest('.image-dialog') ||
           relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
           relatedTarget?.closest('.radix-select-content') ||
           relatedTarget?.closest('[data-radix-select-content]') ||
           relatedTarget?.closest('.popover-content') ||
           relatedTarget?.closest('[data-radix-popover-content]') ||
           relatedTarget?.closest('.enhanced-text-block') ||
-          showLinkDialog) {
+          showLinkDialog || showImageDialog) {
         console.log('Blur ignored - clicking on UI element');
         return;
       }
@@ -167,6 +179,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         console.log('Closing editor after blur timeout');
         setShowToolbar(false);
         setShowLinkDialog(false);
+        setShowImageDialog(false);
         if (isEditing) {
           onEditEnd();
         }
@@ -227,14 +240,6 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     }
   };
 
-  const handleLinkAdd = () => {
-    if (linkUrl && editor) {
-      editor.chain().focus().setLink({ href: linkUrl }).run();
-      setLinkUrl('');
-      setShowLinkDialog(false);
-    }
-  };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (isEditing && e.key === 'Escape') {
       e.preventDefault();
@@ -244,9 +249,36 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       }
       setShowToolbar(false);
       setShowLinkDialog(false);
+      setShowImageDialog(false);
       editor?.commands.blur();
       onEditEnd();
     }
+  };
+
+  const handleLinkAdd = () => {
+    if (linkUrl && editor) {
+      editor.chain().focus().setLink({ href: linkUrl }).run();
+      setLinkUrl('');
+      setShowLinkDialog(false);
+    }
+  };
+
+  const handleImageInsert = () => {
+    if (imageUrl.trim() && editor) {
+      editor.chain().focus().setImage({ 
+        src: imageUrl.trim(), 
+        alt: 'Image' 
+      }).run();
+      setImageUrl('');
+      setShowImageDialog(false);
+    }
+  };
+
+  // Create email context for AI operations
+  const aiEmailContext: EmailContext = {
+    blockType: 'text',
+    emailHTML: emailContext,
+    targetAudience: 'general'
   };
 
   // Provide default styling values to avoid TypeScript errors
@@ -307,13 +339,15 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         )}
       </div>
 
-      {/* Full TipTap Toolbar */}
+      {/* Full TipTap Toolbar with AI Integration */}
       <FullTipTapToolbar
         editor={editor}
         isVisible={showToolbar && isEditing}
         position={toolbarPosition}
         onLinkClick={() => setShowLinkDialog(true)}
+        onImageInsert={() => setShowImageDialog(true)}
         containerElement={editorRef.current}
+        emailContext={aiEmailContext}
       />
 
       {/* Link Dialog */}
@@ -343,6 +377,40 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
                 Add
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Dialog */}
+      {showImageDialog && (
+        <div 
+          className="image-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="flex flex-col gap-3">
+            <div className="text-sm font-medium text-gray-700">Insert Image</div>
+            <div className="flex gap-2">
+              <Input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="Enter image URL..."
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleImageInsert();
+                  } else if (e.key === 'Escape') {
+                    setShowImageDialog(false);
+                  }
+                }}
+                autoFocus
+              />
+              <Button size="sm" onClick={handleImageInsert} disabled={!imageUrl.trim()}>
+                Add
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>
                 Cancel
               </Button>
             </div>
