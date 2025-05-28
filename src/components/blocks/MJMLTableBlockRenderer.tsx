@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { TableBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
   const styling = block.styling.desktop;
 
   const updateCellContent = (row: number, col: number, content: string) => {
+    console.log(`Updating cell [${row}][${col}] with content:`, content);
     const newCells = [...block.content.cells];
     newCells[row][col] = { ...newCells[row][col], content };
     
@@ -29,6 +29,17 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
         cells: newCells
       }
     });
+  };
+
+  const handleCellClick = (row: number, col: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log(`Cell clicked: [${row}][${col}]`);
+    setEditingCell({ row, col });
+  };
+
+  const handleCellBlur = () => {
+    console.log('Cell editor blurred');
+    setEditingCell(null);
   };
 
   const addRow = () => {
@@ -99,25 +110,26 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
                       key={colIndex}
                       style={{
                         border: getBorderStyle(),
-                        padding: '8px',
+                        padding: '4px',
                         fontWeight: isHeader ? 'bold' : 'normal',
                         backgroundColor: isHeader ? '#f8fafc' : 'transparent',
                         minWidth: '80px',
-                        position: 'relative'
+                        position: 'relative',
+                        verticalAlign: 'top'
                       }}
-                      onClick={() => setEditingCell({ row: rowIndex, col: colIndex })}
+                      onClick={(e) => handleCellClick(rowIndex, colIndex, e)}
                       className="cursor-pointer hover:bg-gray-50 transition-colors"
                     >
                       {isEditing ? (
                         <TableCellEditor
                           content={cell.content}
                           onChange={(content) => updateCellContent(rowIndex, colIndex, content)}
-                          onBlur={() => setEditingCell(null)}
+                          onBlur={handleCellBlur}
                           autoFocus
                         />
                       ) : (
                         <div 
-                          dangerouslySetInnerHTML={{ __html: cell.content }}
+                          dangerouslySetInnerHTML={{ __html: cell.content || '<p>Click to edit</p>' }}
                           className="min-h-[24px] w-full"
                         />
                       )}
