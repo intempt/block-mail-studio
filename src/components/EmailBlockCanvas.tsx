@@ -266,14 +266,21 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   useEffect(() => {
     const initialBlocks: EmailBlock[] = [
       {
-        id: 'initial_text_block',
+        id: 'welcome_text_block',
         type: 'text',
         content: {
-          html: '<h1>Welcome to your email!</h1><p>Start building your email content here.</p>',
+          html: '<h2>Welcome to your email builder!</h2><p>Drag any of the 11 layouts below to get started, then drag text blocks into the columns and click to edit with the rich text editor.</p>',
           textStyle: 'normal'
         },
         styling: {
-          desktop: { width: '100%', height: 'auto' },
+          desktop: { 
+            width: '100%', 
+            height: 'auto',
+            padding: '20px',
+            backgroundColor: '#f8fafc',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0'
+          },
           tablet: { width: '100%', height: 'auto' },
           mobile: { width: '100%', height: 'auto' }
         },
@@ -441,10 +448,26 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setEditingBlockId(null);
   }, []);
 
+  const handleBlockEditStart = useCallback((blockId: string) => {
+    setEditingBlockId(blockId);
+    setSelectedBlockId(blockId);
+    onBlockSelect(blockId);
+  }, [onBlockSelect]);
+
+  const handleBlockEditEnd = useCallback(() => {
+    setEditingBlockId(null);
+  }, []);
+
+  const handleBlockUpdate = useCallback((updatedBlock: EmailBlock) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === updatedBlock.id ? updatedBlock : block
+    ));
+  }, []);
+
   const getDefaultContent = useCallback((blockType: string) => {
     switch (blockType) {
       case 'text':
-        return { html: '<p>Enter your text here...</p>', textStyle: 'normal' };
+        return { html: '<p>Start typing your content here...</p>', textStyle: 'normal' };
       case 'button':
         return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
       case 'image':
@@ -494,12 +517,12 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   const canvasStyle = useMemo(() => ({
     width: `${canvasWidth}px`,
-    minHeight: '500px',
+    minHeight: '600px',
     margin: '0 auto',
     backgroundColor: 'white',
     border: '1px solid #e5e7eb',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    borderRadius: '12px',
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
     position: 'relative' as const,
     overflow: 'hidden'
   }), [canvasWidth]);
@@ -540,6 +563,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             onTipTapChange={handleTipTapChange}
             onTipTapBlur={handleTipTapBlur}
             onColumnDrop={dragDropHandler.handleColumnDrop}
+            onBlockEditStart={handleBlockEditStart}
+            onBlockEditEnd={handleBlockEditEnd}
+            onBlockUpdate={handleBlockUpdate}
           />
         </div>
       </div>

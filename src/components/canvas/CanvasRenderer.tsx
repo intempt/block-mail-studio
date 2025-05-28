@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
-import { UniversalTipTapEditor } from '../UniversalTipTapEditor';
-import { BlockControls } from './BlockControls';
-import { ColumnRenderer } from './ColumnRenderer';
+import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
+import { ColumnRenderer } from './ColumnRenderer';
+import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
+import { BlockRenderer } from '../BlockRenderer';
 
 interface CanvasRendererProps {
   blocks: EmailBlock[];
@@ -17,10 +17,13 @@ interface CanvasRendererProps {
   onBlockDrop: (e: React.DragEvent, targetIndex: number) => void;
   onDeleteBlock: (blockId: string) => void;
   onDuplicateBlock: (blockId: string) => void;
-  onSaveAsSnippet?: (blockId: string) => void;
+  onSaveAsSnippet: (blockId: string) => void;
   onTipTapChange: (blockId: string, html: string) => void;
   onTipTapBlur: () => void;
   onColumnDrop: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
+  onBlockEditStart: (blockId: string) => void;
+  onBlockEditEnd: () => void;
+  onBlockUpdate: (block: EmailBlock) => void;
 }
 
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
@@ -38,210 +41,95 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onSaveAsSnippet,
   onTipTapChange,
   onTipTapBlur,
-  onColumnDrop
+  onColumnDrop,
+  onBlockEditStart,
+  onBlockEditEnd,
+  onBlockUpdate
 }) => {
-  const [editingContent, setEditingContent] = useState<{
-    blockId: string;
-    contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video';
-    property: string;
-    position?: { x: number; y: number };
-  } | null>(null);
+  const renderBlock = (block: EmailBlock, index: number) => {
+    const isSelected = selectedBlockId === block.id;
+    const isEditing = editingBlockId === block.id;
 
-  const handleContentClick = (
-    e: React.MouseEvent,
-    blockId: string,
-    contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video',
-    property: string
-  ) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setEditingContent({
-      blockId,
-      contentType,
-      property,
-      position: { x: rect.left, y: rect.top - 80 }
-    });
-  };
-
-  const handleUniversalEditorChange = (html: string) => {
-    if (editingContent) {
-      onTipTapChange(editingContent.blockId, html);
-    }
-  };
-
-  const handleUniversalEditorBlur = () => {
-    setEditingContent(null);
-    onTipTapBlur();
-  };
-
-  const getContentForProperty = (block: EmailBlock, property: string): string => {
-    switch (property) {
-      case 'html':
-        return block.type === 'text' ? block.content.html || '' : '';
-      case 'text':
-        return block.type === 'button' ? block.content.text || '' : '';
-      case 'alt':
-        return block.type === 'image' ? block.content.alt || '' : '';
-      case 'src':
-        return block.type === 'image' ? block.content.src || '' : '';
-      case 'link':
-        return block.type === 'button' ? block.content.link || '' : 
-               block.type === 'image' ? block.content.link || '' : '';
-      default: return '';
-    }
-  };
-
-  const renderEditableContent = (
-    block: EmailBlock, 
-    content: string, 
-    contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video', 
-    property: string,
-    placeholder?: string
-  ) => {
-    const isEditing = editingContent?.blockId === block.id && editingContent?.property === property;
-    
-    if (isEditing) {
-      return (
-        <UniversalTipTapEditor
-          content={getContentForProperty(block, property)}
-          contentType={contentType}
-          onChange={handleUniversalEditorChange}
-          onBlur={handleUniversalEditorBlur}
-          position={editingContent.position}
-          placeholder={placeholder}
-        />
-      );
-    }
-
-    const isEmpty = !content || content.trim() === '';
-    const displayContent = isEmpty ? 
-      `<span style="color: #999; font-style: italic;">${placeholder || 'Click to edit...'}</span>` : 
-      content;
-
-    return (
-      <div
-        onClick={(e) => handleContentClick(e, block.id, contentType, property)}
-        className="cursor-text hover:bg-blue-50 hover:ring-2 hover:ring-blue-200 transition-all rounded p-1 -m-1"
-        dangerouslySetInnerHTML={{ __html: displayContent }}
-      />
-    );
-  };
-
-  const renderBlock = (block: EmailBlock): React.ReactNode => {
+    // Handle columns blocks specially
     if (block.type === 'columns') {
       return (
         <ColumnRenderer
+          key={block.id}
           block={block}
           onColumnDrop={onColumnDrop}
-          renderBlock={renderBlock}
+          renderBlock={(innerBlock) => (
+            <BlockRenderer 
+              block={innerBlock}
+              isSelected={false}
+              onUpdate={onBlockUpdate}
+            />
+          )}
+          editingBlockId={editingBlockId}
+          onBlockEditStart={onBlockEditStart}
+          onBlockEditEnd={onBlockEditEnd}
+          onBlockUpdate={onBlockUpdate}
         />
       );
     }
 
-    switch (block.type) {
-      case 'text':
-        return (
-          <div className="min-h-[20px]">
-            {renderEditableContent(block, block.content.html, 'html', 'html', 'Enter your text...')}
-          </div>
-        );
-      
-      case 'button':
-        return (
-          <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <a
-              href={block.content.link}
-              style={{
-                background: '#007bff',
-                color: 'white',
-                padding: '12px 24px',
-                textDecoration: 'none',
-                borderRadius: '6px',
-                display: 'inline-block',
-                position: 'relative'
-              }}
-              onClick={(e) => e.preventDefault()}
-            >
-              {renderEditableContent(block, block.content.text, 'text', 'text', 'Button text')}
-            </a>
-          </div>
-        );
-      
-      case 'image':
-        return (
-          <div className="relative text-center">
-            <img
-              src={block.content.src || 'https://via.placeholder.com/400x200?text=Click+to+add+image'}
-              alt={block.content.alt}
-              style={{ maxWidth: '100%', height: 'auto' }}
-              onClick={(e) => handleContentClick(e, block.id, 'url', 'src')}
-              className="cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all"
-            />
-            <div className="mt-2">
-              {renderEditableContent(block, block.content.alt, 'text', 'alt', 'Image description...')}
-            </div>
-          </div>
-        );
-
-      case 'spacer':
-        return <div style={{ height: block.content.height, backgroundColor: 'transparent' }} />;
-
-      case 'divider':
-        return (
-          <hr 
-            style={{
-              border: 'none',
-              borderTop: `${block.content.thickness || '1px'} ${block.content.style || 'solid'} ${block.content.color || '#ddd'}`,
-              margin: '20px 0'
-            }} 
-          />
-        );
-
-      default:
-        return <div>Unknown block type: {block.type}</div>;
+    // Handle text blocks with enhanced editor
+    if (block.type === 'text') {
+      return (
+        <EnhancedTextBlockRenderer
+          key={block.id}
+          block={block}
+          isSelected={isSelected}
+          isEditing={isEditing}
+          onUpdate={onBlockUpdate}
+          onEditStart={() => onBlockEditStart(block.id)}
+          onEditEnd={onBlockEditEnd}
+        />
+      );
     }
+
+    // Handle other block types
+    return (
+      <div
+        key={block.id}
+        className={`email-block mb-4 ${isSelected ? 'selected' : ''}`}
+        draggable
+        onDragStart={(e) => onBlockDragStart(e, block.id)}
+        onDrop={(e) => onBlockDrop(e, index)}
+        onDragOver={(e) => e.preventDefault()}
+        onClick={() => onBlockClick(block.id)}
+        onDoubleClick={() => onBlockDoubleClick(block.id, block.type)}
+      >
+        <BlockRenderer 
+          block={block}
+          isSelected={isSelected}
+          onUpdate={onBlockUpdate}
+        />
+      </div>
+    );
   };
 
   return (
-    <>
-      {isDraggingOver && dragOverIndex === 0 && (
-        <div className="h-2 bg-blue-400 rounded-full mb-4 opacity-75" />
-      )}
-      
-      {blocks.map((block, index) => (
-        <div key={block.id}>
-          <div
-            className={`email-block group cursor-pointer transition-all duration-200 mb-4 relative ${
-              selectedBlockId === block.id ? 'ring-2 ring-blue-500 ring-opacity-50 bg-blue-50' : 'hover:bg-gray-50'
-            }`}
-            draggable
-            onClick={() => onBlockClick(block.id)}
-            onDragStart={(e) => onBlockDragStart(e, block.id)}
-            onDrop={(e) => onBlockDrop(e, index)}
-            onDragOver={(e) => e.preventDefault()}
-          >
-            <BlockControls
-              blockId={block.id}
-              onDelete={onDeleteBlock}
-              onDuplicate={onDuplicateBlock}
-              onDragStart={onBlockDragStart}
-              onSaveAsSnippet={onSaveAsSnippet}
-            />
-            {renderBlock(block)}
-          </div>
-          
-          {isDraggingOver && dragOverIndex === index + 1 && (
-            <div className="h-2 bg-blue-400 rounded-full mb-4 opacity-75" />
+    <div className="canvas-renderer min-h-64">
+      {blocks.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-lg font-medium mb-2">Ready to build!</div>
+          <div className="text-sm">Drag a layout from the toolbar above to start building your email</div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {blocks.map((block, index) => (
+            <React.Fragment key={block.id}>
+              {isDraggingOver && dragOverIndex === index && (
+                <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200" />
+              )}
+              {renderBlock(block, index)}
+            </React.Fragment>
+          ))}
+          {isDraggingOver && dragOverIndex === blocks.length && (
+            <div className="h-2 bg-blue-400 rounded-full opacity-75 transition-all duration-200" />
           )}
         </div>
-      ))}
-      
-      {blocks.length === 0 && (
-        <div className="text-center py-16">
-          <div className="text-gray-400 text-lg mb-2">Drop blocks here to start building</div>
-          <div className="text-gray-500 text-sm">Drag blocks from the palette to create your email</div>
-        </div>
       )}
-    </>
+    </div>
   );
 };
