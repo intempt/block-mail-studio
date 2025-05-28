@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -266,7 +267,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     <div 
       className={`enhanced-text-block relative group cursor-text transition-all duration-200 ${
         isSelected ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
-      } ${isEditing ? 'editing shadow-lg bg-white' : 'hover:shadow-md'}`}
+      } ${isEditing ? 'editing shadow-lg bg-white ring-2 ring-blue-500' : 'hover:shadow-md hover:ring-1 hover:ring-gray-300'}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       style={{
@@ -291,17 +292,8 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
             fontWeight: defaultStyling.fontWeight,
           }}
         />
-        
-        {/* Editing State Indicator */}
-        {isEditing && (
-          <div className="absolute -top-2 -left-2 z-10">
-            <Badge variant="default" className="text-xs bg-blue-500 text-white animate-pulse">
-              Editing
-            </Badge>
-          </div>
-        )}
 
-        {/* Status Indicators */}
+        {/* Status Indicators - Only show when editing and relevant */}
         {isEditing && (
           <div className="absolute top-2 right-2 flex gap-2 z-10">
             {hasUnsavedChanges && (
@@ -358,16 +350,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         </div>
       )}
 
-      {/* Edit Hint */}
-      {!isEditing && !isTransitioning && (
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
-          <Badge variant="secondary" className="text-xs bg-gray-800 text-white">
-            Click to edit
-          </Badge>
-        </div>
-      )}
-
-      {/* Keyboard Shortcut Hints */}
+      {/* Keyboard Shortcut Hints - Only show when editing */}
       {isEditing && (
         <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
           <Badge variant="outline" className="text-xs text-gray-500 bg-white">
