@@ -28,6 +28,7 @@ export interface AnalysisResult {
     title: string;
     description: string;
     impact: 'high' | 'medium' | 'low';
+    suggested?: string;
   }>;
   contentMetrics: {
     wordCount: number;
@@ -83,7 +84,8 @@ class CallbackEmailAnalysisServiceClass {
           type: 'subject',
           title: 'Optimize Subject Line',
           description: 'Consider shortening for mobile',
-          impact: 'medium' as const
+          impact: 'medium' as const,
+          suggested: 'Try using 30-50 characters for better mobile display'
         }
       ],
       contentMetrics: this.calculateBasicMetrics(request.emailHTML)
