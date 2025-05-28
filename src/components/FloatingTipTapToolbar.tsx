@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { emailAIService } from '@/services/EmailAIService';
+import { toast } from 'sonner';
 import { 
   Bold, 
   Italic, 
@@ -26,7 +27,8 @@ import {
   Redo,
   Sparkles,
   Image as ImageIcon,
-  Wand2
+  Wand2,
+  Loader2
 } from 'lucide-react';
 
 interface FloatingTipTapToolbarProps {
@@ -66,12 +68,12 @@ const bgColors = [
 ];
 
 const aiOperations = [
-  { label: 'Improve Writing', action: 'improve' },
-  { label: 'Fix Grammar', action: 'grammar' },
-  { label: 'Make Professional', action: 'professional' },
-  { label: 'Make Casual', action: 'casual' },
-  { label: 'Shorten Text', action: 'shorten' },
-  { label: 'Expand Text', action: 'expand' }
+  { label: 'Improve Writing', action: 'improve', prompt: 'Improve the writing quality, clarity, and flow of this text while maintaining its original meaning:' },
+  { label: 'Fix Grammar', action: 'grammar', prompt: 'Fix any grammatical errors, spelling mistakes, and improve sentence structure in this text:' },
+  { label: 'Make Professional', action: 'professional', prompt: 'Rewrite this text to sound more professional and formal while keeping the same message:' },
+  { label: 'Make Casual', action: 'casual', prompt: 'Rewrite this text to sound more casual and conversational while keeping the same message:' },
+  { label: 'Shorten Text', action: 'shorten', prompt: 'Make this text more concise and shorter while preserving all important information:' },
+  { label: 'Expand Text', action: 'expand', prompt: 'Expand this text with more detail and elaboration while maintaining the original tone:' }
 ];
 
 const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
@@ -86,6 +88,7 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   const [showAIDialog, setShowAIDialog] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [imageAlt, setImageAlt] = useState('');
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
 
   if (!editor || !isVisible) return null;
 
@@ -133,23 +136,43 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
     }
   };
 
-  const handleAIOperation = (operation: string) => {
-    const selectedText = editor.state.selection.empty ? 
-      editor.getText() : 
-      editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+  const handleAIOperation = async (operation: { action: string; prompt: string; label: string }) => {
+    if (isAIProcessing) return;
     
-    console.log('AI Operation:', operation, 'on text:', selectedText);
-    
-    // Simulate AI processing - in real implementation, call AI service
-    const processedText = `[AI ${operation}] ${selectedText}`;
-    
-    if (editor.state.selection.empty) {
-      editor.chain().focus().selectAll().insertContent(processedText).run();
-    } else {
-      editor.chain().focus().insertContent(processedText).run();
-    }
-    
+    setIsAIProcessing(true);
     setShowAIDialog(false);
+    
+    try {
+      const selectedText = editor.state.selection.empty ? 
+        editor.getText() : 
+        editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+      
+      if (!selectedText.trim()) {
+        toast.error('Please select some text to process');
+        return;
+      }
+
+      toast.info(`Processing text with AI: ${operation.label}...`);
+      
+      const fullPrompt = `${operation.prompt}\n\n"${selectedText}"\n\nReturn only the improved text, no explanations or quotes.`;
+      const processedText = await emailAIService.getConversationalResponse(fullPrompt);
+      
+      if (processedText) {
+        if (editor.state.selection.empty) {
+          editor.chain().focus().selectAll().insertContent(processedText).run();
+        } else {
+          editor.chain().focus().insertContent(processedText).run();
+        }
+        toast.success(`Text ${operation.action} completed!`);
+      } else {
+        throw new Error('No response from AI service');
+      }
+    } catch (error) {
+      console.error('AI operation failed:', error);
+      toast.error(`Failed to ${operation.action} text. Please try again.`);
+    } finally {
+      setIsAIProcessing(false);
+    }
   };
 
   const getCurrentHeading = () => {
@@ -502,15 +525,20 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
               size="sm"
               className="h-8 w-8 p-0 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               title="AI Operations"
+              disabled={isAIProcessing}
             >
-              <Sparkles className="w-4 h-4" />
+              {isAIProcessing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4" />
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64 p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
             <div className="space-y-2">
               <div className="text-sm font-medium flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-600" />
-                AI Operations
+                AI Text Operations
               </div>
               <div className="grid gap-1">
                 {aiOperations.map((operation) => (
@@ -518,8 +546,9 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
                     key={operation.action}
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleAIOperation(operation.action)}
+                    onClick={() => handleAIOperation(operation)}
                     className="justify-start h-8 text-xs hover:bg-purple-50"
+                    disabled={isAIProcessing}
                   >
                     {operation.label}
                   </Button>
@@ -565,5 +594,24 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
     </div>
   );
 };
+
+function getCurrentHeading(editor: Editor) {
+  if (editor.isActive('heading', { level: 1 })) return '1';
+  if (editor.isActive('heading', { level: 2 })) return '2';
+  if (editor.isActive('heading', { level: 3 })) return '3';
+  if (editor.isActive('heading', { level: 4 })) return '4';
+  if (editor.isActive('heading', { level: 5 })) return '5';
+  if (editor.isActive('heading', { level: 6 })) return '6';
+  return 'paragraph';
+}
+
+function handleHeadingChange(editor: Editor, value: string) {
+  if (value === 'paragraph') {
+    editor.chain().focus().setParagraph().run();
+  } else {
+    const level = parseInt(value) as 1 | 2 | 3 | 4 | 5 | 6;
+    editor.chain().focus().toggleHeading({ level }).run();
+  }
+}
 
 export { FloatingTipTapToolbar };
