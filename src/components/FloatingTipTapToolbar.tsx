@@ -134,19 +134,58 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   };
 
   const handleAIOperation = (operation: string) => {
-    const selectedText = editor.state.selection.empty ? 
-      editor.getText() : 
-      editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
+    if (!editor) return;
+
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to);
     
     console.log('AI Operation:', operation, 'on text:', selectedText);
     
-    // Simulate AI processing - in real implementation, call AI service
-    const processedText = `[AI ${operation}] ${selectedText}`;
+    // Simulate AI processing with more realistic transformations
+    let processedText = selectedText;
     
-    if (editor.state.selection.empty) {
-      editor.chain().focus().selectAll().insertContent(processedText).run();
+    switch (operation) {
+      case 'improve':
+        processedText = selectedText.replace(/\b(good|nice|ok)\b/gi, 'excellent')
+          .replace(/\b(bad|poor)\b/gi, 'suboptimal')
+          .replace(/\s+/g, ' ');
+        break;
+      case 'grammar':
+        processedText = selectedText.replace(/\bi\b/g, 'I')
+          .replace(/\bdont\b/g, "don't")
+          .replace(/\bcant\b/g, "can't")
+          .replace(/\bwont\b/g, "won't");
+        break;
+      case 'professional':
+        processedText = selectedText.replace(/\b(hey|hi)\b/gi, 'Dear')
+          .replace(/\b(thanks|thx)\b/gi, 'Thank you')
+          .replace(/\b(gonna)\b/gi, 'going to')
+          .replace(/\b(wanna)\b/gi, 'want to');
+        break;
+      case 'casual':
+        processedText = selectedText.replace(/\bDear\b/gi, 'Hey')
+          .replace(/\bThank you\b/gi, 'Thanks')
+          .replace(/\bgoing to\b/gi, 'gonna')
+          .replace(/\bwant to\b/gi, 'wanna');
+        break;
+      case 'shorten':
+        processedText = selectedText.split(' ').slice(0, Math.max(1, Math.floor(selectedText.split(' ').length * 0.7))).join(' ');
+        break;
+      case 'expand':
+        processedText = selectedText.replace(/\./g, '. Additionally,')
+          .replace(/\band\b/g, ', furthermore,');
+        break;
+      default:
+        processedText = `[AI ${operation}] ${selectedText}`;
+    }
+    
+    // Apply the processed text to the selection
+    if (from !== to) {
+      // Replace selected text
+      editor.chain().focus().deleteSelection().insertContent(processedText).run();
     } else {
-      editor.chain().focus().insertContent(processedText).run();
+      // If no selection, replace all content
+      editor.chain().focus().selectAll().deleteSelection().insertContent(processedText).run();
     }
     
     setShowAIDialog(false);
