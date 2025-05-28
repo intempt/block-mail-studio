@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -62,7 +61,7 @@ const bgColors = [
   '#BFDBFE', '#DDD6FE', '#FBCFE8', '#A7F3D0'
 ];
 
-export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
+const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   editor,
   isVisible,
   position,
@@ -100,7 +99,7 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
 
   const handleBgColorChange = (color: string) => {
     console.log('Setting background color:', color);
-    editor.chain().focus().setHighlight({ color }).run();
+    editor.chain().focus().toggleHighlight({ color }).run();
     setShowBgColorPicker(false);
   };
 
@@ -430,3 +429,5 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
     </div>
   );
 };
+
+export { FloatingTipTapToolbar };
