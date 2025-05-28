@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +35,8 @@ import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
 import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
+import { createDragData } from '@/utils/dragDropUtils';
+import { generateUniqueId } from '@/utils/blockUtils';
 
 interface BlockItem {
   id: string;
@@ -132,24 +135,66 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
+
+  const createLayoutConfig = (layout: LayoutOption) => {
+    const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
+      id: generateUniqueId(),
+      blocks: [],
+      width: layout.preview[index] || `${100 / layout.columns}%`
+    }));
+
+    return {
+      columnCount: layout.columns,
+      columnRatio: layout.ratio,
+      columns: columnElements,
+      gap: '16px'
+    };
+  };
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
-    e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
+    console.log('OmnipresentRibbon: Starting block drag:', blockType);
+    const dragData = createDragData({ blockType });
+    e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
+    console.log('OmnipresentRibbon: Starting layout drag:', layout.name);
+    setDraggedLayout(layout.id);
+    
+    const layoutConfig = createLayoutConfig(layout);
+    const dragData = createDragData({
+      blockType: 'columns',
+      isLayout: true,
+      layoutData: layoutConfig
+    });
+
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.effectAllowed = 'copy';
+
+    // Enhanced drag image
+    const dragPreview = document.createElement('div');
+    dragPreview.className = 'bg-white border-2 border-blue-400 rounded-lg p-3 shadow-lg';
+    dragPreview.style.transform = 'rotate(2deg)';
+    dragPreview.innerHTML = `
+      <div class="text-sm font-medium text-blue-700 mb-2">${layout.name}</div>
+      <div class="flex gap-1 h-6">
+        ${layout.preview.map(width => `<div class="bg-blue-200 rounded border" style="width: ${width}"></div>`).join('')}
+      </div>
+    `;
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 60, 30);
+    setTimeout(() => document.body.removeChild(dragPreview), 0);
+  };
+
+  const handleLayoutDragEnd = () => {
+    setDraggedLayout(null);
+  };
+
   const handleLayoutSelect = (layout: LayoutOption) => {
-    const columns = Array.from({ length: layout.columns }, (_, index) => ({
-      id: `col-${index}`,
-      blocks: [],
-      width: layout.preview[index] || '100%'
-    }));
-
-    const layoutConfig = {
-      ...layout,
-      columns
-    };
-
+    console.log('OmnipresentRibbon: Layout clicked:', layout.name);
+    const layoutConfig = createLayoutConfig(layout);
     onBlockAdd('columns', layoutConfig);
   };
 
@@ -227,7 +272,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     <div className="bg-white border-b border-gray-200 relative">
       <EnhancedAISuggestionsWidget
         isOpen={showAISuggestions}
-        onToggle={handleAISuggestionsToggle}
+        onToggle={() => setShowAISuggestions(!showAISuggestions)}
         emailHTML={emailHTML}
         subjectLine={subjectLine}
         canvasRef={canvasRef}
@@ -237,6 +282,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         }}
       />
 
+      {/* Top Header */}
       <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-4">
           {onBack && (
@@ -256,8 +302,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Input
                 value={campaignTitle}
                 onChange={(e) => setCampaignTitle(e.target.value)}
-                onBlur={handleTitleSave}
-                onKeyDown={handleTitleKeyPress}
+                onBlur={() => setIsEditingTitle(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') setIsEditingTitle(false);
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
                 className="text-xl font-semibold border-none p-0 h-auto focus:ring-0 focus:border-none"
                 autoFocus
               />
@@ -306,7 +355,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={handleDeleteCanvas}
+            onClick={() => {
+              if (confirm('Are you sure you want to clear all content?')) {
+                console.log('Clearing canvas content');
+              }
+            }}
             className="flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
@@ -334,8 +387,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
+      {/* Toolbar */}
       <div className="px-3 py-2">
         <div className="flex items-center gap-3 overflow-x-auto">
+          {/* Content Blocks */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               {blockItems.map((block) => (
@@ -343,10 +398,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={block.id}
                   variant="ghost"
                   size="sm"
-                  className="p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100"
+                  className="p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
+                  title={`Add ${block.name}`}
                 >
                   {block.icon}
                 </Button>
@@ -356,6 +412,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
+          {/* Layout Options */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               {layoutOptions.map((layout) => (
@@ -363,8 +420,14 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={layout.id}
                   variant="ghost"
                   size="sm"
-                  className="p-2 cursor-pointer hover:bg-gray-100"
+                  className={`p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200 ${
+                    draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
+                  }`}
+                  draggable
+                  onDragStart={(e) => handleLayoutDragStart(e, layout)}
+                  onDragEnd={handleLayoutDragEnd}
                   onClick={() => handleLayoutSelect(layout)}
+                  title={`Add ${layout.name} Layout`}
                 >
                   <DynamicLayoutIcon layout={layout} className="w-6 h-5" />
                 </Button>
@@ -374,73 +437,70 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           <Separator orientation="vertical" className="h-10" />
 
+          {/* Tool Buttons */}
           <div className="flex-shrink-0">
             <div className="flex gap-1">
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="sm"
                 className="p-2 hover:bg-gray-100"
-                onClick={handleEmailSettingsToggle}
+                onClick={() => {
+                  closeAllPanels();
+                  setShowEmailSettings(!showEmailSettings);
+                }}
+                title="Email Settings"
               >
                 <Settings className="w-6 h-6" />
               </Button>
-            </div>
-          </div>
 
-          <Separator orientation="vertical" className="h-10" />
-
-          <div className="flex-shrink-0">
-            <div className="flex gap-1">
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="sm"
                 className="p-2 hover:bg-gray-100"
-                onClick={handleTextHeadingsToggle}
+                onClick={() => {
+                  closeAllPanels();
+                  setShowTextHeadings(!showTextHeadings);
+                }}
+                title="Text & Headings"
               >
                 <Type className="w-6 h-6" />
               </Button>
-            </div>
-          </div>
 
-          <Separator orientation="vertical" className="h-10" />
-
-          <div className="flex-shrink-0">
-            <div className="flex gap-1">
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
                 size="sm"
                 className="p-2 hover:bg-gray-100"
-                onClick={handleButtonsToggle}
+                onClick={() => {
+                  closeAllPanels();
+                  setShowButtons(!showButtons);
+                }}
+                title="Buttons & Links"
               >
                 <MousePointer className="w-6 h-6" />
               </Button>
-            </div>
-          </div>
 
-          <Separator orientation="vertical" className="h-10" />
-
-          <div className="flex-shrink-0">
-            <div className="flex gap-1">
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
                 size="sm"
                 className="p-2 hover:bg-gray-100"
-                onClick={handleLinksToggle}
+                onClick={() => {
+                  closeAllPanels();
+                  setShowLinks(!showLinks);
+                }}
+                title="Links"
               >
                 <Link className="w-6 h-6" />
               </Button>
-            </div>
-          </div>
 
-          <Separator orientation="vertical" className="h-10" />
-
-          <div className="flex-shrink-0">
-            <div className="flex gap-1">
               <Button
                 variant={showAISuggestions ? 'default' : 'ghost'}
                 size="sm"
                 className="p-2 hover:bg-gray-100"
-                onClick={handleAISuggestionsToggle}
+                onClick={() => {
+                  closeAllPanels();
+                  setShowAISuggestions(!showAISuggestions);
+                }}
+                title="AI Suggestions"
               >
                 <Lightbulb className="w-6 h-6" />
               </Button>
@@ -449,21 +509,22 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
+      {/* Settings Panels */}
       <EmailSettingsCard
         isOpen={showEmailSettings}
-        onToggle={handleEmailSettingsToggle}
+        onToggle={() => setShowEmailSettings(!showEmailSettings)}
         onStylesChange={onGlobalStylesChange}
       />
 
       <TextHeadingsCard
         isOpen={showTextHeadings}
-        onToggle={handleTextHeadingsToggle}
+        onToggle={() => setShowTextHeadings(!showTextHeadings)}
         onStylesChange={onGlobalStylesChange}
       />
 
       <ButtonsLinksCard
         isOpen={showButtons}
-        onToggle={handleButtonsToggle}
+        onToggle={() => setShowButtons(!showButtons)}
         onStylesChange={onGlobalStylesChange}
       />
 
@@ -477,7 +538,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleLinksToggle}
+              onClick={() => setShowLinks(false)}
               className="text-gray-500"
             >
               <ChevronDown className="w-4 h-4" />
