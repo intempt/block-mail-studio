@@ -37,8 +37,6 @@ export class CentralizedAIAnalysisService {
 
     const startTime = Date.now();
     const errors: string[] = [];
-    
-    toast.loading('Running complete AI analysis...', { id: 'complete-analysis' });
 
     // Run all analyses in parallel
     const [brandVoiceResult, performanceResult, subjectVariantsResult, optimizationResults] = await Promise.allSettled([
@@ -100,10 +98,8 @@ export class CentralizedAIAnalysisService {
 
     const executionTime = Date.now() - startTime;
     
-    if (errors.length === 0) {
-      toast.success(`Complete analysis finished in ${(executionTime / 1000).toFixed(1)}s`, { id: 'complete-analysis' });
-    } else {
-      toast.warning(`Analysis completed with ${errors.length} errors`, { id: 'complete-analysis' });
+    if (errors.length > 0) {
+      toast.error(`Analysis completed with ${errors.length} errors`);
     }
 
     return {

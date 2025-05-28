@@ -1,3 +1,4 @@
+
 import { OpenAIEmailService, EmailGenerationRequest as OpenAIEmailGenerationRequest, ConversationalRequest } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
 import { toast } from 'sonner';
@@ -78,7 +79,6 @@ export class EmailAIService {
       };
 
       const result = await OpenAIEmailService.generateEmailContent(emailRequest);
-      toast.success('Email generated successfully');
       return result;
     } catch (error) {
       console.error('Email generation failed:', error);
@@ -89,7 +89,6 @@ export class EmailAIService {
 
   static async generateImage(request: ImageGenerationRequest): Promise<any> {
     // Image generation placeholder - not implemented with OpenAI DALL-E yet
-    toast.info('Image generation feature coming soon');
     return {
       imageUrl: `https://via.placeholder.com/600x300/4F46E5/FFFFFF?text=${encodeURIComponent(request.prompt)}`,
       prompt: request.prompt,
@@ -109,7 +108,6 @@ export class EmailAIService {
                               refinementPrompt.toLowerCase().includes('clear') ? 'clarity' : 'conversion';
 
       const result = await OpenAIEmailService.optimizeCopy(currentHTML, optimizationType);
-      toast.success('Email refined successfully');
       return result;
     } catch (error) {
       console.error('Email refinement failed:', error);
@@ -132,7 +130,6 @@ export class EmailAIService {
       };
 
       const result = await OpenAIEmailService.conversationalResponse(conversationalRequest);
-      toast.success('Content generated successfully');
       return result;
     } catch (error) {
       console.error('Content generation failed:', error);
@@ -171,7 +168,6 @@ export class EmailAIService {
 
     try {
       const result = await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
-      toast.success('Brand voice analysis completed');
       return result;
     } catch (error) {
       console.error('Brand voice analysis failed:', error);
@@ -188,7 +184,6 @@ export class EmailAIService {
 
     try {
       const suggestions = await OpenAIEmailService.generateSubjectLines(emailContent, 3);
-      toast.success('Subject line analysis completed');
       return {
         score: Math.floor(Math.random() * 20) + 70, // This should be enhanced to use real AI scoring
         suggestions,
@@ -212,7 +207,6 @@ export class EmailAIService {
 
     try {
       const result = await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
-      toast.success('Performance analysis completed');
       return result;
     } catch (error) {
       console.error('Email performance analysis failed:', error);
@@ -222,7 +216,6 @@ export class EmailAIService {
   }
 
   static async analyzeImage(imageUrl: string): Promise<any> {
-    toast.info('Image analysis feature coming soon');
     return {
       analysis: 'Image analysis feature coming soon',
       suggestions: ['Optimize image size', 'Add descriptive alt text', 'Ensure mobile compatibility']

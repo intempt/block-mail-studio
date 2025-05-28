@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,13 +50,6 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
       console.log('Direct performance analysis completed:', result);
       
       setAnalysis(result);
-      
-      // Show toast for critical issues
-      if (result.overallScore !== null && result.overallScore < 60) {
-        console.log(`Performance Issues Detected. Overall score: ${result.overallScore}/100. Check recommendations for improvements.`);
-      } else if (result.overallScore !== null && result.overallScore > 85) {
-        console.log(`Excellent Performance! Your email scored ${result.overallScore}/100!`);
-      }
     } catch (error) {
       console.error('Error analyzing performance:', error);
       console.log("Analysis Failed. Unable to analyze email performance. Please try again.");
