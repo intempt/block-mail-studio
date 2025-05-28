@@ -77,7 +77,8 @@ export const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   };
 
   const handleFontSizeChange = (size: string) => {
-    editor.chain().focus().setFontSize(size).run();
+    // Use TipTap's TextStyle extension to set font size
+    editor.chain().focus().setMark('textStyle', { fontSize: size }).run();
   };
 
   const handleFontFamilyChange = (family: string) => {
