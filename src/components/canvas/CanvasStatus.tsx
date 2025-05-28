@@ -1,9 +1,8 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Monitor, Smartphone, Mail, Image, Link, FileText, BarChart3, TrendingUp, RefreshCw, Shield, Clock } from 'lucide-react';
-import { useEmailAnalysis } from '@/contexts/EmailAnalysisContext';
+import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
 
 interface CanvasStatusProps {
   selectedBlockId: string | null;
@@ -20,7 +19,9 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   emailHTML = '',
   subjectLine = ''
 }) => {
-  const { analysis, isAnalyzing, lastAnalyzed, analyzeEmail, refreshAnalysis } = useEmailAnalysis();
+  const [analytics, setAnalytics] = useState<UnifiedEmailAnalytics | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [lastAnalyzed, setLastAnalyzed] = useState<Date | null>(null);
   const [hasContent, setHasContent] = useState(false);
 
   // Check if there's content to analyze
@@ -28,20 +29,40 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     const contentExists = emailHTML.trim().length > 0;
     setHasContent(contentExists);
     
-    // Trigger analysis when content exists
-    if (contentExists && subjectLine) {
-      analyzeEmail({
-        emailHTML,
-        subjectLine,
-        variant: 'quick'
-      });
+    // Run initial analysis only if content exists and no previous analysis
+    if (contentExists && !analytics && !isAnalyzing) {
+      analyzeEmail();
     }
-  }, [emailHTML, subjectLine, analyzeEmail]);
+  }, [emailHTML]);
+
+  const analyzeEmail = async () => {
+    if (!emailHTML.trim()) {
+      setAnalytics(null);
+      setLastAnalyzed(null);
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const result = await UnifiedEmailAnalyticsService.analyzeEmail(emailHTML, subjectLine);
+      setAnalytics(result);
+      setLastAnalyzed(new Date());
+    } catch (error) {
+      console.error('Analytics error:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const refreshAnalytics = () => {
+    UnifiedEmailAnalyticsService.clearCache();
+    analyzeEmail();
   };
 
   const formatLastAnalyzed = () => {
@@ -79,7 +100,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={refreshAnalysis}
+              onClick={refreshAnalytics}
               disabled={isAnalyzing || !hasContent}
               className="h-6 px-2 text-xs"
             >
@@ -120,8 +141,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         </div>
       )}
 
-      {/* Analytics display using shared analysis */}
-      {analysis && !isAnalyzing && (
+      {/* Analytics display - keep existing comprehensive analytics display */}
+      {analytics && !isAnalyzing && (
         <div className="grid grid-cols-12 gap-4 text-xs">
           {/* Content Metrics */}
           <div className="col-span-3 space-y-2">
@@ -132,26 +153,26 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   <Mail className="w-3 h-3" />
                   Size
                 </span>
-                <span className="font-medium">{analysis.contentMetrics.sizeKB}KB</span>
+                <span className="font-medium">{analytics.sizeKB}KB</span>
               </div>
               
-              {analysis.contentMetrics.imageCount > 0 && (
+              {analytics.imageCount > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <Image className="w-3 h-3" />
                     Images
                   </span>
-                  <span>{analysis.contentMetrics.imageCount}</span>
+                  <span>{analytics.imageCount}</span>
                 </div>
               )}
               
-              {analysis.contentMetrics.linkCount > 0 && (
+              {analytics.linkCount > 0 && (
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <Link className="w-3 h-3" />
                     Links
                   </span>
-                  <span>{analysis.contentMetrics.linkCount}</span>
+                  <span>{analytics.linkCount}</span>
                 </div>
               )}
               
@@ -160,7 +181,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   <FileText className="w-3 h-3" />
                   Words
                 </span>
-                <span>{analysis.contentMetrics.wordCount}</span>
+                <span>{analytics.wordCount}</span>
               </div>
             </div>
           </div>
@@ -174,20 +195,20 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span>Overall</span>
-                <span className={`font-medium ${getScoreColor(analysis.overallScore)}`}>
-                  {analysis.overallScore}
+                <span className={`font-medium ${getScoreColor(analytics.overallScore)}`}>
+                  {analytics.overallScore}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Deliverability</span>
-                <span className={`font-medium ${getScoreColor(analysis.deliverabilityScore)}`}>
-                  {analysis.deliverabilityScore}
+                <span className={`font-medium ${getScoreColor(analytics.deliverabilityScore)}`}>
+                  {analytics.deliverabilityScore}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Mobile</span>
-                <span className={`font-medium ${getScoreColor(analysis.mobileScore)}`}>
-                  {analysis.mobileScore}
+                <span className={`font-medium ${getScoreColor(analytics.mobileScore)}`}>
+                  {analytics.mobileScore}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -195,8 +216,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   <Shield className="w-3 h-3" />
                   Spam Risk
                 </span>
-                <span className={`font-medium ${analysis.spamScore > 20 ? 'text-red-600' : 'text-green-600'}`}>
-                  {analysis.spamScore}%
+                <span className={`font-medium ${analytics.spamScore > 20 ? 'text-red-600' : 'text-green-600'}`}>
+                  {analytics.spamScore}%
                 </span>
               </div>
             </div>
@@ -212,48 +233,54 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               <div className="flex items-center justify-between">
                 <span>Open Rate</span>
                 <span className="font-medium text-blue-600">
-                  {analysis.performancePrediction.openRate.toFixed(1)}%
+                  {analytics.performancePrediction.openRate.toFixed(1)}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Click Rate</span>
                 <span className="font-medium text-purple-600">
-                  {analysis.performancePrediction.clickRate.toFixed(1)}%
+                  {analytics.performancePrediction.clickRate.toFixed(1)}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Conversion</span>
                 <span className="font-medium text-green-600">
-                  {analysis.performancePrediction.conversionRate.toFixed(1)}%
+                  {analytics.performancePrediction.conversionRate.toFixed(1)}%
                 </span>
               </div>
             </div>
           </div>
 
           {/* Brand & Engagement Scores */}
-          <div className="col-span-3 space-y-2">
-            <div className="font-medium text-gray-700 mb-2">Brand Analysis</div>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span>Brand Voice</span>
-                <span className={`font-medium ${getScoreColor(analysis.brandVoiceScore)}`}>
-                  {analysis.brandVoiceScore}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Engagement</span>
-                <span className={`font-medium ${getScoreColor(analysis.engagementScore)}`}>
-                  {analysis.engagementScore}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Readability</span>
-                <span className={`font-medium ${getScoreColor(analysis.readabilityScore)}`}>
-                  {analysis.readabilityScore}
-                </span>
+          {analytics.brandVoiceScore && (
+            <div className="col-span-3 space-y-2">
+              <div className="font-medium text-gray-700 mb-2">Brand Analysis</div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span>Brand Voice</span>
+                  <span className={`font-medium ${getScoreColor(analytics.brandVoiceScore)}`}>
+                    {analytics.brandVoiceScore}
+                  </span>
+                </div>
+                {analytics.engagementScore && (
+                  <div className="flex items-center justify-between">
+                    <span>Engagement</span>
+                    <span className={`font-medium ${getScoreColor(analytics.engagementScore)}`}>
+                      {analytics.engagementScore}
+                    </span>
+                  </div>
+                )}
+                {analytics.readabilityScore && (
+                  <div className="flex items-center justify-between">
+                    <span>Readability</span>
+                    <span className={`font-medium ${getScoreColor(analytics.readabilityScore)}`}>
+                      {analytics.readabilityScore}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>
