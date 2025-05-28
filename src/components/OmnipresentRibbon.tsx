@@ -343,7 +343,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               }`}
             >
               <Monitor className="w-4 h-4" />
-              <span className="text-xs">Desktop</span>
+              <span className="text-xs">Desktop Email Clients</span>
             </Button>
             <Button
               variant={previewMode === 'mobile' ? 'default' : 'ghost'}
@@ -354,7 +354,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               }`}
             >
               <Smartphone className="w-4 h-4" />
-              <span className="text-xs">Mobile</span>
+              <span className="text-xs">Mobile Devices</span>
             </Button>
           </div>
           
