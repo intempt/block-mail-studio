@@ -28,11 +28,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   useEffect(() => {
     const contentExists = emailHTML.trim().length > 0;
     setHasContent(contentExists);
-    
-    // Run initial analysis only if content exists and no previous analysis
-    if (contentExists && !analytics && !isAnalyzing) {
-      analyzeEmail();
-    }
+    // Removed auto-analysis - only manual analysis via refresh button
   }, [emailHTML]);
 
   const analyzeEmail = async () => {
@@ -130,6 +126,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       {!hasContent && (
         <div className="text-center py-4">
           <p className="text-sm text-gray-500">Add content to see analytics</p>
+        </div>
+      )}
+
+      {/* Show message when content exists but no analysis run */}
+      {hasContent && !analytics && !isAnalyzing && (
+        <div className="text-center py-4">
+          <p className="text-sm text-gray-500">Click refresh to analyze email with AI</p>
         </div>
       )}
 
