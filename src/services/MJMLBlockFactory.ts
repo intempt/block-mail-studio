@@ -1,4 +1,3 @@
-
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, VideoBlock, SocialBlock, DividerBlock, SpacerBlock, ColumnsBlock } from '@/types/emailBlocks';
 
 export class MJMLBlockFactory {
@@ -20,6 +19,10 @@ export class MJMLBlockFactory {
         return this.spacerBlockToMJML(block as SpacerBlock);
       case 'columns':
         return this.columnsBlockToMJML(block as ColumnsBlock);
+      case 'html':
+        return this.htmlBlockToMJML(block);
+      case 'table':
+        return this.tableBlockToMJML(block);
       default:
         return `<!-- Unsupported block type: ${block.type} -->`;
     }
@@ -158,6 +161,48 @@ export class MJMLBlockFactory {
       >
         ${columnElements}
       </mj-section>
+    `;
+  }
+
+  private static htmlBlockToMJML(block: any): string {
+    const styling = block.styling.desktop;
+    return `
+      <mj-raw>
+        <div style="padding: ${styling.padding || '10px 25px'}; background-color: ${styling.backgroundColor || 'transparent'};">
+          ${block.content.html || '<!-- Empty HTML block -->'}
+        </div>
+      </mj-raw>
+    `;
+  }
+
+  private static tableBlockToMJML(block: any): string {
+    const styling = block.styling.desktop;
+    const getBorderStyle = () => {
+      const { borderStyle, borderColor, borderWidth } = block.content;
+      return `${borderWidth} ${borderStyle} ${borderColor}`;
+    };
+
+    const cellsHTML = block.content.cells.map((row: any[], rowIndex: number) => {
+      const isHeader = block.content.headerRow && rowIndex === 0;
+      const Tag = isHeader ? 'th' : 'td';
+      
+      const rowHTML = row.map((cell: any) => 
+        `<${Tag} style="border: ${getBorderStyle()}; padding: 8px; ${isHeader ? 'font-weight: bold; background-color: #f5f5f5;' : ''}">${cell.content}</${Tag}>`
+      ).join('');
+      
+      return `<tr>${rowHTML}</tr>`;
+    }).join('');
+
+    return `
+      <mj-raw>
+        <div style="padding: ${styling.padding || '10px 25px'}; background-color: ${styling.backgroundColor || 'transparent'};">
+          <table style="width: 100%; border-collapse: collapse; border: ${getBorderStyle()};">
+            <tbody>
+              ${cellsHTML}
+            </tbody>
+          </table>
+        </div>
+      </mj-raw>
     `;
   }
 

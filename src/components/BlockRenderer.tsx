@@ -13,6 +13,9 @@ import { HtmlBlockRenderer } from './blocks/HtmlBlockRenderer';
 import { TableBlockRenderer } from './blocks/TableBlockRenderer';
 import { MJMLImageBlockRenderer } from './blocks/MJMLImageBlockRenderer';
 import { MJMLVideoBlockRenderer } from './blocks/MJMLVideoBlockRenderer';
+import { MJMLHtmlBlockRenderer } from './blocks/MJMLHtmlBlockRenderer';
+import { MJMLTableBlockRenderer } from './blocks/MJMLTableBlockRenderer';
+import { MJMLSocialBlockRenderer } from './blocks/MJMLSocialBlockRenderer';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -44,11 +47,11 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       case 'video':
         return <MJMLVideoBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'social':
-        return <SocialBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLSocialBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'html':
-        return <HtmlBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLHtmlBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'table':
-        return <TableBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
+        return <MJMLTableBlockRenderer block={block} isSelected={isSelected} onUpdate={onUpdate} />;
       default:
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
     }
