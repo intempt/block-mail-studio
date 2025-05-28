@@ -51,15 +51,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-6 h-6" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-6 h-6" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-6 h-6" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-6 h-6" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-6 h-6" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-6 h-6" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-6 h-6" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-6 h-6" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-6 h-6" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-7 h-7" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-7 h-7" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-7 h-7" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-7 h-7" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-7 h-7" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-7 h-7" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-7 h-7" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-7 h-7" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-7 h-7" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -382,17 +382,17 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       </div>
 
       {/* Toolbar - Centered */}
-      <div className="px-3 py-2">
+      <div className="px-3 py-1.5">
         <div className="flex items-center justify-center gap-3 overflow-x-auto">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="ghost"
                   size="sm"
-                  className="p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200"
+                  className="p-1.5 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
@@ -408,13 +408,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="ghost"
                   size="sm"
-                  className={`p-2 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200 ${
+                  className={`p-1.5 cursor-grab active:cursor-grabbing hover:bg-gray-100 transition-all duration-200 ${
                     draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
                   }`}
                   draggable
@@ -423,7 +423,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-6 h-5" />
+                  <DynamicLayoutIcon layout={layout} className="w-7 h-6" />
                 </Button>
               ))}
             </div>
@@ -433,67 +433,67 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="sm"
-                className="p-2 hover:bg-gray-100"
+                className="p-1.5 hover:bg-gray-100"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-6 h-6" />
+                <Settings className="w-7 h-7" />
               </Button>
 
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="sm"
-                className="p-2 hover:bg-gray-100"
+                className="p-1.5 hover:bg-gray-100"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-6 h-6" />
+                <Type className="w-7 h-7" />
               </Button>
 
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
                 size="sm"
-                className="p-2 hover:bg-gray-100"
+                className="p-1.5 hover:bg-gray-100"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
                 }}
                 title="Buttons & Links"
               >
-                <MousePointer className="w-6 h-6" />
+                <MousePointer className="w-7 h-7" />
               </Button>
 
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
                 size="sm"
-                className="p-2 hover:bg-gray-100"
+                className="p-1.5 hover:bg-gray-100"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
                 }}
                 title="Links"
               >
-                <Link className="w-6 h-6" />
+                <Link className="w-7 h-7" />
               </Button>
 
               <Button
                 variant={showAISuggestions ? 'default' : 'ghost'}
                 size="sm"
-                className="p-2 hover:bg-gray-100"
+                className="p-1.5 hover:bg-gray-100"
                 onClick={handleAISuggestionsClick}
                 title="AI Suggestions"
               >
-                <Lightbulb className="w-6 h-6" />
+                <Lightbulb className="w-7 h-7" />
               </Button>
             </div>
           </div>
