@@ -1,4 +1,3 @@
-
 import { OpenAIEmailService } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
 import { toast } from 'sonner';
@@ -32,6 +31,15 @@ export interface ComprehensiveEmailAnalysis {
     estimatedReadTime: string;
     sizeKB: number;
   };
+  
+  // Subject line variants
+  subjectLineVariants: Array<{
+    id: string;
+    text: string;
+    style: 'direct' | 'emotional' | 'curiosity' | 'urgency' | 'personalized';
+    predictedOpenRate: number;
+    reason: string;
+  }>;
   
   // AI suggestions
   suggestions: Array<{
@@ -131,6 +139,7 @@ ANALYSIS REQUIREMENTS for ${variant} analysis:
 4. Content Optimization Opportunities
 5. Predictive Performance Metrics
 6. Actionable Improvement Suggestions
+7. Subject Line Variants (3 different styles)
 
 Return comprehensive JSON structure:
 {
@@ -147,6 +156,29 @@ Return comprehensive JSON structure:
     "clickRate": 7.8,
     "conversionRate": 2.9
   },
+  "subjectLineVariants": [
+    {
+      "id": "variant-1",
+      "text": "Alternative subject line based on content analysis",
+      "style": "direct",
+      "predictedOpenRate": 26.2,
+      "reason": "Clear value proposition increases open rates"
+    },
+    {
+      "id": "variant-2", 
+      "text": "Emotional variant based on content",
+      "style": "emotional",
+      "predictedOpenRate": 23.8,
+      "reason": "Emotional appeal for better engagement"
+    },
+    {
+      "id": "variant-3",
+      "text": "Curiosity-driven variant",
+      "style": "curiosity", 
+      "predictedOpenRate": 28.1,
+      "reason": "Questions drive curiosity and opens"
+    }
+  ],
   "suggestions": [
     {
       "id": "subj-001",
@@ -242,7 +274,7 @@ Focus on providing genuine, actionable insights based on the actual email conten
       console.error('Master analysis failed:', error);
       toast.error('Analysis failed', { id: 'master-analysis' });
       
-      // Return fallback analysis with calculated metrics
+      // Enhanced fallback analysis with subject line variants
       const fallbackAnalysis: ComprehensiveEmailAnalysis = {
         overallScore: 85,
         deliverabilityScore: 88,
@@ -258,6 +290,29 @@ Focus on providing genuine, actionable insights based on the actual email conten
           conversionRate: 2.4
         },
         contentMetrics: this.calculateContentMetrics(request.emailHTML),
+        subjectLineVariants: [
+          {
+            id: 'fallback-1',
+            text: request.subjectLine.length > 50 ? request.subjectLine.substring(0, 47) + '...' : request.subjectLine + ' - Limited Time',
+            style: 'direct',
+            predictedOpenRate: 24.2,
+            reason: 'Shortened for mobile optimization'
+          },
+          {
+            id: 'fallback-2',
+            text: '🎯 ' + request.subjectLine,
+            style: 'emotional',
+            predictedOpenRate: 21.8,
+            reason: 'Emoji can increase engagement'
+          },
+          {
+            id: 'fallback-3',
+            text: request.subjectLine.endsWith('?') ? request.subjectLine : request.subjectLine + '?',
+            style: 'curiosity',
+            predictedOpenRate: 23.5,
+            reason: 'Questions drive curiosity'
+          }
+        ],
         suggestions: [
           {
             id: 'fallback-001',

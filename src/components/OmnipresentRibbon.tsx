@@ -36,6 +36,7 @@ import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
 import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
+import { SmartLightbulb } from './SmartLightbulb';
 import { createDragData } from '@/utils/dragDropUtils';
 import { generateUniqueId } from '@/utils/blockUtils';
 
@@ -334,6 +335,14 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
+          <SmartLightbulb
+            emailHTML={emailHTML}
+            subjectLine={subjectLine}
+            onAnalyze={() => {
+              console.log('Smart analysis triggered');
+            }}
+          />
+          
           <Button onClick={onPreview} variant="outline" size="sm">
             <Eye className="w-4 h-4 mr-2" />
             Preview
