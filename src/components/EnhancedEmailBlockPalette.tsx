@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,11 @@ import {
   Type, 
   Image, 
   MousePointer, 
-  Minus, 
+  Space, 
+  Separator,
   Video, 
   Share2, 
+  Code,
   Table,
   ChevronDown,
   ChevronRight,
@@ -41,11 +44,11 @@ const blockItems: BlockItem[] = [
   { id: 'text', name: 'Text', description: 'Add paragraphs, headings, and formatted text', icon: <Type className="w-4 h-4" /> },
   { id: 'image', name: 'Image', description: 'Insert images with optional links', icon: <Image className="w-4 h-4" /> },
   { id: 'button', name: 'Button', description: 'Call-to-action buttons with custom styling', icon: <MousePointer className="w-4 h-4" /> },
-  { id: 'spacer', name: 'Spacer', description: 'Add vertical spacing between blocks', icon: <Minus className="w-4 h-4" /> },
-  { id: 'divider', name: 'Divider', description: 'Horizontal line separators', icon: <Minus className="w-4 h-4" /> },
+  { id: 'spacer', name: 'Spacer', description: 'Add vertical spacing between blocks', icon: <Space className="w-4 h-4" /> },
+  { id: 'divider', name: 'Divider', description: 'Horizontal line separators', icon: <Separator className="w-4 h-4" /> },
   { id: 'video', name: 'Video', description: 'Embed videos with thumbnails', icon: <Video className="w-4 h-4" /> },
   { id: 'social', name: 'Social', description: 'Social media icons and links', icon: <Share2 className="w-4 h-4" /> },
-  { id: 'html', name: 'HTML', description: 'Custom HTML content', icon: <Table className="w-4 h-4" /> },
+  { id: 'html', name: 'HTML', description: 'Custom HTML content', icon: <Code className="w-4 h-4" /> },
   { id: 'table', name: 'Table', description: 'Data tables with customizable styling', icon: <Table className="w-4 h-4" /> },
 ];
 

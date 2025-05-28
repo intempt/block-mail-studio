@@ -31,7 +31,7 @@ export interface UnifiedEmailAnalytics {
 
 class UnifiedEmailAnalyticsService {
   private static cache = new Map<string, { data: UnifiedEmailAnalytics; timestamp: number }>();
-  private static CACHE_DURATION = 30000; // 30 seconds
+  private static CACHE_DURATION = 300000; // 5 minutes (extended from 30 seconds)
 
   private static calculateBasicMetrics(emailHTML: string): Partial<UnifiedEmailAnalytics> {
     const textContent = emailHTML.replace(/<[^>]*>/g, '');
@@ -72,6 +72,7 @@ class UnifiedEmailAnalyticsService {
     const cached = this.cache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      console.log('Unified analytics: Using cached result');
       return cached.data;
     }
 
@@ -126,7 +127,7 @@ class UnifiedEmailAnalyticsService {
 
   static clearCache(): void {
     this.cache.clear();
-    toast.info('Analytics cache cleared');
+    toast.info('Analytics cache cleared - fresh analysis will run on next refresh');
   }
 }
 

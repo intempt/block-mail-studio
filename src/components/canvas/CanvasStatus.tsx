@@ -1,8 +1,7 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Monitor, Smartphone, Mail, Image, Link, FileText, BarChart3, TrendingUp, RefreshCw, Shield } from 'lucide-react';
+import { Monitor, Smartphone, Mail, Image, Link, FileText, BarChart3, TrendingUp, RefreshCw, Shield, Clock } from 'lucide-react';
 import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
 
 interface CanvasStatusProps {
@@ -22,10 +21,24 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 }) => {
   const [analytics, setAnalytics] = useState<UnifiedEmailAnalytics | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [lastAnalyzed, setLastAnalyzed] = useState<Date | null>(null);
+  const [hasContent, setHasContent] = useState(false);
+
+  // Check if there's content to analyze
+  useEffect(() => {
+    const contentExists = emailHTML.trim().length > 0;
+    setHasContent(contentExists);
+    
+    // Run initial analysis only if content exists and no previous analysis
+    if (contentExists && !analytics && !isAnalyzing) {
+      analyzeEmail();
+    }
+  }, [emailHTML]);
 
   const analyzeEmail = async () => {
     if (!emailHTML.trim()) {
       setAnalytics(null);
+      setLastAnalyzed(null);
       return;
     }
 
@@ -33,21 +46,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     try {
       const result = await UnifiedEmailAnalyticsService.analyzeEmail(emailHTML, subjectLine);
       setAnalytics(result);
+      setLastAnalyzed(new Date());
     } catch (error) {
       console.error('Analytics error:', error);
     } finally {
       setIsAnalyzing(false);
     }
   };
-
-  // Auto-analyze when content changes (debounced)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      analyzeEmail();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [emailHTML, subjectLine]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
@@ -58,6 +63,19 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const refreshAnalytics = () => {
     UnifiedEmailAnalyticsService.clearCache();
     analyzeEmail();
+  };
+
+  const formatLastAnalyzed = () => {
+    if (!lastAnalyzed) return 'Not analyzed';
+    const now = new Date();
+    const diffMs = now.getTime() - lastAnalyzed.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return lastAnalyzed.toLocaleDateString();
   };
 
   return (
@@ -78,20 +96,29 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             </Badge>
           )}
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={refreshAnalytics}
-            disabled={isAnalyzing}
-            className="h-6 px-2 text-xs"
-          >
-            {isAnalyzing ? (
-              <RefreshCw className="w-3 h-3 animate-spin mr-1" />
-            ) : (
-              <RefreshCw className="w-3 h-3 mr-1" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshAnalytics}
+              disabled={isAnalyzing || !hasContent}
+              className="h-6 px-2 text-xs"
+            >
+              {isAnalyzing ? (
+                <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="w-3 h-3 mr-1" />
+              )}
+              Refresh
+            </Button>
+            
+            {lastAnalyzed && (
+              <div className="flex items-center gap-1 text-xs text-gray-400">
+                <Clock className="w-3 h-3" />
+                <span>{formatLastAnalyzed()}</span>
+              </div>
             )}
-            Refresh
-          </Button>
+          </div>
         </div>
         
         <div className="text-right">
@@ -99,10 +126,25 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         </div>
       </div>
 
-      {/* Comprehensive Analytics Display */}
-      {analytics && (
+      {/* Show message when no content */}
+      {!hasContent && (
+        <div className="text-center py-4">
+          <p className="text-sm text-gray-500">Add content to see analytics</p>
+        </div>
+      )}
+
+      {/* Loading state */}
+      {isAnalyzing && hasContent && (
+        <div className="flex items-center justify-center py-4">
+          <RefreshCw className="w-4 h-4 animate-spin mr-2 text-blue-500" />
+          <span className="text-sm text-gray-600">Analyzing email with AI...</span>
+        </div>
+      )}
+
+      {/* Analytics display - keep existing comprehensive analytics display */}
+      {analytics && !isAnalyzing && (
         <div className="grid grid-cols-12 gap-4 text-xs">
-          {/* Email Size & Content Metrics */}
+          {/* Content Metrics */}
           <div className="col-span-3 space-y-2">
             <div className="font-medium text-gray-700 mb-2">Content Metrics</div>
             <div className="space-y-1">
@@ -239,13 +281,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {isAnalyzing && (
-        <div className="flex items-center justify-center py-4">
-          <RefreshCw className="w-4 h-4 animate-spin mr-2 text-blue-500" />
-          <span className="text-sm text-gray-600">Analyzing email with AI...</span>
         </div>
       )}
     </div>

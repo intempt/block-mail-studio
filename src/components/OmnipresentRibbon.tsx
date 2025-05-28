@@ -8,7 +8,7 @@ import {
   Type, 
   Image, 
   MousePointer, 
-  Minus, 
+  Space, 
   Video, 
   Share2, 
   Table,
@@ -25,7 +25,9 @@ import {
   Settings,
   Lightbulb,
   Edit3,
-  Trash2
+  Trash2,
+  Separator as SeparatorIcon,
+  Code
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -56,11 +58,11 @@ const blockItems: BlockItem[] = [
   { id: 'text', name: 'Text', icon: <Type className="w-6 h-6" /> },
   { id: 'image', name: 'Image', icon: <Image className="w-6 h-6" /> },
   { id: 'button', name: 'Button', icon: <MousePointer className="w-6 h-6" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Minus className="w-6 h-6" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-6 h-6" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-6 h-6" /> },
+  { id: 'divider', name: 'Divider', icon: <SeparatorIcon className="w-6 h-6" /> },
   { id: 'video', name: 'Video', icon: <Video className="w-6 h-6" /> },
   { id: 'social', name: 'Social', icon: <Share2 className="w-6 h-6" /> },
-  { id: 'html', name: 'HTML', icon: <Table className="w-6 h-6" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-6 h-6" /> },
   { id: 'table', name: 'Table', icon: <Table className="w-6 h-6" /> }
 ];
 
