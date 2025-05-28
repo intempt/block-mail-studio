@@ -382,7 +382,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar - Centered with properly sized icons */}
+      {/* Toolbar - Centered with bigger icons */}
       <div className="px-3 py-2">
         <div className="flex items-center justify-center gap-3 overflow-x-auto">
           {/* Content Blocks */}
@@ -399,7 +399,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {block.icon}
+                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-6 h-6" })}
                 </Button>
               ))}
             </div>
@@ -424,7 +424,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-5 h-5" />
+                  <DynamicLayoutIcon layout={layout} className="w-6 h-6" />
                 </Button>
               ))}
             </div>
@@ -445,7 +445,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-6 h-6" />
               </Button>
 
               <Button
@@ -458,7 +458,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-5 h-5" />
+                <Type className="w-6 h-6" />
               </Button>
 
               <Button
@@ -471,7 +471,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Buttons & Links"
               >
-                <MousePointer className="w-5 h-5" />
+                <MousePointer className="w-6 h-6" />
               </Button>
 
               <Button
@@ -484,7 +484,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Links"
               >
-                <Link className="w-5 h-5" />
+                <Link className="w-6 h-6" />
               </Button>
 
               <Button
@@ -494,7 +494,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 onClick={handleAISuggestionsClick}
                 title="AI Suggestions"
               >
-                <Lightbulb className="w-5 h-5" />
+                <Lightbulb className="w-6 h-6" />
               </Button>
             </div>
           </div>
