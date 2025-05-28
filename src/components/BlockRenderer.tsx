@@ -70,16 +70,24 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       if (onUnstarBlock) {
         onUnstarBlock(block.id);
       }
+      
+      // Update the block state immediately
+      const updatedBlock = { ...block, isStarred: false };
+      onUpdate(updatedBlock);
     } else {
-      // Star the block
+      // Star the block - create snippet immediately
       if (onStarBlock) {
         onStarBlock(block);
       }
+      
+      // Update the block state immediately
+      const updatedBlock = { ...block, isStarred: true };
+      onUpdate(updatedBlock);
     }
     
-    // Trigger snippet refresh after starring/unstarring
+    // Force immediate snippet refresh
     if (onSnippetRefresh) {
-      setTimeout(() => onSnippetRefresh(), 100);
+      onSnippetRefresh();
     }
   };
 

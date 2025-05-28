@@ -1,4 +1,3 @@
-
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 
@@ -45,11 +44,16 @@ export class DirectSnippetService {
     // Add to session snippets
     this.sessionSnippets.push(snippet);
     
-    // Notify listeners about the change
-    this.notifyListeners();
-    
     console.log('Snippet saved to session:', snippet);
     console.log('Total snippets now:', this.sessionSnippets.length);
+
+    // Immediate notification to all listeners
+    this.notifyListeners();
+    
+    // Force a second notification after a tiny delay to ensure UI updates
+    setTimeout(() => {
+      this.notifyListeners();
+    }, 50);
 
     return snippet;
   }
@@ -65,7 +69,10 @@ export class DirectSnippetService {
     };
 
     this.sessionSnippets.push(newSnippet);
+    
+    // Immediate notification
     this.notifyListeners();
+    
     return newSnippet;
   }
 
@@ -91,6 +98,14 @@ export class DirectSnippetService {
     if (beforeCount !== afterCount) {
       this.notifyListeners();
       console.log(`Snippet ${id} deleted. Count: ${beforeCount} -> ${afterCount}`);
+      
+      // Immediate notification
+      this.notifyListeners();
+      
+      // Force a second notification to ensure UI updates
+      setTimeout(() => {
+        this.notifyListeners();
+      }, 50);
     }
   }
 
