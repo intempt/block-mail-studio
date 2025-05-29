@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { ComprehensiveTestRunner } from './ComprehensiveTestRunner';
+import { RealTestRunner } from './RealTestRunner';
 
 export const TestRunner: React.FC = () => {
-  return <ComprehensiveTestRunner />;
+  return <RealTestRunner />;
 };
