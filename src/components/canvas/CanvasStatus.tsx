@@ -4,13 +4,27 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { 
   BarChart3, 
   Brain, 
   TrendingUp, 
   RefreshCw, 
   Shield,
   Lightbulb,
-  Info
+  Info,
+  Eye,
+  MousePointer,
+  Target,
+  FileText,
+  Image,
+  Link,
+  Type,
+  Hash
 } from 'lucide-react';
 import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
 
@@ -77,176 +91,195 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   const formatPrediction = (value: number) => value.toFixed(1);
 
-  const StatusIndicator = ({ status }: { status: 'analyzing' | 'ready' | 'empty' }) => {
-    const config = {
-      analyzing: { icon: RefreshCw, text: 'Analyzing...', className: 'text-blue-600 animate-spin' },
-      ready: { icon: Lightbulb, text: 'AI Active', className: 'text-emerald-600' },
-      empty: { icon: Info, text: 'Add content to analyze', className: 'text-gray-400' }
-    };
-    
-    const { icon: Icon, text, className } = config[status];
-    
-    return (
-      <div className="flex items-center gap-2">
-        <Icon className={`w-3 h-3 ${className}`} />
-        <span className="text-xs font-medium text-gray-700">{text}</span>
-      </div>
-    );
-  };
-
-  const CompactMetric = ({ 
-    label, 
+  const MetricIcon = ({ 
+    icon: Icon, 
     value, 
-    icon: Icon,
+    tooltip,
     variant = 'outline'
   }: { 
-    label: string; 
+    icon: any; 
     value: string | number; 
-    icon?: any;
+    tooltip: string;
     variant?: 'default' | 'secondary' | 'destructive' | 'outline';
   }) => (
-    <div className="flex items-center gap-1">
-      {Icon && <Icon className="w-3 h-3 text-gray-500" />}
-      <span className="text-xs text-gray-600">{label}:</span>
-      <Badge variant={variant} className="text-xs px-1.5 py-0.5 h-5">
-        {value}
-      </Badge>
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div className="flex items-center gap-1 text-xs">
+          <Icon className="w-3 h-3 text-gray-500" />
+          <Badge variant={variant} className="text-xs px-1 py-0 h-4 min-w-6 justify-center">
+            {value}
+          </Badge>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top">
+        <p className="text-xs">{tooltip}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 
   return (
-    <div className="bg-white border-t border-gray-200 shadow-sm">
-      <div className="px-4 py-2">
-        {/* Header Row */}
-        <div className="flex items-center justify-between gap-4 mb-2">
-          <StatusIndicator 
-            status={isAnalyzing ? 'analyzing' : hasContent && analytics ? 'ready' : 'empty'} 
-          />
-          
-          {hasContent && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={refreshAnalytics}
-              disabled={isAnalyzing}
-              className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
-            >
-              <RefreshCw className={`w-3 h-3 mr-1 ${isAnalyzing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+    <TooltipProvider>
+      <div className="bg-white border-t border-gray-200 shadow-sm">
+        <div className="px-4 py-1.5">
+          {/* Single Line Analytics */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Status Indicator */}
+              <div className="flex items-center gap-1">
+                {isAnalyzing ? (
+                  <RefreshCw className="w-3 h-3 text-blue-600 animate-spin" />
+                ) : hasContent && analytics ? (
+                  <Lightbulb className="w-3 h-3 text-emerald-600" />
+                ) : (
+                  <Info className="w-3 h-3 text-gray-400" />
+                )}
+                <span className="text-xs text-gray-600 font-medium">
+                  {isAnalyzing ? 'Analyzing...' : hasContent && analytics ? 'AI Active' : 'Add content'}
+                </span>
+              </div>
+
+              {/* Analytics Metrics */}
+              {analytics && (
+                <div className="flex items-center gap-2 text-xs">
+                  <div className="w-px h-4 bg-gray-300" />
+                  
+                  {/* AI Scores */}
+                  <MetricIcon
+                    icon={BarChart3}
+                    value={analytics.overallScore !== null ? analytics.overallScore : '--'}
+                    tooltip={`Overall Score: ${analytics.overallScore !== null ? analytics.overallScore : 'N/A'}`}
+                    variant={getBadgeVariant(analytics.overallScore)}
+                  />
+                  <MetricIcon
+                    icon={Shield}
+                    value={analytics.deliverabilityScore !== null ? analytics.deliverabilityScore : '--'}
+                    tooltip={`Deliverability Score: ${analytics.deliverabilityScore !== null ? analytics.deliverabilityScore : 'N/A'}`}
+                    variant={getBadgeVariant(analytics.deliverabilityScore)}
+                  />
+                  <MetricIcon
+                    icon={Brain}
+                    value={analytics.mobileScore !== null ? analytics.mobileScore : '--'}
+                    tooltip={`Mobile Score: ${analytics.mobileScore !== null ? analytics.mobileScore : 'N/A'}`}
+                    variant={getBadgeVariant(analytics.mobileScore)}
+                  />
+                  <MetricIcon
+                    icon={Shield}
+                    value={analytics.spamScore !== null ? `${analytics.spamScore}%` : '--'}
+                    tooltip={`Spam Risk: ${analytics.spamScore !== null ? analytics.spamScore + '%' : 'N/A'}`}
+                    variant={getBadgeVariant(analytics.spamScore)}
+                  />
+
+                  <div className="w-px h-4 bg-gray-300" />
+
+                  {/* Performance Predictions */}
+                  {analytics.performancePrediction && (
+                    <>
+                      <MetricIcon
+                        icon={Eye}
+                        value={`${formatPrediction(analytics.performancePrediction.openRate)}%`}
+                        tooltip={`Predicted Open Rate: ${formatPrediction(analytics.performancePrediction.openRate)}%`}
+                      />
+                      <MetricIcon
+                        icon={MousePointer}
+                        value={`${formatPrediction(analytics.performancePrediction.clickRate)}%`}
+                        tooltip={`Predicted Click Rate: ${formatPrediction(analytics.performancePrediction.clickRate)}%`}
+                      />
+                      <MetricIcon
+                        icon={Target}
+                        value={`${formatPrediction(analytics.performancePrediction.conversionRate)}%`}
+                        tooltip={`Predicted Conversion Rate: ${formatPrediction(analytics.performancePrediction.conversionRate)}%`}
+                      />
+
+                      <div className="w-px h-4 bg-gray-300" />
+                    </>
+                  )}
+
+                  {/* Content Metrics */}
+                  <MetricIcon
+                    icon={FileText}
+                    value={`${analytics.sizeKB}KB`}
+                    tooltip={`Email Size: ${analytics.sizeKB} KB`}
+                  />
+                  <MetricIcon
+                    icon={Type}
+                    value={analytics.wordCount}
+                    tooltip={`Word Count: ${analytics.wordCount}`}
+                  />
+                  <MetricIcon
+                    icon={Hash}
+                    value={analytics.characterCount.toLocaleString()}
+                    tooltip={`Character Count: ${analytics.characterCount.toLocaleString()}`}
+                  />
+                  <MetricIcon
+                    icon={Image}
+                    value={analytics.imageCount}
+                    tooltip={`Images: ${analytics.imageCount}`}
+                  />
+                  <MetricIcon
+                    icon={Link}
+                    value={analytics.linkCount}
+                    tooltip={`Links: ${analytics.linkCount}`}
+                  />
+
+                  {/* Brand Metrics */}
+                  {(analytics.brandVoiceScore || analytics.engagementScore || analytics.readabilityScore) && (
+                    <>
+                      <div className="w-px h-4 bg-gray-300" />
+                      {analytics.brandVoiceScore && (
+                        <MetricIcon
+                          icon={Brain}
+                          value={analytics.brandVoiceScore}
+                          tooltip={`Brand Voice Score: ${analytics.brandVoiceScore}`}
+                          variant={getBadgeVariant(analytics.brandVoiceScore)}
+                        />
+                      )}
+                      {analytics.engagementScore && (
+                        <MetricIcon
+                          icon={TrendingUp}
+                          value={analytics.engagementScore}
+                          tooltip={`Engagement Score: ${analytics.engagementScore}`}
+                          variant={getBadgeVariant(analytics.engagementScore)}
+                        />
+                      )}
+                      {analytics.readabilityScore && (
+                        <MetricIcon
+                          icon={FileText}
+                          value={analytics.readabilityScore}
+                          tooltip={`Readability Score: ${analytics.readabilityScore}`}
+                          variant={getBadgeVariant(analytics.readabilityScore)}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Refresh Button */}
+            {hasContent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={refreshAnalytics}
+                disabled={isAnalyzing}
+                className="h-5 px-1.5 text-xs text-gray-600 hover:text-gray-900"
+              >
+                <RefreshCw className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
+          </div>
+
+          {/* Empty State */}
+          {!hasContent && !isAnalyzing && (
+            <div className="flex items-center justify-center py-2">
+              <div className="flex items-center gap-2 text-gray-500">
+                <Lightbulb className="w-4 h-4" />
+                <span className="text-xs">Add content to see AI analytics with 15 metrics</span>
+              </div>
+            </div>
           )}
         </div>
-
-        {analytics && (
-          <div className="space-y-2">
-            {/* Primary AI Scores Row */}
-            <div className="flex items-center gap-4 flex-wrap">
-              <CompactMetric
-                label="Overall"
-                value={analytics.overallScore !== null ? analytics.overallScore : '--'}
-                icon={BarChart3}
-                variant={getBadgeVariant(analytics.overallScore)}
-              />
-              <CompactMetric
-                label="Deliverability"
-                value={analytics.deliverabilityScore !== null ? analytics.deliverabilityScore : '--'}
-                icon={Shield}
-                variant={getBadgeVariant(analytics.deliverabilityScore)}
-              />
-              <CompactMetric
-                label="Mobile"
-                value={analytics.mobileScore !== null ? analytics.mobileScore : '--'}
-                icon={Brain}
-                variant={getBadgeVariant(analytics.mobileScore)}
-              />
-              <CompactMetric
-                label="Spam Risk"
-                value={analytics.spamScore !== null ? `${analytics.spamScore}%` : '--'}
-                icon={Shield}
-                variant={getBadgeVariant(analytics.spamScore)}
-              />
-            </div>
-
-            {/* Performance Predictions Row */}
-            {analytics.performancePrediction && (
-              <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 pt-2">
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-blue-600" />
-                  <span className="text-xs font-medium text-blue-900">Predictions:</span>
-                </div>
-                <CompactMetric
-                  label="Open Rate"
-                  value={`${formatPrediction(analytics.performancePrediction.openRate)}%`}
-                  variant="outline"
-                />
-                <CompactMetric
-                  label="Click Rate"
-                  value={`${formatPrediction(analytics.performancePrediction.clickRate)}%`}
-                  variant="outline"
-                />
-                <CompactMetric
-                  label="Conversion"
-                  value={`${formatPrediction(analytics.performancePrediction.conversionRate)}%`}
-                  variant="outline"
-                />
-              </div>
-            )}
-
-            {/* Content Analysis Row */}
-            <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 pt-2">
-              <div className="flex items-center gap-1">
-                <BarChart3 className="w-3 h-3 text-gray-600" />
-                <span className="text-xs font-medium text-gray-700">Content:</span>
-              </div>
-              <CompactMetric label="Size" value={`${analytics.sizeKB} KB`} />
-              <CompactMetric label="Words" value={analytics.wordCount} />
-              <CompactMetric label="Characters" value={analytics.characterCount.toLocaleString()} />
-              <CompactMetric label="Images" value={analytics.imageCount} />
-              <CompactMetric label="Links" value={analytics.linkCount} />
-            </div>
-
-            {/* Brand Analysis Row */}
-            {(analytics.brandVoiceScore || analytics.engagementScore || analytics.readabilityScore) && (
-              <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 pt-2">
-                <div className="flex items-center gap-1">
-                  <Brain className="w-3 h-3 text-purple-600" />
-                  <span className="text-xs font-medium text-gray-700">Brand:</span>
-                </div>
-                {analytics.brandVoiceScore && (
-                  <CompactMetric
-                    label="Voice Score"
-                    value={analytics.brandVoiceScore}
-                    variant={getBadgeVariant(analytics.brandVoiceScore)}
-                  />
-                )}
-                {analytics.engagementScore && (
-                  <CompactMetric
-                    label="Engagement"
-                    value={analytics.engagementScore}
-                    variant={getBadgeVariant(analytics.engagementScore)}
-                  />
-                )}
-                {analytics.readabilityScore && (
-                  <CompactMetric
-                    label="Readability"
-                    value={analytics.readabilityScore}
-                    variant={getBadgeVariant(analytics.readabilityScore)}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!hasContent && !isAnalyzing && (
-          <div className="text-center py-3">
-            <Lightbulb className="w-5 h-5 text-gray-300 mx-auto mb-2" />
-            <h3 className="text-xs font-medium text-gray-600 mb-1">Ready for AI Analysis</h3>
-            <p className="text-xs text-gray-500">Add content to see all 15 analytics metrics</p>
-          </div>
-        )}
       </div>
-    </div>
+    </TooltipProvider>
   );
 };
