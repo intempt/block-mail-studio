@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -268,6 +267,19 @@ export const ContextualEditor: React.FC<ContextualEditorProps> = ({
                   }
                 })}
                 placeholder="40px"
+              />
+              <Label htmlFor="spacer-mobile-height" className="mt-3 block">Mobile Height</Label>
+              <Input
+                id="spacer-mobile-height"
+                value={(block as SpacerBlock).content.mobileHeight || '20px'}
+                onChange={(e) => onBlockUpdate({
+                  ...block,
+                  content: { 
+                    ...(block as SpacerBlock).content,
+                    mobileHeight: e.target.value
+                  }
+                })}
+                placeholder="20px"
               />
             </div>
           )}

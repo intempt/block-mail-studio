@@ -45,7 +45,7 @@ export const DividerBlockPropertyEditor: React.FC<DividerBlockPropertyEditorProp
         <Input
           id="color"
           type="color"
-          value={block.content.color}
+          value={block.content.color || '#e0e0e0'}
           onChange={(e) => updateContent({ color: e.target.value })}
           className="mt-2"
         />
@@ -55,7 +55,7 @@ export const DividerBlockPropertyEditor: React.FC<DividerBlockPropertyEditorProp
         <Label htmlFor="thickness">Thickness</Label>
         <Input
           id="thickness"
-          value={block.content.thickness}
+          value={block.content.thickness || '1px'}
           onChange={(e) => updateContent({ thickness: e.target.value })}
           className="mt-2"
           placeholder="1px"
@@ -66,7 +66,7 @@ export const DividerBlockPropertyEditor: React.FC<DividerBlockPropertyEditorProp
         <Label htmlFor="width">Width</Label>
         <Input
           id="width"
-          value={block.content.width}
+          value={block.content.width || '100%'}
           onChange={(e) => updateContent({ width: e.target.value })}
           className="mt-2"
           placeholder="100%"
@@ -76,7 +76,7 @@ export const DividerBlockPropertyEditor: React.FC<DividerBlockPropertyEditorProp
       <div>
         <Label>Alignment</Label>
         <Select
-          value={block.content.alignment}
+          value={block.content.alignment || 'center'}
           onValueChange={(value) => updateContent({ alignment: value as any })}
         >
           <SelectTrigger className="mt-2">

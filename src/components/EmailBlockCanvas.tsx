@@ -33,6 +33,9 @@ export interface EmailBlockCanvasRef {
   applyDesignSuggestion: (suggestion: any) => void;
   applyGlobalStyles: (styles: any) => void;
   findAndReplaceText: (searchText: string, replaceText: string) => void;
+  optimizeImages: () => void;
+  minifyHTML: () => string;
+  checkLinks: () => Promise<any[]>;
 }
 
 interface EmailBlockCanvasProps {
@@ -243,7 +246,21 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
       replaceTextInAllBlocks,
       applyDesignSuggestion,
       applyGlobalStyles,
-      findAndReplaceText
+      findAndReplaceText,
+      optimizeImages: () => {
+        console.log('Optimizing images...');
+        // Implementation for image optimization
+      },
+      minifyHTML: () => {
+        const html = generateEmailHTML(blocks, subjectLine);
+        // Basic minification - remove extra whitespace
+        return html.replace(/\s+/g, ' ').trim();
+      },
+      checkLinks: async () => {
+        console.log('Checking links...');
+        // Implementation for link checking
+        return [];
+      }
     }));
 
     const handleDragStart = () => {

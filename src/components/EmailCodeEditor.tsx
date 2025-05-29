@@ -1,31 +1,29 @@
 
 import React, { useState, useEffect } from 'react';
-import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Code, Eye, Save, Undo } from 'lucide-react';
 
 interface EmailCodeEditorProps {
-  editor: Editor | null;
-  initialHtml?: string;
+  html: string;
+  onHtmlChange?: (html: string) => void;
 }
 
 export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({ 
-  editor, 
-  initialHtml = '' 
+  html, 
+  onHtmlChange
 }) => {
-  const [htmlCode, setHtmlCode] = useState(initialHtml);
+  const [htmlCode, setHtmlCode] = useState(html);
   const [hasChanges, setHasChanges] = useState(false);
-  const [lastSavedCode, setLastSavedCode] = useState(initialHtml);
+  const [lastSavedCode, setLastSavedCode] = useState(html);
 
   useEffect(() => {
-    if (editor && !hasChanges) {
-      const currentHtml = editor.getHTML();
-      setHtmlCode(currentHtml);
-      setLastSavedCode(currentHtml);
+    if (html !== htmlCode && !hasChanges) {
+      setHtmlCode(html);
+      setLastSavedCode(html);
     }
-  }, [editor, hasChanges]);
+  }, [html, htmlCode, hasChanges]);
 
   const handleCodeChange = (value: string) => {
     setHtmlCode(value);
@@ -33,14 +31,12 @@ export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({
   };
 
   const applyChanges = () => {
-    if (editor) {
-      try {
-        editor.commands.setContent(htmlCode);
-        setLastSavedCode(htmlCode);
-        setHasChanges(false);
-      } catch (error) {
-        console.error('Invalid HTML:', error);
-      }
+    try {
+      onHtmlChange?.(htmlCode);
+      setLastSavedCode(htmlCode);
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Invalid HTML:', error);
     }
   };
 
@@ -49,10 +45,8 @@ export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({
     setHasChanges(false);
   };
 
-  const previewInEditor = () => {
-    if (editor) {
-      editor.commands.setContent(htmlCode);
-    }
+  const previewChanges = () => {
+    onHtmlChange?.(htmlCode);
   };
 
   return (
@@ -73,7 +67,7 @@ export const EmailCodeEditor: React.FC<EmailCodeEditorProps> = ({
             <Button
               size="sm"
               variant="outline"
-              onClick={previewInEditor}
+              onClick={previewChanges}
               disabled={!hasChanges}
             >
               <Eye className="w-4 h-4 mr-1" />
