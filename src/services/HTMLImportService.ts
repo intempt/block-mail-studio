@@ -36,13 +36,13 @@ export class HTMLImportService {
         warnings.push('No recognizable email content found');
       }
 
-    } catch (error) {
+    } catch (error: any) {
       errors.push(`Failed to parse HTML: ${error.message}`);
     }
 
     return {
       blocks,
-      subject,
+      subject: titleElement?.textContent || undefined,
       errors,
       warnings
     };
