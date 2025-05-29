@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -202,7 +201,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
                     <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                   )}
                 </div>
-                <span className="text-sm font-medium">AI Suggestions</span>
+                <span className="text-sm font-medium">Suggestion AI</span>
                 <Badge variant="outline" className="text-xs">
                   {suggestions.length}
                 </Badge>

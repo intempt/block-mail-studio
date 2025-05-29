@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -79,7 +78,7 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
             ) : (
               <Sparkles className="w-3 h-3 mr-1" />
             )}
-            Variants
+            Subject AI
           </Button>
         </div>
       </div>
