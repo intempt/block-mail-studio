@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useRef,
@@ -8,7 +7,7 @@ import React, {
 } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { v4 as uuidv4 } from 'uuid';
-import { TextBlock, ImageBlock, ButtonBlock, DividerBlock, EmailBlock } from '@/types/emailBlocks';
+import { TextBlock, ImageBlock, ButtonBlock, DividerBlock, EmailBlock, BlockType } from '@/types/emailBlocks';
 import { TextBlockComponent } from './email-block-components/TextBlockComponent';
 import { ImageBlockComponent } from './email-block-components/ImageBlockComponent';
 import { ButtonBlockComponent } from './email-block-components/ButtonBlockComponent';
@@ -262,7 +261,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
 
         const newBlock: EmailBlock = {
           id: uuidv4(),
-          type: item.type as any,
+          type: item.type as BlockType,
           content: {
             html: '<p>New text block</p>',
             src: 'https://via.placeholder.com/400x200',
@@ -305,16 +304,12 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
         collect: (monitor) => ({
           isDragging: !!monitor.isDragging(),
         }),
-        begin: () => {
-          handleDragStart();
-          return {};
-        },
         end: () => {
           handleDragEnd();
         }
       });
 
-      const [, drop] = useDrop({
+      const [, dropRef] = useDrop({
         accept: ItemTypes.EXISTING_BLOCK,
         drop: (item: { id: string, type: BlockType, index: number }, monitor) => {
           if (!monitor) return;
@@ -341,7 +336,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
       switch (block.type) {
         case 'text':
           return (
-            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <TextBlockComponent
                 block={block as TextBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -350,7 +345,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
           );
         case 'image':
           return (
-            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <ImageBlockComponent
                 block={block as ImageBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -359,7 +354,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
           );
         case 'button':
           return (
-            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <ButtonBlockComponent
                 block={block as ButtonBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -368,7 +363,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
           );
         case 'divider':
           return (
-            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <DividerBlockComponent
                 block={block as DividerBlock}
                 onBlockUpdate={handleUpdateBlock}

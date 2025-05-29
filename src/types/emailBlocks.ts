@@ -1,8 +1,16 @@
+
 export interface EmailBlock {
   id: string;
   type: BlockType;
   content: any;
   styling: any;
+  isStarred?: boolean;
+  displayOptions?: {
+    showOnDesktop: boolean;
+    showOnTablet: boolean;
+    showOnMobile: boolean;
+  };
+  position?: { x: number; y: number };
 }
 
 export interface TextBlock extends EmailBlock {
@@ -10,6 +18,7 @@ export interface TextBlock extends EmailBlock {
   content: {
     html: string;
     placeholder?: string;
+    textStyle?: string;
   };
   styling: {
     desktop: {
@@ -23,6 +32,9 @@ export interface TextBlock extends EmailBlock {
       borderRadius: string;
       width?: string;
       height?: string;
+      margin?: string;
+      textColor?: string;
+      fontWeight?: string;
     };
   };
 }
@@ -32,6 +44,9 @@ export interface ImageBlock extends EmailBlock {
   content: {
     src: string;
     alt: string;
+    link?: string;
+    alignment?: 'left' | 'center' | 'right';
+    isDynamic?: boolean;
   };
   styling: {
     desktop: {
@@ -50,6 +65,8 @@ export interface ButtonBlock extends EmailBlock {
   content: {
     text: string;
     link: string;
+    style?: string;
+    size?: 'small' | 'medium' | 'large';
   };
   styling: {
     desktop: {
@@ -70,6 +87,8 @@ export interface DividerBlock extends EmailBlock {
   content: {
     style: 'solid' | 'dashed';
     size: 'small' | 'medium' | 'large';
+    thickness?: number;
+    color?: string;
   };
   styling: {
     desktop: {
@@ -79,6 +98,26 @@ export interface DividerBlock extends EmailBlock {
       margin?: string;
     };
   };
+}
+
+export interface SpacerBlock extends EmailBlock {
+  type: 'spacer';
+  content: {
+    height: number;
+  };
+  styling: {
+    desktop: {
+      height: string;
+    };
+  };
+}
+
+export interface UniversalContent {
+  id: string;
+  type: string;
+  name: string;
+  content: any;
+  metadata?: any;
 }
 
 export type BlockType = 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'video' | 'social' | 'html' | 'table' | 'columns';

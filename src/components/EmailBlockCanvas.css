@@ -1,63 +1,76 @@
 
-/* Email Block Canvas Styles */
-.block-canvas {
-  min-height: 600px;
+.email-canvas-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #f5f5f5;
 }
 
-.block-canvas .ProseMirror {
+.subject-line {
+  padding: 16px;
+  background-color: white;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.subject-line input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 16px;
   outline: none;
-  padding: 0;
-  margin: 0;
 }
 
-.email-block-node {
+.subject-line input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.email-canvas {
+  flex: 1;
+  padding: 20px;
+  background-color: white;
+  margin: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  min-height: 400px;
   position: relative;
-  margin: 0;
-  display: block;
 }
 
-.email-block-node.selected .block-wrapper {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
+.drop-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #3b82f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #3b82f6;
+  font-weight: 500;
 }
 
-.email-block-node:hover .block-wrapper {
-  outline: 1px solid #93c5fd;
-  outline-offset: 1px;
-}
-
-.block-wrapper {
-  position: relative;
+.email-block {
+  margin-bottom: 16px;
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
-.email-container {
-  background: white;
-  min-height: 500px;
+.email-block:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Drag and drop indicators */
-.block-canvas.drag-over {
-  background-color: #f0f9ff;
-  border: 2px dashed #3b82f6;
+.email-block.selected {
+  border: 2px solid #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Block type indicators */
-.email-block-node[data-block-type="text"] .block-wrapper::before {
-  content: "Text";
-  position: absolute;
-  top: -20px;
-  left: 0;
-  font-size: 10px;
-  color: #6b7280;
-  background: white;
-  padding: 2px 6px;
-  border-radius: 3px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.email-block-node:hover[data-block-type="text"] .block-wrapper::before,
-.email-block-node.selected[data-block-type="text"] .block-wrapper::before {
-  opacity: 1;
+.email-block.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
 }
