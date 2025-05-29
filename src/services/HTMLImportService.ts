@@ -15,6 +15,7 @@ export class HTMLImportService {
     const errors: string[] = [];
     const warnings: string[] = [];
     const blocks: EmailBlock[] = [];
+    let titleElement: HTMLElement | null = null;
 
     try {
       // Create a temporary DOM element to parse HTML
@@ -22,8 +23,7 @@ export class HTMLImportService {
       tempDiv.innerHTML = htmlContent;
 
       // Extract subject from title tag if present
-      const titleElement = tempDiv.querySelector('title');
-      const subject = titleElement?.textContent || undefined;
+      titleElement = tempDiv.querySelector('title');
 
       // Find the main content area (body or main container)
       const bodyElement = tempDiv.querySelector('body') || tempDiv;
