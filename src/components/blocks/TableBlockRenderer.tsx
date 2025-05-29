@@ -1,8 +1,6 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { TableBlock } from '@/types/emailBlocks';
-import { Button } from '@/components/ui/button';
-import { TableCellEditor } from '../TableCellEditor';
 
 interface TableBlockRendererProps {
   block: TableBlock;
@@ -15,104 +13,94 @@ export const TableBlockRenderer: React.FC<TableBlockRendererProps> = ({
   isSelected,
   onUpdate
 }) => {
-  const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
+  const styling = block.styling.desktop;
 
-  const updateCellContent = (row: number, col: number, content: string) => {
-    const newCells = [...block.content.cells];
-    newCells[row][col] = { ...newCells[row][col], content };
-    
-    onUpdate({
-      ...block,
-      content: {
-        ...block.content,
-        cells: newCells
-      }
-    });
-  };
+  // Ensure we have valid table data
+  const hasHeaders = block.content.headers && block.content.headers.length > 0;
+  const rows = block.content.rows || [];
+  
+  // Calculate columns from existing data
+  const columns = hasHeaders 
+    ? block.content.headers.length 
+    : (rows.length > 0 ? rows[0].length : 2);
+
+  // Ensure we have at least some default data
+  const defaultRows = rows.length === 0 ? [['Cell 1', 'Cell 2'], ['Cell 3', 'Cell 4']] : rows;
+  const defaultHeaders = hasHeaders ? block.content.headers : ['Header 1', 'Header 2'];
 
   const addRow = () => {
-    const newRow = Array(block.content.columns).fill(null).map(() => ({
-      type: 'text' as const,
-      content: 'New cell'
-    }));
-    
-    onUpdate({
+    const newRow = Array(columns).fill('New Cell');
+    const updatedBlock = {
       ...block,
       content: {
         ...block.content,
-        rows: block.content.rows + 1,
-        cells: [...block.content.cells, newRow]
+        rows: [...defaultRows, newRow]
       }
-    });
+    };
+    onUpdate(updatedBlock);
   };
 
   const addColumn = () => {
-    const newCells = block.content.cells.map(row => [
-      ...row,
-      { type: 'text' as const, content: 'New cell' }
-    ]);
+    const newHeaders = hasHeaders ? [...defaultHeaders, 'New Header'] : [...defaultHeaders, 'New Header'];
+    const newRows = defaultRows.map(row => [...row, 'New Cell']);
     
-    onUpdate({
+    const updatedBlock = {
       ...block,
       content: {
         ...block.content,
-        columns: block.content.columns + 1,
-        cells: newCells
+        headers: newHeaders,
+        rows: newRows
       }
-    });
+    };
+    onUpdate(updatedBlock);
   };
 
-  const getBorderStyle = () => {
-    const { borderStyle, borderColor, borderWidth } = block.content;
-    return `${borderWidth} ${borderStyle} ${borderColor}`;
-  };
+  const borderStyle = `1px ${block.content.borderStyle || 'solid'} ${block.content.borderColor || '#ddd'}`;
 
   return (
-    <div className={`table-block ${isSelected ? 'ring-2 ring-blue-500' : ''} p-2`}>
-      <table 
-        style={{ 
+    <div className={`table-block ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+      <table
+        style={{
           width: '100%',
           borderCollapse: 'collapse',
-          border: getBorderStyle()
+          backgroundColor: styling.backgroundColor,
+          margin: styling.margin,
+          border: borderStyle
         }}
       >
+        {hasHeaders && (
+          <thead>
+            <tr>
+              {defaultHeaders.map((header, index) => (
+                <th
+                  key={index}
+                  style={{
+                    border: borderStyle,
+                    padding: '8px',
+                    backgroundColor: '#f5f5f5',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+        )}
         <tbody>
-          {block.content.cells.map((row, rowIndex) => (
+          {defaultRows.map((row, rowIndex) => (
             <tr key={rowIndex}>
-              {row.map((cell, colIndex) => {
-                const isHeader = block.content.headerRow && rowIndex === 0;
-                const CellTag = isHeader ? 'th' : 'td';
-                const isEditing = editingCell?.row === rowIndex && editingCell?.col === colIndex;
-                
-                return (
-                  <CellTag
-                    key={colIndex}
-                    style={{
-                      border: getBorderStyle(),
-                      padding: '4px',
-                      fontWeight: isHeader ? 'bold' : 'normal',
-                      backgroundColor: isHeader ? '#f5f5f5' : 'transparent',
-                      position: 'relative'
-                    }}
-                    onClick={() => setEditingCell({ row: rowIndex, col: colIndex })}
-                    className="cursor-pointer hover:bg-gray-50"
-                  >
-                    {isEditing ? (
-                      <TableCellEditor
-                        content={cell.content}
-                        onChange={(content) => updateCellContent(rowIndex, colIndex, content)}
-                        onBlur={() => setEditingCell(null)}
-                        autoFocus
-                      />
-                    ) : (
-                      <div 
-                        dangerouslySetInnerHTML={{ __html: cell.content }}
-                        className="min-h-[24px]"
-                      />
-                    )}
-                  </CellTag>
-                );
-              })}
+              {row.map((cell, cellIndex) => (
+                <td
+                  key={cellIndex}
+                  style={{
+                    border: borderStyle,
+                    padding: '8px'
+                  }}
+                >
+                  {cell}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -120,12 +108,18 @@ export const TableBlockRenderer: React.FC<TableBlockRendererProps> = ({
       
       {isSelected && (
         <div className="flex gap-2 mt-2">
-          <Button size="sm" variant="outline" onClick={addRow}>
+          <button
+            onClick={addRow}
+            className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+          >
             Add Row
-          </Button>
-          <Button size="sm" variant="outline" onClick={addColumn}>
+          </button>
+          <button
+            onClick={addColumn}
+            className="px-2 py-1 bg-blue-500 text-white text-xs rounded"
+          >
             Add Column
-          </Button>
+          </button>
         </div>
       )}
     </div>

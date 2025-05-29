@@ -3,9 +3,8 @@ import React from 'react';
 import { TableBlock } from '@/types/emailBlocks';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface TableBlockPropertyEditorProps {
   block: TableBlock;
@@ -16,99 +15,97 @@ export const TableBlockPropertyEditor: React.FC<TableBlockPropertyEditorProps> =
   block,
   onUpdate
 }) => {
-  const updateContent = (updates: Partial<TableBlock['content']>) => {
-    onUpdate({
-      ...block,
-      content: { ...block.content, ...updates }
-    });
-  };
+  const rows = block.content.rows || [];
+  const headers = block.content.headers || [];
+  const rowCount = rows.length;
+  const columnCount = headers.length > 0 ? headers.length : (rows.length > 0 ? rows[0].length : 2);
 
   const addRow = () => {
-    const newRow = Array(block.content.columns).fill(null).map(() => ({
-      type: 'text' as const,
-      content: 'New cell'
-    }));
-    
-    updateContent({
-      rows: block.content.rows + 1,
-      cells: [...block.content.cells, newRow]
+    const newRow = Array(columnCount).fill('New Cell');
+    onUpdate({
+      ...block,
+      content: {
+        ...block.content,
+        rows: [...rows, newRow]
+      }
     });
   };
 
   const removeRow = () => {
-    if (block.content.rows > 1) {
-      updateContent({
-        rows: block.content.rows - 1,
-        cells: block.content.cells.slice(0, -1)
+    if (rowCount > 1) {
+      const newRows = rows.slice(0, -1);
+      onUpdate({
+        ...block,
+        content: {
+          ...block.content,
+          rows: newRows
+        }
       });
     }
   };
 
   const addColumn = () => {
-    const newCells = block.content.cells.map(row => [
-      ...row,
-      { type: 'text' as const, content: 'New cell' }
-    ]);
+    const newHeaders = [...headers, `Header ${columnCount + 1}`];
+    const newRows = rows.map(row => [...row, 'New Cell']);
     
-    updateContent({
-      columns: block.content.columns + 1,
-      cells: newCells
+    onUpdate({
+      ...block,
+      content: {
+        ...block.content,
+        headers: newHeaders,
+        rows: newRows
+      }
     });
   };
 
   const removeColumn = () => {
-    if (block.content.columns > 1) {
-      const newCells = block.content.cells.map(row => row.slice(0, -1));
+    if (columnCount > 1) {
+      const newHeaders = headers.slice(0, -1);
+      const newRows = rows.map(row => row.slice(0, -1));
       
-      updateContent({
-        columns: block.content.columns - 1,
-        cells: newCells
+      onUpdate({
+        ...block,
+        content: {
+          ...block.content,
+          headers: newHeaders,
+          rows: newRows
+        }
       });
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
-        <Label className="text-sm font-medium">Table Structure</Label>
-        <div className="grid grid-cols-2 gap-4 mt-2">
+        <Label>Table Structure</Label>
+        <div className="grid grid-cols-2 gap-2 mt-2">
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm">Rows: {block.content.rows}</span>
-              <div className="flex gap-1">
-                <Button size="sm" variant="outline" onClick={addRow}>+</Button>
-                <Button size="sm" variant="outline" onClick={removeRow}>-</Button>
-              </div>
+            <Label className="text-xs">Rows: {rowCount}</Label>
+            <div className="flex gap-1">
+              <Button size="sm" onClick={addRow}>+</Button>
+              <Button size="sm" onClick={removeRow} disabled={rowCount <= 1}>-</Button>
             </div>
           </div>
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm">Columns: {block.content.columns}</span>
-              <div className="flex gap-1">
-                <Button size="sm" variant="outline" onClick={addColumn}>+</Button>
-                <Button size="sm" variant="outline" onClick={removeColumn}>-</Button>
-              </div>
+            <Label className="text-xs">Columns: {columnCount}</Label>
+            <div className="flex gap-1">
+              <Button size="sm" onClick={addColumn}>+</Button>
+              <Button size="sm" onClick={removeColumn} disabled={columnCount <= 1}>-</Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="header-row"
-          checked={block.content.headerRow}
-          onCheckedChange={(checked) => updateContent({ headerRow: checked })}
-        />
-        <Label htmlFor="header-row">Header Row</Label>
-      </div>
-
       <div>
         <Label>Border Style</Label>
         <Select
-          value={block.content.borderStyle}
-          onValueChange={(value) => updateContent({ borderStyle: value as any })}
+          value={block.content.borderStyle || 'solid'}
+          onValueChange={(value) => onUpdate({
+            ...block,
+            content: { ...block.content, borderStyle: value as 'solid' | 'dashed' | 'dotted' | 'none' }
+          })}
         >
-          <SelectTrigger className="mt-2">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -120,27 +117,28 @@ export const TableBlockPropertyEditor: React.FC<TableBlockPropertyEditorProps> =
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="border-color">Border Color</Label>
-          <Input
-            id="border-color"
-            type="color"
-            value={block.content.borderColor}
-            onChange={(e) => updateContent({ borderColor: e.target.value })}
-            className="mt-2"
-          />
-        </div>
-        <div>
-          <Label htmlFor="border-width">Border Width</Label>
-          <Input
-            id="border-width"
-            value={block.content.borderWidth}
-            onChange={(e) => updateContent({ borderWidth: e.target.value })}
-            className="mt-2"
-            placeholder="1px"
-          />
-        </div>
+      <div>
+        <Label>Border Color</Label>
+        <Input
+          type="color"
+          value={block.content.borderColor || '#dddddd'}
+          onChange={(e) => onUpdate({
+            ...block,
+            content: { ...block.content, borderColor: e.target.value }
+          })}
+        />
+      </div>
+
+      <div>
+        <Label>Border Width</Label>
+        <Input
+          value={block.content.borderWidth || '1px'}
+          onChange={(e) => onUpdate({
+            ...block,
+            content: { ...block.content, borderWidth: e.target.value }
+          })}
+          placeholder="1px"
+        />
       </div>
     </div>
   );

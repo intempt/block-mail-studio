@@ -1,4 +1,3 @@
-
 export interface EmailBlock {
   id: string;
   type: BlockType;
@@ -291,3 +290,85 @@ export interface UniversalContent {
 }
 
 export type BlockType = 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'video' | 'social' | 'html' | 'table' | 'columns' | 'code' | 'menu' | 'split';
+
+// Add missing content type interfaces
+export interface TextContent {
+  html: string;
+  placeholder?: string;
+  textStyle?: string;
+}
+
+export interface ImageContent {
+  src: string;
+  alt: string;
+  link?: string;
+  alignment?: 'left' | 'center' | 'right';
+  isDynamic?: boolean;
+  width?: string;
+  dynamicVariable?: string;
+}
+
+export interface ButtonContent {
+  text: string;
+  link: string;
+  style?: string;
+  size?: 'small' | 'medium' | 'large';
+}
+
+export interface SpacerContent {
+  height: string;
+  mobileHeight?: string;
+}
+
+export interface DividerContent {
+  style: 'solid' | 'dashed' | 'dotted';
+  size: 'small' | 'medium' | 'large';
+  thickness?: string;
+  color?: string;
+  width?: string;
+  alignment?: 'left' | 'center' | 'right';
+}
+
+// Add missing styling interfaces
+export interface Styling {
+  desktop: {
+    width?: string;
+    height?: string;
+    backgroundColor?: string;
+    padding?: string;
+    margin?: string;
+    borderRadius?: string;
+    border?: string;
+    fontFamily?: string;
+    fontSize?: string;
+    color?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    textColor?: string;
+    fontWeight?: string;
+    lineHeight?: string;
+  };
+  tablet?: {
+    width?: string;
+    height?: string;
+    backgroundColor?: string;
+    padding?: string;
+    margin?: string;
+  };
+  mobile?: {
+    width?: string;
+    height?: string;
+    backgroundColor?: string;
+    padding?: string;
+    margin?: string;
+  };
+}
+
+export interface DisplayOptions {
+  showOnDesktop: boolean;
+  showOnTablet: boolean;
+  showOnMobile: boolean;
+}
+
+// Update TextBlock styling to include lineHeight
+// Update BlockType to include missing types
+export type BlockType = 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'video' | 'social' | 'html' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
