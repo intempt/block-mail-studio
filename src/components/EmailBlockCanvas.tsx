@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useRef,
@@ -7,7 +8,7 @@ import React, {
 } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { v4 as uuidv4 } from 'uuid';
-import { TextBlock, ImageBlock, ButtonBlock, DividerBlock, BlockType, EmailBlock } from '@/types/emailBlocks';
+import { TextBlock, ImageBlock, ButtonBlock, DividerBlock, EmailBlock } from '@/types/emailBlocks';
 import { TextBlockComponent } from './email-block-components/TextBlockComponent';
 import { ImageBlockComponent } from './email-block-components/ImageBlockComponent';
 import { ButtonBlockComponent } from './email-block-components/ButtonBlockComponent';
@@ -256,12 +257,12 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
 
     const [{ isOver, canDrop }, drop] = useDrop({
       accept: ItemTypes.BLOCK,
-      drop: (item: { id: string, type: BlockType }, monitor) => {
+      drop: (item: { id: string, type: string }, monitor) => {
         if (!item || !item.type) return;
 
         const newBlock: EmailBlock = {
           id: uuidv4(),
-          type: item.type,
+          type: item.type as any,
           content: {
             html: '<p>New text block</p>',
             src: 'https://via.placeholder.com/400x200',
@@ -269,10 +270,13 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
             text: 'Click Me',
             link: 'https://example.com',
             style: 'solid',
-            size: 'medium'
+            size: 'medium',
+            placeholder: 'Enter text...'
           },
           styling: {
             desktop: {
+              width: '100%',
+              height: 'auto',
               fontFamily: 'Arial, sans-serif',
               fontSize: '16px',
               color: '#333',
@@ -406,4 +410,5 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
 
 EmailBlockCanvas.displayName = 'EmailBlockCanvas';
 
+export { EmailBlockCanvas };
 export default EmailBlockCanvas;

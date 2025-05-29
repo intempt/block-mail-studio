@@ -170,12 +170,30 @@ const EmailEditorContent: React.FC<EmailEditorProps> = ({
     }
   }, [onSubjectChange]);
 
+  const handleBlockAdd = (blockType: string) => {
+    // Simple block adding logic
+    console.log('Adding block:', blockType);
+  };
+
   return (
     <div className="email-editor">
       {/* Enhanced Top Bar with Global Styles */}
       <OmnipresentRibbon
+        onBlockAdd={handleBlockAdd}
+        universalContent={[]}
+        onUniversalContentAdd={() => {}}
         onGlobalStylesChange={handleGlobalStylesChange}
-        globalStyles={globalStyles}
+        emailHTML={currentEmailHTML}
+        subjectLine={subject}
+        canvasWidth={600}
+        deviceMode="desktop"
+        onDeviceChange={() => {}}
+        onWidthChange={() => {}}
+        onPreview={() => {}}
+        onSaveTemplate={() => {}}
+        onPublish={() => {}}
+        canvasRef={canvasRef}
+        onSubjectLineChange={onSubjectChange}
       />
 
       {/* AI Suggestions Widget */}
@@ -193,7 +211,7 @@ const EmailEditorContent: React.FC<EmailEditorProps> = ({
       <div className="email-editor-content">
         {/* Left Sidebar */}
         <div className="email-editor-sidebar">
-          {leftSidebarContent === 'palette' && <EmailBlockPalette />}
+          {leftSidebarContent === 'palette' && <EmailBlockPalette onBlockAdd={handleBlockAdd} />}
           {leftSidebarContent === 'ai' && (
             <AISuggestionsPanel
               emailHTML={currentEmailHTML}
@@ -219,15 +237,15 @@ const EmailEditorContent: React.FC<EmailEditorProps> = ({
           )}
           {viewMode === 'preview' && (
             <EmailPreview
-              content={content}
+              html={content}
               subject={subject}
-              viewportWidth={previewViewport}
+              viewport={previewViewport}
             />
           )}
           {viewMode === 'code' && (
             <EmailCodeEditor
-              content={content}
-              onContentChange={onContentChange}
+              html={content}
+              onHtmlChange={onContentChange}
             />
           )}
         </div>
@@ -236,7 +254,7 @@ const EmailEditorContent: React.FC<EmailEditorProps> = ({
         <div className="email-editor-properties">
           <EnhancedPropertiesPanel
             selectedBlock={selectedBlock}
-            onBlockUpdate={handleBlockUpdate}
+            onBlockUpdate={(block) => handleBlockUpdate(block.id, block)}
             onBlockDelete={handleBlockDelete}
             globalStyles={globalStyles}
             onGlobalStylesChange={handleGlobalStylesChange}
@@ -246,8 +264,7 @@ const EmailEditorContent: React.FC<EmailEditorProps> = ({
 
       {/* Status Bar */}
       <StatusBar
-        selectedBlock={selectedBlock}
-        totalBlocks={currentEmailHTML ? currentEmailHTML.split('<').length - 1 : 0}
+        blockCount={currentEmailHTML ? currentEmailHTML.split('<').length - 1 : 0}
         emailSize={currentEmailHTML.length}
       />
     </div>
