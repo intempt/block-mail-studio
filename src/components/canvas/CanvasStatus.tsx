@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -120,8 +121,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     <TooltipProvider>
       <div className="bg-white border-t border-gray-200 shadow-sm">
         <div className="px-4 py-1.5">
-          {/* Single Line Analytics - Center Aligned */}
-          <div className="flex items-center justify-center">
+          {/* Single Line Analytics */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Status Indicator */}
               <div className="flex items-center gap-1">
@@ -253,9 +254,22 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Refresh Button */}
+            {hasContent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={refreshAnalytics}
+                disabled={isAnalyzing}
+                className="h-5 px-1.5 text-xs text-gray-600 hover:text-gray-900"
+              >
+                <RefreshCw className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
           </div>
 
-          {/* Empty State - Center Aligned */}
+          {/* Empty State */}
           {!hasContent && !isAnalyzing && (
             <div className="flex items-center justify-center py-2">
               <div className="flex items-center gap-2 text-gray-500">
