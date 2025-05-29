@@ -1,3 +1,4 @@
+
 export interface EmailBlock {
   id: string;
   type: BlockType;
@@ -34,6 +35,7 @@ export interface TextBlock extends EmailBlock {
       margin?: string;
       textColor?: string;
       fontWeight?: string;
+      lineHeight?: string;
     };
   };
 }
@@ -47,6 +49,7 @@ export interface ImageBlock extends EmailBlock {
     alignment?: 'left' | 'center' | 'right';
     isDynamic?: boolean;
     width?: string;
+    height?: string;
     dynamicVariable?: string;
   };
   styling: {
@@ -70,6 +73,7 @@ export interface ButtonBlock extends EmailBlock {
     link: string;
     style?: string;
     size?: 'small' | 'medium' | 'large';
+    alignment?: 'left' | 'center' | 'right';
   };
   styling: {
     desktop: {
@@ -289,7 +293,7 @@ export interface UniversalContent {
   metadata?: any;
 }
 
-export type BlockType = 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'video' | 'social' | 'html' | 'table' | 'columns' | 'code' | 'menu' | 'split';
+export type BlockType = 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'video' | 'social' | 'html' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
 
 // Add missing content type interfaces
 export interface TextContent {
@@ -305,6 +309,7 @@ export interface ImageContent {
   alignment?: 'left' | 'center' | 'right';
   isDynamic?: boolean;
   width?: string;
+  height?: string;
   dynamicVariable?: string;
 }
 
@@ -313,6 +318,7 @@ export interface ButtonContent {
   link: string;
   style?: string;
   size?: 'small' | 'medium' | 'large';
+  alignment?: 'left' | 'center' | 'right';
 }
 
 export interface SpacerContent {
@@ -353,6 +359,14 @@ export interface Styling {
     backgroundColor?: string;
     padding?: string;
     margin?: string;
+    textColor?: string;
+    fontSize?: string;
+    fontFamily?: string;
+    fontWeight?: string;
+    lineHeight?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    borderRadius?: string;
+    border?: string;
   };
   mobile?: {
     width?: string;
@@ -360,6 +374,14 @@ export interface Styling {
     backgroundColor?: string;
     padding?: string;
     margin?: string;
+    textColor?: string;
+    fontSize?: string;
+    fontFamily?: string;
+    fontWeight?: string;
+    lineHeight?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    borderRadius?: string;
+    border?: string;
   };
 }
 
@@ -368,7 +390,3 @@ export interface DisplayOptions {
   showOnTablet: boolean;
   showOnMobile: boolean;
 }
-
-// Update TextBlock styling to include lineHeight
-// Update BlockType to include missing types
-export type BlockType = 'text' | 'image' | 'button' | 'divider' | 'spacer' | 'video' | 'social' | 'html' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
