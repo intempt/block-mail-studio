@@ -25,6 +25,12 @@ export interface EmailBlockCanvasRef {
   minifyHTML: () => void;
   checkLinks: () => { workingLinks: number; brokenLinks: number; totalLinks: number };
   addBlock: (block: EmailBlock) => void;
+  updateBlockContent: (blockId: string, newContent: any) => void;
+  updateBlockStyle: (blockId: string, styleChanges: any) => void;
+  replaceTextInAllBlocks: (oldText: string, newText: string) => void;
+  applyDesignSuggestion: (suggestion: any) => void;
+  getBlocks: () => EmailBlock[];
+  updateSubjectLine: (newSubject: string) => void;
 }
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
@@ -57,7 +63,164 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     return text.toLowerCase().replace(/\s+/g, ' ').trim();
   };
 
-  // Enhanced findAndReplaceText with better HTML handling
+  // Enhanced updateBlockContent method
+  const updateBlockContent = useCallback((blockId: string, newContent: any) => {
+    console.log('Canvas: Updating block content:', blockId, newContent);
+    setBlocks(prev => prev.map(block => {
+      if (block.id === blockId) {
+        return {
+          ...block,
+          content: { ...block.content, ...newContent }
+        };
+      }
+      if (block.type === 'columns') {
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.map(columnBlock => 
+            columnBlock.id === blockId 
+              ? { ...columnBlock, content: { ...columnBlock.content, ...newContent } }
+              : columnBlock
+          )
+        }));
+        return { ...block, content: { ...block.content, columns: updatedColumns } };
+      }
+      return block;
+    }));
+  }, []);
+
+  // Enhanced updateBlockStyle method
+  const updateBlockStyle = useCallback((blockId: string, styleChanges: any) => {
+    console.log('Canvas: Updating block style:', blockId, styleChanges);
+    setBlocks(prev => prev.map(block => {
+      if (block.id === blockId) {
+        return {
+          ...block,
+          styling: { 
+            ...block.styling,
+            desktop: { ...block.styling?.desktop, ...styleChanges }
+          }
+        };
+      }
+      if (block.type === 'columns') {
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.map(columnBlock => 
+            columnBlock.id === blockId 
+              ? { 
+                  ...columnBlock, 
+                  styling: { 
+                    ...columnBlock.styling,
+                    desktop: { ...columnBlock.styling?.desktop, ...styleChanges }
+                  }
+                }
+              : columnBlock
+          )
+        }));
+        return { ...block, content: { ...block.content, columns: updatedColumns } };
+      }
+      return block;
+    }));
+  }, []);
+
+  // Enhanced replaceTextInAllBlocks method
+  const replaceTextInAllBlocks = useCallback((oldText: string, newText: string) => {
+    console.log('Canvas: Replacing text in all blocks:', oldText, '->', newText);
+    const oldTextNormalized = normalizeText(stripHTML(oldText));
+    let replacementsMade = 0;
+
+    setBlocks(prev => prev.map(block => {
+      if (block.type === 'text') {
+        const blockTextContent = stripHTML(block.content.html || '');
+        const blockTextNormalized = normalizeText(blockTextContent);
+        
+        if (blockTextNormalized.includes(oldTextNormalized)) {
+          let newHTML = block.content.html || '';
+          if (newHTML.includes(oldText)) {
+            newHTML = newHTML.replace(new RegExp(oldText, 'gi'), newText);
+            replacementsMade++;
+          } else {
+            const strippedOld = stripHTML(oldText);
+            if (newHTML.includes(strippedOld)) {
+              newHTML = newHTML.replace(new RegExp(strippedOld, 'gi'), newText);
+              replacementsMade++;
+            }
+          }
+          return { ...block, content: { ...block.content, html: newHTML } };
+        }
+      } else if (block.type === 'button') {
+        const buttonText = block.content.text || '';
+        if (normalizeText(buttonText).includes(oldTextNormalized)) {
+          replacementsMade++;
+          return { ...block, content: { ...block.content, text: newText } };
+        }
+      } else if (block.type === 'columns') {
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.map(columnBlock => {
+            if (columnBlock.type === 'text') {
+              const blockTextContent = stripHTML(columnBlock.content.html || '');
+              if (normalizeText(blockTextContent).includes(oldTextNormalized)) {
+                let newHTML = columnBlock.content.html || '';
+                if (newHTML.includes(oldText)) {
+                  newHTML = newHTML.replace(new RegExp(oldText, 'gi'), newText);
+                  replacementsMade++;
+                }
+                return { ...columnBlock, content: { ...columnBlock.content, html: newHTML } };
+              }
+            } else if (columnBlock.type === 'button') {
+              const buttonText = columnBlock.content.text || '';
+              if (normalizeText(buttonText).includes(oldTextNormalized)) {
+                replacementsMade++;
+                return { ...columnBlock, content: { ...columnBlock.content, text: newText } };
+              }
+            }
+            return columnBlock;
+          })
+        }));
+        return { ...block, content: { ...block.content, columns: updatedColumns } };
+      }
+      return block;
+    }));
+
+    console.log('Canvas: Total replacements made:', replacementsMade);
+  }, []);
+
+  // Apply design suggestion method
+  const applyDesignSuggestion = useCallback((suggestion: any) => {
+    console.log('Canvas: Applying design suggestion:', suggestion);
+    
+    switch (suggestion.type) {
+      case 'subject':
+        onSubjectChange(suggestion.suggested);
+        break;
+      case 'copy':
+        replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+        break;
+      case 'cta':
+        replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+        break;
+      case 'tone':
+        replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+        break;
+      case 'design':
+        if (suggestion.blockId) {
+          updateBlockStyle(suggestion.blockId, suggestion.styleChanges || {});
+        }
+        break;
+      default:
+        console.warn('Unknown suggestion type:', suggestion.type);
+    }
+  }, [onSubjectChange, replaceTextInAllBlocks, updateBlockStyle]);
+
+  // Get all blocks method
+  const getBlocks = useCallback(() => blocks, [blocks]);
+
+  // Update subject line method
+  const updateSubjectLine = useCallback((newSubject: string) => {
+    onSubjectChange(newSubject);
+  }, [onSubjectChange]);
+
+  // Keep existing findAndReplaceText method
   const findAndReplaceText = useCallback((current: string, replacement: string) => {
     console.log('FindAndReplaceText: Searching for:', current);
     console.log('FindAndReplaceText: Replacing with:', replacement);
@@ -72,25 +235,20 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         
         console.log('FindAndReplaceText: Checking block text:', blockTextContent);
         
-        // Check if the current text exists in this block (fuzzy match)
         if (blockTextNormalized.includes(currentNormalized)) {
           console.log('FindAndReplaceText: Found match in text block');
           
-          // Create new HTML with replacement
           let newHTML = block.content.html || '';
           
-          // Try exact replacement first
           if (newHTML.includes(current)) {
             newHTML = newHTML.replace(current, replacement);
             replacementsMade++;
           } else {
-            // Try replacing just the text content while preserving some HTML structure
             const strippedCurrent = stripHTML(current);
             if (newHTML.includes(strippedCurrent)) {
               newHTML = newHTML.replace(strippedCurrent, replacement);
               replacementsMade++;
             } else {
-              // Fallback: replace the entire content if it's similar enough
               const similarity = blockTextNormalized.length > 0 ? 
                 currentNormalized.length / blockTextNormalized.length : 0;
               
@@ -131,7 +289,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           };
         }
       } else if (block.type === 'columns') {
-        // Handle columns recursively
         const updatedColumns = block.content.columns.map(column => ({
           ...column,
           blocks: column.blocks.map(columnBlock => {
@@ -167,7 +324,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
               const buttonText = columnBlock.content.text || '';
               const buttonTextNormalized = normalizeText(buttonText);
               
-              // FIX: Use buttonTextNormalized instead of blockTextNormalized
               if (buttonTextNormalized.includes(normalizeText(current))) {
                 console.log('FindAndReplaceText: Found match in column button block');
                 
@@ -206,6 +362,12 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   useImperativeHandle(ref, () => ({
     findAndReplaceText,
+    updateBlockContent,
+    updateBlockStyle,
+    replaceTextInAllBlocks,
+    applyDesignSuggestion,
+    getBlocks,
+    updateSubjectLine,
     optimizeImages: () => {
       setBlocks(prev => prev.map(block => {
         if (block.type === 'image' && block.content.src) {
@@ -267,7 +429,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       console.log('EmailBlockCanvas: Adding block via ref:', block);
       setBlocks(prev => [...prev, block]);
     }
-  }), [blocks, findAndReplaceText]);
+  }), [blocks, findAndReplaceText, updateBlockContent, updateBlockStyle, replaceTextInAllBlocks, applyDesignSuggestion, getBlocks, updateSubjectLine]);
 
   useEffect(() => {
     const initialBlocks: EmailBlock[] = [
@@ -456,7 +618,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       const duplicatedBlock: EmailBlock = {
         ...blockToDuplicate,
         id: `${blockToDuplicate.id}_copy_${Date.now()}`,
-        isStarred: false // New duplicated blocks are not starred
+        isStarred: false
       };
       const blockIndex = blocks.findIndex(block => block.id === blockId);
       const newBlocks = [...blocks];
@@ -480,15 +642,12 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         isFavorite: false
       };
 
-      // Create the snippet
       DirectSnippetService.createSnippet(block, snippet.name, snippet.description);
       
-      // Update the block's starred state
       setBlocks(prev => prev.map(b => 
         b.id === blockId ? { ...b, isStarred: true } : b
       ));
       
-      // Trigger snippet refresh
       setSnippetRefreshTrigger(prev => prev + 1);
       onSnippetRefresh?.();
       
@@ -499,7 +658,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   }, [blocks, onSnippetRefresh]);
 
   const handleUnstarBlock = useCallback((blockId: string) => {
-    // Find snippets related to this block and remove them
     const allSnippets = DirectSnippetService.getCustomSnippets();
     const relatedSnippet = allSnippets.find(snippet => 
       snippet.blockData?.id === blockId || 
@@ -511,12 +669,10 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       DirectSnippetService.deleteSnippet(relatedSnippet.id);
     }
     
-    // Update the block's starred state
     setBlocks(prev => prev.map(b => 
       b.id === blockId ? { ...b, isStarred: false } : b
     ));
     
-    // Trigger snippet refresh
     setSnippetRefreshTrigger(prev => prev + 1);
     onSnippetRefresh?.();
     
@@ -691,7 +847,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       overflow: 'hidden'
     };
 
-    // Enhanced visual feedback when dragging
     if (isDraggingOver && currentDragType) {
       const colorMap = {
         block: '#3b82f6',
@@ -724,7 +879,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         onDragEnter={dragDropHandler.handleCanvasDragEnter}
         onDragLeave={dragDropHandler.handleCanvasDragLeave}
       >
-        {/* Subject Line Section */}
         <div className="border-b border-gray-100 bg-white">
           <CanvasSubjectLine
             value={subject}
@@ -733,7 +887,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           />
         </div>
 
-        {/* Email Content */}
         <div className="p-6">
           <CanvasRenderer
             blocks={blocks}
@@ -760,7 +913,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         </div>
       </div>
 
-      {/* Only render CanvasStatus when showAIAnalytics is true */}
       {showAIAnalytics && (
         <CanvasStatus 
           selectedBlockId={selectedBlockId}

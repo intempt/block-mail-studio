@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,25 +13,15 @@ import {
   CheckCircle,
   RefreshCw,
   TrendingUp,
-  Brain
+  Brain,
+  Type
 } from 'lucide-react';
-import { directAIService } from '@/services/directAIService';
-import { CentralizedAIAnalysisService } from '@/services/CentralizedAIAnalysisService';
-
-interface Suggestion {
-  id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone' | 'design';
-  title: string;
-  description: string;
-  impact: 'high' | 'medium' | 'low';
-  confidence: number;
-  suggestion: string;
-}
+import { CentralizedAIAnalysisService, UnifiedAISuggestion } from '@/services/CentralizedAIAnalysisService';
 
 interface AISuggestionsPanelProps {
   emailHTML: string;
   subjectLine: string;
-  onApplySuggestion?: (suggestion: Suggestion) => void;
+  onApplySuggestion?: (suggestion: UnifiedAISuggestion) => void;
 }
 
 export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
@@ -38,70 +29,63 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
   subjectLine,
   onApplySuggestion
 }) => {
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<UnifiedAISuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const generateSuggestions = async () => {
-    if (!emailHTML.trim()) return;
+    if (!emailHTML.trim() || emailHTML.length < 50) {
+      console.warn('AISuggestionsPanel: Email content too short for analysis');
+      setSuggestions([]);
+      return;
+    }
 
     setIsLoading(true);
     try {
-      console.log('Generating real AI suggestions...');
+      console.log('AISuggestionsPanel: Generating comprehensive AI suggestions...');
       
-      // Use the centralized AI service to get comprehensive analysis
+      // Use the centralized AI service for real analysis
       const analysis = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
-      const unifiedSuggestions = CentralizedAIAnalysisService.convertToUnifiedSuggestions(analysis);
+      const unifiedSuggestions = CentralizedAIAnalysisService.convertToUnifiedSuggestions(analysis, emailHTML);
       
-      // Convert to the format expected by this component
-      const formattedSuggestions: Suggestion[] = unifiedSuggestions.map(suggestion => ({
-        id: suggestion.id,
-        type: suggestion.type as 'subject' | 'copy' | 'cta' | 'tone' | 'design',
-        title: suggestion.title,
-        description: suggestion.reason,
-        impact: suggestion.impact,
-        confidence: suggestion.confidence,
-        suggestion: suggestion.suggested
-      }));
+      // Sort by priority (high impact first, then by confidence)
+      const sortedSuggestions = unifiedSuggestions.sort((a, b) => {
+        const impactOrder = { high: 3, medium: 2, low: 1 };
+        const impactDiff = impactOrder[b.impact] - impactOrder[a.impact];
+        if (impactDiff !== 0) return impactDiff;
+        return b.confidence - a.confidence;
+      });
 
-      setSuggestions(formattedSuggestions);
-      console.log('Generated real AI suggestions:', formattedSuggestions);
+      setSuggestions(sortedSuggestions);
+      console.log('AISuggestionsPanel: Generated', sortedSuggestions.length, 'AI suggestions');
       
     } catch (error) {
-      console.error('Error generating AI suggestions:', error);
-      // Fallback to basic suggestions if API fails
-      const fallbackSuggestions: Suggestion[] = [
-        {
-          id: 'fallback_1',
-          type: 'subject',
-          title: 'Optimize Subject Line',
-          description: 'Make your subject line more compelling',
-          impact: 'high',
-          confidence: 75,
-          suggestion: 'Consider adding urgency or personalization to your subject line'
-        }
-      ];
-      setSuggestions(fallbackSuggestions);
+      console.error('AISuggestionsPanel: Error generating AI suggestions:', error);
+      setSuggestions([]);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (emailHTML) {
+    if (emailHTML && emailHTML.length > 50) {
       const timer = setTimeout(generateSuggestions, 1500);
       return () => clearTimeout(timer);
+    } else {
+      setSuggestions([]);
     }
   }, [emailHTML, subjectLine]);
 
-  const applySuggestion = (suggestion: Suggestion) => {
+  const applySuggestion = (suggestion: UnifiedAISuggestion) => {
     onApplySuggestion?.(suggestion);
-    setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
-    console.log(`Applied: ${suggestion.title}`);
+    setSuggestions(prev => prev.map(s => 
+      s.id === suggestion.id ? { ...s, applied: true } : s
+    ));
+    console.log(`AISuggestionsPanel: Applied suggestion:`, suggestion.title);
   };
 
-  const copySuggestion = (suggestion: Suggestion) => {
-    navigator.clipboard.writeText(suggestion.suggestion);
-    console.log(`Copied: ${suggestion.title}`);
+  const copySuggestion = (suggestion: UnifiedAISuggestion) => {
+    navigator.clipboard.writeText(suggestion.suggested);
+    console.log(`AISuggestionsPanel: Copied suggestion:`, suggestion.title);
   };
 
   const getImpactColor = (impact: string) => {
@@ -117,10 +101,22 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
     switch (type) {
       case 'subject': return <Target className="w-4 h-4" />;
       case 'cta': return <Zap className="w-4 h-4" />;
-      case 'copy': return <Sparkles className="w-4 h-4" />;
+      case 'copy': return <Type className="w-4 h-4" />;
       case 'design': return <TrendingUp className="w-4 h-4" />;
       case 'tone': return <Brain className="w-4 h-4" />;
+      case 'performance': return <Zap className="w-4 h-4" />;
+      case 'optimization': return <Sparkles className="w-4 h-4" />;
       default: return <Lightbulb className="w-4 h-4" />;
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'brandVoice': return 'bg-purple-100 text-purple-700';
+      case 'performance': return 'bg-green-100 text-green-700';
+      case 'variants': return 'bg-blue-100 text-blue-700';
+      case 'optimization': return 'bg-orange-100 text-orange-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -130,7 +126,7 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Lightbulb className="w-5 h-5" />
-            AI Suggestions
+            Suggestion AI
           </h3>
           <Button
             variant="outline"
@@ -160,7 +156,7 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
         <div className="p-4 space-y-3">
           {suggestions.length > 0 ? (
             suggestions.map((suggestion) => (
-              <Card key={suggestion.id} className="p-3 border hover:shadow-sm transition-shadow">
+              <Card key={suggestion.id} className={`p-3 border hover:shadow-sm transition-shadow ${suggestion.applied ? 'opacity-60' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
                     {getTypeIcon(suggestion.type)}
@@ -168,6 +164,10 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
                     <Badge className={`text-xs ${getImpactColor(suggestion.impact)}`}>
                       {suggestion.impact}
                     </Badge>
+                    <Badge className={`text-xs ${getCategoryColor(suggestion.category)}`}>
+                      {suggestion.category}
+                    </Badge>
+                    {suggestion.applied && <CheckCircle className="w-4 h-4 text-green-600" />}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-gray-500">
                     <CheckCircle className="w-3 h-3" />
@@ -175,37 +175,57 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
                   </div>
                 </div>
                 
-                <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                <p className="text-sm text-gray-600 mb-2">{suggestion.reason}</p>
+                
+                {suggestion.current && (
+                  <div className="text-xs mb-2">
+                    <span className="font-medium text-gray-700">Current:</span>
+                    <div className="bg-gray-50 p-2 rounded mt-1 text-gray-600 font-mono text-xs">
+                      {suggestion.current.length > 100 
+                        ? suggestion.current.substring(0, 100) + '...' 
+                        : suggestion.current}
+                    </div>
+                  </div>
+                )}
                 
                 <div className="text-sm bg-blue-50 p-2 rounded mb-3">
-                  <span className="text-blue-800">💡 {suggestion.suggestion}</span>
+                  <div className="text-xs text-blue-600 font-medium mb-1">💡 Suggested:</div>
+                  <span className="text-blue-800">{suggestion.suggested}</span>
                 </div>
                 
-                <div className="flex gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => applySuggestion(suggestion)}
-                    className="flex-1 text-xs h-7"
-                  >
-                    Apply
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copySuggestion(suggestion)}
-                    className="text-xs h-7"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
-                </div>
+                {suggestion.blockId && (
+                  <div className="text-xs text-purple-600 mb-2">
+                    🎯 Targets: {suggestion.targetElement || 'specific block'} ({suggestion.blockId})
+                  </div>
+                )}
+                
+                {!suggestion.applied && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => applySuggestion(suggestion)}
+                      className="flex-1 text-xs h-7"
+                    >
+                      Apply
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copySuggestion(suggestion)}
+                      className="text-xs h-7"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
               </Card>
             ))
           ) : !isLoading ? (
             <div className="text-center py-8">
               <Lightbulb className="w-8 h-8 text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-600 mb-3">
-                Add email content to get AI suggestions
+                Add email content to get Suggestion AI
               </p>
               <Button
                 variant="outline"
