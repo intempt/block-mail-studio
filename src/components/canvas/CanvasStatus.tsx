@@ -66,11 +66,11 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     return 'text-red-600';
   };
 
-  const getScoreBg = (score: number | null) => {
-    if (score === null) return 'bg-gray-50';
-    if (score >= 80) return 'bg-emerald-50';
-    if (score >= 60) return 'bg-amber-50';
-    return 'bg-red-50';
+  const getBadgeVariant = (score: number | null) => {
+    if (score === null) return 'outline';
+    if (score >= 80) return 'default';
+    if (score >= 60) return 'secondary';
+    return 'destructive';
   };
 
   const refreshAnalytics = () => {
@@ -91,45 +91,32 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     
     return (
       <div className="flex items-center gap-2">
-        <Icon className={`w-4 h-4 ${className}`} />
-        <span className="text-sm font-medium text-gray-700">{text}</span>
+        <Icon className={`w-3 h-3 ${className}`} />
+        <span className="text-xs font-medium text-gray-700">{text}</span>
       </div>
     );
   };
 
-  const ScoreCard = ({ 
+  const CompactScoreBadge = ({ 
     title, 
     score, 
-    icon: Icon, 
-    className = "" 
+    icon: Icon
   }: { 
     title: string; 
     score: number | null; 
     icon: any; 
-    className?: string; 
   }) => (
-    <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Icon className="w-4 h-4 text-gray-600" />
-          <span className="text-sm font-medium text-gray-700">{title}</span>
-        </div>
-      </div>
-      <div className={`text-2xl font-bold ${getScoreColor(score)}`}>
+    <div className="flex items-center gap-1">
+      <Icon className="w-3 h-3 text-gray-500" />
+      <span className="text-xs text-gray-600">{title}:</span>
+      <Badge 
+        variant={getBadgeVariant(score)} 
+        className="text-xs px-1.5 py-0.5 h-5"
+      >
         {score !== null ? score : '--'}
         {score !== null && title !== 'Spam Risk' && '/100'}
         {title === 'Spam Risk' && score !== null && '%'}
-      </div>
-      <div className={`h-2 rounded-full mt-2 ${getScoreBg(score)}`}>
-        {score !== null && title !== 'Spam Risk' && (
-          <div 
-            className={`h-full rounded-full transition-all ${
-              score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-amber-500' : 'bg-red-500'
-            }`}
-            style={{ width: `${score}%` }}
-          />
-        )}
-      </div>
+      </Badge>
     </div>
   );
 
@@ -144,14 +131,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     icon?: any; 
     status?: 'good' | 'warning' | 'poor'; 
   }) => (
-    <div className="flex items-center justify-between py-2">
-      <div className="flex items-center gap-2">
-        {Icon && <Icon className="w-4 h-4 text-gray-500" />}
-        <span className="text-sm text-gray-600">{label}</span>
+    <div className="flex items-center justify-between py-1">
+      <div className="flex items-center gap-1">
+        {Icon && <Icon className="w-3 h-3 text-gray-500" />}
+        <span className="text-xs text-gray-600">{label}</span>
       </div>
       <Badge 
         variant="outline" 
-        className={`text-xs ${
+        className={`text-xs px-1.5 py-0.5 h-5 ${
           status === 'good' ? 'text-emerald-600 border-emerald-200' :
           status === 'warning' ? 'text-amber-600 border-amber-200' :
           status === 'poor' ? 'text-red-600 border-red-200' :
@@ -165,21 +152,21 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   return (
     <div className="bg-white border-t border-gray-200 shadow-sm">
-      {/* Main Analytics Bar */}
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
+      {/* Compact Main Analytics Bar */}
+      <div className="px-4 py-2">
+        <div className="flex items-center justify-between gap-4 mb-2">
           <StatusIndicator 
             status={isAnalyzing ? 'analyzing' : hasContent && analytics ? 'ready' : 'empty'} 
           />
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {hasContent && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={refreshAnalytics}
                 disabled={isAnalyzing}
-                className="h-8 px-3 text-xs text-gray-600 hover:text-gray-900"
+                className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
               >
                 <RefreshCw className={`w-3 h-3 mr-1 ${isAnalyzing ? 'animate-spin' : ''}`} />
                 Refresh
@@ -191,7 +178,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="h-8 px-3 text-xs text-gray-600 hover:text-gray-900"
+                className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
               >
                 {isExpanded ? (
                   <>
@@ -209,25 +196,25 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           </div>
         </div>
 
-        {/* Primary Metrics Grid */}
+        {/* Compact Primary Metrics Row */}
         {analytics && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <ScoreCard
-              title="Overall Score"
+          <div className="flex items-center gap-4 flex-wrap">
+            <CompactScoreBadge
+              title="Overall"
               score={analytics.overallScore}
               icon={BarChart3}
             />
-            <ScoreCard
+            <CompactScoreBadge
               title="Deliverability"
               score={analytics.deliverabilityScore}
               icon={Shield}
             />
-            <ScoreCard
-              title="Mobile Ready"
+            <CompactScoreBadge
+              title="Mobile"
               score={analytics.mobileScore}
               icon={Brain}
             />
-            <ScoreCard
+            <CompactScoreBadge
               title="Spam Risk"
               score={analytics.spamScore}
               icon={Shield}
@@ -235,48 +222,39 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           </div>
         )}
 
-        {/* Performance Predictions */}
+        {/* Compact Performance Predictions */}
         {analytics?.performancePrediction && (
-          <Card className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span className="font-medium text-blue-900">Performance Predictions</span>
+          <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-blue-600" />
+              <span className="text-xs font-medium text-blue-900">Predictions:</span>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-700">
-                  {formatPrediction(analytics.performancePrediction.openRate)}%
-                </div>
-                <div className="text-xs text-blue-600">Open Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-700">
-                  {formatPrediction(analytics.performancePrediction.clickRate)}%
-                </div>
-                <div className="text-xs text-purple-600">Click Rate</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-700">
-                  {formatPrediction(analytics.performancePrediction.conversionRate)}%
-                </div>
-                <div className="text-xs text-green-600">Conversion</div>
-              </div>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="text-blue-700">
+                <strong>{formatPrediction(analytics.performancePrediction.openRate)}%</strong> Open
+              </span>
+              <span className="text-purple-700">
+                <strong>{formatPrediction(analytics.performancePrediction.clickRate)}%</strong> Click
+              </span>
+              <span className="text-green-700">
+                <strong>{formatPrediction(analytics.performancePrediction.conversionRate)}%</strong> Convert
+              </span>
             </div>
-          </Card>
+          </div>
         )}
       </div>
 
-      {/* Expanded Details Panel */}
+      {/* Compact Expanded Details Panel */}
       {isExpanded && analytics && (
-        <div className="border-t border-gray-100 bg-gray-50 px-6 py-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Content Metrics */}
-            <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
+            <Card className="p-3">
+              <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                <BarChart3 className="w-3 h-3" />
                 Content Analysis
               </h4>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 <MetricRow label="File Size" value={`${analytics.sizeKB} KB`} />
                 <MetricRow label="Word Count" value={analytics.wordCount} />
                 <MetricRow label="Character Count" value={analytics.characterCount.toLocaleString()} />
@@ -287,12 +265,12 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
             {/* Brand Metrics */}
             {analytics.brandVoiceScore && (
-              <Card className="p-4">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <Brain className="w-4 h-4" />
+              <Card className="p-3">
+                <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
+                  <Brain className="w-3 h-3" />
                   Brand Analysis
                 </h4>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <MetricRow 
                     label="Brand Voice Score" 
                     value={`${analytics.brandVoiceScore}/100`}
@@ -319,12 +297,12 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Compact Empty State */}
       {!hasContent && !isAnalyzing && (
-        <div className="px-6 py-8 text-center">
-          <Lightbulb className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-sm font-medium text-gray-600 mb-1">Ready for AI Analysis</h3>
-          <p className="text-xs text-gray-500">Add content to your email to see detailed analytics and performance insights</p>
+        <div className="px-4 py-4 text-center">
+          <Lightbulb className="w-5 h-5 text-gray-300 mx-auto mb-2" />
+          <h3 className="text-xs font-medium text-gray-600 mb-1">Ready for AI Analysis</h3>
+          <p className="text-xs text-gray-500">Add content to see analytics</p>
         </div>
       )}
     </div>
