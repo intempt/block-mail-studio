@@ -105,6 +105,8 @@ export interface DividerBlock extends EmailBlock {
       margin?: string;
       backgroundColor?: string;
       padding?: string;
+      borderRadius?: string;
+      border?: string;
     };
   };
 }
@@ -129,6 +131,9 @@ export interface VideoBlock extends EmailBlock {
     thumbnail: string;
     title?: string;
     showPlayButton?: boolean;
+    videoUrl?: string;
+    platform?: 'custom' | 'youtube' | 'vimeo' | 'tiktok';
+    autoThumbnail?: boolean;
   };
   styling: {
     desktop: {
@@ -149,8 +154,11 @@ export interface SocialBlock extends EmailBlock {
       name: string;
       url: string;
       icon?: string;
+      showLabel?: boolean;
     }>;
     layout?: 'horizontal' | 'vertical';
+    iconSize?: string;
+    spacing?: string;
   };
   styling: {
     desktop: {
@@ -165,6 +173,7 @@ export interface HtmlBlock extends EmailBlock {
   type: 'html';
   content: {
     html: string;
+    customCSS?: string;
   };
   styling: {
     desktop: {
@@ -180,6 +189,12 @@ export interface TableBlock extends EmailBlock {
   content: {
     rows: Array<Array<string>>;
     headers?: Array<string>;
+    cells?: Array<Array<{ type: 'text'; content: string }>>;
+    columns?: number;
+    headerRow?: boolean;
+    borderStyle?: 'none' | 'solid' | 'dashed' | 'dotted';
+    borderColor?: string;
+    borderWidth?: string;
   };
   styling: {
     desktop: {
@@ -234,12 +249,16 @@ export interface ColumnsBlock extends EmailBlock {
       width: number;
       blocks: EmailBlock[];
     }>;
+    columnRatio?: string;
+    gap?: string;
   };
   styling: {
     desktop: {
       backgroundColor?: string;
       padding?: string;
       margin?: string;
+      borderRadius?: string;
+      border?: string;
     };
   };
 }
@@ -251,6 +270,8 @@ export interface SplitBlock extends EmailBlock {
     rightColumn: EmailBlock[];
     leftWidth?: number;
     rightWidth?: number;
+    splitRatio?: string;
+    ratio?: string;
   };
   styling: {
     desktop: {
