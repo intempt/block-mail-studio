@@ -1,4 +1,3 @@
-
 import { EmailBlock, TextContent, ImageContent, ButtonContent, SpacerContent, DividerContent } from '@/types/emailBlocks';
 import { generateUniqueId } from '@/utils/blockUtils';
 
@@ -292,6 +291,7 @@ export class HTMLImportService {
   private static createDividerBlock(element: HTMLElement): EmailBlock {
     const dividerContent: DividerContent = {
       style: 'solid',
+      size: 'medium',
       thickness: '1px',
       color: '#e0e0e0',
       width: '100%',
