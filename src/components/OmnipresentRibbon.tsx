@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +27,7 @@ import {
 import { UniversalContent, EmailBlock } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { ButtonsLinksCard } from './ButtonsLinksCard';
+import { LinksCard } from './LinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
 import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
@@ -455,7 +455,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   closeAllPanels();
                   setShowButtons(!showButtons);
                 }}
-                title="Buttons & Links"
+                title="Buttons"
               >
                 <MousePointer className="w-12 h-12" />
               </Button>
@@ -496,30 +496,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         onStylesChange={onGlobalStylesChange}
       />
 
-      {showLinks && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-2 mx-6 shadow-lg border border-gray-200 bg-white rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold flex items-center gap-2">
-              <Link className="w-4 h-4" />
-              Links
-            </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowLinks(false)}
-              className="text-gray-500"
-            >
-              ×
-            </Button>
-          </div>
-          <div className="text-sm text-gray-600">
-            Link styling controls will be implemented here.
-          </div>
-        </div>
-      )}
+      <LinksCard
+        isOpen={showLinks}
+        onToggle={() => setShowLinks(!showLinks)}
+        onStylesChange={onGlobalStylesChange}
+      />
     </div>
   );
 };
 
 export default OmnipresentRibbon;
-

@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
   MousePointer,
-  Link,
   ChevronDown,
   X,
   Lock,
@@ -54,13 +53,6 @@ export const ButtonsLinksCard: React.FC<ButtonsLinksCardProps> = ({
     paddingLocked: true
   });
 
-  const [linkStyles, setLinkStyles] = useState({
-    color: '#4a90e2',
-    style: 'Normal',
-    italic: false,
-    underline: false
-  });
-
   const handleButtonStyleChange = (property: string, value: any) => {
     const newStyles = { ...buttonStyles, [property]: value };
     setButtonStyles(newStyles);
@@ -78,19 +70,6 @@ export const ButtonsLinksCard: React.FC<ButtonsLinksCardProps> = ({
           textDecoration: newStyles.underline ? 'underline' : 'none',
           padding: `${newStyles.paddingTopBottom}px ${newStyles.paddingLeftRight}px`
         }
-      }
-    });
-  };
-
-  const handleLinkStyleChange = (property: string, value: any) => {
-    const newStyles = { ...linkStyles, [property]: value };
-    setLinkStyles(newStyles);
-    
-    onStylesChange({
-      links: {
-        normal: newStyles.color,
-        fontStyle: newStyles.italic ? 'italic' : 'normal',
-        textDecoration: newStyles.underline ? 'underline' : 'none'
       }
     });
   };
@@ -130,7 +109,7 @@ export const ButtonsLinksCard: React.FC<ButtonsLinksCardProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold flex items-center gap-2">
             <MousePointer className="w-4 h-4" />
-            Buttons & Links
+            Buttons
           </h3>
           <Button
             variant="ghost"
@@ -142,257 +121,187 @@ export const ButtonsLinksCard: React.FC<ButtonsLinksCardProps> = ({
           </Button>
         </div>
 
-        <div className="space-y-6">
-          {/* BUTTONS Section */}
+        <div className="space-y-3">
+          {/* Font Selection */}
           <div>
-            <h4 className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">Buttons</h4>
-            <div className="space-y-3">
-              {/* Font Selection */}
-              <div>
-                <Label className="text-xs font-medium mb-2 block">Font</Label>
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {buttonStyles.fontFamily.map((font) => (
-                    <Badge key={font} variant="secondary" className="text-xs flex items-center gap-1">
-                      {font.split(',')[0]}
-                      <X 
-                        className="w-3 h-3 cursor-pointer hover:text-red-500" 
-                        onClick={() => removeFont(font)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-                <Select onValueChange={(value) => addFont(value)}>
-                  <SelectTrigger className="h-8">
-                    <SelectValue placeholder="Add font..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fontOptions.map((font) => (
-                      <SelectItem key={font} value={font} style={{ fontFamily: font }}>
-                        {font.split(',')[0]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <Label className="text-xs font-medium mb-2 block">Font</Label>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {buttonStyles.fontFamily.map((font) => (
+                <Badge key={font} variant="secondary" className="text-xs flex items-center gap-1">
+                  {font.split(',')[0]}
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-red-500" 
+                    onClick={() => removeFont(font)}
+                  />
+                </Badge>
+              ))}
+            </div>
+            <Select onValueChange={(value) => addFont(value)}>
+              <SelectTrigger className="h-8">
+                <SelectValue placeholder="Add font..." />
+              </SelectTrigger>
+              <SelectContent>
+                {fontOptions.map((font) => (
+                  <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                    {font.split(',')[0]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-4 gap-3">
+            {/* Style */}
+            <div>
+              <Label className="text-xs">Style</Label>
+              <Select value={buttonStyles.style} onValueChange={(value) => handleButtonStyleChange('style', value)}>
+                <SelectTrigger className="h-8 mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="Bold">Bold</SelectItem>
+                  <SelectItem value="Light">Light</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Text Color */}
+            <div>
+              <Label className="text-xs">Text Color</Label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="color"
+                  value={buttonStyles.textColor}
+                  onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
+                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                />
+                <Input
+                  value={buttonStyles.textColor}
+                  onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
+                  className="flex-1 h-8 text-xs font-mono"
+                />
               </div>
+            </div>
 
-              <div className="grid grid-cols-4 gap-3">
-                {/* Style */}
-                <div>
-                  <Label className="text-xs">Style</Label>
-                  <Select value={buttonStyles.style} onValueChange={(value) => handleButtonStyleChange('style', value)}>
-                    <SelectTrigger className="h-8 mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Normal">Normal</SelectItem>
-                      <SelectItem value="Bold">Bold</SelectItem>
-                      <SelectItem value="Light">Light</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Text Color */}
-                <div>
-                  <Label className="text-xs">Text Color</Label>
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      type="color"
-                      value={buttonStyles.textColor}
-                      onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
-                      className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={buttonStyles.textColor}
-                      onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
-                      className="flex-1 h-8 text-xs font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Button Color */}
-                <div>
-                  <Label className="text-xs">Button Color</Label>
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      type="color"
-                      value={buttonStyles.backgroundColor}
-                      onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
-                      className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={buttonStyles.backgroundColor}
-                      onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
-                      className="flex-1 h-8 text-xs font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Font Size */}
-                <div>
-                  <Label className="text-xs">Size</Label>
-                  <div className="flex items-center mt-1">
-                    <Input
-                      type="number"
-                      value={buttonStyles.fontSize}
-                      onChange={(e) => handleButtonStyleChange('fontSize', e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <span className="text-xs text-gray-500 ml-1">px</span>
-                  </div>
-                </div>
+            {/* Button Color */}
+            <div>
+              <Label className="text-xs">Button Color</Label>
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="color"
+                  value={buttonStyles.backgroundColor}
+                  onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
+                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                />
+                <Input
+                  value={buttonStyles.backgroundColor}
+                  onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
+                  className="flex-1 h-8 text-xs font-mono"
+                />
               </div>
+            </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                {/* Line Height */}
-                <div>
-                  <Label className="text-xs">Line Height</Label>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Input
-                      type="number"
-                      value={buttonStyles.lineHeight}
-                      onChange={(e) => handleButtonStyleChange('lineHeight', e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <span className="text-xs text-gray-500">%</span>
-                  </div>
-                </div>
-
-                {/* Letter Spacing */}
-                <div>
-                  <Label className="text-xs">Letter Spacing</Label>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Input
-                      type="number"
-                      value={buttonStyles.letterSpacing}
-                      onChange={(e) => handleButtonStyleChange('letterSpacing', e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <span className="text-xs text-gray-500">px</span>
-                  </div>
-                </div>
-
-                {/* Text Formatting */}
-                <div>
-                  <Label className="text-xs">Format</Label>
-                  <div className="flex gap-1 mt-1">
-                    <Button
-                      variant={buttonStyles.italic ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleButtonStyleChange('italic', !buttonStyles.italic)}
-                    >
-                      <Italic className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={buttonStyles.underline ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleButtonStyleChange('underline', !buttonStyles.underline)}
-                    >
-                      <Underline className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Padding Controls */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Top/Bottom Padding</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      value={buttonStyles.paddingTopBottom}
-                      onChange={(e) => handlePaddingChange('topBottom', e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <span className="text-xs text-gray-500">px</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={togglePaddingLock}
-                    >
-                      <Lock className={`w-3 h-3 ${buttonStyles.paddingLocked ? 'text-blue-600' : 'text-gray-400'}`} />
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">Left/Right Padding</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Input
-                      type="number"
-                      value={buttonStyles.paddingLeftRight}
-                      onChange={(e) => handlePaddingChange('leftRight', e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                    <span className="text-xs text-gray-500">px</span>
-                  </div>
-                </div>
+            {/* Font Size */}
+            <div>
+              <Label className="text-xs">Size</Label>
+              <div className="flex items-center mt-1">
+                <Input
+                  type="number"
+                  value={buttonStyles.fontSize}
+                  onChange={(e) => handleButtonStyleChange('fontSize', e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-gray-500 ml-1">px</span>
               </div>
             </div>
           </div>
 
-          {/* LINKS Section */}
-          <div className="border-t border-gray-200 pt-4">
-            <h4 className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">Links</h4>
-            <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-3">
-                {/* Color */}
-                <div>
-                  <Label className="text-xs">Color</Label>
-                  <div className="flex gap-2 mt-1">
-                    <input
-                      type="color"
-                      value={linkStyles.color}
-                      onChange={(e) => handleLinkStyleChange('color', e.target.value)}
-                      className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={linkStyles.color}
-                      onChange={(e) => handleLinkStyleChange('color', e.target.value)}
-                      className="flex-1 h-8 text-xs font-mono"
-                    />
-                  </div>
-                </div>
+          <div className="grid grid-cols-3 gap-3">
+            {/* Line Height */}
+            <div>
+              <Label className="text-xs">Line Height</Label>
+              <div className="flex items-center gap-1 mt-1">
+                <Input
+                  type="number"
+                  value={buttonStyles.lineHeight}
+                  onChange={(e) => handleButtonStyleChange('lineHeight', e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-gray-500">%</span>
+              </div>
+            </div>
 
-                {/* Style */}
-                <div>
-                  <Label className="text-xs">Style</Label>
-                  <Select value={linkStyles.style} onValueChange={(value) => handleLinkStyleChange('style', value)}>
-                    <SelectTrigger className="h-8 mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Normal">Normal</SelectItem>
-                      <SelectItem value="Bold">Bold</SelectItem>
-                      <SelectItem value="Light">Light</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            {/* Letter Spacing */}
+            <div>
+              <Label className="text-xs">Letter Spacing</Label>
+              <div className="flex items-center gap-1 mt-1">
+                <Input
+                  type="number"
+                  value={buttonStyles.letterSpacing}
+                  onChange={(e) => handleButtonStyleChange('letterSpacing', e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-gray-500">px</span>
+              </div>
+            </div>
 
-                {/* Text Formatting */}
-                <div>
-                  <Label className="text-xs">Format</Label>
-                  <div className="flex gap-1 mt-1">
-                    <Button
-                      variant={linkStyles.italic ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleLinkStyleChange('italic', !linkStyles.italic)}
-                    >
-                      <Italic className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant={linkStyles.underline ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleLinkStyleChange('underline', !linkStyles.underline)}
-                    >
-                      <Underline className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
+            {/* Text Formatting */}
+            <div>
+              <Label className="text-xs">Format</Label>
+              <div className="flex gap-1 mt-1">
+                <Button
+                  variant={buttonStyles.italic ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handleButtonStyleChange('italic', !buttonStyles.italic)}
+                >
+                  <Italic className="w-3 h-3" />
+                </Button>
+                <Button
+                  variant={buttonStyles.underline ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handleButtonStyleChange('underline', !buttonStyles.underline)}
+                >
+                  <Underline className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Padding Controls */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs">Top/Bottom Padding</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="number"
+                  value={buttonStyles.paddingTopBottom}
+                  onChange={(e) => handlePaddingChange('topBottom', e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-gray-500">px</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={togglePaddingLock}
+                >
+                  <Lock className={`w-3 h-3 ${buttonStyles.paddingLocked ? 'text-blue-600' : 'text-gray-400'}`} />
+                </Button>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Left/Right Padding</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="number"
+                  value={buttonStyles.paddingLeftRight}
+                  onChange={(e) => handlePaddingChange('leftRight', e.target.value)}
+                  className="h-8 text-xs"
+                />
+                <span className="text-xs text-gray-500">px</span>
               </div>
             </div>
           </div>
@@ -400,7 +309,7 @@ export const ButtonsLinksCard: React.FC<ButtonsLinksCardProps> = ({
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-2 border-t border-gray-200">
             <Badge variant="secondary" className="text-xs">
-              Applied to all buttons & links
+              Applied to all buttons
             </Badge>
           </div>
         </div>
