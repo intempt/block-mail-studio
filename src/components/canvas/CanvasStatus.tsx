@@ -10,8 +10,6 @@ import {
   RefreshCw, 
   Shield,
   Lightbulb,
-  ChevronUp,
-  ChevronDown,
   Info
 } from 'lucide-react';
 import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
@@ -34,7 +32,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [analytics, setAnalytics] = useState<UnifiedEmailAnalytics | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasContent, setHasContent] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
   // Check if there's content to analyze
   useEffect(() => {
@@ -97,54 +94,21 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     );
   };
 
-  const CompactScoreBadge = ({ 
-    title, 
-    score, 
-    icon: Icon
-  }: { 
-    title: string; 
-    score: number | null; 
-    icon: any; 
-  }) => (
-    <div className="flex items-center gap-1">
-      <Icon className="w-3 h-3 text-gray-500" />
-      <span className="text-xs text-gray-600">{title}:</span>
-      <Badge 
-        variant={getBadgeVariant(score)} 
-        className="text-xs px-1.5 py-0.5 h-5"
-      >
-        {score !== null ? score : '--'}
-        {score !== null && title !== 'Spam Risk' && '/100'}
-        {title === 'Spam Risk' && score !== null && '%'}
-      </Badge>
-    </div>
-  );
-
-  const MetricRow = ({ 
+  const CompactMetric = ({ 
     label, 
     value, 
-    icon: Icon, 
-    status 
+    icon: Icon,
+    variant = 'outline'
   }: { 
     label: string; 
     value: string | number; 
-    icon?: any; 
-    status?: 'good' | 'warning' | 'poor'; 
+    icon?: any;
+    variant?: 'default' | 'secondary' | 'destructive' | 'outline';
   }) => (
-    <div className="flex items-center justify-between py-1">
-      <div className="flex items-center gap-1">
-        {Icon && <Icon className="w-3 h-3 text-gray-500" />}
-        <span className="text-xs text-gray-600">{label}</span>
-      </div>
-      <Badge 
-        variant="outline" 
-        className={`text-xs px-1.5 py-0.5 h-5 ${
-          status === 'good' ? 'text-emerald-600 border-emerald-200' :
-          status === 'warning' ? 'text-amber-600 border-amber-200' :
-          status === 'poor' ? 'text-red-600 border-red-200' :
-          'text-gray-600'
-        }`}
-      >
+    <div className="flex items-center gap-1">
+      {Icon && <Icon className="w-3 h-3 text-gray-500" />}
+      <span className="text-xs text-gray-600">{label}:</span>
+      <Badge variant={variant} className="text-xs px-1.5 py-0.5 h-5">
         {value}
       </Badge>
     </div>
@@ -152,159 +116,137 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   return (
     <div className="bg-white border-t border-gray-200 shadow-sm">
-      {/* Compact Main Analytics Bar */}
       <div className="px-4 py-2">
+        {/* Header Row */}
         <div className="flex items-center justify-between gap-4 mb-2">
           <StatusIndicator 
             status={isAnalyzing ? 'analyzing' : hasContent && analytics ? 'ready' : 'empty'} 
           />
           
-          <div className="flex items-center gap-2">
-            {hasContent && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={refreshAnalytics}
-                disabled={isAnalyzing}
-                className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
-              >
-                <RefreshCw className={`w-3 h-3 mr-1 ${isAnalyzing ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-            )}
-            
-            {analytics && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="w-3 h-3 mr-1" />
-                    Less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3 h-3 mr-1" />
-                    Details
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
+          {hasContent && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshAnalytics}
+              disabled={isAnalyzing}
+              className="h-6 px-2 text-xs text-gray-600 hover:text-gray-900"
+            >
+              <RefreshCw className={`w-3 h-3 mr-1 ${isAnalyzing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          )}
         </div>
 
-        {/* Compact Primary Metrics Row */}
         {analytics && (
-          <div className="flex items-center gap-4 flex-wrap">
-            <CompactScoreBadge
-              title="Overall"
-              score={analytics.overallScore}
-              icon={BarChart3}
-            />
-            <CompactScoreBadge
-              title="Deliverability"
-              score={analytics.deliverabilityScore}
-              icon={Shield}
-            />
-            <CompactScoreBadge
-              title="Mobile"
-              score={analytics.mobileScore}
-              icon={Brain}
-            />
-            <CompactScoreBadge
-              title="Spam Risk"
-              score={analytics.spamScore}
-              icon={Shield}
-            />
+          <div className="space-y-2">
+            {/* Primary AI Scores Row */}
+            <div className="flex items-center gap-4 flex-wrap">
+              <CompactMetric
+                label="Overall"
+                value={analytics.overallScore !== null ? analytics.overallScore : '--'}
+                icon={BarChart3}
+                variant={getBadgeVariant(analytics.overallScore)}
+              />
+              <CompactMetric
+                label="Deliverability"
+                value={analytics.deliverabilityScore !== null ? analytics.deliverabilityScore : '--'}
+                icon={Shield}
+                variant={getBadgeVariant(analytics.deliverabilityScore)}
+              />
+              <CompactMetric
+                label="Mobile"
+                value={analytics.mobileScore !== null ? analytics.mobileScore : '--'}
+                icon={Brain}
+                variant={getBadgeVariant(analytics.mobileScore)}
+              />
+              <CompactMetric
+                label="Spam Risk"
+                value={analytics.spamScore !== null ? `${analytics.spamScore}%` : '--'}
+                icon={Shield}
+                variant={getBadgeVariant(analytics.spamScore)}
+              />
+            </div>
+
+            {/* Performance Predictions Row */}
+            {analytics.performancePrediction && (
+              <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 pt-2">
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3 text-blue-600" />
+                  <span className="text-xs font-medium text-blue-900">Predictions:</span>
+                </div>
+                <CompactMetric
+                  label="Open Rate"
+                  value={`${formatPrediction(analytics.performancePrediction.openRate)}%`}
+                  variant="outline"
+                />
+                <CompactMetric
+                  label="Click Rate"
+                  value={`${formatPrediction(analytics.performancePrediction.clickRate)}%`}
+                  variant="outline"
+                />
+                <CompactMetric
+                  label="Conversion"
+                  value={`${formatPrediction(analytics.performancePrediction.conversionRate)}%`}
+                  variant="outline"
+                />
+              </div>
+            )}
+
+            {/* Content Analysis Row */}
+            <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 pt-2">
+              <div className="flex items-center gap-1">
+                <BarChart3 className="w-3 h-3 text-gray-600" />
+                <span className="text-xs font-medium text-gray-700">Content:</span>
+              </div>
+              <CompactMetric label="Size" value={`${analytics.sizeKB} KB`} />
+              <CompactMetric label="Words" value={analytics.wordCount} />
+              <CompactMetric label="Characters" value={analytics.characterCount.toLocaleString()} />
+              <CompactMetric label="Images" value={analytics.imageCount} />
+              <CompactMetric label="Links" value={analytics.linkCount} />
+            </div>
+
+            {/* Brand Analysis Row */}
+            {(analytics.brandVoiceScore || analytics.engagementScore || analytics.readabilityScore) && (
+              <div className="flex items-center gap-4 flex-wrap border-t border-gray-100 pt-2">
+                <div className="flex items-center gap-1">
+                  <Brain className="w-3 h-3 text-purple-600" />
+                  <span className="text-xs font-medium text-gray-700">Brand:</span>
+                </div>
+                {analytics.brandVoiceScore && (
+                  <CompactMetric
+                    label="Voice Score"
+                    value={analytics.brandVoiceScore}
+                    variant={getBadgeVariant(analytics.brandVoiceScore)}
+                  />
+                )}
+                {analytics.engagementScore && (
+                  <CompactMetric
+                    label="Engagement"
+                    value={analytics.engagementScore}
+                    variant={getBadgeVariant(analytics.engagementScore)}
+                  />
+                )}
+                {analytics.readabilityScore && (
+                  <CompactMetric
+                    label="Readability"
+                    value={analytics.readabilityScore}
+                    variant={getBadgeVariant(analytics.readabilityScore)}
+                  />
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {/* Compact Performance Predictions */}
-        {analytics?.performancePrediction && (
-          <div className="flex items-center gap-4 mt-2 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-blue-600" />
-              <span className="text-xs font-medium text-blue-900">Predictions:</span>
-            </div>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="text-blue-700">
-                <strong>{formatPrediction(analytics.performancePrediction.openRate)}%</strong> Open
-              </span>
-              <span className="text-purple-700">
-                <strong>{formatPrediction(analytics.performancePrediction.clickRate)}%</strong> Click
-              </span>
-              <span className="text-green-700">
-                <strong>{formatPrediction(analytics.performancePrediction.conversionRate)}%</strong> Convert
-              </span>
-            </div>
+        {/* Empty State */}
+        {!hasContent && !isAnalyzing && (
+          <div className="text-center py-3">
+            <Lightbulb className="w-5 h-5 text-gray-300 mx-auto mb-2" />
+            <h3 className="text-xs font-medium text-gray-600 mb-1">Ready for AI Analysis</h3>
+            <p className="text-xs text-gray-500">Add content to see all 15 analytics metrics</p>
           </div>
         )}
       </div>
-
-      {/* Compact Expanded Details Panel */}
-      {isExpanded && analytics && (
-        <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Content Metrics */}
-            <Card className="p-3">
-              <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
-                <BarChart3 className="w-3 h-3" />
-                Content Analysis
-              </h4>
-              <div className="space-y-0.5">
-                <MetricRow label="File Size" value={`${analytics.sizeKB} KB`} />
-                <MetricRow label="Word Count" value={analytics.wordCount} />
-                <MetricRow label="Character Count" value={analytics.characterCount.toLocaleString()} />
-                <MetricRow label="Images" value={analytics.imageCount} />
-                <MetricRow label="Links" value={analytics.linkCount} />
-              </div>
-            </Card>
-
-            {/* Brand Metrics */}
-            {analytics.brandVoiceScore && (
-              <Card className="p-3">
-                <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2 text-sm">
-                  <Brain className="w-3 h-3" />
-                  Brand Analysis
-                </h4>
-                <div className="space-y-0.5">
-                  <MetricRow 
-                    label="Brand Voice Score" 
-                    value={`${analytics.brandVoiceScore}/100`}
-                    status={analytics.brandVoiceScore >= 80 ? 'good' : analytics.brandVoiceScore >= 60 ? 'warning' : 'poor'}
-                  />
-                  {analytics.engagementScore && (
-                    <MetricRow 
-                      label="Engagement Score" 
-                      value={analytics.engagementScore}
-                      status={analytics.engagementScore >= 80 ? 'good' : analytics.engagementScore >= 60 ? 'warning' : 'poor'}
-                    />
-                  )}
-                  {analytics.readabilityScore && (
-                    <MetricRow 
-                      label="Readability Score" 
-                      value={analytics.readabilityScore}
-                      status={analytics.readabilityScore >= 80 ? 'good' : analytics.readabilityScore >= 60 ? 'warning' : 'poor'}
-                    />
-                  )}
-                </div>
-              </Card>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Compact Empty State */}
-      {!hasContent && !isAnalyzing && (
-        <div className="px-4 py-4 text-center">
-          <Lightbulb className="w-5 h-5 text-gray-300 mx-auto mb-2" />
-          <h3 className="text-xs font-medium text-gray-600 mb-1">Ready for AI Analysis</h3>
-          <p className="text-xs text-gray-500">Add content to see analytics</p>
-        </div>
-      )}
     </div>
   );
 };
