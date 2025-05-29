@@ -56,7 +56,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
 
       setImportResult(result);
       setPreviewHTML(content);
-    } catch (error) {
+    } catch (error: any) {
       setImportResult({
         blocks: [],
         errors: [`Failed to process file: ${error.message}`],
@@ -251,7 +251,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
                       </div>
                     )}
                   </div>
-                )}
+                ) : null}
               </div>
 
               {/* Preview */}
