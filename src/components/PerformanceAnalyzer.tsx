@@ -1,382 +1,360 @@
 import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  BarChart3, 
-  CheckCircle, 
-  AlertTriangle, 
   Zap, 
+  Mail, 
+  Smartphone, 
+  Monitor, 
+  AlertTriangle, 
+  CheckCircle, 
   Clock,
-  Smartphone,
-  Monitor,
-  Target,
-  TrendingUp,
-  RefreshCw,
-  Wifi,
-  WifiOff,
-  Shield
+  FileText,
+  Image as ImageIcon,
+  Link,
+  Palette
 } from 'lucide-react';
-import { Editor } from '@tiptap/react';
-import { EmailBlockCanvasRef } from './EmailBlockCanvas';
-import { OpenAIEmailService, PerformanceAnalysis } from '@/services/openAIEmailService';
-import { ApiKeyService } from '@/services/apiKeyService';
 
 interface PerformanceAnalyzerProps {
-  editor: Editor | null;
   emailHTML: string;
-  canvasRef?: React.MutableRefObject<EmailBlockCanvasRef | null>;
-  subjectLine?: string;
+  subjectLine: string;
+  canvasRef?: React.RefObject<any>;
 }
 
-export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
-  editor,
+interface PerformanceMetric {
+  name: string;
+  score: number;
+  status: 'good' | 'warning' | 'critical';
+  details?: string;
+}
+
+interface PerformanceReport {
+  overallScore: number;
+  metrics: PerformanceMetric[];
+  fileSize: string;
+  imageCount: number;
+  linkCount: number;
+  loadTime: string;
+  recommendations: string[];
+}
+
+const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
   emailHTML,
-  canvasRef,
-  subjectLine = ''
+  subjectLine,
+  canvasRef
 }) => {
+  const [report, setReport] = useState<PerformanceReport | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [performanceResult, setPerformanceResult] = useState<PerformanceAnalysis | null>(null);
-  const [apiStatus, setApiStatus] = useState<'idle' | 'connecting' | 'connected' | 'failed'>('idle');
-  const [currentStep, setCurrentStep] = useState(0);
+  const [activeTab, setActiveTab] = useState<'overview' | 'details'>('overview');
 
-  const [emailMetrics, setEmailMetrics] = useState({
-    characterCount: 0,
-    wordCount: 0,
-    linkCount: 0,
-    imageCount: 0,
-    estimatedReadTime: '30 seconds'
-  });
-
-  const analyzingSteps = [
-    "Analyzing deliverability factors...",
-    "Checking mobile optimization...",
-    "Evaluating accessibility compliance...",
-    "Generating performance insights..."
-  ];
-
-  // Auto-analyze when content changes
   useEffect(() => {
-    analyzeContent();
-    
     if (emailHTML) {
-      const timer = setTimeout(() => {
-        runFullAnalysis();
-      }, 2500); // Auto-analyze after 2.5 seconds
-
-      return () => clearTimeout(timer);
+      analyzePerformance();
     }
-  }, [emailHTML, subjectLine]);
+  }, [emailHTML]);
 
-  const analyzeContent = () => {
-    const textContent = emailHTML.replace(/<[^>]*>/g, '');
-    const words = textContent.split(/\s+/).filter(word => word.length > 0);
-    const links = (emailHTML.match(/<a\s+[^>]*href/gi) || []).length;
-    const images = (emailHTML.match(/<img\s+[^>]*src/gi) || []).length;
-    
-    setEmailMetrics({
-      characterCount: textContent.length,
-      wordCount: words.length,
-      linkCount: links,
-      imageCount: images,
-      estimatedReadTime: `${Math.ceil(words.length / 200)} min`
-    });
+  const handleOptimizeImages = () => {
+    console.log('Image optimization would be implemented here');
+    // Note: Removed canvasRef.current.optimizeImages() as it doesn't exist
   };
 
-  const runFullAnalysis = async () => {
-    if (!emailHTML.trim()) {
-      return;
-    }
+  const handleMinifyHTML = () => {
+    console.log('HTML minification would be implemented here');
+    // Note: Removed canvasRef.current.minifyHTML() as it doesn't exist
+  };
 
+  const handleCheckLinks = async () => {
+    console.log('Link checking would be implemented here');
+    // Note: Removed canvasRef.current.checkLinks() as it doesn't exist
+  };
+
+  const analyzePerformance = () => {
     setIsAnalyzing(true);
-    setApiStatus('connecting');
     
-    // Progressive analysis steps
-    for (let i = 0; i < analyzingSteps.length; i++) {
-      setCurrentStep(i);
-      await new Promise(resolve => setTimeout(resolve, 700));
-    }
-
-    try {
-      console.log('Starting OpenAI performance analysis...');
+    // Simulate analysis delay
+    setTimeout(() => {
+      // Calculate file size
+      const fileSize = new Blob([emailHTML]).size;
+      const fileSizeFormatted = fileSize < 1024 
+        ? `${fileSize} bytes` 
+        : `${(fileSize / 1024).toFixed(1)} KB`;
       
-      const result = await OpenAIEmailService.analyzePerformance({
-        emailHTML,
-        subjectLine
+      // Count images
+      const imgRegex = /<img[^>]+>/g;
+      const imageMatches = emailHTML.match(imgRegex) || [];
+      const imageCount = imageMatches.length;
+      
+      // Count links
+      const linkRegex = /<a[^>]+>/g;
+      const linkMatches = emailHTML.match(linkRegex) || [];
+      const linkCount = linkMatches.length;
+      
+      // Estimate load time (simplified)
+      const estimatedLoadTime = Math.max(0.5, fileSize / 50000); // Rough estimate
+      const loadTimeFormatted = `${estimatedLoadTime.toFixed(1)}s`;
+      
+      // Check for common issues
+      const hasAltText = !/<img[^>]+alt="[^"]*"[^>]*>/g.test(emailHTML);
+      const hasLargeImages = imageCount > 0 && fileSize / imageCount > 50000;
+      const subjectLength = subjectLine ? subjectLine.length : 0;
+      const hasGoodSubjectLength = subjectLength > 0 && subjectLength < 50;
+      
+      // Generate metrics
+      const metrics: PerformanceMetric[] = [
+        {
+          name: 'File Size',
+          score: fileSize < 70000 ? 100 : fileSize < 102400 ? 70 : 40,
+          status: fileSize < 70000 ? 'good' : fileSize < 102400 ? 'warning' : 'critical',
+          details: `Email is ${fileSizeFormatted}. ${
+            fileSize < 70000 
+              ? 'Good size for fast loading.' 
+              : 'Consider optimizing to improve load times.'
+          }`
+        },
+        {
+          name: 'Image Optimization',
+          score: !hasLargeImages ? 100 : 60,
+          status: !hasLargeImages ? 'good' : 'warning',
+          details: `${imageCount} images detected. ${
+            !hasLargeImages 
+              ? 'Images appear to be well-optimized.' 
+              : 'Some images may be too large.'
+          }`
+        },
+        {
+          name: 'Accessibility',
+          score: hasAltText ? 100 : 50,
+          status: hasAltText ? 'good' : 'warning',
+          details: hasAltText 
+            ? 'All images have alt text.' 
+            : 'Some images may be missing alt text.'
+        },
+        {
+          name: 'Subject Line',
+          score: hasGoodSubjectLength ? 90 : subjectLength > 0 ? 60 : 30,
+          status: hasGoodSubjectLength ? 'good' : subjectLength > 0 ? 'warning' : 'critical',
+          details: subjectLength === 0 
+            ? 'Missing subject line.' 
+            : subjectLength > 50 
+              ? 'Subject line may be too long.' 
+              : 'Subject line length is good.'
+        }
+      ];
+      
+      // Calculate overall score
+      const overallScore = Math.round(
+        metrics.reduce((sum, metric) => sum + metric.score, 0) / metrics.length
+      );
+      
+      // Generate recommendations
+      const recommendations = [];
+      if (fileSize > 102400) recommendations.push('Reduce email size to improve load times');
+      if (hasLargeImages) recommendations.push('Optimize images to reduce file size');
+      if (!hasAltText) recommendations.push('Add alt text to all images for better accessibility');
+      if (subjectLength === 0) recommendations.push('Add a subject line');
+      if (subjectLine && subjectLine.length > 50) recommendations.push('Shorten subject line for better open rates');
+      if (linkCount === 0) recommendations.push('Consider adding at least one call-to-action link');
+      
+      setReport({
+        overallScore,
+        metrics,
+        fileSize: fileSizeFormatted,
+        imageCount,
+        linkCount,
+        loadTime: loadTimeFormatted,
+        recommendations
       });
       
-      setPerformanceResult(result);
-      setApiStatus('connected');
-      
-    } catch (error) {
-      console.error('Error during OpenAI analysis:', error);
-      setApiStatus('failed');
-      
-      // Enhanced fallback mock data
-      const mockResult: PerformanceAnalysis = {
-        overallScore: 87,
-        deliverabilityScore: 91,
-        mobileScore: 94,
-        spamScore: 12,
-        metrics: {
-          loadTime: { value: 1.1, status: 'good' },
-          accessibility: { value: 83, status: 'warning' },
-          imageOptimization: { value: 92, status: 'good' },
-          linkCount: { value: emailMetrics.linkCount, status: emailMetrics.linkCount > 10 ? 'warning' : 'good' }
-        },
-        accessibilityIssues: [
-          {
-            type: 'Missing Alt Text',
-            severity: 'medium',
-            description: 'Some images lack descriptive alt text for screen readers',
-            fix: 'Add meaningful alt attributes to all images describing their content or purpose'
-          },
-          {
-            type: 'Color Contrast',
-            severity: 'low',
-            description: 'Some text may not meet WCAG AA contrast requirements',
-            fix: 'Ensure text has at least 4.5:1 contrast ratio against background'
-          }
-        ],
-        optimizationSuggestions: [
-          'Compress images to reduce load time by 25%',
-          'Add more descriptive alt text to improve accessibility',
-          'Consider reducing font variety for better mobile performance',
-          'Optimize email width for better mobile display'
-        ]
-      };
-      setPerformanceResult(mockResult);
-    } finally {
       setIsAnalyzing(false);
-    }
+    }, 1000);
   };
 
-  const optimizeImages = () => {
-    if (canvasRef?.current) {
-      canvasRef.current.optimizeImages();
-    }
-  };
-
-  const minifyHTML = () => {
-    if (canvasRef?.current) {
-      canvasRef.current.minifyHTML();
-    }
-  };
-
-  const checkLinks = () => {
-    if (canvasRef?.current) {
-      const result = canvasRef.current.checkLinks();
-      console.log('Link check result:', result);
-    }
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
-  const getScoreBadgeVariant = (score: number) => {
-    if (score >= 80) return 'default';
-    if (score >= 60) return 'secondary';
-    return 'destructive';
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'good': return 'text-green-600 bg-green-50';
-      case 'warning': return 'text-yellow-600 bg-yellow-50';
-      case 'poor': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-blue-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const getApiStatusIcon = () => {
-    switch (apiStatus) {
-      case 'connecting': return <RefreshCw className="w-3 h-3 animate-spin text-blue-500" />;
-      case 'connected': return <Wifi className="w-3 h-3 text-green-500" />;
-      case 'failed': return <WifiOff className="w-3 h-3 text-yellow-500" />;
-      default: return <BarChart3 className="w-3 h-3 text-gray-400" />;
-    }
-  };
-
-  const getApiStatusText = () => {
-    switch (apiStatus) {
-      case 'connecting': return 'Analyzing...';
-      case 'connected': return 'AI Active';
-      case 'failed': return 'Fallback Mode';
-      default: return 'Ready';
-    }
-  };
+  if (!report) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-500" />
+            Email Performance
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="h-8 w-8 bg-gray-200 rounded-full mb-4"></div>
+            <div className="h-4 w-48 bg-gray-200 rounded mb-2"></div>
+            <div className="h-3 w-32 bg-gray-100 rounded"></div>
+          </div>
+          <Button 
+            variant="outline" 
+            className="mt-4" 
+            onClick={analyzePerformance}
+            disabled={isAnalyzing}
+          >
+            {isAnalyzing ? 'Analyzing...' : 'Analyze Performance'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">AI Performance Analytics</h3>
-          <div className="flex items-center gap-2">
-            {getApiStatusIcon()}
-            <span className="text-xs text-gray-600">{getApiStatusText()}</span>
+    <Card className="w-full">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-500" />
+            Email Performance
+          </CardTitle>
+          <div className="flex gap-2">
+            <Button 
+              variant={activeTab === 'overview' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setActiveTab('overview')}
+              className="h-7 text-xs"
+            >
+              Overview
+            </Button>
+            <Button 
+              variant={activeTab === 'details' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setActiveTab('details')}
+              className="h-7 text-xs"
+            >
+              Details
+            </Button>
           </div>
         </div>
-
-        {isAnalyzing ? (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-3 h-3 animate-spin" />
-              <span className="text-sm">{analyzingSteps[currentStep]}</span>
+      </CardHeader>
+      <CardContent>
+        {activeTab === 'overview' ? (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium">Overall Score</div>
+                <div className="text-3xl font-bold">{report.overallScore}/100</div>
+              </div>
+              <div className="w-16 h-16 rounded-full border-4 border-blue-500 flex items-center justify-center">
+                <span className="text-xl font-bold">{report.overallScore}</span>
+              </div>
             </div>
-            <Progress value={(currentStep + 1) * 25} className="h-2" />
-          </div>
-        ) : performanceResult ? (
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <Card className="p-3">
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${getScoreColor(performanceResult.overallScore)}`}>
-                  {performanceResult.overallScore}
-                </div>
-                <div className="text-xs text-gray-600">Overall Score</div>
-              </div>
-            </Card>
             
-            <Card className="p-3">
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${performanceResult.spamScore > 20 ? 'text-red-600' : 'text-green-600'}`}>
-                  {performanceResult.spamScore}%
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <FileText className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs font-medium">Size</span>
                 </div>
-                <div className="text-xs text-gray-600">Spam Risk</div>
+                <div className="text-sm font-bold">{report.fileSize}</div>
               </div>
-            </Card>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <ImageIcon className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs font-medium">Images</span>
+                </div>
+                <div className="text-sm font-bold">{report.imageCount}</div>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <div className="flex items-center gap-2 mb-1">
+                  <Link className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs font-medium">Links</span>
+                </div>
+                <div className="text-sm font-bold">{report.linkCount}</div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="text-sm font-medium mb-2">Recommendations</div>
+              {report.recommendations.length > 0 ? (
+                <ul className="space-y-1">
+                  {report.recommendations.map((rec, i) => (
+                    <li key={i} className="text-xs flex items-start gap-2">
+                      <AlertTriangle className="w-3 h-3 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-xs flex items-center gap-2 text-green-600">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>No issues detected!</span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" variant="outline" onClick={handleOptimizeImages} className="text-xs">
+                <ImageIcon className="w-3 h-3 mr-1" />
+                Optimize Images
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleMinifyHTML} className="text-xs">
+                <FileText className="w-3 h-3 mr-1" />
+                Minify HTML
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCheckLinks} className="text-xs">
+                <Link className="w-3 h-3 mr-1" />
+                Check Links
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="text-center py-2">
-            <p className="text-sm text-gray-500">
-              {ApiKeyService.isKeyAvailable() ? 'Auto-analyzing performance...' : 'Add content to analyze'}
-            </p>
-          </div>
-        )}
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          {/* Performance Metrics */}
-          {performanceResult && (
-            <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3">AI Performance Metrics</h4>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Deliverability Score</span>
-                  <Badge variant={getScoreBadgeVariant(performanceResult.deliverabilityScore)}>
-                    {performanceResult.deliverabilityScore}%
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Mobile Optimization</span>
-                  <Badge variant={getScoreBadgeVariant(performanceResult.mobileScore)}>
-                    {performanceResult.mobileScore}%
-                  </Badge>
-                </div>
-                
-                {Object.entries(performanceResult.metrics).map(([key, metric]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 capitalize">
-                      {key.replace(/([A-Z])/g, ' $1').trim()}
-                    </span>
-                    <Badge className={`text-xs ${getStatusColor(metric.status)}`}>
-                      {typeof metric.value === 'number' ? 
-                        (key === 'loadTime' ? `${metric.value}s` : metric.value) : 
-                        metric.value
-                      }
+          <div className="space-y-4">
+            <div className="space-y-3">
+              {report.metrics.map((metric, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-medium">{metric.name}</div>
+                    <Badge variant={
+                      metric.status === 'good' ? 'outline' : 
+                      metric.status === 'warning' ? 'secondary' : 'destructive'
+                    }>
+                      {metric.score}/100
                     </Badge>
                   </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Accessibility Issues */}
-          {performanceResult && performanceResult.accessibilityIssues.length > 0 && (
-            <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Accessibility Issues
-              </h4>
-              <div className="space-y-2">
-                {performanceResult.accessibilityIssues.map((issue, index) => (
-                  <div key={index} className="p-3 border rounded">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={`text-xs ${getSeverityColor(issue.severity)}`}>
-                        {issue.severity}
-                      </Badge>
-                      <span className="text-sm font-medium">{issue.type}</span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2">{issue.description}</p>
-                    <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
-                      💡 {issue.fix}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* AI Optimization Suggestions */}
-          {performanceResult && performanceResult.optimizationSuggestions.length > 0 && (
-            <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                AI Optimization Suggestions
-              </h4>
-              <div className="space-y-2">
-                {performanceResult.optimizationSuggestions.map((suggestion, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                    <span className="text-sm text-blue-900 flex-1">{suggestion}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Email Content Stats */}
-          <Card className="p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Content Analysis</h4>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <div className="text-gray-600">Characters</div>
-                <div className="font-medium">{emailMetrics.characterCount.toLocaleString()}</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Words</div>
-                <div className="font-medium">{emailMetrics.wordCount}</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Links</div>
-                <div className="font-medium">{emailMetrics.linkCount}</div>
-              </div>
-              <div>
-                <div className="text-gray-600">Images</div>
-                <div className="font-medium">{emailMetrics.imageCount}</div>
+                  <Progress value={metric.score} className="h-1.5" />
+                  <div className="text-xs text-gray-500">{metric.details}</div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="border-t pt-3">
+              <div className="text-sm font-medium mb-2">Technical Details</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Estimated Load Time:</span>
+                  <span className="font-medium">{report.loadTime}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">File Size:</span>
+                  <span className="font-medium">{report.fileSize}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Images:</span>
+                  <span className="font-medium">{report.imageCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Links:</span>
+                  <span className="font-medium">{report.linkCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500">Subject Length:</span>
+                  <span className="font-medium">{subjectLine ? subjectLine.length : 0} chars</span>
+                </div>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <div className="text-sm text-gray-600">Estimated read time</div>
-              <div className="font-medium">{emailMetrics.estimatedReadTime}</div>
+            
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" onClick={analyzePerformance} className="text-xs">
+                <Zap className="w-3 h-3 mr-1" />
+                Re-analyze
+              </Button>
             </div>
-          </Card>
-        </div>
-      </ScrollArea>
-    </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
+
+export default PerformanceAnalyzer;
