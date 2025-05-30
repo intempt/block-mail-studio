@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Eye, Code2, Smartphone, Tablet, Monitor, Download, Upload, Save } from 'lucide-react';
@@ -6,9 +5,14 @@ import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { EmailBlockPalette } from './EmailBlockPalette';
 import { EmailPreview } from './EmailPreview';
 import { EmailCodeEditor } from './EmailCodeEditor';
-import { PropertyEditorPanel } from './PropertyEditorPanel';
+import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
 import { EmailBlock } from '@/types/emailBlocks';
+import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { StatusBar } from './StatusBar';
+import { AISuggestionsPanel } from './AISuggestionsPanel';
+import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
+import { GlobalBrandStylesProvider, useGlobalBrandStyles, GlobalBrandStyles } from '@/contexts/GlobalBrandStylesContext';
+import { UnifiedAISuggestion } from '@/services/CentralizedAIAnalysisService';
 import './EmailEditor.css';
 
 interface EmailEditorProps {
@@ -19,16 +23,19 @@ interface EmailEditorProps {
   onBack?: () => void;
 }
 
-const EmailEditor: React.FC<EmailEditorProps> = ({
+const EmailEditorContent: React.FC<EmailEditorProps> = ({
   content,
   subject,
   onContentChange,
   onSubjectChange,
   onBack
 }) => {
+  const { styles: globalStyles, updateStyles: updateGlobalStyles } = useGlobalBrandStyles();
+  
   const [viewMode, setViewMode] = useState<'design' | 'preview' | 'code'>('design');
   const [previewViewport, setPreviewViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [leftSidebarContent, setLeftSidebarContent] = useState<'palette' | 'ai'>('palette');
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const canvasRef = useRef<EmailBlockCanvasRef>(null);
   const [currentEmailHTML, setCurrentEmailHTML] = useState(content);
@@ -94,104 +101,106 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
     }
   }, [content, currentEmailHTML]);
 
-  const handleBlockAdd = (blockType: string) => {
-    console.log('Adding block:', blockType);
-  };
+  const handleGlobalStylesChange = useCallback((newStyles: Partial<GlobalBrandStyles>) => {
+    updateGlobalStyles(newStyles);
+    
+    // Apply styles to existing blocks in canvas
+    if (canvasRef.current) {
+      canvasRef.current.applyGlobalStyles(globalStyles);
+    }
+  }, [updateGlobalStyles, globalStyles]);
+
+  const applySuggestion = useCallback(async (suggestion: UnifiedAISuggestion) => {
+    if (!canvasRef.current) {
+      console.warn('EmailEditor: No canvas reference available');
+      return;
+    }
+
+    try {
+      console.log('EmailEditor: Applying AI suggestion:', suggestion.title);
+      
+      // Apply suggestion based on type
+      switch (suggestion.type) {
+        case 'subject':
+          onSubjectChange?.(suggestion.suggested);
+          break;
+          
+        case 'copy':
+        case 'tone':
+          if (suggestion.blockId && canvasRef.current.updateBlockContent) {
+            canvasRef.current.updateBlockContent(suggestion.blockId, {
+              html: `<p>${suggestion.suggested}</p>`
+            });
+          } else {
+            canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+          }
+          break;
+          
+        case 'cta':
+          if (suggestion.blockId && canvasRef.current.updateBlockContent) {
+            canvasRef.current.updateBlockContent(suggestion.blockId, {
+              text: suggestion.suggested
+            });
+          } else {
+            canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+          }
+          break;
+          
+        case 'design':
+          if (suggestion.blockId && suggestion.styleChanges && canvasRef.current.updateBlockStyle) {
+            canvasRef.current.updateBlockStyle(suggestion.blockId, suggestion.styleChanges);
+          }
+          break;
+          
+        case 'performance':
+        case 'optimization':
+          // Generic text replacement for performance suggestions
+          canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+          break;
+          
+        default:
+          console.warn('EmailEditor: Unknown suggestion type:', suggestion.type);
+          canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
+      }
+
+      console.log('EmailEditor: Successfully applied suggestion:', suggestion.title);
+      
+    } catch (error) {
+      console.error('EmailEditor: Failed to apply suggestion:', error);
+    }
+  }, [onSubjectChange]);
 
   return (
     <div className="email-editor">
-      {/* Top Bar */}
-      <div className="email-editor-toolbar bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {onBack && (
-              <Button variant="ghost" size="sm" onClick={onBack}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-            )}
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'design' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('design')}
-              >
-                Design
-              </Button>
-              <Button
-                variant={viewMode === 'preview' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('preview')}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
-              <Button
-                variant={viewMode === 'code' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('code')}
-              >
-                <Code2 className="w-4 h-4 mr-2" />
-                Code
-              </Button>
-            </div>
-          </div>
+      {/* Enhanced Top Bar with Global Styles */}
+      <OmnipresentRibbon
+        onGlobalStylesChange={handleGlobalStylesChange}
+        globalStyles={globalStyles}
+      />
 
-          <div className="flex items-center gap-2">
-            {viewMode === 'preview' && (
-              <div className="flex items-center gap-1 mr-4">
-                <Button
-                  variant={previewViewport === 'desktop' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => handleViewportChange('desktop')}
-                >
-                  <Monitor className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={previewViewport === 'tablet' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => handleViewportChange('tablet')}
-                >
-                  <Tablet className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={previewViewport === 'mobile' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => handleViewportChange('mobile')}
-                >
-                  <Smartphone className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-
-            <Button variant="outline" size="sm" onClick={handleEmailSave}>
-              <Save className="w-4 h-4 mr-2" />
-              Save
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleEmailExport}>
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-            <input
-              type="file"
-              accept=".html"
-              onChange={handleEmailImport}
-              style={{ display: 'none' }}
-              id="import-input"
-            />
-            <Button variant="outline" size="sm" onClick={() => document.getElementById('import-input')?.click()}>
-              <Upload className="w-4 h-4 mr-2" />
-              Import
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* AI Suggestions Widget */}
+      <EnhancedAISuggestionsWidget
+        isOpen={showAISuggestions}
+        onToggle={() => setShowAISuggestions(!showAISuggestions)}
+        emailHTML={currentEmailHTML}
+        subjectLine={subject}
+        canvasRef={canvasRef}
+        onSubjectLineChange={onSubjectChange}
+        onApplySuggestion={applySuggestion}
+      />
 
       {/* Main Content */}
       <div className="email-editor-content">
         {/* Left Sidebar */}
         <div className="email-editor-sidebar">
-          <EmailBlockPalette onBlockAdd={handleBlockAdd} />
+          {leftSidebarContent === 'palette' && <EmailBlockPalette />}
+          {leftSidebarContent === 'ai' && (
+            <AISuggestionsPanel
+              emailHTML={currentEmailHTML}
+              subjectLine={subject}
+              onApplySuggestion={applySuggestion}
+            />
+          )}
         </div>
 
         {/* Canvas Area */}
@@ -205,38 +214,51 @@ const EmailEditor: React.FC<EmailEditorProps> = ({
               onSubjectChange={onSubjectChange}
               onSelectionChange={setSelectedBlock}
               selectedBlockId={selectedBlock?.id}
+              globalStyles={globalStyles}
             />
           )}
           {viewMode === 'preview' && (
             <EmailPreview
-              html={content}
+              content={content}
               subject={subject}
-              viewport={previewViewport}
+              viewportWidth={previewViewport}
             />
           )}
           {viewMode === 'code' && (
             <EmailCodeEditor
-              html={content}
-              onHtmlChange={onContentChange}
+              content={content}
+              onContentChange={onContentChange}
             />
           )}
         </div>
 
         {/* Right Sidebar */}
         <div className="email-editor-properties">
-          <PropertyEditorPanel
+          <EnhancedPropertiesPanel
             selectedBlock={selectedBlock}
-            onBlockUpdate={(block) => handleBlockUpdate(block.id, block)}
+            onBlockUpdate={handleBlockUpdate}
+            onBlockDelete={handleBlockDelete}
+            globalStyles={globalStyles}
+            onGlobalStylesChange={handleGlobalStylesChange}
           />
         </div>
       </div>
 
       {/* Status Bar */}
       <StatusBar
-        blockCount={currentEmailHTML ? currentEmailHTML.split('<').length - 1 : 0}
+        selectedBlock={selectedBlock}
+        totalBlocks={currentEmailHTML ? currentEmailHTML.split('<').length - 1 : 0}
         emailSize={currentEmailHTML.length}
       />
     </div>
+  );
+};
+
+const EmailEditor: React.FC<EmailEditorProps> = (props) => {
+  return (
+    <GlobalBrandStylesProvider>
+      <EmailEditorContent {...props} />
+    </GlobalBrandStylesProvider>
   );
 };
 

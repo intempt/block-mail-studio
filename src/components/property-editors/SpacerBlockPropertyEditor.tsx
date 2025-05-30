@@ -22,7 +22,7 @@ export const SpacerBlockPropertyEditor: React.FC<SpacerBlockPropertyEditorProps>
   };
 
   const heightValue = parseInt(block.content.height.replace('px', '')) || 40;
-  const mobileHeightValue = parseInt((block.content.mobileHeight || '20px').replace('px', '')) || 20;
+  const mobileHeightValue = parseInt(block.content.mobileHeight.replace('px', '')) || 20;
 
   return (
     <div className="space-y-6">
@@ -55,7 +55,7 @@ export const SpacerBlockPropertyEditor: React.FC<SpacerBlockPropertyEditorProps>
           className="mt-2"
         />
         <Input
-          value={block.content.mobileHeight || '20px'}
+          value={block.content.mobileHeight}
           onChange={(e) => updateContent({ mobileHeight: e.target.value })}
           className="mt-2"
           placeholder="20px"

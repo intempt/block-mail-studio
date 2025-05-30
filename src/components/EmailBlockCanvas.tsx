@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { v4 as uuidv4 } from 'uuid';
-import { TextBlock, ImageBlock, ButtonBlock, DividerBlock, EmailBlock, BlockType } from '@/types/emailBlocks';
+import { TextBlock, ImageBlock, ButtonBlock, DividerBlock, BlockType, EmailBlock } from '@/types/emailBlocks';
 import { TextBlockComponent } from './email-block-components/TextBlockComponent';
 import { ImageBlockComponent } from './email-block-components/ImageBlockComponent';
 import { ButtonBlockComponent } from './email-block-components/ButtonBlockComponent';
@@ -33,9 +33,6 @@ export interface EmailBlockCanvasRef {
   applyDesignSuggestion: (suggestion: any) => void;
   applyGlobalStyles: (styles: any) => void;
   findAndReplaceText: (searchText: string, replaceText: string) => void;
-  optimizeImages: () => void;
-  minifyHTML: () => string;
-  checkLinks: () => Promise<any[]>;
 }
 
 interface EmailBlockCanvasProps {
@@ -246,21 +243,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
       replaceTextInAllBlocks,
       applyDesignSuggestion,
       applyGlobalStyles,
-      findAndReplaceText,
-      optimizeImages: () => {
-        console.log('Optimizing images...');
-        // Implementation for image optimization
-      },
-      minifyHTML: () => {
-        const html = generateEmailHTML(blocks, subjectLine);
-        // Basic minification - remove extra whitespace
-        return html.replace(/\s+/g, ' ').trim();
-      },
-      checkLinks: async () => {
-        console.log('Checking links...');
-        // Implementation for link checking
-        return [];
-      }
+      findAndReplaceText
     }));
 
     const handleDragStart = () => {
@@ -273,12 +256,12 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
 
     const [{ isOver, canDrop }, drop] = useDrop({
       accept: ItemTypes.BLOCK,
-      drop: (item: { id: string, type: string }, monitor) => {
+      drop: (item: { id: string, type: BlockType }, monitor) => {
         if (!item || !item.type) return;
 
         const newBlock: EmailBlock = {
           id: uuidv4(),
-          type: item.type as BlockType,
+          type: item.type,
           content: {
             html: '<p>New text block</p>',
             src: 'https://via.placeholder.com/400x200',
@@ -286,13 +269,10 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
             text: 'Click Me',
             link: 'https://example.com',
             style: 'solid',
-            size: 'medium',
-            placeholder: 'Enter text...'
+            size: 'medium'
           },
           styling: {
             desktop: {
-              width: '100%',
-              height: 'auto',
               fontFamily: 'Arial, sans-serif',
               fontSize: '16px',
               color: '#333',
@@ -321,12 +301,16 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
         collect: (monitor) => ({
           isDragging: !!monitor.isDragging(),
         }),
+        begin: () => {
+          handleDragStart();
+          return {};
+        },
         end: () => {
           handleDragEnd();
         }
       });
 
-      const [, dropRef] = useDrop({
+      const [, drop] = useDrop({
         accept: ItemTypes.EXISTING_BLOCK,
         drop: (item: { id: string, type: BlockType, index: number }, monitor) => {
           if (!monitor) return;
@@ -353,7 +337,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
       switch (block.type) {
         case 'text':
           return (
-            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <TextBlockComponent
                 block={block as TextBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -362,7 +346,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
           );
         case 'image':
           return (
-            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <ImageBlockComponent
                 block={block as ImageBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -371,7 +355,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
           );
         case 'button':
           return (
-            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <ButtonBlockComponent
                 block={block as ButtonBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -380,7 +364,7 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
           );
         case 'divider':
           return (
-            <div ref={node => drag(dropRef(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
+            <div ref={node => drag(drop(preview(node)))} style={blockStyle} key={block.id} onClick={() => handleBlockSelect(block.id)}>
               <DividerBlockComponent
                 block={block as DividerBlock}
                 onBlockUpdate={handleUpdateBlock}
@@ -422,5 +406,4 @@ const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasP
 
 EmailBlockCanvas.displayName = 'EmailBlockCanvas';
 
-export { EmailBlockCanvas };
 export default EmailBlockCanvas;
