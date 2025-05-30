@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { useDragDropHandler } from './canvas/DragDropHandler';
-import { blockFactory } from '@/utils/blockFactory';
+import { createBlock } from '@/utils/blockFactory';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { generateUniqueId } from '@/utils/blockUtils';
 
@@ -16,6 +17,7 @@ interface EmailBlockCanvasProps {
   subject: string;
   onSubjectChange: (subject: string) => void;
   showAIAnalytics: boolean;
+  globalStyles?: any;
 }
 
 export interface EmailBlockCanvasRef {
@@ -34,7 +36,8 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   compactMode,
   subject,
   onSubjectChange,
-  showAIAnalytics
+  showAIAnalytics,
+  globalStyles
 }, ref) => {
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -45,13 +48,7 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const {
-    handleDragStart,
-    handleDragEnter,
-    handleDragLeave,
-    handleDrop,
-    handleDragOver
-  } = useDragDropHandler(
+  const dragHandlers = useDragDropHandler(
     emailBlocks,
     setEmailBlocks,
     setSelectedBlockId,
@@ -111,11 +108,11 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   };
 
   const handleBlockDragStart = (e: React.DragEvent, blockId: string) => {
-    handleDragStart(e, blockId);
+    dragHandlers.handleBlockDragStart(e, blockId);
   };
 
   const handleBlockDrop = (e: React.DragEvent, targetIndex: number) => {
-    handleDrop(e, targetIndex);
+    dragHandlers.handleBlockDrop(e, targetIndex);
   };
 
   const handleDeleteBlock = (blockId: string) => {
@@ -138,10 +135,15 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
       const newSnippet: EmailSnippet = {
         id: `snippet-${Date.now()}`,
         name: `Snippet for ${blockToSave.type}`,
+        description: `Auto-saved snippet from ${blockToSave.type} block`,
+        category: 'content',
+        tags: [blockToSave.type],
         blockData: blockToSave,
+        blockType: blockToSave.type,
         createdAt: new Date(),
         updatedAt: new Date(),
         usageCount: 0,
+        isFavorite: false,
       };
       DirectSnippetService.saveSnippet(newSnippet);
       blockToSave.isStarred = true;
@@ -205,7 +207,7 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
                   return col;
                 } else {
                   // Handle regular block drop into column
-                  const newBlock = blockFactory(blockType);
+                  const newBlock = createBlock(blockType);
                   return {
                     ...col,
                     blocks: [...col.blocks, newBlock]
@@ -321,10 +323,10 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
     <div
       className="email-block-canvas relative"
       ref={canvasRef}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleBlockDrop}
+      onDragEnter={dragHandlers.handleCanvasDragEnter}
+      onDragOver={dragHandlers.handleCanvasDragOver}
+      onDragLeave={dragHandlers.handleCanvasDragLeave}
+      onDrop={dragHandlers.handleCanvasDrop}
     >
       <CanvasRenderer
         blocks={emailBlocks}
@@ -347,6 +349,7 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
         onBlockEditStart={handleBlockEditStart}
         onBlockEditEnd={handleBlockEditEnd}
         onBlockUpdate={handleBlockUpdate}
+        globalStyles={globalStyles}
       />
     </div>
   );

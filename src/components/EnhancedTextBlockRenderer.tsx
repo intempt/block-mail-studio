@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TextBlock } from '@/types/emailBlocks';
 import { SimpleTipTapEditor } from './SimpleTipTapEditor';
@@ -53,7 +54,6 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           content={block.content.html || ''}
           onChange={handleContentChange}
           onBlur={handleSave}
-          autoFocus={true}
         />
         <div className="flex gap-2 mt-2">
           <Button size="sm" onClick={handleSave} className="h-6 px-2 text-xs">
@@ -83,6 +83,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         color: styling.textColor,
         fontSize: styling.fontSize,
         fontWeight: styling.fontWeight,
+        ...globalStyles
       }}
       onClick={onEditStart}
     >
