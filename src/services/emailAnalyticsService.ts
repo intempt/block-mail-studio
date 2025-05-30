@@ -19,11 +19,15 @@ export class EmailAnalyticsService {
   static analyzeEmail(htmlContent: string, subjectLine: string): EmailAnalytics {
     console.log('Analyzing email content:', htmlContent.length, 'chars');
     
+    // Ensure we have string inputs
+    const safeHtmlContent = htmlContent || '';
+    const safeSubjectLine = subjectLine || '';
+    
     // Calculate email size
-    const sizeKB = Math.round((new Blob([htmlContent]).size) / 1024 * 100) / 100;
+    const sizeKB = Math.round((new Blob([safeHtmlContent]).size) / 1024 * 100) / 100;
     
     // Count images
-    const imageMatches = htmlContent.match(/<img[^>]*>/gi) || [];
+    const imageMatches = safeHtmlContent.match(/<img[^>]*>/gi) || [];
     const imageCount = imageMatches.length;
     
     // Estimate image sizes (simplified)
@@ -37,16 +41,16 @@ export class EmailAnalyticsService {
     });
     
     // Count links
-    const linkMatches = htmlContent.match(/<a[^>]*href[^>]*>/gi) || [];
+    const linkMatches = safeHtmlContent.match(/<a[^>]*href[^>]*>/gi) || [];
     const linkCount = linkMatches.length;
     
     // Calculate HTML complexity
-    const tagCount = (htmlContent.match(/<[^>]*>/g) || []).length;
+    const tagCount = (safeHtmlContent.match(/<[^>]*>/g) || []).length;
     const htmlComplexity = Math.min(100, Math.round((tagCount / 100) * 100));
     
     // Mobile optimization score
-    const hasMobileStyles = htmlContent.includes('@media') || htmlContent.includes('mobile');
-    const hasResponsiveImages = htmlContent.includes('max-width: 100%') || htmlContent.includes('width: 100%');
+    const hasMobileStyles = safeHtmlContent.includes('@media') || safeHtmlContent.includes('mobile');
+    const hasResponsiveImages = safeHtmlContent.includes('max-width: 100%') || safeHtmlContent.includes('width: 100%');
     let mobileScore = 60;
     if (hasMobileStyles) mobileScore += 20;
     if (hasResponsiveImages) mobileScore += 20;
@@ -54,13 +58,13 @@ export class EmailAnalyticsService {
     // Deliverability score based on content analysis
     let deliverabilityScore = 85;
     const spamWords = ['free', 'urgent', 'limited time', 'act now', 'click here'];
-    const lowerContent = htmlContent.toLowerCase() + subjectLine.toLowerCase();
+    const lowerContent = safeHtmlContent.toLowerCase() + safeSubjectLine.toLowerCase();
     spamWords.forEach(word => {
       if (lowerContent.includes(word)) deliverabilityScore -= 5;
     });
     
     // Image to text ratio
-    const textLength = htmlContent.replace(/<[^>]*>/g, '').length;
+    const textLength = safeHtmlContent.replace(/<[^>]*>/g, '').length;
     if (imageCount > 0 && textLength < imageCount * 100) {
       deliverabilityScore -= 10; // Too many images relative to text
     }
@@ -77,8 +81,8 @@ export class EmailAnalyticsService {
     let conversionRate = 2.1;
     
     // Subject line impact
-    if (subjectLine.length > 5 && subjectLine.length < 50) openRate += 2;
-    if (subjectLine.includes('?') || subjectLine.includes('!')) openRate += 1;
+    if (safeSubjectLine.length > 5 && safeSubjectLine.length < 50) openRate += 2;
+    if (safeSubjectLine.includes('?') || safeSubjectLine.includes('!')) openRate += 1;
     
     // Content impact
     if (linkCount > 0 && linkCount < 5) clickRate += 1;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,7 +59,6 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [saveName, setSaveName] = useState('');
   
-  // Collapsible sections state
   const [sectionsExpanded, setSectionsExpanded] = useState({
     typography: !compactMode,
     spacing: !compactMode,
@@ -618,12 +616,13 @@ export const EnhancedPropertiesPanel: React.FC<EnhancedPropertiesPanelProps> = (
   };
 
   const renderOverviewStats = () => {
-    const blockCount = (emailHTML.match(/<div[^>]*class[^>]*email-block/g) || []).length;
-    const textBlocks = (emailHTML.match(/<div[^>]*>.*?<\/div>/g) || []).filter(block => 
+    const safeEmailHTML = emailHTML || '';
+    const blockCount = (safeEmailHTML.match(/<div[^>]*class[^>]*email-block/g) || []).length;
+    const textBlocks = (safeEmailHTML.match(/<div[^>]*>.*?<\/div>/g) || []).filter(block => 
       block.includes('text') || block.includes('<p>') || block.includes('<h')
     ).length;
-    const imageBlocks = (emailHTML.match(/<img/g) || []).length;
-    const linkBlocks = (emailHTML.match(/<a/g) || []).length;
+    const imageBlocks = (safeEmailHTML.match(/<img/g) || []).length;
+    const linkBlocks = (safeEmailHTML.match(/<a/g) || []).length;
 
     const spacing = compactMode ? 'space-y-2' : 'space-y-4';
 

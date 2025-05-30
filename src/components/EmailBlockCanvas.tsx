@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -48,27 +47,28 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
 
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const dragHandlers = useDragDropHandler(
-    emailBlocks,
-    setEmailBlocks,
-    setSelectedBlockId,
-    setIsDraggingOver,
-    setDragOverIndex,
-    setCurrentDragType
-  );
+  const dragHandlers = useDragDropHandler(emailBlocks);
 
-  // Imperative handle for external access
+  // Update drag state when handlers change
+  useEffect(() => {
+    if (dragHandlers) {
+      setEmailBlocks(dragHandlers.blocks || emailBlocks);
+      setSelectedBlockId(dragHandlers.selectedBlockId || selectedBlockId);
+      setIsDraggingOver(dragHandlers.isDraggingOver || false);
+      setDragOverIndex(dragHandlers.dragOverIndex || null);
+      setCurrentDragType(dragHandlers.currentDragType || null);
+    }
+  }, [dragHandlers]);
+
   useImperativeHandle(ref, () => ({
     addBlock: (block: EmailBlock) => {
       setEmailBlocks(prev => [...prev, block]);
     },
     getBlocks: () => emailBlocks,
     exportHTML: () => {
-      // Implement HTML export logic here
       return '<div>Email HTML</div>';
     },
     exportMJML: () => {
-      // Implement MJML export logic here
       return '<mjml>Email MJML</mjml>';
     },
     findAndReplaceText: (searchText: string, replaceText: string) => {
@@ -91,7 +91,6 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   }));
 
   useEffect(() => {
-    // Update content when blocks change
     const newContent = generateCanvasHTML(emailBlocks, previewWidth, previewMode, subject);
     onContentChange(newContent);
   }, [emailBlocks, previewWidth, previewMode, subject, onContentChange]);
@@ -108,11 +107,11 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   };
 
   const handleBlockDragStart = (e: React.DragEvent, blockId: string) => {
-    dragHandlers.handleBlockDragStart(e, blockId);
+    dragHandlers.handleBlockDragStart?.(e, blockId);
   };
 
   const handleBlockDrop = (e: React.DragEvent, targetIndex: number) => {
-    dragHandlers.handleBlockDrop(e, targetIndex);
+    dragHandlers.handleBlockDrop?.(e, targetIndex);
   };
 
   const handleDeleteBlock = (blockId: string) => {
@@ -202,11 +201,9 @@ const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
             const updatedColumns = (block.content as any).columns.map((col: any, index: number) => {
               if (index === columnIndex) {
                 if (isLayout && layoutData) {
-                  // Handle layout block drop into column
                   console.log('Dropping layout into column is not supported.');
                   return col;
                 } else {
-                  // Handle regular block drop into column
                   const newBlock = createBlock(blockType);
                   return {
                     ...col,
