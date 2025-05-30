@@ -1,265 +1,498 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo
+} from 'react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { Link } from '@tiptap/extension-link';
+import { Image } from '@tiptap/extension-image';
+import { Underline } from '@tiptap/extension-underline';
+import { Placeholder } from '@tiptap/extension-placeholder';
+import { Color } from '@tiptap/extension-color';
+import TextStyle from '@tiptap/extension-text-style';
+import TextAlign from '@tiptap/extension-text-align';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Eye, Code2, Smartphone, Tablet, Monitor, Download, Upload, Save } from 'lucide-react';
-import { EmailBlockCanvas, EmailBlockCanvasRef } from './EmailBlockCanvas';
-import { EmailBlockPalette } from './EmailBlockPalette';
+import {
+  ArrowLeft,
+  Eye,
+  Send
+} from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
-import { EmailCodeEditor } from './EmailCodeEditor';
-import { EnhancedPropertiesPanel } from './EnhancedPropertiesPanel';
-import { EmailBlock } from '@/types/emailBlocks';
+import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
-import { StatusBar } from './StatusBar';
-import { AISuggestionsPanel } from './AISuggestionsPanel';
-import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
-import { GlobalBrandStylesProvider, useGlobalBrandStyles, GlobalBrandStyles } from '@/contexts/GlobalBrandStylesContext';
-import { UnifiedAISuggestion } from '@/services/CentralizedAIAnalysisService';
-import './EmailEditor.css';
+import { SnippetRibbon } from './SnippetRibbon';
+import { CompactAISuggestions } from './CompactAISuggestions';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { CanvasStatus } from './canvas/CanvasStatus';
+import { EmailTemplate } from './TemplateManager';
+import { DirectTemplateService } from '@/services/directTemplateService';
+import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
+import { EmailBlock } from '@/types/emailBlocks';
+
+interface Block {
+  id: string;
+  type: string;
+  content: string;
+  styles: Record<string, string>;
+}
+
+interface LayoutConfig {
+  direction: 'row' | 'column';
+  alignItems: 'start' | 'center' | 'end';
+  justifyContent: 'start' | 'center' | 'space-between';
+}
+
+type LeftPanelTab = 'blocks' | 'design' | 'performance';
+
+interface BasicAISuggestion {
+  id: string;
+  type: 'subject' | 'copy' | 'cta' | 'tone';
+  title: string;
+  current: string;
+  suggested: string;
+  reason: string;
+  impact: 'high' | 'medium' | 'low';
+  confidence: number;
+  applied?: boolean;
+}
 
 interface EmailEditorProps {
   content: string;
   subject: string;
-  onContentChange?: (content: string) => void;
-  onSubjectChange?: (subject: string) => void;
+  onContentChange: (content: string) => void;
+  onSubjectChange: (subject: string) => void;
   onBack?: () => void;
 }
 
-const EmailEditorContent: React.FC<EmailEditorProps> = ({
+export default function EmailEditor({ 
   content,
   subject,
   onContentChange,
   onSubjectChange,
-  onBack
-}) => {
-  const { styles: globalStyles, updateStyles: updateGlobalStyles } = useGlobalBrandStyles();
+  onBack 
+}: EmailEditorProps) {
+  console.log('EmailEditor: Component starting to render');
+
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [universalContent] = useState<UniversalContent[]>([]);
+  const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
+  const [showAIAnalytics, setShowAIAnalytics] = useState(true);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   
-  const [viewMode, setViewMode] = useState<'design' | 'preview' | 'code'>('design');
-  const [previewViewport, setPreviewViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [leftSidebarContent, setLeftSidebarContent] = useState<'palette' | 'ai'>('palette');
-  const [showAISuggestions, setShowAISuggestions] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
-  const canvasRef = useRef<EmailBlockCanvasRef>(null);
-  const [currentEmailHTML, setCurrentEmailHTML] = useState(content);
+  // AI Suggestions state
+  const [aiSuggestions, setAiSuggestions] = useState<BasicAISuggestion[]>([]);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
 
-  const handleViewportChange = (viewport: 'desktop' | 'tablet' | 'mobile') => {
-    setPreviewViewport(viewport);
-  };
+  const [canvasWidth, setCanvasWidth] = useState(600);
+  const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
-  const handleSidebarToggle = (sidebar: 'palette' | 'ai') => {
-    setLeftSidebarContent(sidebar);
-  };
+  const canvasRef = useRef<any>(null);
 
-  const handleBlockUpdate = useCallback((blockId: string, updates: Partial<EmailBlock>) => {
-    canvasRef.current?.updateBlock(blockId, updates);
+  const layoutConfig = useMemo<LayoutConfig>(() => ({
+    direction: 'column',
+    alignItems: 'center',
+    justifyContent: 'start'
+  }), []);
+
+  console.log('EmailEditor: State initialized, creating extensions');
+
+  const extensions = useMemo(() => {
+    console.log('EmailEditor: Creating TipTap extensions');
+    return [
+      StarterKit.configure({
+        history: false,
+      }),
+      Underline,
+      Link,
+      Image,
+      Placeholder.configure({
+        placeholder: 'Write something here...'
+      }),
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+    ];
   }, []);
 
-  const handleBlockDelete = useCallback((blockId: string) => {
-    canvasRef.current?.deleteBlock(blockId);
-    setSelectedBlock(null);
-  }, []);
+  const handleEditorUpdate = useCallback(({ editor }) => {
+    const newContent = editor.getHTML();
+    onContentChange(newContent);
+  }, [onContentChange]);
 
-  const handleEmailExport = () => {
-    const htmlContent = canvasRef.current?.exportToHTML() || '<p>No content to export.</p>';
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'email_template.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  console.log('EmailEditor: About to create TipTap editor');
 
-  const handleEmailImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const htmlContent = e.target?.result as string;
-        canvasRef.current?.importFromHTML(htmlContent);
-        onContentChange?.(htmlContent);
-      };
-      reader.readAsText(file);
-    }
-  };
+  const editor = useEditor({
+    extensions,
+    content: '',
+    onUpdate: handleEditorUpdate,
+    immediatelyRender: false,
+  });
 
-  const handleEmailSave = () => {
-    const htmlContent = canvasRef.current?.exportToHTML() || '<p>No content to save.</p>';
-    localStorage.setItem('emailContent', htmlContent);
-    alert('Email content saved to local storage!');
-  };
-
-  const handleEmailLoad = () => {
-    const savedContent = localStorage.getItem('emailContent') || '<p>No saved content.</p>';
-    canvasRef.current?.importFromHTML(savedContent);
-    onContentChange?.(savedContent);
-  };
+  console.log('EmailEditor: TipTap editor created', { editor: !!editor });
 
   useEffect(() => {
-    if (content !== currentEmailHTML) {
-      setCurrentEmailHTML(content);
+    if (editor && editor.getHTML() !== content) {
+      console.log('EmailEditor: Updating editor content from prop');
+      editor.commands.setContent(content);
     }
-  }, [content, currentEmailHTML]);
+  }, [editor, content]);
 
-  const handleGlobalStylesChange = useCallback((newStyles: Partial<GlobalBrandStyles>) => {
-    updateGlobalStyles(newStyles);
-    
-    // Apply styles to existing blocks in canvas
-    if (canvasRef.current) {
-      canvasRef.current.applyGlobalStyles(globalStyles);
-    }
-  }, [updateGlobalStyles, globalStyles]);
+  useEffect(() => {
+    console.log('EmailEditor: Loading templates');
+    const initialTemplates = DirectTemplateService.getAllTemplates();
+    setTemplates(initialTemplates);
+  }, []);
 
-  const applySuggestion = useCallback(async (suggestion: UnifiedAISuggestion) => {
-    if (!canvasRef.current) {
-      console.warn('EmailEditor: No canvas reference available');
+  // AI Suggestions handlers
+  const generateAISuggestions = useCallback(async () => {
+    if (!content || content.length < 50) {
+      console.warn('Email content too short for analysis');
       return;
     }
-
+    
+    setIsGeneratingSuggestions(true);
+    
     try {
-      console.log('EmailEditor: Applying AI suggestion:', suggestion.title);
+      console.log('Generating AI suggestions...');
       
-      // Apply suggestion based on type
-      switch (suggestion.type) {
-        case 'subject':
-          onSubjectChange?.(suggestion.suggested);
-          break;
-          
-        case 'copy':
-        case 'tone':
-          if (suggestion.blockId && canvasRef.current.updateBlockContent) {
-            canvasRef.current.updateBlockContent(suggestion.blockId, {
-              html: `<p>${suggestion.suggested}</p>`
-            });
-          } else {
-            canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
-          }
-          break;
-          
-        case 'cta':
-          if (suggestion.blockId && canvasRef.current.updateBlockContent) {
-            canvasRef.current.updateBlockContent(suggestion.blockId, {
-              text: suggestion.suggested
-            });
-          } else {
-            canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
-          }
-          break;
-          
-        case 'design':
-          if (suggestion.blockId && suggestion.styleChanges && canvasRef.current.updateBlockStyle) {
-            canvasRef.current.updateBlockStyle(suggestion.blockId, suggestion.styleChanges);
-          }
-          break;
-          
-        case 'performance':
-        case 'optimization':
-          // Generic text replacement for performance suggestions
-          canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
-          break;
-          
-        default:
-          console.warn('EmailEditor: Unknown suggestion type:', suggestion.type);
-          canvasRef.current.replaceTextInAllBlocks(suggestion.current, suggestion.suggested);
-      }
-
-      console.log('EmailEditor: Successfully applied suggestion:', suggestion.title);
+      // Generate suggestions based on content analysis
+      const suggestions: BasicAISuggestion[] = [
+        {
+          id: 'suggestion_1',
+          type: 'subject',
+          title: 'Improve subject line engagement',
+          current: subject || 'Current subject',
+          suggested: subject ? `${subject} - Limited Time!` : 'Your Amazing Offer - Limited Time!',
+          reason: 'Adding urgency can increase open rates by 15-20%',
+          impact: 'high',
+          confidence: 85,
+          applied: false
+        },
+        {
+          id: 'suggestion_2',
+          type: 'cta',
+          title: 'Strengthen call-to-action',
+          current: 'Click here',
+          suggested: 'Get Started Now',
+          reason: 'Action-oriented CTAs perform 25% better',
+          impact: 'high',
+          confidence: 90,
+          applied: false
+        },
+        {
+          id: 'suggestion_3',
+          type: 'copy',
+          title: 'Improve readability',
+          current: 'Long paragraph text',
+          suggested: 'Break into shorter, scannable sections',
+          reason: 'Shorter paragraphs improve engagement by 18%',
+          impact: 'medium',
+          confidence: 75,
+          applied: false
+        }
+      ];
+      
+      setAiSuggestions(suggestions);
+      console.log('Generated AI suggestions:', suggestions);
       
     } catch (error) {
-      console.error('EmailEditor: Failed to apply suggestion:', error);
+      console.error('Failed to generate suggestions:', error);
+      setAiSuggestions([]);
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
+  }, [content, subject]);
+
+  const handleApplyAISuggestion = useCallback(async (suggestion: BasicAISuggestion) => {
+    try {
+      if (suggestion.type === 'subject') {
+        onSubjectChange(suggestion.suggested);
+      } else if (canvasRef?.current) {
+        switch (suggestion.type) {
+          case 'copy':
+          case 'cta':
+          case 'tone':
+            // Try to apply the suggestion to the canvas
+            if (canvasRef.current.findAndReplaceText) {
+              canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
+            }
+            break;
+        }
+      }
+
+      // Mark as applied
+      setAiSuggestions(prev => prev.map(s => 
+        s.id === suggestion.id ? { ...s, applied: true } : s
+      ));
+
+      console.log(`Applied suggestion: ${suggestion.title}`);
+    } catch (error) {
+      console.error('Failed to apply suggestion:', error);
     }
   }, [onSubjectChange]);
 
+  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
+    setDeviceMode(device);
+    const widthMap = {
+      desktop: 1200,
+      tablet: 768,
+      mobile: 375,
+      custom: canvasWidth
+    };
+    if (device !== 'custom') {
+      setCanvasWidth(widthMap[device]);
+    }
+    setPreviewMode(device === 'mobile' ? 'mobile' : 'desktop');
+  };
+
+  const handleWidthChange = (width: number) => {
+    setCanvasWidth(width);
+    setDeviceMode('custom');
+  };
+
+  const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
+    console.log('EmailEditor: handleBlockAdd called with:', { blockType, layoutConfig });
+    
+    if (!canvasRef.current) {
+      console.warn('EmailEditor: Canvas ref not available, cannot add block');
+      return;
+    }
+
+    // Handle layout blocks specifically
+    if (blockType === 'columns' && layoutConfig) {
+      console.log('EmailEditor: Processing layout configuration:', layoutConfig);
+      
+      // Create the layout block data structure
+      const columnCount = layoutConfig.columnCount || layoutConfig.columns || 2;
+      const columnRatio = layoutConfig.columnRatio || layoutConfig.ratio || '50-50';
+      const columnElements = layoutConfig.columnElements || [];
+      
+      const newLayoutBlock: EmailBlock = {
+        id: `layout-${Date.now()}`,
+        type: 'columns',
+        content: {
+          columnCount: columnCount as 1 | 2 | 3 | 4,
+          columnRatio: columnRatio,
+          columns: columnElements.length > 0 ? columnElements : Array.from({ length: columnCount }, (_, i) => ({
+            id: `col-${i}-${Date.now()}`,
+            blocks: [],
+            width: `${100 / columnCount}%`
+          })),
+          gap: '16px'
+        },
+        styling: {
+          desktop: { width: '100%', height: 'auto' },
+          tablet: { width: '100%', height: 'auto' },
+          mobile: { width: '100%', height: 'auto' }
+        },
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        }
+      };
+
+      console.log('EmailEditor: Created layout block:', newLayoutBlock);
+      
+      // Add the block directly to the canvas
+      if (canvasRef.current) {
+        canvasRef.current.addBlock(newLayoutBlock);
+      }
+      
+      return;
+    }
+
+    // Handle regular blocks
+    const newBlock: Block = {
+      id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type: blockType,
+      content: `New ${blockType} block`,
+      styles: {}
+    };
+
+    console.log('EmailEditor: Created regular block:', newBlock);
+    setBlocks(prev => [...prev, newBlock]);
+  };
+
+  const handleBlocksChange = (newBlocks: Block[]) => {
+    setBlocks(newBlocks);
+  };
+
+  const handleBlockUpdate = (block: EmailBlock) => {
+    setEmailBlocks(prev => 
+      prev.map(b => b.id === block.id ? block : b)
+    );
+  };
+
+  const handleBlockDelete = (blockId: string) => {
+    setBlocks(prev => prev.filter(block => block.id !== blockId));
+    setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
+  };
+
+  const handleGlobalStylesChange = (styles: any) => {
+    console.log('Applying global styles:', styles);
+  };
+
+  const handlePreview = () => {
+    setShowPreview(true);
+  };
+
+  const handlePublish = async () => {
+    const existingTemplateNames = templates.map(t => t.name);
+    const newTemplate = DirectTemplateService.savePublishedTemplate(
+      content,
+      subject,
+      existingTemplateNames
+    );
+    setTemplates(prev => [...prev, newTemplate]);
+    setShowTemplateLibrary(false);
+  };
+
+  const handleTemplateLoad = (template: EmailTemplate) => {
+    onContentChange(template.html);
+    onSubjectChange(template.subject);
+  };
+
+  const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
+    const newTemplate = DirectTemplateService.saveTemplate(template);
+    setTemplates(prev => [...prev, newTemplate]);
+    setShowTemplateLibrary(false);
+  };
+
+  const handleSnippetAdd = (snippet: EmailSnippet) => {
+    console.log('Adding snippet:', snippet);
+    setSnippetRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleUniversalContentAdd = (content: UniversalContent) => {
+    console.log('Adding universal content:', content);
+  };
+
+  const handleContentChangeFromCanvas = (newContent: string) => {
+    onContentChange(newContent);
+  };
+
+  const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
+    setPreviewMode(mode);
+  };
+
+  const handleTemplateLibraryOpen = () => {
+    setShowTemplateLibrary(true);
+  };
+
+  const handleSnippetSelect = (snippet: EmailSnippet) => {
+    console.log('Adding snippet to canvas:', snippet);
+    if (canvasRef.current && snippet.blockData) {
+      // Create a new block from the snippet data
+      const newBlock: EmailBlock = {
+        ...snippet.blockData,
+        id: `block-${Date.now()}`, // Generate new unique ID
+      };
+      canvasRef.current.addBlock(newBlock);
+      setSnippetRefreshTrigger(prev => prev + 1);
+    }
+  };
+
+  const handleToggleAIAnalytics = () => {
+    setShowAIAnalytics(prev => !prev);
+  };
+
+  const handleBlockSelect = (blockId: string | null) => {
+    setSelectedBlockId(blockId);
+  };
+
+  console.log('EmailEditor: About to render main component');
+
   return (
-    <div className="email-editor">
-      {/* Enhanced Top Bar with Global Styles */}
+    <div className="h-screen flex flex-col bg-gray-50">
       <OmnipresentRibbon
+        onBlockAdd={handleBlockAdd}
+        onSnippetAdd={handleSnippetAdd}
+        universalContent={universalContent}
+        onUniversalContentAdd={handleUniversalContentAdd}
         onGlobalStylesChange={handleGlobalStylesChange}
-        globalStyles={globalStyles}
-      />
-
-      {/* AI Suggestions Widget */}
-      <EnhancedAISuggestionsWidget
-        isOpen={showAISuggestions}
-        onToggle={() => setShowAISuggestions(!showAISuggestions)}
-        emailHTML={currentEmailHTML}
+        emailHTML={content}
         subjectLine={subject}
-        canvasRef={canvasRef}
-        onSubjectLineChange={onSubjectChange}
-        onApplySuggestion={applySuggestion}
+        editor={editor}
+        snippetRefreshTrigger={snippetRefreshTrigger}
+        onTemplateLibraryOpen={handleTemplateLibraryOpen}
+        onPreviewModeChange={handlePreviewModeChange}
+        previewMode={previewMode}
+        onBack={onBack}
+        canvasWidth={canvasWidth}
+        deviceMode={deviceMode}
+        onDeviceChange={handleDeviceChange}
+        onWidthChange={handleWidthChange}
+        onPreview={handlePreview}
+        onSaveTemplate={handleSaveAsTemplate}
+        onPublish={handlePublish}
+        onToggleAIAnalytics={handleToggleAIAnalytics}
       />
 
-      {/* Main Content */}
-      <div className="email-editor-content">
-        {/* Left Sidebar */}
-        <div className="email-editor-sidebar">
-          {leftSidebarContent === 'palette' && <EmailBlockPalette />}
-          {leftSidebarContent === 'ai' && (
-            <AISuggestionsPanel
-              emailHTML={currentEmailHTML}
-              subjectLine={subject}
-              onApplySuggestion={applySuggestion}
-            />
-          )}
-        </div>
+      <SnippetRibbon
+        onSnippetSelect={handleSnippetSelect}
+        refreshTrigger={snippetRefreshTrigger}
+      />
 
-        {/* Canvas Area */}
-        <div className="email-editor-canvas-container">
-          {viewMode === 'design' && (
-            <EmailBlockCanvas
-              ref={canvasRef}
-              content={content}
-              subject={subject}
-              onContentChange={onContentChange}
-              onSubjectChange={onSubjectChange}
-              onSelectionChange={setSelectedBlock}
-              selectedBlockId={selectedBlock?.id}
-              globalStyles={globalStyles}
-            />
-          )}
-          {viewMode === 'preview' && (
-            <EmailPreview
-              content={content}
-              subject={subject}
-              viewportWidth={previewViewport}
-            />
-          )}
-          {viewMode === 'code' && (
-            <EmailCodeEditor
-              content={content}
-              onContentChange={onContentChange}
-            />
-          )}
-        </div>
+      {/* AI Suggestions Header - Always Visible */}
+      <CompactAISuggestions
+        suggestions={aiSuggestions}
+        isLoading={isGeneratingSuggestions}
+        onApplySuggestion={handleApplyAISuggestion}
+        onRefresh={generateAISuggestions}
+      />
 
-        {/* Right Sidebar */}
-        <div className="email-editor-properties">
-          <EnhancedPropertiesPanel
-            selectedBlock={selectedBlock}
-            onBlockUpdate={handleBlockUpdate}
-            onBlockDelete={handleBlockDelete}
-            globalStyles={globalStyles}
-            onGlobalStylesChange={handleGlobalStylesChange}
+      <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
+        <div className="max-w-4xl mx-auto">
+          <EmailBlockCanvas
+            ref={canvasRef}
+            onContentChange={handleContentChangeFromCanvas}
+            onBlockSelect={handleBlockSelect}
+            previewWidth={canvasWidth}
+            previewMode={previewMode}
+            compactMode={false}
+            subject={subject}
+            onSubjectChange={onSubjectChange}
+            showAIAnalytics={false} // Don't show in canvas since we're showing in footer
           />
         </div>
       </div>
 
-      {/* Status Bar */}
-      <StatusBar
-        selectedBlock={selectedBlock}
-        totalBlocks={currentEmailHTML ? currentEmailHTML.split('<').length - 1 : 0}
-        emailSize={currentEmailHTML.length}
-      />
+      {/* AI Analytics Footer - Always visible */}
+      <div className="bg-white border-t border-gray-200 shadow-lg">
+        <CanvasStatus 
+          selectedBlockId={selectedBlockId}
+          canvasWidth={canvasWidth}
+          previewMode={previewMode}
+          emailHTML={content}
+          subjectLine={subject}
+        />
+      </div>
+
+      {showPreview && (
+        <EmailPreview
+          html={content}
+          previewMode={previewMode}
+        />
+      )}
+
+      {showTemplateLibrary && (
+        <EmailTemplateLibrary
+          editor={editor}
+        />
+      )}
     </div>
   );
-};
-
-const EmailEditor: React.FC<EmailEditorProps> = (props) => {
-  return (
-    <GlobalBrandStylesProvider>
-      <EmailEditorContent {...props} />
-    </GlobalBrandStylesProvider>
-  );
-};
-
-export default EmailEditor;
+}

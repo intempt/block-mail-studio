@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -156,7 +157,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               ) : (
                 <Sparkles className="w-3 h-3 mr-1" />
               )}
-              Subject AI
+              A/B Variants
             </Button>
           </div>
         </div>

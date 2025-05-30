@@ -122,7 +122,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       <div className="bg-white border-t border-gray-200 shadow-sm">
         <div className="px-4 py-1.5">
           {/* Single Line Analytics */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {/* Status Indicator */}
               <div className="flex items-center gap-1">
@@ -134,7 +134,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   <Info className="w-3 h-3 text-gray-400" />
                 )}
                 <span className="text-xs text-gray-600 font-medium">
-                  {isAnalyzing ? 'Analyzing...' : hasContent && analytics ? 'Analyze AI' : 'Add content'}
+                  {isAnalyzing ? 'Analyzing...' : hasContent && analytics ? 'AI Active' : 'Add content'}
                 </span>
               </div>
 
@@ -262,7 +262,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 size="sm"
                 onClick={refreshAnalytics}
                 disabled={isAnalyzing}
-                className="h-5 px-1.5 text-xs text-gray-600 hover:text-gray-900 ml-4"
+                className="h-5 px-1.5 text-xs text-gray-600 hover:text-gray-900"
               >
                 <RefreshCw className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
               </Button>

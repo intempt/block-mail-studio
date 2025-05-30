@@ -16,10 +16,9 @@ import {
   Type
 } from 'lucide-react';
 
-interface UnifiedAISuggestion {
+interface BasicAISuggestion {
   id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone' | 'design' | 'performance' | 'optimization';
-  category: 'brandVoice' | 'performance' | 'variants' | 'optimization';
+  type: 'subject' | 'copy' | 'cta' | 'tone';
   title: string;
   current: string;
   suggested: string;
@@ -27,15 +26,12 @@ interface UnifiedAISuggestion {
   impact: 'high' | 'medium' | 'low';
   confidence: number;
   applied?: boolean;
-  blockId?: string;
-  targetElement?: string;
-  styleChanges?: any;
 }
 
 interface CompactAISuggestionsProps {
-  suggestions: UnifiedAISuggestion[];
+  suggestions: BasicAISuggestion[];
   isLoading?: boolean;
-  onApplySuggestion?: (suggestion: UnifiedAISuggestion) => void;
+  onApplySuggestion?: (suggestion: BasicAISuggestion) => void;
   onRefresh?: () => void;
 }
 
@@ -63,9 +59,6 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
       case 'cta': return <Zap className="w-3 h-3" />;
       case 'copy': return <Type className="w-3 h-3" />;
       case 'tone': return <Brain className="w-3 h-3" />;
-      case 'design': return <Brain className="w-3 h-3" />;
-      case 'performance': return <Zap className="w-3 h-3" />;
-      case 'optimization': return <Target className="w-3 h-3" />;
       default: return <Lightbulb className="w-3 h-3" />;
     }
   };
@@ -84,7 +77,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="flex items-center gap-3">
           <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
-          <span className="text-sm text-gray-600">Generating Suggestion AI...</span>
+          <span className="text-sm text-gray-600">Generating AI suggestions...</span>
         </div>
       </div>
     );
@@ -95,7 +88,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="flex items-center gap-3">
           <Lightbulb className="w-4 h-4 text-purple-600" />
-          <span className="text-sm text-gray-600">Click to generate Suggestion AI</span>
+          <span className="text-sm text-gray-600">Click to generate AI suggestions</span>
           <Button variant="outline" size="sm" onClick={onRefresh} className="ml-auto h-6">
             <Lightbulb className="w-3 h-3 mr-1" />
             Analyze
@@ -112,7 +105,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium">Suggestion AI</span>
+              <span className="text-sm font-medium">AI Suggestions</span>
               {suggestions.length > 0 && (
                 <>
                   <Badge variant="outline" className="text-xs">
@@ -143,7 +136,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
           </Button>
         </div>
 
-        {/* Suggestion chips */}
+        {/* Simple horizontal suggestion chips */}
         <ScrollArea className="w-full">
           <div className="flex gap-2 pb-1">
             {suggestions.slice(0, isExpanded ? suggestions.length : 4).map((suggestion) => (
@@ -186,8 +179,8 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
 
 // Helper component for suggestion chips
 const SuggestionChip: React.FC<{
-  suggestion: UnifiedAISuggestion;
-  onApply?: (suggestion: UnifiedAISuggestion) => void;
+  suggestion: BasicAISuggestion;
+  onApply?: (suggestion: BasicAISuggestion) => void;
   hoveredSuggestion: string | null;
   setHoveredSuggestion: (id: string | null) => void;
   getImpactColor: (impact: string) => string;
@@ -239,48 +232,24 @@ const SuggestionChip: React.FC<{
       )}
     </div>
 
-    {/* Enhanced hover tooltip */}
+    {/* Hover Tooltip */}
     {hoveredSuggestion === suggestion.id && !suggestion.applied && (
       <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80 max-w-96">
         <div className="space-y-2">
-          <div className="flex items-center gap-2 mb-2">
-            {getTypeIcon(suggestion.type)}
-            <span className="font-medium text-sm">{suggestion.title}</span>
-            <Badge className={`text-xs ${getImpactColor(suggestion.impact)}`}>
-              {suggestion.impact} impact
-            </Badge>
-          </div>
-          
           <div className="text-xs">
             <span className="font-medium text-gray-700">Current:</span>
-            <div className="bg-gray-50 p-2 rounded mt-1 text-gray-600 font-mono text-xs max-h-16 overflow-y-auto">
-              {suggestion.current.length > 100 
-                ? suggestion.current.substring(0, 100) + '...' 
-                : suggestion.current}
+            <div className="bg-gray-50 p-2 rounded mt-1 text-gray-600 font-mono text-xs">
+              {suggestion.current}
             </div>
           </div>
-          
           <div className="text-xs">
             <span className="font-medium text-blue-700">Suggested:</span>
-            <div className="bg-blue-50 p-2 rounded mt-1 text-blue-700 font-mono text-xs max-h-16 overflow-y-auto">
-              {suggestion.suggested.length > 100 
-                ? suggestion.suggested.substring(0, 100) + '...' 
-                : suggestion.suggested}
+            <div className="bg-blue-50 p-2 rounded mt-1 text-blue-700 font-mono text-xs">
+              {suggestion.suggested}
             </div>
           </div>
-          
           <div className="text-xs text-gray-600 italic">
             💡 {suggestion.reason}
-          </div>
-          
-          {suggestion.blockId && (
-            <div className="text-xs text-purple-600">
-              🎯 Targets: {suggestion.targetElement || 'specific block'}
-            </div>
-          )}
-          
-          <div className="text-xs text-gray-500">
-            Confidence: {suggestion.confidence}% • Category: {suggestion.category}
           </div>
         </div>
       </div>
