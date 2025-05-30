@@ -384,6 +384,13 @@ export default function EmailEditor({
     onContentChange(newContent);
   };
 
+  const handleBlocksChangeFromCanvas = (blocks: EmailBlock[]) => {
+    setEmailBlocks(blocks);
+    // Convert blocks to HTML content
+    const htmlContent = blocks.map(block => block.content.html || '').join('');
+    onContentChange(htmlContent);
+  };
+
   const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
     setPreviewMode(mode);
   };
@@ -458,14 +465,15 @@ export default function EmailEditor({
         <div className="max-w-4xl mx-auto">
           <EmailBlockCanvas
             ref={canvasRef}
-            onContentChange={handleContentChangeFromCanvas}
+            initialBlocks={emailBlocks}
+            onBlocksChange={handleBlocksChangeFromCanvas}
             onBlockSelect={handleBlockSelect}
             previewWidth={canvasWidth}
             previewMode={previewMode}
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
-            showAIAnalytics={false} // Don't show in canvas since we're showing in footer
+            showAIAnalytics={false}
           />
         </div>
       </div>

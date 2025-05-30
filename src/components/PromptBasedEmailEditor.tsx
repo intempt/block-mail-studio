@@ -51,6 +51,8 @@ export const PromptBasedEmailEditor: React.FC<PromptBasedEmailEditorProps> = ({
           },
           styling: {
             desktop: {
+              width: '100%',
+              height: 'auto',
               backgroundColor: 'transparent',
               padding: '16px',
               margin: '8px 0',
@@ -88,6 +90,8 @@ export const PromptBasedEmailEditor: React.FC<PromptBasedEmailEditorProps> = ({
         },
         styling: {
           desktop: {
+            width: '100%',
+            height: 'auto',
             backgroundColor: 'transparent',
             padding: '16px',
             margin: '8px 0',

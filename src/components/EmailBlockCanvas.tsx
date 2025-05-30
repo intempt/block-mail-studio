@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -14,6 +15,7 @@ export interface EmailBlockCanvasRef {
   checkLinks: () => { valid: number; broken: number };
   getBlocks: () => EmailBlock[];
   setBlocks: (blocks: EmailBlock[]) => void;
+  addBlock: (block: EmailBlock) => void;
 }
 
 interface EmailBlockCanvasProps {
@@ -21,7 +23,14 @@ interface EmailBlockCanvasProps {
   onBlocksChange?: (blocks: EmailBlock[]) => void;
   onExport?: (html: string) => void;
   onSelectionChange?: (blockId: string | null) => void;
+  onBlockSelect?: (blockId: string | null) => void;
   className?: string;
+  previewWidth?: number;
+  previewMode?: 'desktop' | 'mobile';
+  compactMode?: boolean;
+  subject?: string;
+  onSubjectChange?: (subject: string) => void;
+  showAIAnalytics?: boolean;
 }
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
@@ -29,7 +38,14 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   onBlocksChange,
   onExport,
   onSelectionChange,
-  className = ''
+  onBlockSelect,
+  className = '',
+  previewWidth = 600,
+  previewMode = 'desktop',
+  compactMode = false,
+  subject = '',
+  onSubjectChange,
+  showAIAnalytics = false
 }, ref) => {
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   
@@ -49,7 +65,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     selectedBlockId,
     selectBlock,
     clearSelection
-  } = useSelection(onSelectionChange);
+  } = useSelection(onSelectionChange || onBlockSelect);
 
   const dragDropHandlers = useDragDrop({
     blocks,
@@ -64,18 +80,18 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   });
 
   useKeyboardShortcuts({
-    deleteBlock: () => {
+    onDelete: () => {
       if (selectedBlockId) {
         deleteBlock(selectedBlockId);
         clearSelection();
       }
     },
-    duplicateBlock: () => {
+    onDuplicate: () => {
       if (selectedBlockId) {
         duplicateBlock(selectedBlockId);
       }
     },
-    moveBlock: (direction: 'up' | 'down') => {
+    onMove: (direction: 'up' | 'down') => {
       if (selectedBlockId) {
         const selectedIndex = blocks.findIndex(block => block.id === selectedBlockId);
         if (selectedIndex !== -1) {
@@ -99,11 +115,12 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     minifyHTML: () => 'HTML minified',
     checkLinks: () => ({ valid: 0, broken: 0 }),
     getBlocks: () => blocks,
-    setBlocks: (newBlocks: EmailBlock[]) => setBlocks(newBlocks)
+    setBlocks: (newBlocks: EmailBlock[]) => setBlocks(newBlocks),
+    addBlock: (block: EmailBlock) => addBlock(block)
   }));
 
   return (
-    <div className={`email-canvas ${className}`}>
+    <div className={`email-canvas ${className}`} style={{ width: previewWidth }}>
       <CanvasRenderer
         blocks={dragDropHandlers.blocks}
         selectedBlockId={dragDropHandlers.selectedBlockId}
