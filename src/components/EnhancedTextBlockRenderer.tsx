@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -22,6 +22,64 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+interface GlobalStyles {
+  email?: {
+    backgroundColor?: string;
+    width?: string;
+    defaultFontFamily?: string;
+  };
+  text?: {
+    body?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      lineHeight?: string;
+    };
+    h1?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+    h2?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+    h3?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+    h4?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+  };
+  buttons?: {
+    default?: {
+      backgroundColor?: string;
+      color?: string;
+      borderColor?: string;
+      borderRadius?: string;
+      fontSize?: string;
+      fontWeight?: string;
+      padding?: string;
+    };
+  };
+  links?: {
+    normal?: string;
+    hover?: string;
+    textDecoration?: string;
+    fontWeight?: string;
+    fontStyle?: string;
+  };
+}
+
 interface EnhancedTextBlockRendererProps {
   block: TextBlock;
   isSelected: boolean;
@@ -30,6 +88,7 @@ interface EnhancedTextBlockRendererProps {
   onEditStart: () => void;
   onEditEnd: () => void;
   emailContext?: string;
+  globalStyles?: GlobalStyles;
 }
 
 export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps> = ({
@@ -39,7 +98,8 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   onUpdate,
   onEditStart,
   onEditEnd,
-  emailContext
+  emailContext,
+  globalStyles = {}
 }) => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
@@ -281,151 +341,224 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     targetAudience: 'general'
   };
 
-  // Provide default styling values to avoid TypeScript errors
+  // Provide default styling values with global styles merged
   const styling = block.styling?.desktop;
-  const defaultStyling = {
-    backgroundColor: styling?.backgroundColor || 'transparent',
-    padding: styling?.padding || '16px',
-    margin: styling?.margin || '8px 0',
-    borderRadius: styling?.borderRadius || '6px',
-    border: styling?.border || (isSelected ? '2px solid #3b82f6' : '2px solid transparent'),
-    textColor: styling?.textColor || '#374151',
-    fontSize: styling?.fontSize || '14px',
-    fontWeight: styling?.fontWeight || '400'
-  };
+  const defaultStyling = useMemo(() => {
+    const baseStyle = {
+      backgroundColor: styling?.backgroundColor || 'transparent',
+      padding: styling?.padding || '16px',
+      margin: styling?.margin || '8px 0',
+      borderRadius: styling?.borderRadius || '6px',
+      border: styling?.border || (isSelected ? '2px solid #3b82f6' : '2px solid transparent'),
+      textColor: styling?.textColor || '#374151',
+      fontSize: styling?.fontSize || '14px',
+      fontWeight: styling?.fontWeight || '400'
+    };
+
+    // Apply global text styles as defaults
+    if (globalStyles.text?.body) {
+      const globalText = globalStyles.text.body;
+      return {
+        ...baseStyle,
+        fontFamily: baseStyle.fontFamily || globalText.fontFamily,
+        fontSize: baseStyle.fontSize || globalText.fontSize,
+        textColor: baseStyle.textColor || globalText.color,
+        lineHeight: baseStyle.lineHeight || globalText.lineHeight,
+      };
+    }
+
+    // Apply global email font family as fallback
+    if (globalStyles.email?.defaultFontFamily) {
+      return {
+        ...baseStyle,
+        fontFamily: baseStyle.fontFamily || globalStyles.email.defaultFontFamily,
+      };
+    }
+
+    return baseStyle;
+  }, [styling, isSelected, globalStyles]);
+
+  // Generate global CSS for links and headings
+  const globalCSS = useMemo(() => {
+    let css = '';
+    
+    // Apply global link styles
+    if (globalStyles.links) {
+      const linkStyles = globalStyles.links;
+      css += `
+        .enhanced-text-block a {
+          color: ${linkStyles.normal || '#3B82F6'} !important;
+          text-decoration: ${linkStyles.textDecoration || 'underline'} !important;
+          font-weight: ${linkStyles.fontWeight || 'normal'} !important;
+          font-style: ${linkStyles.fontStyle || 'normal'} !important;
+        }
+        .enhanced-text-block a:hover {
+          color: ${linkStyles.hover || linkStyles.normal || '#1E40AF'} !important;
+        }
+      `;
+    }
+
+    // Apply global heading styles
+    if (globalStyles.text) {
+      const textStyles = globalStyles.text;
+      
+      ['h1', 'h2', 'h3', 'h4'].forEach(tag => {
+        if (textStyles[tag]) {
+          css += `
+            .enhanced-text-block ${tag} {
+              font-family: ${textStyles[tag].fontFamily || 'inherit'} !important;
+              font-size: ${textStyles[tag].fontSize || 'inherit'} !important;
+              color: ${textStyles[tag].color || 'inherit'} !important;
+              font-weight: ${textStyles[tag].fontWeight || 'bold'} !important;
+            }
+          `;
+        }
+      });
+    }
+
+    return css;
+  }, [globalStyles]);
 
   return (
-    <div 
-      className={`enhanced-text-block relative group cursor-text transition-all duration-200 ${
-        isSelected ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
-      } ${isEditing ? 'editing shadow-lg bg-white ring-2 ring-blue-500' : 'hover:shadow-md hover:ring-1 hover:ring-gray-300'}`}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      style={{
-        backgroundColor: defaultStyling.backgroundColor,
-        padding: defaultStyling.padding,
-        margin: defaultStyling.margin,
-        borderRadius: defaultStyling.borderRadius,
-        border: defaultStyling.border,
-        minHeight: '60px',
-        position: 'relative'
-      }}
-    >
-      <div ref={editorRef} className="relative">
-        <EditorContent 
+    <>
+      {/* Inject global styles for this text block */}
+      {globalCSS && (
+        <style dangerouslySetInnerHTML={{ __html: globalCSS }} />
+      )}
+      
+      <div 
+        className={`enhanced-text-block relative group cursor-text transition-all duration-200 ${
+          isSelected ? 'ring-2 ring-blue-500 ring-opacity-30' : ''
+        } ${isEditing ? 'editing shadow-lg bg-white ring-2 ring-blue-500' : 'hover:shadow-md hover:ring-1 hover:ring-gray-300'}`}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        style={{
+          backgroundColor: defaultStyling.backgroundColor,
+          padding: defaultStyling.padding,
+          margin: defaultStyling.margin,
+          borderRadius: defaultStyling.borderRadius,
+          border: defaultStyling.border,
+          minHeight: '60px',
+          position: 'relative'
+        }}
+      >
+        <div ref={editorRef} className="relative">
+          <EditorContent 
+            editor={editor}
+            className={`prose prose-sm max-w-none focus:outline-none transition-all duration-200 ${
+              isEditing ? 'cursor-text' : 'cursor-pointer'
+            }`}
+            style={{
+              color: defaultStyling.textColor,
+              fontSize: defaultStyling.fontSize,
+              fontWeight: defaultStyling.fontWeight,
+              fontFamily: defaultStyling.fontFamily,
+            }}
+          />
+
+          {/* Status Indicators - Only show when editing and relevant */}
+          {isEditing && (
+            <div className="absolute top-2 right-2 flex gap-2 z-10">
+              {hasUnsavedChanges && (
+                <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
+                  Saving...
+                </Badge>
+              )}
+              <Badge variant="outline" className="text-xs bg-white">
+                {wordCount} words
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Full TipTap Toolbar with AI Integration */}
+        <FullTipTapToolbar
           editor={editor}
-          className={`prose prose-sm max-w-none focus:outline-none transition-all duration-200 ${
-            isEditing ? 'cursor-text' : 'cursor-pointer'
-          }`}
-          style={{
-            color: defaultStyling.textColor,
-            fontSize: defaultStyling.fontSize,
-            fontWeight: defaultStyling.fontWeight,
-          }}
+          isVisible={showToolbar && isEditing}
+          position={toolbarPosition}
+          onLinkClick={() => setShowLinkDialog(true)}
+          onImageInsert={() => setShowImageDialog(true)}
+          containerElement={editorRef.current}
+          emailContext={aiEmailContext}
         />
 
-        {/* Status Indicators - Only show when editing and relevant */}
+        {/* Link Dialog */}
+        {showLinkDialog && (
+          <div 
+            className="link-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium text-gray-700">Add Link</div>
+              <div className="flex gap-2">
+                <Input
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleLinkAdd();
+                    } else if (e.key === 'Escape') {
+                      setShowLinkDialog(false);
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleLinkAdd} disabled={!linkUrl.trim()}>
+                  Add
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Dialog */}
+        {showImageDialog && (
+          <div 
+            className="image-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
+            onMouseDown={(e) => e.preventDefault()}
+          >
+            <div className="flex flex-col gap-3">
+              <div className="text-sm font-medium text-gray-700">Insert Image</div>
+              <div className="flex gap-2">
+                <Input
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="Enter image URL..."
+                  className="flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleImageInsert();
+                    } else if (e.key === 'Escape') {
+                      setShowImageDialog(false);
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button size="sm" onClick={handleImageInsert} disabled={!imageUrl.trim()}>
+                  Add
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Keyboard Shortcut Hints - Only show when editing */}
         {isEditing && (
-          <div className="absolute top-2 right-2 flex gap-2 z-10">
-            {hasUnsavedChanges && (
-              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
-                Saving...
-              </Badge>
-            )}
-            <Badge variant="outline" className="text-xs bg-white">
-              {wordCount} words
+          <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
+            <Badge variant="outline" className="text-xs text-gray-500 bg-white">
+              Press Esc to finish editing
             </Badge>
           </div>
         )}
       </div>
-
-      {/* Full TipTap Toolbar with AI Integration */}
-      <FullTipTapToolbar
-        editor={editor}
-        isVisible={showToolbar && isEditing}
-        position={toolbarPosition}
-        onLinkClick={() => setShowLinkDialog(true)}
-        onImageInsert={() => setShowImageDialog(true)}
-        containerElement={editorRef.current}
-        emailContext={aiEmailContext}
-      />
-
-      {/* Link Dialog */}
-      {showLinkDialog && (
-        <div 
-          className="link-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          <div className="flex flex-col gap-3">
-            <div className="text-sm font-medium text-gray-700">Add Link</div>
-            <div className="flex gap-2">
-              <Input
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleLinkAdd();
-                  } else if (e.key === 'Escape') {
-                    setShowLinkDialog(false);
-                  }
-                }}
-                autoFocus
-              />
-              <Button size="sm" onClick={handleLinkAdd} disabled={!linkUrl.trim()}>
-                Add
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Image Dialog */}
-      {showImageDialog && (
-        <div 
-          className="image-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          <div className="flex flex-col gap-3">
-            <div className="text-sm font-medium text-gray-700">Insert Image</div>
-            <div className="flex gap-2">
-              <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Enter image URL..."
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleImageInsert();
-                  } else if (e.key === 'Escape') {
-                    setShowImageDialog(false);
-                  }
-                }}
-                autoFocus
-              />
-              <Button size="sm" onClick={handleImageInsert} disabled={!imageUrl.trim()}>
-                Add
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Keyboard Shortcut Hints - Only show when editing */}
-      {isEditing && (
-        <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
-          <Badge variant="outline" className="text-xs text-gray-500 bg-white">
-            Press Esc to finish editing
-          </Badge>
-        </div>
-      )}
-    </div>
+    </>
   );
 };

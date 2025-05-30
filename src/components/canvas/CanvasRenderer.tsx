@@ -7,6 +7,64 @@ import { BlockRenderer } from '../BlockRenderer';
 import { BlockControls } from './BlockControls';
 import { DropZoneIndicator } from '../DropZoneIndicator';
 
+interface GlobalStyles {
+  email?: {
+    backgroundColor?: string;
+    width?: string;
+    defaultFontFamily?: string;
+  };
+  text?: {
+    body?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      lineHeight?: string;
+    };
+    h1?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+    h2?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+    h3?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+    h4?: {
+      fontFamily?: string;
+      fontSize?: string;
+      color?: string;
+      fontWeight?: string;
+    };
+  };
+  buttons?: {
+    default?: {
+      backgroundColor?: string;
+      color?: string;
+      borderColor?: string;
+      borderRadius?: string;
+      fontSize?: string;
+      fontWeight?: string;
+      padding?: string;
+    };
+  };
+  links?: {
+    normal?: string;
+    hover?: string;
+    textDecoration?: string;
+    fontWeight?: string;
+    fontStyle?: string;
+  };
+}
+
 interface CanvasRendererProps {
   blocks: EmailBlock[];
   selectedBlockId: string | null;
@@ -28,6 +86,7 @@ interface CanvasRendererProps {
   onBlockEditStart: (blockId: string) => void;
   onBlockEditEnd: () => void;
   onBlockUpdate: (block: EmailBlock) => void;
+  globalStyles?: GlobalStyles;
 }
 
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
@@ -50,7 +109,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onColumnDrop,
   onBlockEditStart,
   onBlockEditEnd,
-  onBlockUpdate
+  onBlockUpdate,
+  globalStyles = {}
 }) => {
   const renderBlock = (block: EmailBlock, index: number) => {
     const isSelected = selectedBlockId === block.id;
@@ -88,6 +148,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                 block={innerBlock}
                 isSelected={false}
                 onUpdate={onBlockUpdate}
+                globalStyles={globalStyles}
               />
             )}
             editingBlockId={editingBlockId}
@@ -119,6 +180,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onUpdate={onBlockUpdate}
             onEditStart={() => onBlockEditStart(block.id)}
             onEditEnd={onBlockEditEnd}
+            globalStyles={globalStyles}
           />
         </div>
       );
@@ -151,6 +213,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           onUpdate={onBlockUpdate}
           onStarBlock={() => onSaveAsSnippet(block.id)}
           onUnstarBlock={onUnstarBlock}
+          globalStyles={globalStyles}
         />
       </div>
     );
