@@ -60,64 +60,6 @@ interface BasicAISuggestion {
   applied?: boolean;
 }
 
-interface GlobalStyles {
-  email?: {
-    backgroundColor?: string;
-    width?: string;
-    defaultFontFamily?: string;
-  };
-  text?: {
-    body?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      lineHeight?: string;
-    };
-    h1?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-    h2?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-    h3?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-    h4?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-  };
-  buttons?: {
-    default?: {
-      backgroundColor?: string;
-      color?: string;
-      borderColor?: string;
-      borderRadius?: string;
-      fontSize?: string;
-      fontWeight?: string;
-      padding?: string;
-    };
-  };
-  links?: {
-    normal?: string;
-    hover?: string;
-    textDecoration?: string;
-    fontWeight?: string;
-    fontStyle?: string;
-  };
-}
-
 interface EmailEditorProps {
   content: string;
   subject: string;
@@ -144,7 +86,6 @@ export default function EmailEditor({
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [showAIAnalytics, setShowAIAnalytics] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [globalStyles, setGlobalStyles] = useState<GlobalStyles>({});
   
   // AI Suggestions state
   const [aiSuggestions, setAiSuggestions] = useState<BasicAISuggestion[]>([]);
@@ -402,32 +343,6 @@ export default function EmailEditor({
 
   const handleGlobalStylesChange = (styles: any) => {
     console.log('Applying global styles:', styles);
-    setGlobalStyles(prev => {
-      // Deep merge the new styles with existing ones
-      const merged = { ...prev };
-      
-      if (styles.email) {
-        merged.email = { ...merged.email, ...styles.email };
-      }
-      
-      if (styles.text) {
-        merged.text = { ...merged.text };
-        Object.keys(styles.text).forEach(key => {
-          merged.text![key] = { ...merged.text![key], ...styles.text[key] };
-        });
-      }
-      
-      if (styles.buttons) {
-        merged.buttons = { ...merged.buttons, ...styles.buttons };
-      }
-      
-      if (styles.links) {
-        merged.links = { ...merged.links, ...styles.links };
-      }
-      
-      console.log('Updated global styles:', merged);
-      return merged;
-    });
   };
 
   const handlePreview = () => {
@@ -550,8 +465,7 @@ export default function EmailEditor({
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
-            showAIAnalytics={false}
-            globalStyles={globalStyles}
+            showAIAnalytics={false} // Don't show in canvas since we're showing in footer
           />
         </div>
       </div>
@@ -567,7 +481,6 @@ export default function EmailEditor({
         />
       </div>
 
-      {/* Keep existing preview and template library modals */}
       {showPreview && (
         <EmailPreview
           html={content}

@@ -18,64 +18,6 @@ import { MJMLHtmlBlockRenderer } from './blocks/MJMLHtmlBlockRenderer';
 import { MJMLTableBlockRenderer } from './blocks/MJMLTableBlockRenderer';
 import { MJMLSocialBlockRenderer } from './blocks/MJMLSocialBlockRenderer';
 
-interface GlobalStyles {
-  email?: {
-    backgroundColor?: string;
-    width?: string;
-    defaultFontFamily?: string;
-  };
-  text?: {
-    body?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      lineHeight?: string;
-    };
-    h1?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-    h2?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-    h3?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-    h4?: {
-      fontFamily?: string;
-      fontSize?: string;
-      color?: string;
-      fontWeight?: string;
-    };
-  };
-  buttons?: {
-    default?: {
-      backgroundColor?: string;
-      color?: string;
-      borderColor?: string;
-      borderRadius?: string;
-      fontSize?: string;
-      fontWeight?: string;
-      padding?: string;
-    };
-  };
-  links?: {
-    normal?: string;
-    hover?: string;
-    textDecoration?: string;
-    fontWeight?: string;
-    fontStyle?: string;
-  };
-}
-
 interface BlockRendererProps {
   block: EmailBlock;
   isSelected: boolean;
@@ -84,7 +26,6 @@ interface BlockRendererProps {
   onStarBlock?: (block: EmailBlock) => void;
   onUnstarBlock?: (blockId: string) => void;
   onSnippetRefresh?: () => void;
-  globalStyles?: GlobalStyles;
 }
 
 export const BlockRenderer: React.FC<BlockRendererProps> = ({ 
@@ -94,17 +35,16 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   onBlockAdd,
   onStarBlock,
   onUnstarBlock,
-  onSnippetRefresh,
-  globalStyles = {}
+  onSnippetRefresh
 }) => {
   const getBlockComponent = () => {
     switch (block.type) {
       case 'text':
-        return <TextBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} globalStyles={globalStyles} />;
+        return <TextBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'image':
         return <MJMLImageBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'button':
-        return <ButtonBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} globalStyles={globalStyles} />;
+        return <ButtonBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'spacer':
         return <SpacerBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'divider':
