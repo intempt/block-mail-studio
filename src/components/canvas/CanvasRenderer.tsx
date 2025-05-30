@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
@@ -27,7 +28,6 @@ interface CanvasRendererProps {
   onBlockEditStart: (blockId: string) => void;
   onBlockEditEnd: () => void;
   onBlockUpdate: (block: EmailBlock) => void;
-  globalStyles?: any;
 }
 
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
@@ -50,14 +50,15 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onColumnDrop,
   onBlockEditStart,
   onBlockEditEnd,
-  onBlockUpdate,
-  globalStyles
+  onBlockUpdate
 }) => {
   const renderBlock = (block: EmailBlock, index: number) => {
     const isSelected = selectedBlockId === block.id;
     const isEditing = editingBlockId === block.id;
 
+    // Handle columns blocks specially
     if (block.type === 'columns') {
+      // Type assertion with proper check
       const columnsBlock = block as ColumnsBlock;
       return (
         <div
@@ -98,6 +99,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       );
     }
 
+    // Handle text blocks with enhanced editor
     if (block.type === 'text') {
       return (
         <div key={block.id} className="group relative">
@@ -117,12 +119,12 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onUpdate={onBlockUpdate}
             onEditStart={() => onBlockEditStart(block.id)}
             onEditEnd={onBlockEditEnd}
-            globalStyles={globalStyles}
           />
         </div>
       );
     }
 
+    // Handle other block types
     return (
       <div
         key={block.id}
@@ -174,6 +176,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Top drop zone */}
           {isDraggingOver && dragOverIndex === 0 && currentDragType && (
             <DropZoneIndicator
               isVisible={true}
@@ -185,6 +188,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
 
           {blocks.map((block, index) => (
             <React.Fragment key={block.id}>
+              {/* Drop zone above current block */}
               {isDraggingOver && dragOverIndex === index && dragOverIndex !== 0 && currentDragType && (
                 <DropZoneIndicator
                   isVisible={true}
@@ -196,6 +200,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               
               {renderBlock(block, index)}
               
+              {/* Drop zone below current block */}
               {isDraggingOver && dragOverIndex === index + 1 && currentDragType && (
                 <DropZoneIndicator
                   isVisible={true}
@@ -207,6 +212,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             </React.Fragment>
           ))}
 
+          {/* Bottom drop zone */}
           {isDraggingOver && dragOverIndex === blocks.length && currentDragType && (
             <DropZoneIndicator
               isVisible={true}
