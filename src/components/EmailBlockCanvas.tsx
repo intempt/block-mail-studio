@@ -1,3 +1,4 @@
+
 import React, { 
   useState, 
   useEffect, 
@@ -138,6 +139,16 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   const dragDropHandler = useRef<DragDropHandler>(new DragDropHandler());
 
+  const addBlock = useCallback((block: EmailBlock, insertIndex?: number) => {
+    const updatedBlocks = [...blocks];
+    if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= blocks.length) {
+      updatedBlocks.splice(insertIndex, 0, block);
+    } else {
+      updatedBlocks.push(block);
+    }
+    setBlocks(updatedBlocks);
+  }, [blocks]);
+
   const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDraggingOver(true);
@@ -197,6 +208,13 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     updatedBlocks.splice(newIndex, 0, movedBlock);
 
     setBlocks(updatedBlocks);
+  };
+
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setSelectedBlockId(null);
+      onBlockSelect(null);
+    }
   };
 
   const handleBlockClick = (blockId: string) => {
@@ -260,11 +278,13 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           name: `Snippet for ${blockToSave.type}`,
           description: `Snippet created from a ${blockToSave.type} block`,
           blockData: blockToSave,
+          blockType: blockToSave.type,
           createdAt: new Date(),
           updatedAt: new Date(),
           usageCount: 0,
           category: 'custom',
           tags: [],
+          isFavorite: false,
         };
         await directSnippetService.saveSnippet(snippet);
         blockToSave.isStarred = true;
@@ -344,27 +364,33 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setEditingBlockId(null);
   };
 
+  const handleBlockUpdate = (block: EmailBlock) => {
+    const updatedBlocks = blocks.map(b => b.id === block.id ? block : b);
+    setBlocks(updatedBlocks);
+  };
+
+  const exportToHTML = () => {
+    // Implement HTML export logic here
+    return '<div>Email HTML Content</div>';
+  };
+
   useImperativeHandle(ref, () => ({
-    addBlock: (block: EmailBlock, insertIndex?: number) => {
-      const updatedBlocks = [...blocks];
-      if (insertIndex !== undefined && insertIndex >= 0 && insertIndex <= blocks.length) {
-        updatedBlocks.splice(insertIndex, 0, block);
-      } else {
-        updatedBlocks.push(block);
-      }
-      setBlocks(updatedBlocks);
-    },
+    addBlock,
     duplicateBlock: handleDuplicateBlock,
     deleteBlock: handleDeleteBlock,
-    moveBlock: moveBlockTo,
+    moveBlock: (fromIndex: number, toIndex: number) => {
+      if (fromIndex < 0 || toIndex < 0 || fromIndex >= blocks.length) return;
+      
+      const updatedBlocks = [...blocks];
+      const [movedBlock] = updatedBlocks.splice(fromIndex, 1);
+      updatedBlocks.splice(toIndex, 0, movedBlock);
+      setBlocks(updatedBlocks);
+    },
     getBlocks: () => blocks,
     setBlocks: (newBlocks: EmailBlock[]) => {
       setBlocks(newBlocks);
     },
-    exportToHTML: () => {
-      // Implement HTML export logic here
-      return '<div>Email HTML Content</div>';
-    },
+    exportToHTML,
     findAndReplaceText: (searchText: string, replaceText: string) => {
       const updatedBlocks = blocks.map(block => {
         if (block.type === 'text' && typeof block.content === 'object' && 'html' in block.content) {

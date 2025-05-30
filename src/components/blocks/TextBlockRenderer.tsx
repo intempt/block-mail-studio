@@ -85,6 +85,8 @@ export const TextBlockRenderer: React.FC<TextBlockRendererProps> = ({
       color: styling.textColor,
       fontSize: styling.fontSize,
       fontWeight: styling.fontWeight,
+      fontFamily: styling.fontFamily,
+      lineHeight: styling.lineHeight,
     };
 
     // Apply global text styles as defaults

@@ -85,6 +85,7 @@ export const ButtonBlockRenderer: React.FC<ButtonBlockRendererProps> = ({
       borderRadius: '6px',
       fontWeight: '500',
       border: block.content.style === 'outline' ? '2px solid #3B82F6' : 'none',
+      fontSize: '14px',
     };
 
     // Apply style variants
