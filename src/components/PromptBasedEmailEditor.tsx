@@ -74,6 +74,12 @@ export const PromptBasedEmailEditor: React.FC<PromptBasedEmailEditorProps> = ({
               margin: '4px 0',
               borderRadius: '4px'
             }
+          },
+          position: { x: 0, y: 0 },
+          displayOptions: {
+            showOnDesktop: true,
+            showOnTablet: true,
+            showOnMobile: true
           }
         }
       ];
@@ -129,6 +135,12 @@ export const PromptBasedEmailEditor: React.FC<PromptBasedEmailEditorProps> = ({
             margin: '4px 0',
             borderRadius: '4px'
           }
+        },
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
         }
       };
 

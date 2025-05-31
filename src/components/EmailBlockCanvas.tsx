@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -16,6 +15,7 @@ export interface EmailBlockCanvasRef {
   getBlocks: () => EmailBlock[];
   setBlocks: (blocks: EmailBlock[]) => void;
   addBlock: (block: EmailBlock) => void;
+  findAndReplaceText: (searchText: string, replaceText: string) => void;
 }
 
 interface EmailBlockCanvasProps {
