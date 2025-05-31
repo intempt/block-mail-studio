@@ -413,6 +413,26 @@ export default function EmailEditor({
     setSelectedBlockId(blockId);
   };
 
+  const handleImportBlocks = (blocks: EmailBlock[], importedSubject?: string) => {
+    console.log('EmailEditor: Importing blocks', { blocks, importedSubject });
+    
+    // Clear existing blocks and replace with imported ones
+    setBlocks([]);
+    setEmailBlocks(blocks);
+    
+    // Update subject if provided
+    if (importedSubject) {
+      onSubjectChange(importedSubject);
+    }
+    
+    // Update canvas with new blocks
+    if (canvasRef.current) {
+      canvasRef.current.replaceAllBlocks(blocks);
+    }
+    
+    console.log('EmailEditor: Import completed');
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -439,6 +459,7 @@ export default function EmailEditor({
         onSaveTemplate={handleSaveAsTemplate}
         onPublish={handlePublish}
         onToggleAIAnalytics={handleToggleAIAnalytics}
+        onImportBlocks={handleImportBlocks}
       />
 
       <SnippetRibbon

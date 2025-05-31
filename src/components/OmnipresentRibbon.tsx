@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +15,7 @@ import {
   Link,
   ArrowLeft,
   Download,
+  Upload,
   Monitor,
   Smartphone,
   Save,
@@ -34,8 +33,10 @@ import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
 import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
+import { EmailImportDialog } from './dialogs/EmailImportDialog';
 import { createDragData } from '@/utils/dragDropUtils';
 import { generateUniqueId } from '@/utils/blockUtils';
+import { EmailBlock } from '@/types/emailBlocks';
 
 interface BlockItem {
   id: string;
@@ -101,6 +102,7 @@ interface OmnipresentRibbonProps {
   canvasRef?: React.RefObject<any>;
   onSubjectLineChange?: (subject: string) => void;
   onToggleAIAnalytics?: () => void;
+  onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -125,12 +127,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onSaveTemplate,
   onPublish,
   canvasRef,
-  onSubjectLineChange
+  onSubjectLineChange,
+  onToggleAIAnalytics,
+  onImportBlocks
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
@@ -268,6 +273,17 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     }
   };
 
+  const handleImport = () => {
+    setShowImportDialog(true);
+  };
+
+  const handleImportBlocks = (blocks: EmailBlock[], subject?: string) => {
+    if (onImportBlocks) {
+      onImportBlocks(blocks, subject);
+    }
+    setShowImportDialog(false);
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 relative">
       {/* Top Header */}
@@ -357,6 +373,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
+          <Button onClick={handleImport} variant="outline" size="sm">
+            <Upload className="w-4 h-4 mr-2" />
+            Import
+          </Button>
           <Button onClick={handleExport} variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
             Export
@@ -517,9 +537,14 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
       )}
+
+      <EmailImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImportBlocks}
+      />
     </div>
   );
 };
 
 export default OmnipresentRibbon;
-
