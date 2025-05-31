@@ -34,6 +34,7 @@ import { AISuggestionsCard } from './AISuggestionsCard';
 import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
 import { EmailImportDialog } from './dialogs/EmailImportDialog';
+import { EmailExportDialog } from './dialogs/EmailExportDialog';
 import { createDragData } from '@/utils/dragDropUtils';
 import { generateUniqueId } from '@/utils/blockUtils';
 import { EmailBlock } from '@/types/emailBlocks';
@@ -136,9 +137,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [showEmailSettings, setShowEmailSettings] = useState(false);
   const [showTextHeadings, setShowTextHeadings] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
+  
+  // Add blocks state to pass to export dialog
+  const [blocks, setBlocks] = useState<EmailBlock[]>([]);
 
   useEffect(() => {
     const savedDraft = localStorage.getItem('email-builder-draft');
@@ -222,36 +227,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleExport = () => {
-    const timestamp = new Date().toISOString().split('T')[0];
-    const fileName = campaignTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase() || `email_${timestamp}`;
-    
-    const htmlBlob = new Blob([emailHTML], { type: 'text/html' });
-    const htmlUrl = URL.createObjectURL(htmlBlob);
-    const htmlLink = document.createElement('a');
-    htmlLink.href = htmlUrl;
-    htmlLink.download = `${fileName}.html`;
-    document.body.appendChild(htmlLink);
-    htmlLink.click();
-    document.body.removeChild(htmlLink);
-    URL.revokeObjectURL(htmlUrl);
-
-    const emailData = {
-      title: campaignTitle,
-      subject: subjectLine,
-      html: emailHTML,
-      exportedAt: new Date().toISOString()
-    };
-    const jsonBlob = new Blob([JSON.stringify(emailData, null, 2)], { type: 'application/json' });
-    const jsonUrl = URL.createObjectURL(jsonBlob);
-    const jsonLink = document.createElement('a');
-    jsonLink.href = jsonUrl;
-    jsonLink.download = `${fileName}.json`;
-    document.body.appendChild(jsonLink);
-    jsonLink.click();
-    document.body.removeChild(jsonLink);
-    URL.revokeObjectURL(jsonUrl);
-
-    console.log('Email exported as HTML and JSON');
+    setShowExportDialog(true);
   };
 
   const handleSave = () => {
@@ -542,6 +518,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         isOpen={showImportDialog}
         onClose={() => setShowImportDialog(false)}
         onImport={handleImportBlocks}
+      />
+
+      <EmailExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        blocks={blocks}
+        subject={subjectLine}
+        emailHTML={emailHTML}
+        campaignTitle={campaignTitle}
       />
     </div>
   );
