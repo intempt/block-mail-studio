@@ -93,14 +93,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleSaveTemplate = () => {
-    // Create a default template object for saving
+    // Create a template object with all required properties
     const templateData = {
       name: 'Untitled Template',
       description: 'Imported template',
-      thumbnail: '',
-      blocks: [],
+      html: emailHTML || '<p>Empty template</p>',
+      subject: subjectLine || 'No subject',
       category: 'imported',
-      tags: []
+      tags: [],
+      isFavorite: false
     };
     onSaveTemplate(templateData);
   };
