@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -87,8 +86,6 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
     return (
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="flex items-center gap-3">
-          <Lightbulb className="w-4 h-4 text-purple-600" />
-          <span className="text-sm text-gray-600">Click to generate AI suggestions</span>
           <Button 
             variant="outline" 
             size="sm" 

@@ -86,8 +86,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
         <div className="px-6 py-3">
           <div className="flex items-center gap-3">
-            <Lightbulb className="w-4 h-4 text-purple-600" />
-            <span className="text-sm text-gray-600">Click to generate AI analytics</span>
             <Button 
               variant="outline" 
               size="sm" 
