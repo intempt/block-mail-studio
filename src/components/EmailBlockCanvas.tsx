@@ -10,6 +10,7 @@ import { CanvasSubjectLine } from './CanvasSubjectLine';
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
   onBlockSelect: (blockId: string | null) => void;
+  onBlocksChange?: (blocks: EmailBlock[]) => void;
   previewWidth?: number;
   previewMode?: 'desktop' | 'mobile';
   compactMode?: boolean;
@@ -25,11 +26,13 @@ export interface EmailBlockCanvasRef {
   minifyHTML: () => void;
   checkLinks: () => { workingLinks: number; brokenLinks: number; totalLinks: number };
   addBlock: (block: EmailBlock) => void;
+  replaceAllBlocks: (blocks: EmailBlock[]) => void;
 }
 
 export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(({
   onContentChange,
   onBlockSelect,
+  onBlocksChange,
   previewWidth = 600,
   previewMode = 'desktop',
   compactMode = false,
@@ -46,6 +49,14 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [currentEmailHTML, setCurrentEmailHTML] = useState('');
+
+  // Emit blocks changes whenever blocks state changes
+  useEffect(() => {
+    if (onBlocksChange) {
+      console.log('EmailBlockCanvas: Emitting blocks change:', blocks.length);
+      onBlocksChange(blocks);
+    }
+  }, [blocks, onBlocksChange]);
 
   // Helper function to strip HTML tags for text comparison
   const stripHTML = (html: string): string => {
@@ -167,7 +178,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
               const buttonText = columnBlock.content.text || '';
               const buttonTextNormalized = normalizeText(buttonText);
               
-              // FIX: Use buttonTextNormalized instead of blockTextNormalized
               if (buttonTextNormalized.includes(normalizeText(current))) {
                 console.log('FindAndReplaceText: Found match in column button block');
                 
@@ -266,6 +276,10 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     addBlock: (block: EmailBlock) => {
       console.log('EmailBlockCanvas: Adding block via ref:', block);
       setBlocks(prev => [...prev, block]);
+    },
+    replaceAllBlocks: (newBlocks: EmailBlock[]) => {
+      console.log('EmailBlockCanvas: Replacing all blocks:', newBlocks.length);
+      setBlocks(newBlocks);
     }
   }), [blocks, findAndReplaceText]);
 

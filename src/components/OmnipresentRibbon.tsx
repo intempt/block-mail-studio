@@ -104,6 +104,7 @@ interface OmnipresentRibbonProps {
   onSubjectLineChange?: (subject: string) => void;
   onToggleAIAnalytics?: () => void;
   onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
+  blocks: EmailBlock[];
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -130,7 +131,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   canvasRef,
   onSubjectLineChange,
   onToggleAIAnalytics,
-  onImportBlocks
+  onImportBlocks,
+  blocks
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -142,9 +144,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
   
-  // Add blocks state to pass to export dialog
-  const [blocks, setBlocks] = useState<EmailBlock[]>([]);
-
   useEffect(() => {
     const savedDraft = localStorage.getItem('email-builder-draft');
     if (savedDraft) {
@@ -227,6 +226,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleExport = () => {
+    console.log('OmnipresentRibbon: Opening export dialog with blocks:', blocks.length);
     setShowExportDialog(true);
   };
 

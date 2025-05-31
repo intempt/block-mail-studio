@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -152,6 +153,12 @@ export default function EmailEditor({
     console.log('EmailEditor: Loading templates');
     const initialTemplates = DirectTemplateService.getAllTemplates();
     setTemplates(initialTemplates);
+  }, []);
+
+  // Handle blocks change from canvas
+  const handleBlocksChange = useCallback((newBlocks: EmailBlock[]) => {
+    console.log('EmailEditor: Received blocks update from canvas:', newBlocks.length);
+    setEmailBlocks(newBlocks);
   }, []);
 
   // AI Suggestions handlers
@@ -326,7 +333,7 @@ export default function EmailEditor({
     setBlocks(prev => [...prev, newBlock]);
   };
 
-  const handleBlocksChange = (newBlocks: Block[]) => {
+  const handleBlocksChange2 = (newBlocks: Block[]) => {
     setBlocks(newBlocks);
   };
 
@@ -460,6 +467,7 @@ export default function EmailEditor({
         onPublish={handlePublish}
         onToggleAIAnalytics={handleToggleAIAnalytics}
         onImportBlocks={handleImportBlocks}
+        blocks={emailBlocks}
       />
 
       <SnippetRibbon
@@ -481,6 +489,7 @@ export default function EmailEditor({
             ref={canvasRef}
             onContentChange={handleContentChangeFromCanvas}
             onBlockSelect={handleBlockSelect}
+            onBlocksChange={handleBlocksChange}
             previewWidth={canvasWidth}
             previewMode={previewMode}
             compactMode={false}
