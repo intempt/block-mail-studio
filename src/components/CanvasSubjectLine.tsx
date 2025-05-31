@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Sparkles, 
+  Lightbulb, 
   Target, 
   AlertTriangle, 
   CheckCircle,
@@ -72,14 +72,14 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
             size="sm"
             onClick={generateVariants}
             disabled={isGeneratingVariants || !value.trim()}
-            className="h-7 text-xs"
+            className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           >
             {isGeneratingVariants ? (
-              <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+              <RefreshCw className="w-4 h-4 animate-spin mr-1 text-purple-600" />
             ) : (
-              <Sparkles className="w-3 h-3 mr-1" />
+              <Lightbulb className="w-4 h-4 mr-1" />
             )}
-            Variants
+            Subject AI
           </Button>
         </div>
       </div>
@@ -118,7 +118,7 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-medium text-gray-700 flex items-center gap-1">
                 <BarChart3 className="w-3 h-3" />
-                Variants:
+                AI Variants:
               </h4>
               <Button
                 variant="ghost"
@@ -132,8 +132,8 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
             
             {isGeneratingVariants ? (
               <div className="text-center py-4">
-                <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-blue-600" />
-                <p className="text-xs text-gray-600">Generating variants...</p>
+                <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-purple-600" />
+                <p className="text-xs text-gray-600">AI analyzing subject line...</p>
               </div>
             ) : (
               <ScrollArea className="max-h-32">

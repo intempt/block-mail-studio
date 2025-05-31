@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
-  Sparkles, 
+  Lightbulb, 
   Target, 
   AlertTriangle, 
   CheckCircle,
@@ -150,14 +150,14 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               size="sm"
               onClick={generateVariants}
               disabled={isGeneratingVariants || !value.trim()}
-              className="h-7"
+              className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
             >
               {isGeneratingVariants ? (
-                <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                <RefreshCw className="w-4 h-4 animate-spin mr-1 text-purple-600" />
               ) : (
-                <Sparkles className="w-3 h-3 mr-1" />
+                <Lightbulb className="w-4 h-4 mr-1" />
               )}
-              A/B Variants
+              Subject AI
             </Button>
           </div>
         </div>
@@ -252,7 +252,7 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-medium text-gray-700 flex items-center gap-1">
                   <BarChart3 className="w-3 h-3" />
-                  Email Marketing A/B Variants:
+                  Subject AI Variants:
                 </h4>
                 <Button
                   variant="ghost"
@@ -266,8 +266,8 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
               
               {isGeneratingVariants ? (
                 <div className="text-center py-4">
-                  <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-blue-600" />
-                  <p className="text-xs text-gray-600">Generating email marketing optimized variants...</p>
+                  <RefreshCw className="w-4 h-4 animate-spin mx-auto mb-2 text-purple-600" />
+                  <p className="text-xs text-gray-600">AI analyzing subject line...</p>
                 </div>
               ) : (
                 <ScrollArea className="max-h-48">
