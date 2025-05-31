@@ -1,5 +1,5 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AuthenticIntemptLayout } from '@/components/AuthenticIntemptLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,7 @@ import { UniversalConversationalInterface } from '@/components/UniversalConversa
 import { JourneysTab } from '@/components/JourneysTab';
 import { SnippetsTab } from '@/components/SnippetsTab';
 import { MessagesTable } from '@/components/MessagesTable';
-import { TestRunner } from '@/components/TestRunner';
-import { Search, Plus, Zap, Sparkles } from 'lucide-react';
+import { Search, Plus, Zap } from 'lucide-react';
 
 interface WorkspacePageProps {
   onEmailBuilderOpen?: (emailHTML?: string, subjectLine?: string) => void;
@@ -17,7 +16,6 @@ interface WorkspacePageProps {
 
 const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => {
   const [activeTab, setActiveTab] = useState('journeys');
-  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('=== WorkspacePage: Component mounted/updated ===');
@@ -78,11 +76,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
     }
   };
 
-  const handlePromptEditorOpen = () => {
-    console.log('Opening AI Prompt Editor');
-    navigate('/prompt-editor');
-  };
-
   const handleForceLoadEditor = () => {
     console.log('=== WorkspacePage: Force Load Editor button clicked ===');
     console.log('WorkspacePage: onEmailBuilderOpen callback available:', !!onEmailBuilderOpen);
@@ -117,33 +110,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
   return (
     <AuthenticIntemptLayout activeContext={config.breadcrumbText}>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* AI Editor Options */}
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-medium text-purple-900 mb-2">Email Editor Options</h3>
-              <p className="text-sm text-purple-700">Choose between traditional block-based editing or AI-powered prompt-based creation</p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleCreateMessage}
-                variant="outline"
-                className="border-purple-300 text-purple-700 hover:bg-purple-50"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Block Editor
-              </Button>
-              <Button 
-                onClick={handlePromptEditorOpen}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                AI Prompt Editor
-              </Button>
-            </div>
-          </div>
-        </div>
-
         {/* Force Load Editor Button - Emergency Access */}
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
@@ -177,7 +143,7 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-100">
+          <TabsList className="grid w-full grid-cols-3 bg-gray-100">
             <TabsTrigger 
               value="journeys" 
               className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
@@ -195,12 +161,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
               className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
             >
               Snippets
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tests"
-              className="data-[state=active]:bg-white data-[state=active]:text-blue-600"
-            >
-              Tests
             </TabsTrigger>
           </TabsList>
 
@@ -244,22 +204,14 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
               </div>
             </div>
             
-            {/* Create Message Buttons */}
-            <div className="pt-4 border-t border-gray-200 space-y-3">
+            {/* Create Message Button */}
+            <div className="pt-4 border-t border-gray-200">
               <Button 
                 onClick={handleCreateMessage}
                 className="bg-blue-600 hover:bg-blue-700 w-full"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create Message (Block Editor)
-              </Button>
-              <Button 
-                onClick={handlePromptEditorOpen}
-                variant="outline"
-                className="w-full border-purple-300 text-purple-700 hover:bg-purple-50"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Create with AI Prompts
+                Create Message
               </Button>
             </div>
           </TabsContent>
@@ -285,12 +237,6 @@ const WorkspacePage: React.FC<WorkspacePageProps> = ({ onEmailBuilderOpen }) => 
                 <Plus className="w-4 h-4 mr-2" />
                 Create Snippet
               </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="tests" className="space-y-6 mt-6">
-            <div className="bg-white rounded-lg border border-gray-200">
-              <TestRunner />
             </div>
           </TabsContent>
         </Tabs>

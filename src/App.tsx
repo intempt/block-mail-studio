@@ -7,7 +7,6 @@ import Index from '@/pages/Index';
 import Messages from '@/pages/Messages';
 import WorkspacePage from '@/pages/WorkspacePage';
 import EditorPage from '@/pages/EditorPage';
-import PromptEditorPage from '@/pages/PromptEditorPage';
 import NotFound from '@/pages/NotFound';
 import './App.css';
 
@@ -23,7 +22,6 @@ function App() {
             <Route path="/messages" element={<Messages />} />
             <Route path="/workspace" element={<WorkspacePage />} />
             <Route path="/editor" element={<EditorPage />} />
-            <Route path="/prompt-editor" element={<PromptEditorPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster 

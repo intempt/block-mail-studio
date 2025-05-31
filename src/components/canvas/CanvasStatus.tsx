@@ -2,29 +2,13 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { 
   BarChart3, 
   Brain, 
   TrendingUp, 
   RefreshCw, 
   Shield,
-  Lightbulb,
-  Info,
-  Eye,
-  MousePointer,
-  Target,
-  FileText,
-  Image,
-  Link,
-  Type,
-  Hash
+  Lightbulb
 } from 'lucide-react';
 import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
 
@@ -71,17 +55,10 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   };
 
   const getScoreColor = (score: number | null) => {
-    if (score === null) return 'text-gray-400';
-    if (score >= 80) return 'text-emerald-600';
-    if (score >= 60) return 'text-amber-600';
+    if (score === null) return 'text-gray-600';
+    if (score >= 80) return 'text-green-600';
+    if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
-  };
-
-  const getBadgeVariant = (score: number | null) => {
-    if (score === null) return 'outline';
-    if (score >= 80) return 'default';
-    if (score >= 60) return 'secondary';
-    return 'destructive';
   };
 
   const refreshAnalytics = () => {
@@ -89,197 +66,130 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     analyzeEmail();
   };
 
-  const formatPrediction = (value: number) => value.toFixed(1);
-
-  const MetricIcon = ({ 
-    icon: Icon, 
-    value, 
-    tooltip,
-    variant = 'outline'
-  }: { 
-    icon: any; 
-    value: string | number; 
-    tooltip: string;
-    variant?: 'default' | 'secondary' | 'destructive' | 'outline';
-  }) => (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="flex items-center gap-1 text-xs">
-          <Icon className="w-3 h-3 text-gray-500" />
-          <Badge variant={variant} className="text-xs px-1 py-0 h-4 min-w-6 justify-center">
-            {value}
-          </Badge>
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="top">
-        <p className="text-xs">{tooltip}</p>
-      </TooltipContent>
-    </Tooltip>
-  );
-
   return (
-    <TooltipProvider>
-      <div className="bg-white border-t border-gray-200 shadow-sm">
-        <div className="px-4 py-1.5">
-          {/* Single Line Analytics */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Status Indicator */}
-              <div className="flex items-center gap-1">
-                {isAnalyzing ? (
-                  <RefreshCw className="w-3 h-3 text-blue-600 animate-spin" />
-                ) : hasContent && analytics ? (
-                  <Lightbulb className="w-3 h-3 text-emerald-600" />
-                ) : (
-                  <Info className="w-3 h-3 text-gray-400" />
-                )}
-                <span className="text-xs text-gray-600 font-medium">
-                  {isAnalyzing ? 'Analyzing...' : hasContent && analytics ? 'AI Active' : 'Add content'}
-                </span>
-              </div>
-
-              {/* Analytics Metrics */}
-              {analytics && (
-                <div className="flex items-center gap-2 text-xs">
-                  <div className="w-px h-4 bg-gray-300" />
-                  
-                  {/* AI Scores */}
-                  <MetricIcon
-                    icon={BarChart3}
-                    value={analytics.overallScore !== null ? analytics.overallScore : '--'}
-                    tooltip={`Overall Score: ${analytics.overallScore !== null ? analytics.overallScore : 'N/A'}`}
-                    variant={getBadgeVariant(analytics.overallScore)}
-                  />
-                  <MetricIcon
-                    icon={Shield}
-                    value={analytics.deliverabilityScore !== null ? analytics.deliverabilityScore : '--'}
-                    tooltip={`Deliverability Score: ${analytics.deliverabilityScore !== null ? analytics.deliverabilityScore : 'N/A'}`}
-                    variant={getBadgeVariant(analytics.deliverabilityScore)}
-                  />
-                  <MetricIcon
-                    icon={Brain}
-                    value={analytics.mobileScore !== null ? analytics.mobileScore : '--'}
-                    tooltip={`Mobile Score: ${analytics.mobileScore !== null ? analytics.mobileScore : 'N/A'}`}
-                    variant={getBadgeVariant(analytics.mobileScore)}
-                  />
-                  <MetricIcon
-                    icon={Shield}
-                    value={analytics.spamScore !== null ? `${analytics.spamScore}%` : '--'}
-                    tooltip={`Spam Risk: ${analytics.spamScore !== null ? analytics.spamScore + '%' : 'N/A'}`}
-                    variant={getBadgeVariant(analytics.spamScore)}
-                  />
-
-                  <div className="w-px h-4 bg-gray-300" />
-
-                  {/* Performance Predictions */}
-                  {analytics.performancePrediction && (
-                    <>
-                      <MetricIcon
-                        icon={Eye}
-                        value={`${formatPrediction(analytics.performancePrediction.openRate)}%`}
-                        tooltip={`Predicted Open Rate: ${formatPrediction(analytics.performancePrediction.openRate)}%`}
-                      />
-                      <MetricIcon
-                        icon={MousePointer}
-                        value={`${formatPrediction(analytics.performancePrediction.clickRate)}%`}
-                        tooltip={`Predicted Click Rate: ${formatPrediction(analytics.performancePrediction.clickRate)}%`}
-                      />
-                      <MetricIcon
-                        icon={Target}
-                        value={`${formatPrediction(analytics.performancePrediction.conversionRate)}%`}
-                        tooltip={`Predicted Conversion Rate: ${formatPrediction(analytics.performancePrediction.conversionRate)}%`}
-                      />
-
-                      <div className="w-px h-4 bg-gray-300" />
-                    </>
-                  )}
-
-                  {/* Content Metrics */}
-                  <MetricIcon
-                    icon={FileText}
-                    value={`${analytics.sizeKB}KB`}
-                    tooltip={`Email Size: ${analytics.sizeKB} KB`}
-                  />
-                  <MetricIcon
-                    icon={Type}
-                    value={analytics.wordCount}
-                    tooltip={`Word Count: ${analytics.wordCount}`}
-                  />
-                  <MetricIcon
-                    icon={Hash}
-                    value={analytics.characterCount.toLocaleString()}
-                    tooltip={`Character Count: ${analytics.characterCount.toLocaleString()}`}
-                  />
-                  <MetricIcon
-                    icon={Image}
-                    value={analytics.imageCount}
-                    tooltip={`Images: ${analytics.imageCount}`}
-                  />
-                  <MetricIcon
-                    icon={Link}
-                    value={analytics.linkCount}
-                    tooltip={`Links: ${analytics.linkCount}`}
-                  />
-
-                  {/* Brand Metrics */}
-                  {(analytics.brandVoiceScore || analytics.engagementScore || analytics.readabilityScore) && (
-                    <>
-                      <div className="w-px h-4 bg-gray-300" />
-                      {analytics.brandVoiceScore && (
-                        <MetricIcon
-                          icon={Brain}
-                          value={analytics.brandVoiceScore}
-                          tooltip={`Brand Voice Score: ${analytics.brandVoiceScore}`}
-                          variant={getBadgeVariant(analytics.brandVoiceScore)}
-                        />
-                      )}
-                      {analytics.engagementScore && (
-                        <MetricIcon
-                          icon={TrendingUp}
-                          value={analytics.engagementScore}
-                          tooltip={`Engagement Score: ${analytics.engagementScore}`}
-                          variant={getBadgeVariant(analytics.engagementScore)}
-                        />
-                      )}
-                      {analytics.readabilityScore && (
-                        <MetricIcon
-                          icon={FileText}
-                          value={analytics.readabilityScore}
-                          tooltip={`Readability Score: ${analytics.readabilityScore}`}
-                          variant={getBadgeVariant(analytics.readabilityScore)}
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Refresh Button */}
-            {hasContent && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={refreshAnalytics}
-                disabled={isAnalyzing}
-                className="h-5 px-1.5 text-xs text-gray-600 hover:text-gray-900"
-              >
-                <RefreshCw className={`w-3 h-3 ${isAnalyzing ? 'animate-spin' : ''}`} />
-              </Button>
-            )}
+    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
+      <div className="px-6 py-3">
+        <div className="flex flex-wrap items-center gap-4">
+          {/* AI Analytics Header */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Lightbulb className="w-4 h-4 text-purple-600" />
+            <span className="text-sm font-medium">AI Analytics</span>
           </div>
 
-          {/* Empty State */}
-          {!hasContent && !isAnalyzing && (
-            <div className="flex items-center justify-center py-2">
-              <div className="flex items-center gap-2 text-gray-500">
-                <Lightbulb className="w-4 h-4" />
-                <span className="text-xs">Add content to see AI analytics with 15 metrics</span>
+          {/* Performance Metrics */}
+          {analytics && (
+            <>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-medium">Performance</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge variant="outline" className={`text-xs ${getScoreColor(analytics.overallScore)}`}>
+                    {analytics.overallScore || '--'}/100
+                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-600">Deliverability:</span>
+                    <span className={`text-xs font-medium ${getScoreColor(analytics.deliverabilityScore)}`}>
+                      {analytics.deliverabilityScore || '--'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-600">Mobile:</span>
+                    <span className={`text-xs font-medium ${getScoreColor(analytics.mobileScore)}`}>
+                      {analytics.mobileScore || '--'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Shield className="w-3 h-3" />
+                    <span className={`text-xs font-medium ${analytics.spamScore !== null ? analytics.spamScore > 20 ? 'text-red-600' : 'text-green-600' : 'text-gray-600'}`}>
+                      {analytics.spamScore !== null ? `${analytics.spamScore}% spam` : '--'}
+                    </span>
+                  </div>
+                </div>
               </div>
+
+              {/* Brand Voice Metrics */}
+              {analytics.brandVoiceScore && (
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="h-4 w-px bg-gray-300" />
+                  <div className="flex items-center gap-2">
+                    <Brain className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-medium">Brand Voice</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge variant="outline" className={`text-xs ${getScoreColor(analytics.brandVoiceScore)}`}>
+                      {analytics.brandVoiceScore}/100
+                    </Badge>
+                    {analytics.engagementScore && (
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-600">Engagement:</span>
+                        <span className={`text-xs font-medium ${getScoreColor(analytics.engagementScore)}`}>
+                          {analytics.engagementScore}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Performance Predictions */}
+              {analytics.performancePrediction && (analytics.performancePrediction.openRate > 0 || analytics.performancePrediction.clickRate > 0) && (
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="h-4 w-px bg-gray-300" />
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium">Predicted</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                    <span>Open {analytics.performancePrediction.openRate.toFixed(1)}%</span>
+                    <span>Click {analytics.performancePrediction.clickRate.toFixed(1)}%</span>
+                    <span>Convert {analytics.performancePrediction.conversionRate.toFixed(1)}%</span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Loading State */}
+          {isAnalyzing && (
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
+              <span className="text-sm text-gray-600">Analyzing...</span>
             </div>
           )}
+
+          {/* No Content State */}
+          {!hasContent && !isAnalyzing && !analytics && (
+            <div className="flex-1 text-center">
+              <p className="text-sm text-gray-500">Add content to see AI analytics</p>
+            </div>
+          )}
+
+          {/* Refresh Button */}
+          <div className="flex items-center gap-2 ml-auto">
+            {hasContent && (
+              <>
+                <div className="h-4 w-px bg-gray-300" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={refreshAnalytics}
+                  disabled={isAnalyzing}
+                  className="h-6 px-2 text-xs"
+                >
+                  {isAnalyzing ? (
+                    <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                  )}
+                  Refresh
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </TooltipProvider>
+    </div>
   );
 };

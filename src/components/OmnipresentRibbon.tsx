@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,7 +26,7 @@ import {
   Minus,
   Code
 } from 'lucide-react';
-import { UniversalContent, EmailBlock } from '@/types/emailBlocks';
+import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { ButtonsLinksCard } from './ButtonsLinksCard';
 import { EmailSettingsCard } from './EmailSettingsCard';
@@ -33,7 +34,6 @@ import { TextHeadingsCard } from './TextHeadingsCard';
 import { AISuggestionsCard } from './AISuggestionsCard';
 import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
 import { DynamicLayoutIcon } from './DynamicLayoutIcon';
-import { ImportDialog } from './ImportDialog';
 import { createDragData } from '@/utils/dragDropUtils';
 import { generateUniqueId } from '@/utils/blockUtils';
 
