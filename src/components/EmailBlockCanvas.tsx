@@ -133,18 +133,24 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   }));
 
   return (
-    <div className={`email-canvas ${className}`} style={{ width: previewWidth }}>
+    <div 
+      className={`email-canvas ${className}`} 
+      style={{ width: previewWidth }}
+      onDragOver={dragDropHandlers.handleCanvasDragOver}
+      onDragLeave={dragDropHandlers.handleCanvasDragLeave}
+      onDrop={dragDropHandlers.handleCanvasDrop}
+    >
       <CanvasRenderer
         blocks={blocks}
         selectedBlockId={selectedBlockId}
         editingBlockId={editingBlockId}
         isDraggingOver={dragDropHandlers.isDraggingOver}
         dragOverIndex={dragDropHandlers.dragOverIndex}
-        currentDragType={dragDropHandlers.currentDragType as "block" | "layout" | "reorder"}
+        currentDragType={dragDropHandlers.currentDragType}
         onBlockClick={selectBlock}
         onBlockDoubleClick={(blockId, blockType) => setEditingBlockId(blockId)}
-        onBlockDragStart={(e, blockId) => dragDropHandlers.handleBlockDragStart(blockId, 'block')}
-        onBlockDrop={(e, targetIndex) => dragDropHandlers.handleBlockDrop(targetIndex)}
+        onBlockDragStart={dragDropHandlers.handleBlockDragStart}
+        onBlockDrop={dragDropHandlers.handleBlockDrop}
         onDeleteBlock={deleteBlock}
         onDuplicateBlock={duplicateBlock}
         onSaveAsSnippet={() => {}}
