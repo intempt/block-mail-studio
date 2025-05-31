@@ -77,7 +77,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="flex items-center gap-3">
           <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
-          <span className="text-sm text-gray-600">Generating AI suggestions...</span>
+          <span className="text-sm text-gray-600">AI analyzing content...</span>
         </div>
       </div>
     );
@@ -89,9 +89,14 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
         <div className="flex items-center gap-3">
           <Lightbulb className="w-4 h-4 text-purple-600" />
           <span className="text-sm text-gray-600">Click to generate AI suggestions</span>
-          <Button variant="outline" size="sm" onClick={onRefresh} className="ml-auto h-6">
-            <Lightbulb className="w-3 h-3 mr-1" />
-            Analyze
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh} 
+            className="ml-auto h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+          >
+            <Lightbulb className="w-4 h-4 mr-1" />
+            AI Suggestions
           </Button>
         </div>
       </div>
@@ -131,7 +136,12 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
             )}
           </div>
 
-          <Button variant="ghost" size="sm" onClick={onRefresh} className="h-6 px-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onRefresh} 
+            className="h-6 px-2 text-purple-600 hover:text-purple-700"
+          >
             <RefreshCw className="w-3 h-3" />
           </Button>
         </div>
