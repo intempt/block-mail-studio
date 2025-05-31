@@ -1,12 +1,10 @@
 
 import React from 'react';
 import { render } from '@testing-library/react';
-import { axe, toHaveNoViolations } from 'jest-axe';
+import { axe } from 'vitest-axe';
 import { EmailEditor } from '../../src/components/EmailEditor';
 import { EmailBlockPalette } from '../../src/components/EmailBlockPalette';
 import { EmailPropertiesPanel } from '../../src/components/EmailPropertiesPanel';
-
-expect.extend(toHaveNoViolations);
 
 describe('Accessibility Compliance', () => {
   it('EmailEditor has no accessibility violations', async () => {
@@ -79,7 +77,7 @@ describe('Accessibility Compliance', () => {
   it('color contrast meets WCAG standards', () => {
     const { container } = render(<EmailEditor />);
     
-    // This would typically use a tool like jest-axe or custom contrast checking
+    // This would typically use a tool like vitest-axe or custom contrast checking
     // For now, we verify text elements have proper styling
     const textElements = container.querySelectorAll('p, span, div, button');
     textElements.forEach(el => {

@@ -74,7 +74,6 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "input-otp": "^1.2.4",
-    "jest-axe": "^10.0.0",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.462.0",
     "mjml-browser": "^4.15.3",
@@ -93,6 +92,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.3",
     "vitest": "^3.1.4",
+    "vitest-axe": "^0.1.0",
     "y-websocket": "^3.0.0",
     "zod": "^3.23.8"
   },
