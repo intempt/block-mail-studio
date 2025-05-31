@@ -1,4 +1,3 @@
-
 import { EmailBlock } from '@/types/emailBlocks';
 
 const defaultResponsiveSettings = {
@@ -269,6 +268,29 @@ export const createBlock = (type: string, layoutRatio?: string): EmailBlock => {
     default:
       throw new Error(`Unknown block type: ${type}`);
   }
+};
+
+// Specific block creation functions expected by tests
+export const createTextBlock = (content: string = 'Add your text content here...'): EmailBlock => {
+  const block = createBlock('text');
+  if (content !== 'Add your text content here...') {
+    block.content.html = `<p>${content}</p>`;
+  }
+  return block;
+};
+
+export const createImageBlock = (src: string, alt: string = 'Image description'): EmailBlock => {
+  const block = createBlock('image');
+  block.content.src = src;
+  block.content.alt = alt;
+  return block;
+};
+
+export const createButtonBlock = (text: string, link: string = '#'): EmailBlock => {
+  const block = createBlock('button');
+  block.content.text = text;
+  block.content.link = link;
+  return block;
 };
 
 const createColumnsBlock = (ratio: string): EmailBlock => {
