@@ -1,4 +1,3 @@
-
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock, ColumnsBlock, SpacerBlock, DividerBlock } from '@/types/emailBlocks';
 import { generateUniqueId } from '@/utils/emailUtils';
 
@@ -162,7 +161,8 @@ export class HTMLImportService {
 
   private static hasSignificantContent(element: Element): boolean {
     const textContent = element.textContent?.trim() || '';
-    return textContent.length > 10 || element.querySelector('img, a, button');
+    const hasImportantElements = element.querySelector('img, a, button');
+    return textContent.length > 10 || Boolean(hasImportantElements);
   }
 
   private static createTextBlock(element: Element, styles: any): TextBlock {

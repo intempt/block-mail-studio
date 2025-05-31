@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   const handleTemplateSettingsToggle = () => {
     setShowTemplateSettings(!showTemplateSettings);
+  };
+
+  const handleSaveTemplate = () => {
+    // Create a default template object for saving
+    const templateData = {
+      name: 'Untitled Template',
+      description: 'Imported template',
+      thumbnail: '',
+      blocks: [],
+      category: 'imported',
+      tags: []
+    };
+    onSaveTemplate(templateData);
   };
 
   const handleImportBlocks = (blocks: EmailBlock[]) => {
@@ -219,8 +233,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           {/* Right Section */}
           <div className="flex items-center gap-2">
             <ResponsiveLayoutControls
-              canvasWidth={canvasWidth}
-              deviceMode={deviceMode}
+              currentDevice={deviceMode}
               onDeviceChange={onDeviceChange}
               onWidthChange={onWidthChange}
             />
@@ -240,7 +253,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={onSaveTemplate} className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={handleSaveTemplate} className="flex items-center gap-2">
                     <Save className="w-4 h-4" />
                     Save
                   </Button>
@@ -251,7 +264,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               </Tooltip>
             </TooltipProvider>
 
-            <Button variant="primary" size="sm" onClick={onPublish} className="flex items-center gap-2">
+            <Button variant="default" size="sm" onClick={onPublish} className="flex items-center gap-2">
               <Send className="w-4 h-4" />
               Publish
             </Button>
@@ -293,8 +306,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <div className="p-4">
             <h3 className="text-sm font-medium text-gray-700 mb-2">Device Settings</h3>
             <ResponsiveLayoutControls
-              canvasWidth={canvasWidth}
-              deviceMode={deviceMode}
+              currentDevice={deviceMode}
               onDeviceChange={onDeviceChange}
               onWidthChange={onWidthChange}
             />

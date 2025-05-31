@@ -129,6 +129,7 @@ export class MJMLImportService {
 
   private static createImageBlockFromMJML(element: Element): ImageBlock {
     const attributes = this.extractMJMLAttributes(element);
+    const alignment = this.validateAlignment(attributes.align || 'center');
     
     return {
       id: generateUniqueId(),
@@ -136,7 +137,7 @@ export class MJMLImportService {
       content: {
         src: attributes.src || '',
         alt: attributes.alt || 'MJML Image',
-        alignment: attributes.align || 'center',
+        alignment,
         width: attributes.width || '100%',
         height: attributes.height || 'auto',
         link: attributes.href
@@ -158,6 +159,7 @@ export class MJMLImportService {
   private static createButtonBlockFromMJML(element: Element): ButtonBlock {
     const attributes = this.extractMJMLAttributes(element);
     const text = element.textContent?.trim() || 'Button';
+    const alignment = this.validateAlignment(attributes.align || 'center');
     
     return {
       id: generateUniqueId(),
@@ -167,7 +169,7 @@ export class MJMLImportService {
         link: attributes.href || '#',
         style: 'solid',
         size: 'medium',
-        alignment: attributes.align || 'center',
+        alignment,
         backgroundColor: attributes['background-color'],
         color: attributes.color,
         borderRadius: attributes['border-radius']
@@ -264,16 +266,18 @@ export class MJMLImportService {
 
   private static createDividerBlockFromMJML(element: Element): DividerBlock {
     const attributes = this.extractMJMLAttributes(element);
+    const style = this.validateDividerStyle(attributes['border-style'] || 'solid');
+    const alignment = this.validateAlignment(attributes.align || 'center');
     
     return {
       id: generateUniqueId(),
       type: 'divider',
       content: {
-        style: attributes['border-style'] || 'solid',
+        style,
         thickness: attributes['border-width'] || '1px',
         color: attributes['border-color'] || '#e0e0e0',
         width: attributes.width || '100%',
-        alignment: attributes.align || 'center'
+        alignment
       },
       styling: {
         desktop: this.convertMJMLAttributesToStyles(attributes),
@@ -292,6 +296,7 @@ export class MJMLImportService {
   private static createSocialBlockFromMJML(element: Element): SocialBlock {
     const socialElements = Array.from(element.querySelectorAll('mj-social-element'));
     const attributes = this.extractMJMLAttributes(element);
+    const alignment = this.validateAlignment(attributes.align || 'center');
     
     const platforms = socialElements.map(el => {
       const elAttrs = this.extractMJMLAttributes(el);
@@ -312,7 +317,7 @@ export class MJMLImportService {
         layout: attributes.mode === 'vertical' ? 'vertical' : 'horizontal',
         iconSize: attributes['icon-size'] || '32px',
         spacing: '8px',
-        alignment: attributes.align || 'center'
+        alignment
       },
       styling: {
         desktop: this.convertMJMLAttributesToStyles(attributes),
@@ -406,6 +411,20 @@ export class MJMLImportService {
         showOnMobile: true
       }
     };
+  }
+
+  private static validateAlignment(value: string): 'left' | 'center' | 'right' {
+    if (value === 'left' || value === 'center' || value === 'right') {
+      return value;
+    }
+    return 'center';
+  }
+
+  private static validateDividerStyle(value: string): 'solid' | 'dashed' | 'dotted' {
+    if (value === 'solid' || value === 'dashed' || value === 'dotted') {
+      return value;
+    }
+    return 'solid';
   }
 
   private static extractMJMLAttributes(element: Element): { [key: string]: string } {
