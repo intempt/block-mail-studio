@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { EnhancedTestRunner } from '@/components/EnhancedTestRunner';
+import { RealTestRunner } from '@/components/RealTestRunner';
 
 const Index = () => {
-  return <EnhancedTestRunner />;
+  return <RealTestRunner />;
 };
 
 export default Index;
