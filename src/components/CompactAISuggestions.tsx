@@ -93,7 +93,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
             variant="outline" 
             size="sm" 
             onClick={onRefresh} 
-            className="ml-auto h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           >
             <Lightbulb className="w-4 h-4 mr-1" />
             AI Suggestions
@@ -111,6 +111,20 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
             <div className="flex items-center gap-2">
               <Lightbulb className="w-4 h-4 text-purple-600" />
               <span className="text-sm font-medium">AI Suggestions</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onRefresh}
+                disabled={isLoading}
+                className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
+              >
+                {isLoading ? (
+                  <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                ) : (
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                )}
+                Refresh
+              </Button>
               {suggestions.length > 0 && (
                 <>
                   <Badge variant="outline" className="text-xs">
@@ -135,15 +149,6 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
               </Button>
             )}
           </div>
-
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onRefresh} 
-            className="h-6 px-2 text-purple-600 hover:text-purple-700"
-          >
-            <RefreshCw className="w-3 h-3" />
-          </Button>
         </div>
 
         {/* Simple horizontal suggestion chips */}

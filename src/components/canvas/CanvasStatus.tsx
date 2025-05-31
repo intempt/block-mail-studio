@@ -92,7 +92,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               variant="outline" 
               size="sm" 
               onClick={analyzeEmail} 
-              className="ml-auto h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+              className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
             >
               <Lightbulb className="w-4 h-4 mr-1" />
               AI Analytics
@@ -111,6 +111,20 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           <div className="flex items-center gap-2 flex-shrink-0">
             <Lightbulb className="w-4 h-4 text-purple-600" />
             <span className="text-sm font-medium">AI Analytics</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refreshAnalytics}
+              disabled={isAnalyzing}
+              className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
+            >
+              {isAnalyzing ? (
+                <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+              ) : (
+                <RefreshCw className="w-3 h-3 mr-1" />
+              )}
+              Refresh
+            </Button>
           </div>
 
           {/* Performance Metrics */}
@@ -187,29 +201,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               )}
             </>
           )}
-
-          {/* Refresh Button */}
-          <div className="flex items-center gap-2 ml-auto">
-            {hasContent && (
-              <>
-                <div className="h-4 w-px bg-gray-300" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={refreshAnalytics}
-                  disabled={isAnalyzing}
-                  className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
-                >
-                  {isAnalyzing ? (
-                    <RefreshCw className="w-3 h-3 animate-spin mr-1" />
-                  ) : (
-                    <RefreshCw className="w-3 h-3 mr-1" />
-                  )}
-                  Refresh
-                </Button>
-              </>
-            )}
-          </div>
         </div>
       </div>
     </div>
