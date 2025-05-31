@@ -13,6 +13,11 @@ export default defineConfig({
   server: {
     port: 8080
   },
+  build: {
+    rollupOptions: {
+      external: ['vitest-axe', 'axe-core']
+    }
+  },
   test: {
     globals: true,
     environment: 'jsdom',

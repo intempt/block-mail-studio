@@ -2,7 +2,6 @@
 import '@testing-library/jest-dom/vitest';
 import { expect, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import 'vitest-axe/extend-expect';
 
 // Cleanup after each test case
 afterEach(() => {
