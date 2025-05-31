@@ -293,7 +293,7 @@ export const createButtonBlock = (text: string, link: string = '#'): EmailBlock 
   return block;
 };
 
-const createColumnsBlock = (ratio: string): EmailBlock => {
+export const createColumnsBlock = (ratio: string): EmailBlock => {
   const baseBlock = {
     id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     styling: defaultResponsiveSettings,
