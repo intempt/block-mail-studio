@@ -66,6 +66,43 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     analyzeEmail();
   };
 
+  // Loading state
+  if (isAnalyzing) {
+    return (
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
+        <div className="px-6 py-3">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
+            <span className="text-sm text-gray-600">AI analyzing content...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // No content state
+  if (!hasContent && !analytics) {
+    return (
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
+        <div className="px-6 py-3">
+          <div className="flex items-center gap-3">
+            <Lightbulb className="w-4 h-4 text-purple-600" />
+            <span className="text-sm text-gray-600">Click to generate AI analytics</span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={analyzeEmail} 
+              className="ml-auto h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            >
+              <Lightbulb className="w-4 h-4 mr-1" />
+              AI Analytics
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
       <div className="px-6 py-3">
@@ -151,21 +188,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             </>
           )}
 
-          {/* Loading State */}
-          {isAnalyzing && (
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
-              <span className="text-sm text-gray-600">Analyzing...</span>
-            </div>
-          )}
-
-          {/* No Content State */}
-          {!hasContent && !isAnalyzing && !analytics && (
-            <div className="flex-1 text-center">
-              <p className="text-sm text-gray-500">Add content to see AI analytics</p>
-            </div>
-          )}
-
           {/* Refresh Button */}
           <div className="flex items-center gap-2 ml-auto">
             {hasContent && (
@@ -176,7 +198,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   size="sm"
                   onClick={refreshAnalytics}
                   disabled={isAnalyzing}
-                  className="h-6 px-2 text-xs"
+                  className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
                 >
                   {isAnalyzing ? (
                     <RefreshCw className="w-3 h-3 animate-spin mr-1" />
