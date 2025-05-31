@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +26,7 @@ import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 import { ImportDialog } from './ImportDialog';
+import { ExportDialog } from './ExportDialog';
 
 interface OmnipresentRibbonProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
@@ -50,6 +50,8 @@ interface OmnipresentRibbonProps {
   onSaveTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => void;
   onPublish: () => void;
   onToggleAIAnalytics: () => void;
+  emailBlocks?: EmailBlock[]; // Add this prop for current email blocks
+  globalStyles?: string; // Add this prop for global styles
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -73,12 +75,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPreview,
   onSaveTemplate,
   onPublish,
-  onToggleAIAnalytics
+  onToggleAIAnalytics,
+  emailBlocks = [], // Default to empty array
+  globalStyles
 }) => {
   const [showGlobalStyles, setShowGlobalStyles] = useState(false);
   const [showDeviceSettings, setShowDeviceSettings] = useState(false);
   const [showTemplateSettings, setShowTemplateSettings] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   const handleGlobalStylesToggle = () => {
     setShowGlobalStyles(!showGlobalStyles);
@@ -254,6 +259,25 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowExportDialog(true)} 
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Export as MJML, HTML, or ZIP</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
                   <Button variant="ghost" size="sm" onClick={handleSaveTemplate} className="flex items-center gap-2">
                     <Save className="w-4 h-4" />
                     Save
@@ -291,6 +315,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         isOpen={showImportDialog}
         onClose={() => setShowImportDialog(false)}
         onImport={handleImportBlocks}
+      />
+
+      {/* Export Dialog */}
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        blocks={emailBlocks}
+        subject={subjectLine}
+        globalStyles={globalStyles}
       />
 
       {showGlobalStyles && (
