@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +19,8 @@ import {
   Eye,
   Layout,
   User,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 
@@ -43,6 +43,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [hoveredSuggestion, setHoveredSuggestion] = useState<string | null>(null);
+  const [hasGenerated, setHasGenerated] = useState(false);
 
   const analyzeCriticalIssues = async () => {
     if (!emailHTML.trim()) {
@@ -54,6 +55,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
     try {
       const criticalSuggestions = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
       setSuggestions(criticalSuggestions);
+      setHasGenerated(true);
     } catch (error) {
       console.error('Critical analysis failed:', error);
       setSuggestions([]);
@@ -62,18 +64,17 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
     }
   };
 
-  const handleRefresh = () => {
+  const handleGenerateSuggestions = () => {
     CriticalEmailAnalysisService.clearCache();
     onRefresh?.();
     analyzeCriticalIssues();
   };
 
-  // Auto-analyze when content changes
-  useEffect(() => {
-    if (emailHTML.trim().length > 50) {
-      analyzeCriticalIssues();
-    }
-  }, [emailHTML, subjectLine]);
+  const handleRefresh = () => {
+    CriticalEmailAnalysisService.clearCache();
+    onRefresh?.();
+    analyzeCriticalIssues();
+  };
 
   const getTypeIcon = (category: string) => {
     switch (category) {
@@ -119,35 +120,69 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
     ));
   };
 
+  // Show loading state
   if (isAnalyzing || isLoading) {
     return (
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4">
         <div className="flex items-center gap-3">
-          <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
-          <span className="text-sm text-gray-600">AI analyzing email for critical issues...</span>
+          <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />
+          <span className="text-sm text-gray-600 font-medium">AI analyzing email for critical issues...</span>
+          <span className="text-xs text-gray-500">Usually takes 5-10 seconds</span>
         </div>
       </div>
     );
   }
 
-  if (suggestions.length === 0) {
+  // Show generate button when no suggestions exist
+  if (suggestions.length === 0 && !hasGenerated) {
     return (
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center gap-3">
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            <span className="text-sm font-medium text-gray-800">Get AI-powered email optimization suggestions</span>
+          </div>
+          <Button 
+            onClick={handleGenerateSuggestions}
+            disabled={!emailHTML.trim()}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            size="sm"
+          >
+            <Lightbulb className="w-4 h-4 mr-2" />
+            Generate AI Suggestions
+          </Button>
+          {!emailHTML.trim() && (
+            <span className="text-xs text-gray-500 italic">Add content to your email to get suggestions</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state after generation if no issues found
+  if (suggestions.length === 0 && hasGenerated) {
+    return (
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="text-sm font-medium text-green-800">Great! No critical issues found in your email</span>
+          </div>
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleRefresh} 
-            className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            onClick={handleRefresh}
+            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           >
-            <Lightbulb className="w-4 h-4 mr-1" />
-            AI Critical Analysis
+            <RefreshCw className="w-4 h-4 mr-1" />
+            Re-analyze
           </Button>
         </div>
       </div>
     );
   }
 
+  // Show suggestions with controls
   return (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
       <div className="px-6 py-3">
@@ -158,7 +193,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
                 <AlertTriangle className="w-4 h-4 text-red-600" />
               )}
               <Lightbulb className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium">Critical Email Issues</span>
+              <span className="text-sm font-medium">Critical Email Issues Found</span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -171,7 +206,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
                 ) : (
                   <RefreshCw className="w-3 h-3 mr-1" />
                 )}
-                Refresh
+                Refresh Analysis
               </Button>
               {suggestions.length > 0 && (
                 <>
