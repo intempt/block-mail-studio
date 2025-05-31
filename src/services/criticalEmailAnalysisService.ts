@@ -1,7 +1,6 @@
 
 import { OpenAIEmailService } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
-import { toast } from 'sonner';
 
 export interface CriticalSuggestion {
   id: string;
@@ -117,19 +116,17 @@ Focus on REAL issues found in the actual content. Only suggest improvements for 
       // Cache the result
       this.cache.set(cacheKey, { data: suggestions, timestamp: Date.now() });
       
-      toast.success(`Found ${suggestions.length} actionable email improvements`);
       return suggestions;
       
     } catch (error) {
       console.error('Critical analysis error:', error);
-      toast.error('Failed to analyze email for critical issues');
-      return [];
+      throw error; // Let the component handle the error inline
     }
   }
 
   static clearCache(): void {
     this.cache.clear();
-    toast.info('Critical analysis cache cleared');
+    console.log('Critical analysis cache cleared');
   }
 
   static getSeverityColor(severity: string): string {

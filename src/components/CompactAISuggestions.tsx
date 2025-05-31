@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   Lightbulb, 
   CheckCircle,
@@ -20,7 +22,8 @@ import {
   Layout,
   User,
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  XCircle
 } from 'lucide-react';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 
@@ -44,20 +47,26 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [hoveredSuggestion, setHoveredSuggestion] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [lastGeneratedCount, setLastGeneratedCount] = useState(0);
 
   const analyzeCriticalIssues = async () => {
     if (!emailHTML.trim()) {
       setSuggestions([]);
+      setError(null);
       return;
     }
 
     setIsAnalyzing(true);
+    setError(null);
     try {
       const criticalSuggestions = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
       setSuggestions(criticalSuggestions);
       setHasGenerated(true);
+      setLastGeneratedCount(criticalSuggestions.length);
     } catch (error) {
       console.error('Critical analysis failed:', error);
+      setError('Failed to analyze email. Please check your API key and try again.');
       setSuggestions([]);
     } finally {
       setIsAnalyzing(false);
@@ -126,9 +135,34 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200 px-6 py-4">
         <div className="flex items-center gap-3">
           <RefreshCw className="w-5 h-5 animate-spin text-purple-600" />
-          <span className="text-sm text-gray-600 font-medium">AI analyzing email for critical issues...</span>
-          <span className="text-xs text-gray-500">Usually takes 5-10 seconds</span>
+          <div className="flex-1">
+            <span className="text-sm text-gray-600 font-medium">AI analyzing email for critical issues...</span>
+            <div className="text-xs text-gray-500 mt-1">Usually takes 5-10 seconds</div>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 border-b border-gray-200 px-6 py-4">
+        <Alert className="border-red-200 bg-red-50">
+          <XCircle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-700">
+            {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              className="ml-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Retry
+            </Button>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -159,14 +193,17 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
     );
   }
 
-  // Show empty state after generation if no issues found
+  // Show success state after generation if no issues found
   if (suggestions.length === 0 && hasGenerated) {
     return (
       <div className="bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <CheckCircle className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-medium text-green-800">Great! No critical issues found in your email</span>
+            <div>
+              <span className="text-sm font-medium text-green-800">Great! No critical issues found in your email</span>
+              <div className="text-xs text-green-600 mt-1">Analysis completed successfully</div>
+            </div>
           </div>
           <Button 
             variant="outline" 
@@ -193,7 +230,14 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
                 <AlertTriangle className="w-4 h-4 text-red-600" />
               )}
               <Lightbulb className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium">Critical Email Issues Found</span>
+              <div>
+                <span className="text-sm font-medium">Critical Email Issues Found</span>
+                {lastGeneratedCount > 0 && (
+                  <div className="text-xs text-gray-500">
+                    Found {lastGeneratedCount} optimization{lastGeneratedCount !== 1 ? 's' : ''}
+                  </div>
+                )}
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
