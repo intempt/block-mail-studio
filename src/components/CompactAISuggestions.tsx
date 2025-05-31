@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,9 +22,11 @@ import {
   User,
   AlertTriangle,
   Sparkles,
-  XCircle
+  XCircle,
+  Maximize2
 } from 'lucide-react';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
+import { AISuggestionsDrawer } from './AISuggestionsDrawer';
 
 interface CompactAISuggestionsProps {
   emailHTML?: string;
@@ -49,6 +50,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
   const [hasGenerated, setHasGenerated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastGeneratedCount, setLastGeneratedCount] = useState(0);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const analyzeCriticalIssues = async () => {
     if (!emailHTML.trim()) {
@@ -127,6 +129,10 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
     setSuggestions(prev => prev.map(s => 
       s.id === suggestion.id ? { ...s, applied: true } : s
     ));
+  };
+
+  const handleDrawerApplySuggestion = (suggestion: CriticalSuggestion) => {
+    handleApplySuggestion(suggestion);
   };
 
   // Show loading state
@@ -221,114 +227,138 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
 
   // Show suggestions with controls
   return (
-    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
-      <div className="px-6 py-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              {criticalSuggestions.length > 0 && (
-                <AlertTriangle className="w-4 h-4 text-red-600" />
-              )}
-              <Lightbulb className="w-4 h-4 text-purple-600" />
-              <div>
-                <span className="text-sm font-medium">Critical Email Issues Found</span>
-                {lastGeneratedCount > 0 && (
-                  <div className="text-xs text-gray-500">
-                    Found {lastGeneratedCount} optimization{lastGeneratedCount !== 1 ? 's' : ''}
-                  </div>
+    <>
+      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b border-gray-200">
+        <div className="px-6 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {criticalSuggestions.length > 0 && (
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                )}
+                <Lightbulb className="w-4 h-4 text-purple-600" />
+                <div>
+                  <span className="text-sm font-medium">Critical Email Issues Found</span>
+                  {lastGeneratedCount > 0 && (
+                    <div className="text-xs text-gray-500">
+                      Found {lastGeneratedCount} optimization{lastGeneratedCount !== 1 ? 's' : ''}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefresh}
+                  disabled={isAnalyzing}
+                  className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
+                >
+                  {isAnalyzing ? (
+                    <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                  ) : (
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                  )}
+                  Refresh Analysis
+                </Button>
+                {suggestions.length > 0 && (
+                  <>
+                    <Badge variant="outline" className="text-xs">
+                      {suggestions.length - appliedCount} issues
+                    </Badge>
+                    {criticalSuggestions.length > 0 && (
+                      <Badge className="text-xs bg-red-100 text-red-700">
+                        {criticalSuggestions.length} critical
+                      </Badge>
+                    )}
+                    {appliedCount > 0 && (
+                      <Badge className="text-xs bg-green-100 text-green-700">
+                        {appliedCount} fixed
+                      </Badge>
+                    )}
+                  </>
                 )}
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRefresh}
-                disabled={isAnalyzing}
-                className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
-              >
-                {isAnalyzing ? (
-                  <RefreshCw className="w-3 h-3 animate-spin mr-1" />
-                ) : (
-                  <RefreshCw className="w-3 h-3 mr-1" />
-                )}
-                Refresh Analysis
-              </Button>
-              {suggestions.length > 0 && (
-                <>
-                  <Badge variant="outline" className="text-xs">
-                    {suggestions.length - appliedCount} issues
-                  </Badge>
-                  {criticalSuggestions.length > 0 && (
-                    <Badge className="text-xs bg-red-100 text-red-700">
-                      {criticalSuggestions.length} critical
-                    </Badge>
-                  )}
-                  {appliedCount > 0 && (
-                    <Badge className="text-xs bg-green-100 text-green-700">
-                      {appliedCount} fixed
-                    </Badge>
-                  )}
-                </>
+
+              {criticalSuggestions.length > 0 && (
+                <Button
+                  onClick={applyAllCritical}
+                  size="sm"
+                  className="h-6 px-3 text-xs bg-red-600 hover:bg-red-700"
+                >
+                  Fix All Critical ({criticalSuggestions.length})
+                </Button>
+              )}
+
+              {highSuggestions.length > 0 && (
+                <Button
+                  onClick={applyAllHigh}
+                  size="sm"
+                  className="h-6 px-3 text-xs bg-orange-600 hover:bg-orange-700"
+                >
+                  Fix All High ({highSuggestions.length})
+                </Button>
               )}
             </div>
 
-            {criticalSuggestions.length > 0 && (
+            {/* View All Button */}
+            {suggestions.length > 0 && (
               <Button
-                onClick={applyAllCritical}
+                onClick={() => setIsDrawerOpen(true)}
+                variant="outline"
                 size="sm"
-                className="h-6 px-3 text-xs bg-red-600 hover:bg-red-700"
+                className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
               >
-                Fix All Critical ({criticalSuggestions.length})
-              </Button>
-            )}
-
-            {highSuggestions.length > 0 && (
-              <Button
-                onClick={applyAllHigh}
-                size="sm"
-                className="h-6 px-3 text-xs bg-orange-600 hover:bg-orange-700"
-              >
-                Fix All High ({highSuggestions.length})
+                <Maximize2 className="w-4 h-4 mr-1" />
+                View All
               </Button>
             )}
           </div>
+
+          <ScrollArea className="w-full">
+            <div className="flex gap-2 pb-1">
+              {suggestions.slice(0, isExpanded ? suggestions.length : 6).map((suggestion) => (
+                <SuggestionChip 
+                  key={suggestion.id} 
+                  suggestion={suggestion} 
+                  onApply={handleApplySuggestion}
+                  hoveredSuggestion={hoveredSuggestion}
+                  setHoveredSuggestion={setHoveredSuggestion}
+                  getTypeIcon={getTypeIcon}
+                />
+              ))}
+              {suggestions.length > 6 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="h-7 px-2 text-xs whitespace-nowrap"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="w-3 h-3 mr-1" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3 h-3 mr-1" />
+                      +{suggestions.length - 6} more
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </ScrollArea>
         </div>
-
-        <ScrollArea className="w-full">
-          <div className="flex gap-2 pb-1">
-            {suggestions.slice(0, isExpanded ? suggestions.length : 6).map((suggestion) => (
-              <SuggestionChip 
-                key={suggestion.id} 
-                suggestion={suggestion} 
-                onApply={handleApplySuggestion}
-                hoveredSuggestion={hoveredSuggestion}
-                setHoveredSuggestion={setHoveredSuggestion}
-                getTypeIcon={getTypeIcon}
-              />
-            ))}
-            {suggestions.length > 6 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="h-7 px-2 text-xs whitespace-nowrap"
-              >
-                {isExpanded ? (
-                  <>
-                    <ChevronUp className="w-3 h-3 mr-1" />
-                    Show Less
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3 h-3 mr-1" />
-                    +{suggestions.length - 6} more
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        </ScrollArea>
       </div>
-    </div>
+
+      {/* AI Suggestions Drawer */}
+      <AISuggestionsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        suggestions={suggestions}
+        onApplySuggestion={handleDrawerApplySuggestion}
+        onRefresh={handleRefresh}
+      />
+    </>
   );
 };
 
