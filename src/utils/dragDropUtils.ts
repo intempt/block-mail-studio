@@ -1,6 +1,5 @@
-
 export interface DragData {
-  blockType: string;
+  blockType?: string;
   isReorder?: boolean;
   isLayout?: boolean;
   layoutData?: any;
