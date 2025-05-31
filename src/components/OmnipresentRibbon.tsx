@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -50,8 +51,8 @@ interface OmnipresentRibbonProps {
   onSaveTemplate: (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => void;
   onPublish: () => void;
   onToggleAIAnalytics: () => void;
-  emailBlocks?: EmailBlock[]; // Add this prop for current email blocks
-  globalStyles?: string; // Add this prop for global styles
+  emailBlocks?: EmailBlock[];
+  globalStyles?: string;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -76,7 +77,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onSaveTemplate,
   onPublish,
   onToggleAIAnalytics,
-  emailBlocks = [], // Default to empty array
+  emailBlocks = [],
   globalStyles
 }) => {
   const [showGlobalStyles, setShowGlobalStyles] = useState(false);
@@ -98,7 +99,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleSaveTemplate = () => {
-    // Create a template object with all required properties
     const templateData = {
       name: 'Untitled Template',
       description: 'Imported template',
@@ -114,7 +114,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const handleImportBlocks = (blocks: EmailBlock[]) => {
     console.log('Importing blocks:', blocks);
     
-    // Add each block through the existing onBlockAdd mechanism
     blocks.forEach((block, index) => {
       setTimeout(() => {
         if (block.type === 'columns') {
@@ -122,7 +121,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         } else {
           onBlockAdd(block.type);
         }
-      }, index * 100); // Stagger the additions slightly
+      }, index * 100);
     });
     
     setShowImportDialog(false);
@@ -130,12 +129,17 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   return (
     <>
-      <div className="bg-white border-b border-gray-200 shadow-sm relative z-40">
+      <div className="ribbon-container relative z-40">
         <div className="flex items-center justify-between px-6 py-3">
           {/* Left Section */}
           <div className="flex items-center gap-4">
             {onBack && (
-              <Button variant="ghost" size="sm" onClick={onBack} className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={onBack} 
+                className="flex items-center gap-2 hover:bg-gray-100 transition-smooth"
+              >
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </Button>
@@ -147,14 +151,14 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
 
           {/* Center Section - Tools */}
-          <div className="flex items-center gap-2">
+          <div className="button-group">
             <EnhancedEmailBlockPalette
               onBlockAdd={onBlockAdd}
               universalContent={universalContent}
               onUniversalContentAdd={onUniversalContentAdd}
             />
             
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 mx-2" />
             
             <TooltipProvider>
               <Tooltip>
@@ -163,13 +167,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowImportDialog(true)}
-                    className="flex items-center gap-2"
+                    className="toolbar-button hover:bg-gray-100"
                   >
                     <Upload className="w-4 h-4" />
-                    Import
+                    <span className="ml-2 hidden sm:inline">Import</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Import HTML/MJML template</p>
                 </TooltipContent>
               </Tooltip>
@@ -182,13 +186,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleGlobalStylesToggle}
-                    className="flex items-center gap-2"
+                    className="toolbar-button hover:bg-gray-100"
                   >
                     <Palette className="w-4 h-4" />
-                    Design
+                    <span className="ml-2 hidden sm:inline">Design</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Edit global styles</p>
                 </TooltipContent>
               </Tooltip>
@@ -201,16 +205,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleDeviceSettingsToggle}
-                    className="flex items-center gap-2"
+                    className="toolbar-button hover:bg-gray-100"
                   >
                     {deviceMode === 'desktop' && <Monitor className="w-4 h-4" />}
                     {deviceMode === 'tablet' && <Tablet className="w-4 h-4" />}
                     {deviceMode === 'mobile' && <Smartphone className="w-4 h-4" />}
                     {deviceMode === 'custom' && <Settings className="w-4 h-4" />}
-                    <span className="hidden sm:block">{deviceMode === 'custom' ? 'Custom' : deviceMode}</span>
+                    <span className="ml-2 hidden sm:block">{deviceMode === 'custom' ? 'Custom' : deviceMode}</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Adjust for different screen sizes</p>
                 </TooltipContent>
               </Tooltip>
@@ -223,13 +227,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={handleTemplateSettingsToggle}
-                    className="flex items-center gap-2"
+                    className="toolbar-button hover:bg-gray-100"
                   >
                     <FolderOpen className="w-4 h-4" />
-                    Templates
+                    <span className="ml-2 hidden sm:inline">Templates</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Open template library</p>
                 </TooltipContent>
               </Tooltip>
@@ -237,23 +241,35 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center gap-2">
+          <div className="button-group">
             <ResponsiveLayoutControls
               currentDevice={deviceMode}
               onDeviceChange={onDeviceChange}
               onWidthChange={onWidthChange}
             />
 
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-6 mx-2" />
 
-            <Button variant="ghost" size="sm" onClick={() => onPreviewModeChange(previewMode === 'desktop' ? 'mobile' : 'desktop')} className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onPreviewModeChange(previewMode === 'desktop' ? 'mobile' : 'desktop')} 
+              className="toolbar-button hover:bg-gray-100"
+            >
               <Eye className="w-4 h-4" />
-              {previewMode === 'desktop' ? 'Mobile' : 'Desktop'}
+              <span className="ml-2 hidden sm:inline">
+                {previewMode === 'desktop' ? 'Mobile' : 'Desktop'}
+              </span>
             </Button>
 
-            <Button variant="ghost" size="sm" onClick={onPreview} className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onPreview} 
+              className="toolbar-button hover:bg-gray-100"
+            >
               <Download className="w-4 h-4" />
-              Preview
+              <span className="ml-2 hidden sm:inline">Preview</span>
             </Button>
 
             <TooltipProvider>
@@ -263,13 +279,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     variant="ghost" 
                     size="sm" 
                     onClick={() => setShowExportDialog(true)} 
-                    className="flex items-center gap-2"
+                    className="toolbar-button hover:bg-gray-100"
                   >
                     <Download className="w-4 h-4" />
-                    Export
+                    <span className="ml-2 hidden sm:inline">Export</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Export as MJML, HTML, or ZIP</p>
                 </TooltipContent>
               </Tooltip>
@@ -278,30 +294,45 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={handleSaveTemplate} className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSaveTemplate} 
+                    className="toolbar-button hover:bg-gray-100"
+                  >
                     <Save className="w-4 h-4" />
-                    Save
+                    <span className="ml-2 hidden sm:inline">Save</span>
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Save as template</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
-            <Button variant="default" size="sm" onClick={onPublish} className="flex items-center gap-2">
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={onPublish} 
+              className="bg-blue-600 hover:bg-blue-700 text-white transition-smooth"
+            >
               <Send className="w-4 h-4" />
-              Publish
+              <span className="ml-2 hidden sm:inline">Publish</span>
             </Button>
 
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={onToggleAIAnalytics} className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={onToggleAIAnalytics} 
+                    className="toolbar-button hover:bg-gray-100"
+                  >
                     <BarChart3 className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent className="tooltip-content">
                   <p>Toggle AI Analytics</p>
                 </TooltipContent>
               </Tooltip>
@@ -326,8 +357,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         globalStyles={globalStyles}
       />
 
+      {/* Dropdown Panels with improved styling */}
       {showGlobalStyles && (
-        <div className="absolute top-14 right-6 w-96 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+        <div className="absolute top-14 right-6 w-96 dropdown-content p-0 z-50 animate-scale-in">
           <EmailPropertiesPanel
             emailHTML={emailHTML}
             onPropertyChange={onGlobalStylesChange}
@@ -336,9 +368,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       )}
 
       {showDeviceSettings && (
-        <div className="absolute top-14 right-6 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+        <div className="absolute top-14 right-6 w-80 dropdown-content z-50 animate-scale-in">
           <div className="p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Device Settings</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Device Settings</h3>
             <ResponsiveLayoutControls
               currentDevice={deviceMode}
               onDeviceChange={onDeviceChange}
@@ -349,10 +381,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       )}
 
       {showTemplateSettings && (
-        <div className="absolute top-14 right-6 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+        <div className="absolute top-14 right-6 w-80 dropdown-content z-50 animate-scale-in">
           <div className="p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Template Settings</h3>
-            {/* Add template settings content here */}
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Template Settings</h3>
+            <div className="space-y-2">
+              <Button 
+                onClick={onTemplateLibraryOpen}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Browse Templates
+              </Button>
+            </div>
           </div>
         </div>
       )}

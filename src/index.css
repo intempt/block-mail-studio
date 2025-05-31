@@ -69,3 +69,70 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Fix dropdown backgrounds and z-index issues */
+@layer components {
+  .dropdown-content {
+    @apply bg-white border border-gray-200 shadow-lg rounded-md z-50;
+  }
+  
+  .tooltip-content {
+    @apply bg-gray-900 text-white text-xs rounded px-2 py-1 z-50;
+  }
+  
+  /* Ensure proper spacing for buttons */
+  .button-group {
+    @apply flex items-center gap-2;
+  }
+  
+  /* Fix any transparent backgrounds */
+  .popover-content {
+    @apply bg-white border border-gray-200 shadow-lg rounded-md;
+  }
+  
+  /* Improve ribbon styling */
+  .ribbon-container {
+    @apply bg-white border-b border-gray-200 shadow-sm;
+  }
+  
+  /* Canvas improvements */
+  .email-canvas {
+    @apply bg-gray-50 min-h-screen;
+  }
+  
+  /* Better sidebar spacing */
+  .sidebar-content {
+    @apply p-4 space-y-4;
+  }
+  
+  /* Improve button consistency */
+  .toolbar-button {
+    @apply inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-md transition-colors;
+  }
+  
+  /* Fix any layout overflow issues */
+  .main-layout {
+    @apply min-h-screen flex flex-col;
+  }
+  
+  .content-area {
+    @apply flex-1 flex overflow-hidden;
+  }
+}
+
+/* Enhanced focus styles for accessibility */
+@layer utilities {
+  .focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  }
+  
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  /* Better hover states */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+}
