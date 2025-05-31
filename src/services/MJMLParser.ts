@@ -1,4 +1,3 @@
-
 import { EmailBlock } from '@/types/emailBlocks';
 import { ImportResult } from './EmailImportService';
 import { generateUniqueId } from '@/utils/blockUtils';
@@ -196,7 +195,7 @@ export class MJMLParser {
       id: generateUniqueId(),
       type: 'text',
       content: { text: content, tag: 'p' },
-      styling: {
+      styling: { 
         desktop: { 
           fontSize,
           color,
@@ -335,6 +334,8 @@ export class MJMLParser {
   private createDividerBlock(element: Element): EmailBlock {
     const borderColor = element.getAttribute('border-color') || '#cccccc';
     const borderWidth = element.getAttribute('border-width') || '1px';
+    const borderStyle = 'solid';
+    const border = `${borderWidth} ${borderStyle} ${borderColor}`;
 
     return {
       id: generateUniqueId(),
@@ -342,20 +343,17 @@ export class MJMLParser {
       content: {},
       styling: {
         desktop: { 
-          borderColor,
-          borderWidth,
+          border,
           width: '100%',
           height: 'auto'
         },
         tablet: { 
-          borderColor,
-          borderWidth,
+          border,
           width: '100%',
           height: 'auto'
         },
         mobile: { 
-          borderColor,
-          borderWidth,
+          border,
           width: '100%',
           height: 'auto'
         }

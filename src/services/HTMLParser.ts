@@ -181,9 +181,9 @@ export class HTMLParser {
       type: 'text',
       content: { text: content, tag: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tag) ? tag : 'p' },
       styling: {
-        desktop: { ...styles, width: '100%', height: 'auto' },
-        tablet: { ...styles, width: '100%', height: 'auto' },
-        mobile: { ...styles, width: '100%', height: 'auto' }
+        desktop: { width: '100%', height: 'auto', ...styles },
+        tablet: { width: '100%', height: 'auto', ...styles },
+        mobile: { width: '100%', height: 'auto', ...styles }
       },
       position: { x: 0, y: 0 },
       displayOptions: {
@@ -206,9 +206,9 @@ export class HTMLParser {
       type: 'image',
       content: { src, alt },
       styling: {
-        desktop: styles,
-        tablet: styles,
-        mobile: styles
+        desktop: { width: styles.width || 'auto', height: styles.height || 'auto', ...styles },
+        tablet: { width: styles.width || 'auto', height: styles.height || 'auto', ...styles },
+        mobile: { width: styles.width || 'auto', height: styles.height || 'auto', ...styles }
       },
       position: { x: 0, y: 0 },
       displayOptions: {
@@ -234,9 +234,9 @@ export class HTMLParser {
       type: isButton ? 'button' : 'text',
       content: isButton ? { text, url: href } : { text: `<a href="${href}">${text}</a>`, tag: 'p' },
       styling: {
-        desktop: { ...styles, width: 'auto', height: 'auto' },
-        tablet: { ...styles, width: 'auto', height: 'auto' },
-        mobile: { ...styles, width: 'auto', height: 'auto' }
+        desktop: { width: 'auto', height: 'auto', ...styles },
+        tablet: { width: 'auto', height: 'auto', ...styles },
+        mobile: { width: 'auto', height: 'auto', ...styles }
       },
       position: { x: 0, y: 0 },
       displayOptions: {
@@ -257,9 +257,9 @@ export class HTMLParser {
       type: 'divider',
       content: {},
       styling: {
-        desktop: { ...styles, width: '100%', height: 'auto' },
-        tablet: { ...styles, width: '100%', height: 'auto' },
-        mobile: { ...styles, width: '100%', height: 'auto' }
+        desktop: { width: '100%', height: 'auto', ...styles },
+        tablet: { width: '100%', height: 'auto', ...styles },
+        mobile: { width: '100%', height: 'auto', ...styles }
       },
       position: { x: 0, y: 0 },
       displayOptions: {
@@ -272,7 +272,15 @@ export class HTMLParser {
     this.blocks.push(block);
   }
 
-  private extractStyles(element: Element): Record<string, string> {
+  private extractStyles(element: Element): Partial<{ 
+    color?: string; 
+    fontSize?: string; 
+    textAlign?: string; 
+    backgroundColor?: string; 
+    width?: string; 
+    height?: string; 
+    border?: string;
+  }> {
     const styles: Record<string, string> = {};
     const style = element.getAttribute('style');
     
@@ -301,11 +309,10 @@ export class HTMLParser {
             case 'height':
               styles.height = value;
               break;
+            case 'border':
             case 'border-color':
-              styles.borderColor = value;
-              break;
             case 'border-width':
-              styles.borderWidth = value;
+              styles.border = value;
               break;
           }
         }
