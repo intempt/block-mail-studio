@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,71 +13,118 @@ import {
   Target,
   Zap,
   Brain,
-  Type
+  Type,
+  Shield,
+  Smartphone,
+  FileCheck,
+  Eye,
+  Layout,
+  User,
+  AlertTriangle
 } from 'lucide-react';
-
-interface BasicAISuggestion {
-  id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone';
-  title: string;
-  current: string;
-  suggested: string;
-  reason: string;
-  impact: 'high' | 'medium' | 'low';
-  confidence: number;
-  applied?: boolean;
-}
+import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 
 interface CompactAISuggestionsProps {
-  suggestions: BasicAISuggestion[];
+  emailHTML?: string;
+  subjectLine?: string;
   isLoading?: boolean;
-  onApplySuggestion?: (suggestion: BasicAISuggestion) => void;
+  onApplySuggestion?: (suggestion: CriticalSuggestion) => void;
   onRefresh?: () => void;
 }
 
 export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
-  suggestions,
+  emailHTML = '',
+  subjectLine = '',
   isLoading = false,
   onApplySuggestion,
   onRefresh
 }) => {
+  const [suggestions, setSuggestions] = useState<CriticalSuggestion[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [hoveredSuggestion, setHoveredSuggestion] = useState<string | null>(null);
 
-  const getImpactColor = (impact: string) => {
-    switch (impact) {
-      case 'high': return 'bg-red-100 text-red-700 border-red-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-      case 'low': return 'bg-blue-100 text-blue-700 border-blue-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+  const analyzeCriticalIssues = async () => {
+    if (!emailHTML.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const criticalSuggestions = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
+      setSuggestions(criticalSuggestions);
+    } catch (error) {
+      console.error('Critical analysis failed:', error);
+      setSuggestions([]);
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
+  const handleRefresh = () => {
+    CriticalEmailAnalysisService.clearCache();
+    onRefresh?.();
+    analyzeCriticalIssues();
+  };
+
+  // Auto-analyze when content changes
+  useEffect(() => {
+    if (emailHTML.trim().length > 50) {
+      analyzeCriticalIssues();
+    }
+  }, [emailHTML, subjectLine]);
+
+  const getTypeIcon = (category: string) => {
+    switch (category) {
       case 'subject': return <Target className="w-3 h-3" />;
+      case 'deliverability': return <Shield className="w-3 h-3" />;
       case 'cta': return <Zap className="w-3 h-3" />;
-      case 'copy': return <Type className="w-3 h-3" />;
+      case 'mobile': return <Smartphone className="w-3 h-3" />;
+      case 'compliance': return <FileCheck className="w-3 h-3" />;
+      case 'accessibility': return <Eye className="w-3 h-3" />;
+      case 'structure': return <Layout className="w-3 h-3" />;
+      case 'personalization': return <User className="w-3 h-3" />;
       case 'tone': return <Brain className="w-3 h-3" />;
       default: return <Lightbulb className="w-3 h-3" />;
     }
   };
 
-  const highPrioritySuggestions = suggestions.filter(s => s.impact === 'high' && !s.applied);
+  const criticalSuggestions = suggestions.filter(s => s.severity === 'critical' && !s.applied);
+  const highSuggestions = suggestions.filter(s => s.severity === 'high' && !s.applied);
   const appliedCount = suggestions.filter(s => s.applied).length;
 
-  const applyAllHighPriority = () => {
-    highPrioritySuggestions.forEach(suggestion => {
+  const applyAllCritical = () => {
+    criticalSuggestions.forEach(suggestion => {
       onApplySuggestion?.(suggestion);
+      setSuggestions(prev => prev.map(s => 
+        s.id === suggestion.id ? { ...s, applied: true } : s
+      ));
     });
   };
 
-  if (isLoading) {
+  const applyAllHigh = () => {
+    highSuggestions.forEach(suggestion => {
+      onApplySuggestion?.(suggestion);
+      setSuggestions(prev => prev.map(s => 
+        s.id === suggestion.id ? { ...s, applied: true } : s
+      ));
+    });
+  };
+
+  const handleApplySuggestion = (suggestion: CriticalSuggestion) => {
+    onApplySuggestion?.(suggestion);
+    setSuggestions(prev => prev.map(s => 
+      s.id === suggestion.id ? { ...s, applied: true } : s
+    ));
+  };
+
+  if (isAnalyzing || isLoading) {
     return (
       <div className="bg-white border-b border-gray-200 px-6 py-3">
         <div className="flex items-center gap-3">
           <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
-          <span className="text-sm text-gray-600">AI analyzing content...</span>
+          <span className="text-sm text-gray-600">AI analyzing email for critical issues...</span>
         </div>
       </div>
     );
@@ -89,11 +137,11 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={onRefresh} 
+            onClick={handleRefresh} 
             className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
           >
             <Lightbulb className="w-4 h-4 mr-1" />
-            AI Suggestions
+            AI Critical Analysis
           </Button>
         </div>
       </div>
@@ -106,16 +154,19 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
+              {criticalSuggestions.length > 0 && (
+                <AlertTriangle className="w-4 h-4 text-red-600" />
+              )}
               <Lightbulb className="w-4 h-4 text-purple-600" />
-              <span className="text-sm font-medium">AI Suggestions</span>
+              <span className="text-sm font-medium">Critical Email Issues</span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onRefresh}
-                disabled={isLoading}
+                onClick={handleRefresh}
+                disabled={isAnalyzing}
                 className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
               >
-                {isLoading ? (
+                {isAnalyzing ? (
                   <RefreshCw className="w-3 h-3 animate-spin mr-1" />
                 ) : (
                   <RefreshCw className="w-3 h-3 mr-1" />
@@ -125,44 +176,57 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
               {suggestions.length > 0 && (
                 <>
                   <Badge variant="outline" className="text-xs">
-                    {suggestions.length - appliedCount} pending
+                    {suggestions.length - appliedCount} issues
                   </Badge>
+                  {criticalSuggestions.length > 0 && (
+                    <Badge className="text-xs bg-red-100 text-red-700">
+                      {criticalSuggestions.length} critical
+                    </Badge>
+                  )}
                   {appliedCount > 0 && (
                     <Badge className="text-xs bg-green-100 text-green-700">
-                      {appliedCount} applied
+                      {appliedCount} fixed
                     </Badge>
                   )}
                 </>
               )}
             </div>
 
-            {highPrioritySuggestions.length > 0 && (
+            {criticalSuggestions.length > 0 && (
               <Button
-                onClick={applyAllHighPriority}
+                onClick={applyAllCritical}
                 size="sm"
                 className="h-6 px-3 text-xs bg-red-600 hover:bg-red-700"
               >
-                Apply All High Priority ({highPrioritySuggestions.length})
+                Fix All Critical ({criticalSuggestions.length})
+              </Button>
+            )}
+
+            {highSuggestions.length > 0 && (
+              <Button
+                onClick={applyAllHigh}
+                size="sm"
+                className="h-6 px-3 text-xs bg-orange-600 hover:bg-orange-700"
+              >
+                Fix All High ({highSuggestions.length})
               </Button>
             )}
           </div>
         </div>
 
-        {/* Simple horizontal suggestion chips */}
         <ScrollArea className="w-full">
           <div className="flex gap-2 pb-1">
-            {suggestions.slice(0, isExpanded ? suggestions.length : 4).map((suggestion) => (
+            {suggestions.slice(0, isExpanded ? suggestions.length : 6).map((suggestion) => (
               <SuggestionChip 
                 key={suggestion.id} 
                 suggestion={suggestion} 
-                onApply={onApplySuggestion}
+                onApply={handleApplySuggestion}
                 hoveredSuggestion={hoveredSuggestion}
                 setHoveredSuggestion={setHoveredSuggestion}
-                getImpactColor={getImpactColor}
                 getTypeIcon={getTypeIcon}
               />
             ))}
-            {suggestions.length > 4 && (
+            {suggestions.length > 6 && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -177,7 +241,7 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
                 ) : (
                   <>
                     <ChevronDown className="w-3 h-3 mr-1" />
-                    +{suggestions.length - 4} more
+                    +{suggestions.length - 6} more
                   </>
                 )}
               </Button>
@@ -189,82 +253,90 @@ export const CompactAISuggestions: React.FC<CompactAISuggestionsProps> = ({
   );
 };
 
-// Helper component for suggestion chips
 const SuggestionChip: React.FC<{
-  suggestion: BasicAISuggestion;
-  onApply?: (suggestion: BasicAISuggestion) => void;
+  suggestion: CriticalSuggestion;
+  onApply: (suggestion: CriticalSuggestion) => void;
   hoveredSuggestion: string | null;
   setHoveredSuggestion: (id: string | null) => void;
-  getImpactColor: (impact: string) => string;
-  getTypeIcon: (type: string) => React.ReactNode;
-}> = ({ suggestion, onApply, hoveredSuggestion, setHoveredSuggestion, getImpactColor, getTypeIcon }) => (
-  <div
-    className={`relative flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
-      suggestion.applied 
-        ? 'bg-green-50 border-green-200 opacity-75' 
-        : `bg-white border-gray-200 hover:shadow-sm ${getImpactColor(suggestion.impact)}`
-    }`}
-    onMouseEnter={() => setHoveredSuggestion(suggestion.id)}
-    onMouseLeave={() => setHoveredSuggestion(null)}
-  >
-    <div className="flex items-center gap-1.5 min-w-0">
-      {getTypeIcon(suggestion.type)}
-      <span className="text-xs font-medium truncate max-w-32">
-        {suggestion.title}
-      </span>
-      <Badge variant="outline" className="text-xs px-1 py-0">
-        {suggestion.impact}
-      </Badge>
-      <span className="text-xs text-gray-500">
-        {suggestion.confidence}%
-      </span>
-    </div>
+  getTypeIcon: (category: string) => React.ReactNode;
+}> = ({ suggestion, onApply, hoveredSuggestion, setHoveredSuggestion, getTypeIcon }) => {
+  const getSeverityColor = () => CriticalEmailAnalysisService.getSeverityColor(suggestion.severity);
 
-    <div className="flex items-center gap-1">
-      {!suggestion.applied ? (
-        <>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigator.clipboard.writeText(suggestion.suggested)}
-            className="h-4 w-4 p-0 hover:bg-gray-200"
-          >
-            <Copy className="w-2.5 h-2.5" />
-          </Button>
-          <Button
-            onClick={() => onApply?.(suggestion)}
-            size="sm"
-            className="h-5 px-2 text-xs bg-purple-600 hover:bg-purple-700"
-          >
-            Apply
-          </Button>
-        </>
-      ) : (
-        <CheckCircle className="w-4 h-4 text-green-600" />
-      )}
-    </div>
+  return (
+    <div
+      className={`relative flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all cursor-pointer ${
+        suggestion.applied 
+          ? 'bg-green-50 border-green-200 opacity-75' 
+          : `bg-white border-gray-200 hover:shadow-sm ${getSeverityColor()}`
+      }`}
+      onMouseEnter={() => setHoveredSuggestion(suggestion.id)}
+      onMouseLeave={() => setHoveredSuggestion(null)}
+    >
+      <div className="flex items-center gap-1.5 min-w-0">
+        {getTypeIcon(suggestion.category)}
+        <span className="text-xs font-medium truncate max-w-32">
+          {suggestion.title}
+        </span>
+        <Badge variant="outline" className="text-xs px-1 py-0">
+          {suggestion.severity}
+        </Badge>
+        <span className="text-xs text-gray-500">
+          {suggestion.confidence}%
+        </span>
+      </div>
 
-    {/* Hover Tooltip */}
-    {hoveredSuggestion === suggestion.id && !suggestion.applied && (
-      <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80 max-w-96">
-        <div className="space-y-2">
-          <div className="text-xs">
-            <span className="font-medium text-gray-700">Current:</span>
-            <div className="bg-gray-50 p-2 rounded mt-1 text-gray-600 font-mono text-xs">
-              {suggestion.current}
+      <div className="flex items-center gap-1">
+        {!suggestion.applied ? (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigator.clipboard.writeText(suggestion.suggested)}
+              className="h-4 w-4 p-0 hover:bg-gray-200"
+            >
+              <Copy className="w-2.5 h-2.5" />
+            </Button>
+            <Button
+              onClick={() => onApply(suggestion)}
+              size="sm"
+              className={`h-5 px-2 text-xs ${
+                suggestion.severity === 'critical' ? 'bg-red-600 hover:bg-red-700' :
+                suggestion.severity === 'high' ? 'bg-orange-600 hover:bg-orange-700' :
+                'bg-purple-600 hover:bg-purple-700'
+              }`}
+            >
+              {suggestion.autoFixable ? 'Auto-Fix' : 'Apply'}
+            </Button>
+          </>
+        ) : (
+          <CheckCircle className="w-4 h-4 text-green-600" />
+        )}
+      </div>
+
+      {hoveredSuggestion === suggestion.id && !suggestion.applied && (
+        <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80 max-w-96">
+          <div className="space-y-2">
+            <div className="text-xs">
+              <span className="font-medium text-gray-700">Issue:</span>
+              <div className="bg-gray-50 p-2 rounded mt-1 text-gray-600 font-mono text-xs">
+                {suggestion.current}
+              </div>
             </div>
-          </div>
-          <div className="text-xs">
-            <span className="font-medium text-blue-700">Suggested:</span>
-            <div className="bg-blue-50 p-2 rounded mt-1 text-blue-700 font-mono text-xs">
-              {suggestion.suggested}
+            <div className="text-xs">
+              <span className="font-medium text-blue-700">Suggested Fix:</span>
+              <div className="bg-blue-50 p-2 rounded mt-1 text-blue-700 font-mono text-xs">
+                {suggestion.suggested}
+              </div>
             </div>
-          </div>
-          <div className="text-xs text-gray-600 italic">
-            💡 {suggestion.reason}
+            <div className="text-xs text-gray-600 italic">
+              💡 {suggestion.reason}
+            </div>
+            <div className="text-xs text-green-600 font-medium">
+              📈 {suggestion.businessImpact}
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </div>
-);
+      )}
+    </div>
+  );
+};

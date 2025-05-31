@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -87,10 +86,6 @@ export default function EmailEditor({
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [showAIAnalytics, setShowAIAnalytics] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  
-  // AI Suggestions state
-  const [aiSuggestions, setAiSuggestions] = useState<BasicAISuggestion[]>([]);
-  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
 
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
@@ -161,67 +156,7 @@ export default function EmailEditor({
     setEmailBlocks(newBlocks);
   }, []);
 
-  // AI Suggestions handlers
-  const generateAISuggestions = useCallback(async () => {
-    if (!content || content.length < 50) {
-      console.warn('Email content too short for analysis');
-      return;
-    }
-    
-    setIsGeneratingSuggestions(true);
-    
-    try {
-      console.log('Generating AI suggestions...');
-      
-      // Generate suggestions based on content analysis
-      const suggestions: BasicAISuggestion[] = [
-        {
-          id: 'suggestion_1',
-          type: 'subject',
-          title: 'Improve subject line engagement',
-          current: subject || 'Current subject',
-          suggested: subject ? `${subject} - Limited Time!` : 'Your Amazing Offer - Limited Time!',
-          reason: 'Adding urgency can increase open rates by 15-20%',
-          impact: 'high',
-          confidence: 85,
-          applied: false
-        },
-        {
-          id: 'suggestion_2',
-          type: 'cta',
-          title: 'Strengthen call-to-action',
-          current: 'Click here',
-          suggested: 'Get Started Now',
-          reason: 'Action-oriented CTAs perform 25% better',
-          impact: 'high',
-          confidence: 90,
-          applied: false
-        },
-        {
-          id: 'suggestion_3',
-          type: 'copy',
-          title: 'Improve readability',
-          current: 'Long paragraph text',
-          suggested: 'Break into shorter, scannable sections',
-          reason: 'Shorter paragraphs improve engagement by 18%',
-          impact: 'medium',
-          confidence: 75,
-          applied: false
-        }
-      ];
-      
-      setAiSuggestions(suggestions);
-      console.log('Generated AI suggestions:', suggestions);
-      
-    } catch (error) {
-      console.error('Failed to generate suggestions:', error);
-      setAiSuggestions([]);
-    } finally {
-      setIsGeneratingSuggestions(false);
-    }
-  }, [content, subject]);
-
-  const handleApplyAISuggestion = useCallback(async (suggestion: BasicAISuggestion) => {
+  const handleApplyCriticalSuggestion = useCallback(async (suggestion: any) => {
     try {
       if (suggestion.type === 'subject') {
         onSubjectChange(suggestion.suggested);
@@ -230,7 +165,8 @@ export default function EmailEditor({
           case 'copy':
           case 'cta':
           case 'tone':
-            // Try to apply the suggestion to the canvas
+          case 'structure':
+          case 'accessibility':
             if (canvasRef.current.findAndReplaceText) {
               canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
             }
@@ -238,14 +174,9 @@ export default function EmailEditor({
         }
       }
 
-      // Mark as applied
-      setAiSuggestions(prev => prev.map(s => 
-        s.id === suggestion.id ? { ...s, applied: true } : s
-      ));
-
-      console.log(`Applied suggestion: ${suggestion.title}`);
+      console.log(`Applied critical suggestion: ${suggestion.title}`);
     } catch (error) {
-      console.error('Failed to apply suggestion:', error);
+      console.error('Failed to apply critical suggestion:', error);
     }
   }, [onSubjectChange]);
 
@@ -475,12 +406,11 @@ export default function EmailEditor({
         refreshTrigger={snippetRefreshTrigger}
       />
 
-      {/* AI Suggestions Header - Always Visible */}
+      {/* Critical AI Suggestions Header - Always Visible */}
       <CompactAISuggestions
-        suggestions={aiSuggestions}
-        isLoading={isGeneratingSuggestions}
-        onApplySuggestion={handleApplyAISuggestion}
-        onRefresh={generateAISuggestions}
+        emailHTML={content}
+        subjectLine={subject}
+        onApplySuggestion={handleApplyCriticalSuggestion}
       />
 
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
@@ -495,7 +425,7 @@ export default function EmailEditor({
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
-            showAIAnalytics={false} // Don't show in canvas since we're showing in footer
+            showAIAnalytics={false}
           />
         </div>
       </div>
