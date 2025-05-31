@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -139,7 +140,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         editingBlockId={editingBlockId}
         isDraggingOver={dragDropHandlers.isDraggingOver}
         dragOverIndex={dragDropHandlers.dragOverIndex}
-        currentDragType={dragDropHandlers.currentDragType}
+        currentDragType={dragDropHandlers.currentDragType as "block" | "layout" | "reorder"}
         onBlockClick={selectBlock}
         onBlockDoubleClick={(blockId, blockType) => setEditingBlockId(blockId)}
         onBlockDragStart={(e, blockId) => dragDropHandlers.handleBlockDragStart(blockId, 'block')}
