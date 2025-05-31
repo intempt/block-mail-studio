@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { MJMLTemplateGenerator } from '@/services/MJMLTemplateGenerator';
 import { MJMLValidator } from '@/services/MJMLValidator';
-import { ZipExportService, ExportOptions } from '@/services/ZipExportService';
 
 export const useMJMLExport = () => {
   const [isExporting, setIsExporting] = useState(false);
@@ -58,25 +57,6 @@ export const useMJMLExport = () => {
     }
   }, []);
 
-  const exportAsZip = useCallback(async (
-    blocks: EmailBlock[],
-    subject: string,
-    globalStyles?: string,
-    options: ExportOptions = {}
-  ) => {
-    setIsExporting(true);
-    
-    try {
-      await ZipExportService.exportAndDownload(blocks, subject, globalStyles, options);
-      return { success: true };
-    } catch (error) {
-      console.error('Zip export error:', error);
-      return { success: false, error: error.message };
-    } finally {
-      setIsExporting(false);
-    }
-  }, []);
-
   const downloadMJML = useCallback((mjmlContent: string, filename = 'email-template.mjml') => {
     const blob = new Blob([mjmlContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -103,7 +83,6 @@ export const useMJMLExport = () => {
 
   return {
     exportToMJML,
-    exportAsZip,
     downloadMJML,
     downloadHTML,
     isExporting,

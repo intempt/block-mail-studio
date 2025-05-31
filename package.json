@@ -73,7 +73,6 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "input-otp": "^1.2.4",
-    "jszip": "^3.10.1",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.462.0",
     "mjml-browser": "^4.15.3",

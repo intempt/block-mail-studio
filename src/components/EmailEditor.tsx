@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -23,7 +22,7 @@ import {
 } from 'lucide-react';
 import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
-import { RibbonInterface } from './RibbonInterface';
+import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { SnippetRibbon } from './SnippetRibbon';
 import { CompactAISuggestions } from './CompactAISuggestions';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
@@ -418,23 +417,7 @@ export default function EmailEditor({
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Back button header */}
-      {onBack && (
-        <div className="bg-white border-b border-gray-200 px-6 py-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onBack} 
-            className="flex items-center gap-2 hover:bg-gray-100"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Button>
-        </div>
-      )}
-
-      {/* Professional Ribbon Interface */}
-      <RibbonInterface
+      <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
         universalContent={universalContent}
@@ -447,15 +430,23 @@ export default function EmailEditor({
         onTemplateLibraryOpen={handleTemplateLibraryOpen}
         onPreviewModeChange={handlePreviewModeChange}
         previewMode={previewMode}
+        onBack={onBack}
+        canvasWidth={canvasWidth}
+        deviceMode={deviceMode}
+        onDeviceChange={handleDeviceChange}
+        onWidthChange={handleWidthChange}
+        onPreview={handlePreview}
+        onSaveTemplate={handleSaveAsTemplate}
+        onPublish={handlePublish}
+        onToggleAIAnalytics={handleToggleAIAnalytics}
       />
 
-      {/* Snippet Ribbon */}
       <SnippetRibbon
         onSnippetSelect={handleSnippetSelect}
         refreshTrigger={snippetRefreshTrigger}
       />
 
-      {/* AI Suggestions Header */}
+      {/* AI Suggestions Header - Always Visible */}
       <CompactAISuggestions
         suggestions={aiSuggestions}
         isLoading={isGeneratingSuggestions}
@@ -463,7 +454,6 @@ export default function EmailEditor({
         onRefresh={generateAISuggestions}
       />
 
-      {/* Main Canvas Area */}
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
         <div className="max-w-4xl mx-auto">
           <EmailBlockCanvas
@@ -475,12 +465,12 @@ export default function EmailEditor({
             compactMode={false}
             subject={subject}
             onSubjectChange={onSubjectChange}
-            showAIAnalytics={false}
+            showAIAnalytics={false} // Don't show in canvas since we're showing in footer
           />
         </div>
       </div>
 
-      {/* Status Footer */}
+      {/* AI Analytics Footer - Always visible */}
       <div className="bg-white border-t border-gray-200 shadow-lg">
         <CanvasStatus 
           selectedBlockId={selectedBlockId}
@@ -491,7 +481,6 @@ export default function EmailEditor({
         />
       </div>
 
-      {/* Modals */}
       {showPreview && (
         <EmailPreview
           html={content}

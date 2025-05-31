@@ -1,155 +1,27 @@
 
-/* Email Editor Specific Styles */
-.main-layout {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  background-color: #f8fafc;
-}
-
-.content-area {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.email-canvas {
-  background: #f1f5f9;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.canvas-container {
-  flex: 1;
-  overflow: auto;
-  padding: 2rem;
-  display: flex;
-  justify-content: center;
-}
-
-.email-container {
+.fullscreen-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
   background: white;
-  min-height: 600px;
-  max-width: 600px;
+}
+
+.fullscreen-mode .email-canvas {
   width: 100%;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  position: relative;
+  height: 100%;
+  padding: 2rem;
 }
 
-/* Responsive canvas adjustments */
-.canvas-mobile .email-container {
-  max-width: 375px;
+/* Smooth transitions for panel toggles */
+.panel-transition {
+  transition: width 0.3s ease, opacity 0.3s ease;
 }
 
-.canvas-tablet .email-container {
-  max-width: 768px;
-}
-
-.canvas-desktop .email-container {
-  max-width: 600px;
-}
-
-.canvas-custom .email-container {
-  max-width: var(--custom-width, 600px);
-}
-
-/* Sidebar improvements */
-.sidebar-content {
-  background: white;
-  border-right: 1px solid #e2e8f0;
-  padding: 1rem;
-  overflow-y: auto;
-  max-height: calc(100vh - 140px);
-}
-
-/* Panel transitions */
-.panel-enter {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.panel-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: all 200ms ease-out;
-}
-
-.panel-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.panel-exit-active {
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: all 200ms ease-out;
-}
-
-/* Improved focus states */
-.editor-focused {
-  outline: 2px solid #3b82f6;
+/* Focus indicator for keyboard navigation */
+.keyboard-focus {
+  outline: 2px solid #3B82F6;
   outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Better loading states */
-.loading-spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #e2e8f0;
-  border-top: 2px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .canvas-container {
-    padding: 1rem;
-  }
-  
-  .sidebar-content {
-    padding: 0.5rem;
-  }
-  
-  .button-group {
-    gap: 0.25rem;
-  }
-  
-  .toolbar-button span {
-    display: none;
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .dropdown-content {
-    border-width: 2px;
-    border-color: #000;
-  }
-  
-  .toolbar-button:hover {
-    background-color: #000;
-    color: #fff;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .transition-smooth,
-  .animate-scale-in,
-  .panel-enter-active,
-  .panel-exit-active {
-    transition: none;
-    animation: none;
-  }
 }
