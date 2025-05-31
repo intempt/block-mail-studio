@@ -57,6 +57,22 @@ export const PromptBasedEmailEditor: React.FC<PromptBasedEmailEditorProps> = ({
               padding: '16px',
               margin: '8px 0',
               borderRadius: '6px'
+            },
+            tablet: {
+              width: '100%',
+              height: 'auto',
+              backgroundColor: 'transparent',
+              padding: '12px',
+              margin: '6px 0',
+              borderRadius: '6px'
+            },
+            mobile: {
+              width: '100%',
+              height: 'auto',
+              backgroundColor: 'transparent',
+              padding: '8px',
+              margin: '4px 0',
+              borderRadius: '4px'
             }
           }
         }
@@ -96,6 +112,22 @@ export const PromptBasedEmailEditor: React.FC<PromptBasedEmailEditorProps> = ({
             padding: '16px',
             margin: '8px 0',
             borderRadius: '6px'
+          },
+          tablet: {
+            width: '100%',
+            height: 'auto',
+            backgroundColor: 'transparent',
+            padding: '12px',
+            margin: '6px 0',
+            borderRadius: '6px'
+          },
+          mobile: {
+            width: '100%',
+            height: 'auto',
+            backgroundColor: 'transparent',
+            padding: '8px',
+            margin: '4px 0',
+            borderRadius: '4px'
           }
         }
       };

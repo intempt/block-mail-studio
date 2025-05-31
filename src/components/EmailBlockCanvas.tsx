@@ -116,22 +116,34 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     checkLinks: () => ({ valid: 0, broken: 0 }),
     getBlocks: () => blocks,
     setBlocks: (newBlocks: EmailBlock[]) => setBlocks(newBlocks),
-    addBlock: (block: EmailBlock) => addBlock(block)
+    addBlock: (block: EmailBlock) => addBlock(block),
+    findAndReplaceText: (searchText: string, replaceText: string) => {
+      blocks.forEach(block => {
+        if (block.content.html && block.content.html.includes(searchText)) {
+          updateBlock(block.id, {
+            content: {
+              ...block.content,
+              html: block.content.html.replace(new RegExp(searchText, 'g'), replaceText)
+            }
+          });
+        }
+      });
+    }
   }));
 
   return (
     <div className={`email-canvas ${className}`} style={{ width: previewWidth }}>
       <CanvasRenderer
-        blocks={dragDropHandlers.blocks}
-        selectedBlockId={dragDropHandlers.selectedBlockId}
+        blocks={blocks}
+        selectedBlockId={selectedBlockId}
         editingBlockId={editingBlockId}
         isDraggingOver={dragDropHandlers.isDraggingOver}
         dragOverIndex={dragDropHandlers.dragOverIndex}
         currentDragType={dragDropHandlers.currentDragType}
         onBlockClick={selectBlock}
         onBlockDoubleClick={(blockId, blockType) => setEditingBlockId(blockId)}
-        onBlockDragStart={dragDropHandlers.handleBlockDragStart}
-        onBlockDrop={dragDropHandlers.handleBlockDrop}
+        onBlockDragStart={(e, blockId) => dragDropHandlers.handleBlockDragStart(blockId, 'block')}
+        onBlockDrop={(e, targetIndex) => dragDropHandlers.handleBlockDrop(targetIndex)}
         onDeleteBlock={deleteBlock}
         onDuplicateBlock={duplicateBlock}
         onSaveAsSnippet={() => {}}
@@ -140,7 +152,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         onColumnDrop={() => {}}
         onBlockEditStart={setEditingBlockId}
         onBlockEditEnd={() => setEditingBlockId(null)}
-        onBlockUpdate={updateBlock}
+        onBlockUpdate={(block) => updateBlock(block.id, block)}
       />
     </div>
   );

@@ -2,21 +2,15 @@
 import { useEffect } from 'react';
 
 interface KeyboardShortcutsProps {
-  editor?: any;
-  canvasRef: React.RefObject<any>;
-  onToggleLeftPanel: () => void;
-  onToggleRightPanel: () => void;
-  onToggleFullscreen: () => void;
-  onSave: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+  onMove: (direction: 'up' | 'down') => void;
 }
 
 export const useKeyboardShortcuts = ({
-  editor,
-  canvasRef,
-  onToggleLeftPanel,
-  onToggleRightPanel,
-  onToggleFullscreen,
-  onSave
+  onDelete,
+  onDuplicate,
+  onMove
 }: KeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -26,85 +20,34 @@ export const useKeyboardShortcuts = ({
         event.target instanceof HTMLTextAreaElement ||
         (event.target as any)?.isContentEditable
       ) {
-        // For inputs, only allow save and panel toggles
-        if (!(
-          (event.ctrlKey && event.key === 's') ||
-          (event.ctrlKey && event.key === '[') ||
-          (event.ctrlKey && event.key === ']') ||
-          event.key === 'F11'
-        )) {
-          return;
-        }
-      }
-
-      // Enhanced keyboard shortcuts
-      if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        onSave();
         return;
       }
 
-      if (event.ctrlKey && event.key === '[') {
+      // Delete selected block
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        onDelete();
         event.preventDefault();
-        onToggleLeftPanel();
-        return;
       }
 
-      if (event.ctrlKey && event.key === ']') {
+      // Duplicate selected block
+      if (event.ctrlKey && event.key === 'd') {
+        onDuplicate();
         event.preventDefault();
-        onToggleRightPanel();
-        return;
       }
 
-      if (event.key === 'F11') {
+      // Move blocks up/down
+      if (event.ctrlKey && event.key === 'ArrowUp') {
+        onMove('up');
         event.preventDefault();
-        onToggleFullscreen();
-        return;
       }
 
-      // Canvas-specific shortcuts
-      if (canvasRef.current) {
-        // Delete selected block
-        if (event.key === 'Delete' || event.key === 'Backspace') {
-          if (canvasRef.current.deleteSelectedBlock) {
-            canvasRef.current.deleteSelectedBlock();
-            event.preventDefault();
-          }
-        }
-
-        // Duplicate selected block
-        if (event.ctrlKey && event.key === 'd') {
-          if (canvasRef.current.duplicateSelectedBlock) {
-            canvasRef.current.duplicateSelectedBlock();
-            event.preventDefault();
-          }
-        }
-
-        // Move blocks up/down
-        if (event.ctrlKey && event.key === 'ArrowUp') {
-          if (canvasRef.current.moveSelectedBlockUp) {
-            canvasRef.current.moveSelectedBlockUp();
-            event.preventDefault();
-          }
-        }
-
-        if (event.ctrlKey && event.key === 'ArrowDown') {
-          if (canvasRef.current.moveSelectedBlockDown) {
-            canvasRef.current.moveSelectedBlockDown();
-            event.preventDefault();
-          }
-        }
+      if (event.ctrlKey && event.key === 'ArrowDown') {
+        onMove('down');
+        event.preventDefault();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [
-    editor,
-    canvasRef,
-    onToggleLeftPanel,
-    onToggleRightPanel,
-    onToggleFullscreen,
-    onSave
-  ]);
+  }, [onDelete, onDuplicate, onMove]);
 };

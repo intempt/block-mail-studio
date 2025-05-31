@@ -41,7 +41,9 @@ export const useDragDrop = ({
         type: blockType as any,
         content: getDefaultContent(blockType),
         styling: {
-          desktop: getDefaultStyles(blockType)
+          desktop: getDefaultStyles(blockType),
+          tablet: getDefaultStyles(blockType),
+          mobile: getDefaultStyles(blockType)
         }
       };
       addBlock(newBlock);
