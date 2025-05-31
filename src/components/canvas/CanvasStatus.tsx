@@ -2,13 +2,20 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BarChart3, 
   Brain, 
   TrendingUp, 
   RefreshCw, 
   Shield,
-  Lightbulb
+  Lightbulb,
+  Target,
+  FileText,
+  MousePointer,
+  Mail,
+  Image,
+  Link
 } from 'lucide-react';
 import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
 
@@ -18,6 +25,14 @@ interface CanvasStatusProps {
   previewMode: 'desktop' | 'mobile';
   emailHTML?: string;
   subjectLine?: string;
+}
+
+interface MetricDisplayItem {
+  key: keyof UnifiedEmailAnalytics;
+  label: string;
+  icon?: React.ReactNode;
+  format: (value: any) => string;
+  priority: number;
 }
 
 export const CanvasStatus: React.FC<CanvasStatusProps> = ({
@@ -54,16 +69,41 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     }
   };
 
-  const getScoreColor = (score: number | null) => {
-    if (score === null) return 'text-gray-600';
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
-  };
-
   const refreshAnalytics = () => {
     UnifiedEmailAnalyticsService.clearCache();
     analyzeEmail();
+  };
+
+  // Define metrics in priority order for display
+  const metricDefinitions: MetricDisplayItem[] = [
+    { key: 'overallScore', label: 'Overall', icon: <BarChart3 className="w-3 h-3" />, format: (v) => `${v || '--'}/100`, priority: 1 },
+    { key: 'deliverabilityScore', label: 'Deliverability', icon: <Mail className="w-3 h-3" />, format: (v) => `${v || '--'}`, priority: 2 },
+    { key: 'spamScore', label: 'Spam Risk', icon: <Shield className="w-3 h-3" />, format: (v) => `${v || '--'}%`, priority: 3 },
+    { key: 'mobileScore', label: 'Mobile', icon: <Target className="w-3 h-3" />, format: (v) => `${v || '--'}`, priority: 4 },
+    { key: 'performancePrediction', label: 'Open Rate', icon: <TrendingUp className="w-3 h-3" />, format: (v) => `${v?.openRate || '--'}%`, priority: 5 },
+    { key: 'performancePrediction', label: 'Click Rate', icon: <MousePointer className="w-3 h-3" />, format: (v) => `${v?.clickRate || '--'}%`, priority: 6 },
+    { key: 'subjectLineLength', label: 'Subject', icon: <FileText className="w-3 h-3" />, format: (v) => `${v}c`, priority: 7 },
+    { key: 'ctaCount', label: 'CTAs', icon: <MousePointer className="w-3 h-3" />, format: (v) => `${v}`, priority: 8 },
+    { key: 'readingLevel', label: 'Reading', icon: <Brain className="w-3 h-3" />, format: (v) => `${v}gr`, priority: 9 },
+    { key: 'personalizedScore', label: 'Personal', icon: <Target className="w-3 h-3" />, format: (v) => `${v || '--'}%`, priority: 10 },
+    { key: 'imageCount', label: 'Images', icon: <Image className="w-3 h-3" />, format: (v) => `${v}`, priority: 11 },
+    { key: 'wordCount', label: 'Words', icon: <FileText className="w-3 h-3" />, format: (v) => `${v}`, priority: 12 }
+  ];
+
+  const getMetricColor = (key: keyof UnifiedEmailAnalytics, value: any) => {
+    if (!analytics || value === null || value === undefined) return 'text-gray-500';
+    
+    let numericValue = value;
+    if (key === 'performancePrediction') return 'text-blue-600';
+    if (typeof value === 'object') return 'text-gray-600';
+    
+    const status = UnifiedEmailAnalyticsService.getMetricBenchmark(key, numericValue);
+    switch (status) {
+      case 'good': return 'text-green-600';
+      case 'warning': return 'text-yellow-600';
+      case 'poor': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
   };
 
   // Loading state
@@ -73,7 +113,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         <div className="px-6 py-3">
           <div className="flex items-center gap-3">
             <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
-            <span className="text-sm text-gray-600">AI analyzing content...</span>
+            <span className="text-sm text-gray-600">AI analyzing email content...</span>
           </div>
         </div>
       </div>
@@ -104,11 +144,11 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   return (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
       <div className="px-6 py-3">
-        <div className="flex flex-wrap items-center gap-4">
-          {/* AI Analytics Header */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Header with controls */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
             <Lightbulb className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium">AI Analytics</span>
+            <span className="text-sm font-medium">Email Analytics</span>
             <Button
               variant="ghost"
               size="sm"
@@ -124,82 +164,34 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               Refresh
             </Button>
           </div>
-
-          {/* Performance Metrics */}
-          {analytics && (
-            <>
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium">Performance</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Badge variant="outline" className={`text-xs ${getScoreColor(analytics.overallScore)}`}>
-                    {analytics.overallScore || '--'}/100
-                  </Badge>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-600">Deliverability:</span>
-                    <span className={`text-xs font-medium ${getScoreColor(analytics.deliverabilityScore)}`}>
-                      {analytics.deliverabilityScore || '--'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-600">Mobile:</span>
-                    <span className={`text-xs font-medium ${getScoreColor(analytics.mobileScore)}`}>
-                      {analytics.mobileScore || '--'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Shield className="w-3 h-3" />
-                    <span className={`text-xs font-medium ${analytics.spamScore !== null ? analytics.spamScore > 20 ? 'text-red-600' : 'text-green-600' : 'text-gray-600'}`}>
-                      {analytics.spamScore !== null ? `${analytics.spamScore}% spam` : '--'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Brand Voice Metrics */}
-              {analytics.brandVoiceScore && (
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="h-4 w-px bg-gray-300" />
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-purple-600" />
-                    <span className="text-sm font-medium">Brand Voice</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant="outline" className={`text-xs ${getScoreColor(analytics.brandVoiceScore)}`}>
-                      {analytics.brandVoiceScore}/100
-                    </Badge>
-                    {analytics.engagementScore && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs text-gray-600">Engagement:</span>
-                        <span className={`text-xs font-medium ${getScoreColor(analytics.engagementScore)}`}>
-                          {analytics.engagementScore}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Performance Predictions */}
-              {analytics.performancePrediction && (analytics.performancePrediction.openRate > 0 || analytics.performancePrediction.clickRate > 0) && (
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="h-4 w-px bg-gray-300" />
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium">Predicted</span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs">
-                    <span>Open {analytics.performancePrediction.openRate.toFixed(1)}%</span>
-                    <span>Click {analytics.performancePrediction.clickRate.toFixed(1)}%</span>
-                    <span>Convert {analytics.performancePrediction.conversionRate.toFixed(1)}%</span>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
         </div>
+
+        {/* Metrics Bar */}
+        {analytics && (
+          <ScrollArea className="w-full">
+            <div className="flex items-center gap-4 pb-1">
+              {metricDefinitions.map((metric, index) => {
+                let value = analytics[metric.key];
+                if (metric.key === 'performancePrediction' && metric.label === 'Click Rate') {
+                  value = analytics.performancePrediction;
+                }
+                
+                return (
+                  <div key={`${metric.key}-${index}`} className="flex items-center gap-1.5 whitespace-nowrap">
+                    {metric.icon}
+                    <span className="text-xs text-gray-700">{metric.label}:</span>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs px-1.5 py-0.5 ${getMetricColor(metric.key, value)}`}
+                    >
+                      {metric.format(value)}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        )}
       </div>
     </div>
   );
