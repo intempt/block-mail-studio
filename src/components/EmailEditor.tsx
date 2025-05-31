@@ -6,12 +6,22 @@ interface EmailEditorProps {
   initialBlocks?: any[];
   onBlockUpdate?: (block: any) => void;
   collaborationMode?: boolean;
+  content?: string;
+  subject?: string;
+  onContentChange?: (newContent: string) => void;
+  onSubjectChange?: (newSubject: string) => void;
+  onBack?: () => void;
 }
 
 export const EmailEditor: React.FC<EmailEditorProps> = ({ 
   initialBlocks = [],
   onBlockUpdate,
-  collaborationMode = false 
+  collaborationMode = false,
+  content,
+  subject,
+  onContentChange,
+  onSubjectChange,
+  onBack
 }) => {
   return (
     <div className="h-screen flex flex-col bg-gray-50">
