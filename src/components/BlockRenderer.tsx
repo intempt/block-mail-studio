@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
 import { Star } from 'lucide-react';
@@ -17,6 +17,7 @@ import { MJMLVideoBlockRenderer } from './blocks/MJMLVideoBlockRenderer';
 import { MJMLHtmlBlockRenderer } from './blocks/MJMLHtmlBlockRenderer';
 import { MJMLTableBlockRenderer } from './blocks/MJMLTableBlockRenderer';
 import { MJMLSocialBlockRenderer } from './blocks/MJMLSocialBlockRenderer';
+import { selectionVariants, buttonVariants } from '@/utils/motionVariants';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -92,33 +93,63 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   };
 
   return (
-    <div className={`block-renderer ${isSelected ? 'selected' : ''} relative group`}>
+    <motion.div 
+      className={`block-renderer relative group`}
+      variants={selectionVariants}
+      animate={isSelected ? "selected" : "unselected"}
+      layout
+      layoutId={`block-${block.id}`}
+      whileHover={{ 
+        scale: 1.01,
+        transition: { type: "spring", stiffness: 400, damping: 25 }
+      }}
+    >
       {getBlockComponent()}
       
       {/* Enhanced star button with proper state management */}
       {(onStarBlock || onUnstarBlock) && (
-        <div className={`absolute top-2 right-2 transition-all duration-200 ${
-          isSelected || block.isStarred 
-            ? 'opacity-100' 
-            : 'opacity-0 group-hover:opacity-100'
-        }`}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleStarToggle}
-            className="h-8 w-8 p-0 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border border-gray-200"
-            title={block.isStarred ? 'Remove from snippets' : 'Save as snippet'}
-          >
-            <Star 
-              className={`w-4 h-4 transition-colors ${
-                block.isStarred 
-                  ? 'fill-yellow-400 text-yellow-400' 
-                  : 'text-gray-400 hover:text-yellow-400'
-              }`} 
-            />
-          </Button>
-        </div>
+        <AnimatePresence>
+          {(isSelected || block.isStarred) && (
+            <motion.div
+              className="absolute top-2 right-2"
+              initial={{ opacity: 0, scale: 0.8, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: -10 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <motion.div
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleStarToggle}
+                  className="h-8 w-8 p-0 bg-white/95 backdrop-blur-sm shadow-lg hover:bg-white border border-gray-200"
+                  title={block.isStarred ? 'Remove from snippets' : 'Save as snippet'}
+                >
+                  <motion.div
+                    animate={block.isStarred ? {
+                      rotate: [0, 360],
+                      scale: [1, 1.2, 1]
+                    } : {}}
+                    transition={{ duration: 0.6, type: "spring" }}
+                  >
+                    <Star 
+                      className={`w-4 h-4 transition-colors ${
+                        block.isStarred 
+                          ? 'fill-yellow-400 text-yellow-400' 
+                          : 'text-gray-400 hover:text-yellow-400'
+                      }`} 
+                    />
+                  </motion.div>
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
-    </div>
+    </motion.div>
   );
 };
