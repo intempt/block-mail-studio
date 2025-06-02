@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
 import { useDragDropHandler } from './canvas/DragDropHandler';
@@ -7,7 +6,6 @@ import { CanvasStatus } from './canvas/CanvasStatus';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
-import { canvasVariants, dropZoneVariants } from '@/utils/motionVariants';
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -696,6 +694,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   const canvasStyle = useMemo(() => {
     const baseStyle = {
+      width: `${canvasWidth}px`,
       minHeight: '600px',
       margin: '0 auto',
       backgroundColor: 'white',
@@ -720,66 +719,36 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         ...baseStyle,
         backgroundColor: `${color}08`,
         border: `3px dashed ${color}`,
-        boxShadow: `inset 0 0 40px ${color}25, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`
+        boxShadow: `inset 0 0 40px ${color}25, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
+        transform: 'scale(1.01)',
+        transition: 'all 0.3s ease-in-out'
       };
     }
 
     return baseStyle;
-  }, [isDraggingOver, currentDragType]);
-
-  const getDragZoneVariant = () => {
-    if (!isDraggingOver) return 'inactive';
-    return dragOverIndex !== null ? 'active' : 'inactive';
-  };
+  }, [canvasWidth, isDraggingOver, currentDragType]);
 
   return (
     <div className="relative">
-      <motion.div
+      <div
         style={canvasStyle}
         className="email-canvas"
-        variants={canvasVariants}
-        animate={previewMode}
         onDrop={dragDropHandler.handleCanvasDrop}
         onDragOver={dragDropHandler.handleCanvasDragOver}
         onDragEnter={dragDropHandler.handleCanvasDragEnter}
         onDragLeave={dragDropHandler.handleCanvasDragLeave}
-        whileHover={isDraggingOver ? { scale: 1.01 } : {}}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {/* Subject Line Section */}
-        <motion.div 
-          className="border-b border-gray-100 bg-white"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
+        <div className="border-b border-gray-100 bg-white">
           <CanvasSubjectLine
             value={subject}
             onChange={onSubjectChange}
             emailContent={currentEmailHTML}
           />
-        </motion.div>
+        </div>
 
         {/* Email Content */}
-        <motion.div 
-          className="p-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <AnimatePresence>
-            {isDraggingOver && (
-              <motion.div
-                variants={dropZoneVariants}
-                initial="inactive"
-                animate={getDragZoneVariant()}
-                exit="inactive"
-                className="absolute inset-0 pointer-events-none border-2 border-dashed rounded-lg"
-                style={{ zIndex: 10 }}
-              />
-            )}
-          </AnimatePresence>
-
+        <div className="p-6">
           <CanvasRenderer
             blocks={blocks}
             selectedBlockId={selectedBlockId}
@@ -802,24 +771,18 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             onBlockEditEnd={handleBlockEditEnd}
             onBlockUpdate={handleBlockUpdate}
           />
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Only render CanvasStatus when showAIAnalytics is true */}
       {showAIAnalytics && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <CanvasStatus 
-            selectedBlockId={selectedBlockId}
-            canvasWidth={canvasWidth}
-            previewMode={previewMode}
-            emailHTML={currentEmailHTML}
-            subjectLine={subject}
-          />
-        </motion.div>
+        <CanvasStatus 
+          selectedBlockId={selectedBlockId}
+          canvasWidth={canvasWidth}
+          previewMode={previewMode}
+          emailHTML={currentEmailHTML}
+          subjectLine={subject}
+        />
       )}
     </div>
   );
