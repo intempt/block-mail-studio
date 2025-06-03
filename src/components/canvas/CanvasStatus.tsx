@@ -9,7 +9,7 @@ import {
   TrendingUp, 
   RefreshCw, 
   Shield,
-  Lightbulb,
+  Sparkles,
   Target,
   FileText,
   MousePointer,
@@ -106,34 +106,32 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     }
   };
 
-  // Loading state
-  if (isAnalyzing) {
-    return (
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
-        <div className="px-6 py-3">
-          <div className="flex items-center gap-3">
-            <RefreshCw className="w-4 h-4 animate-spin text-purple-600" />
-            <span className="text-sm text-gray-600">AI analyzing email content...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // No content state
+  // No content state - prominent call-to-action style
   if (!hasContent && !analytics) {
     return (
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
-        <div className="px-6 py-3">
-          <div className="flex items-center gap-3">
+      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 border-t border-purple-500">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-base">Email Analytics</h3>
+                <p className="text-purple-100 text-sm">Get AI-powered optimization insights for your email</p>
+              </div>
+            </div>
             <Button 
-              variant="outline" 
-              size="sm" 
               onClick={analyzeEmail} 
-              className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+              className="bg-white text-purple-700 hover:bg-purple-50 font-medium px-6 py-2 shadow-lg hover:shadow-xl transition-all duration-200"
+              disabled={isAnalyzing}
             >
-              <Lightbulb className="w-4 h-4 mr-1" />
-              AI Analytics
+              {isAnalyzing ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-2" />
+              )}
+              {isAnalyzing ? 'Analyzing...' : 'Analyze Email'}
             </Button>
           </div>
         </div>
@@ -141,20 +139,41 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     );
   }
 
+  // Loading state
+  if (isAnalyzing) {
+    return (
+      <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 border-t border-purple-500">
+        <div className="px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <RefreshCw className="w-6 h-6 animate-spin text-white" />
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-base">AI analyzing your email...</h3>
+              <p className="text-purple-100 text-sm">Generating optimization insights and performance predictions</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-t border-gray-200">
+    <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-purple-700 border-t border-purple-500">
       <div className="px-6 py-3">
         {/* Header with controls */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <Lightbulb className="w-4 h-4 text-purple-600" />
-            <span className="text-sm font-medium">Email Analytics</span>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 bg-white/20 rounded">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-white font-medium text-sm">Email Analytics</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={refreshAnalytics}
               disabled={isAnalyzing}
-              className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700"
+              className="h-6 px-2 text-xs text-white hover:bg-white/20 hover:text-white"
             >
               {isAnalyzing ? (
                 <RefreshCw className="w-3 h-3 animate-spin mr-1" />
@@ -178,11 +197,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 
                 return (
                   <div key={`${metric.key}-${index}`} className="flex items-center gap-1.5 whitespace-nowrap">
-                    {metric.icon}
-                    <span className="text-xs text-gray-700">{metric.label}:</span>
+                    <div className="text-white/80">
+                      {metric.icon}
+                    </div>
+                    <span className="text-xs text-white/90">{metric.label}:</span>
                     <Badge 
                       variant="outline" 
-                      className={`text-xs px-1.5 py-0.5 ${getMetricColor(metric.key, value)}`}
+                      className="text-xs px-1.5 py-0.5 bg-white/20 border-white/30 text-white"
                     >
                       {metric.format(value)}
                     </Badge>
