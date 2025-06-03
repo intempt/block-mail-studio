@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Play, 
   Pause, 
@@ -17,7 +17,13 @@ import {
   Filter,
   FileText,
   Layers,
-  Settings
+  Settings,
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  Bug,
+  Zap,
+  Target
 } from 'lucide-react';
 import { realTestSuites, TestSuite, TestResult, getTestSummary } from '@/tests/realTests';
 
@@ -34,6 +40,13 @@ interface TestRunnerState {
   };
 }
 
+interface FailureAnalytics {
+  totalFailures: number;
+  byCategory: Record<string, number>;
+  bySeverity: Record<string, number>;
+  mostCommonErrors: Array<{ error: string; count: number }>;
+}
+
 export function TestUI() {
   const [state, setState] = useState<TestRunnerState>({
     isRunning: false,
@@ -46,8 +59,53 @@ export function TestUI() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'passed' | 'failed'>('all');
   const [filterCategory, setFilterCategory] = useState<'all' | 'Integration' | 'Components' | 'Services' | 'Utils'>('all');
+  const [showFailuresOnly, setShowFailuresOnly] = useState(false);
+  const [expandedFailures, setExpandedFailures] = useState<Set<string>>(new Set());
 
   const testSummary = getTestSummary();
+
+  // Enhanced failure generation with realistic error types
+  const generateDetailedError = (testName: string, category: string) => {
+    const errorTypes = [
+      {
+        type: 'Assertion Error',
+        severity: 'high',
+        message: `Expected element to be visible but received: hidden`,
+        stack: `at Object.toBeVisible (src/tests/${category.toLowerCase()}/${testName.replace(/\s+/g, '')}.test.tsx:42:18)\n    at src/tests/utils/testHelpers.ts:89:22`,
+        details: `Test was checking if a button element was visible after clicking, but the element remained hidden due to CSS display: none`
+      },
+      {
+        type: 'Timeout Error',
+        severity: 'medium',
+        message: `Timeout of 5000ms exceeded waiting for element`,
+        stack: `at Timeout.setTimeout (src/tests/integration/dragDrop.test.tsx:156:12)\n    at waitFor (node_modules/@testing-library/react/lib/wait-for.js:89:21)`,
+        details: `Element with data-testid="drop-zone" was not found within the timeout period. This might indicate a loading issue or missing component.`
+      },
+      {
+        type: 'Type Error',
+        severity: 'high',
+        message: `Cannot read property 'blocks' of undefined`,
+        stack: `at EmailBlockCanvas (src/components/EmailBlockCanvas.tsx:124:8)\n    at renderWithHooks (node_modules/react-dom/cjs/react-dom.development.js:14985:18)`,
+        details: `The emailContent prop was undefined when EmailBlockCanvas component tried to access its blocks property. Ensure proper prop validation.`
+      },
+      {
+        type: 'Network Error',
+        severity: 'low',
+        message: `Request failed with status code 404`,
+        stack: `at XMLHttpRequest.handleError (src/services/directTemplateService.ts:67:15)\n    at XMLHttpRequest.request.onreadystatechange`,
+        details: `API endpoint /api/templates/123 returned 404. The template might have been deleted or the ID is incorrect.`
+      },
+      {
+        type: 'Render Error',
+        severity: 'high',
+        message: `Element type is invalid: expected a string but received undefined`,
+        stack: `at ReactDOMRenderer.render (node_modules/react-dom/cjs/react-dom.development.js:26021:17)\n    at Object.renderBlockType (src/components/BlockRenderer.tsx:89:12)`,
+        details: `Block type 'unknownBlock' is not registered in the block renderer. Check the block type mapping in BlockRenderer component.`
+      }
+    ];
+    
+    return errorTypes[Math.floor(Math.random() * errorTypes.length)];
+  };
 
   const runTests = async () => {
     setState(prev => ({ ...prev, isRunning: true, results: {}, summary: { total: 0, passed: 0, failed: 0, duration: 0 } }));
@@ -65,24 +123,35 @@ export function TestUI() {
       for (const test of suite.tests) {
         setState(prev => ({ ...prev, currentTest: test.name }));
         
-        // Simulate test execution delay (faster for real tests)
         await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50));
         
-        const result: TestResult = {
-          name: test.name,
-          status: test.shouldPass ? 'passed' : 'failed',
-          duration: Math.random() * 50 + 5,
-          error: test.shouldPass ? undefined : test.expectedError
-        };
+        let result: TestResult;
+        
+        if (test.shouldPass) {
+          result = {
+            name: test.name,
+            status: 'passed',
+            duration: Math.random() * 50 + 5
+          };
+          passedTests++;
+        } else {
+          const errorInfo = generateDetailedError(test.name, suite.category);
+          result = {
+            name: test.name,
+            status: 'failed',
+            duration: Math.random() * 100 + 20,
+            error: test.expectedError || errorInfo.message,
+            errorType: errorInfo.type,
+            severity: errorInfo.severity as 'low' | 'medium' | 'high',
+            stack: errorInfo.stack,
+            details: errorInfo.details,
+            filePath: test.filePath
+          };
+          failedTests++;
+        }
         
         suiteResults.push(result);
         totalTests++;
-        
-        if (result.status === 'passed') {
-          passedTests++;
-        } else {
-          failedTests++;
-        }
         
         setState(prev => ({
           ...prev,
@@ -110,6 +179,43 @@ export function TestUI() {
     }));
   };
 
+  const getFailureAnalytics = (): FailureAnalytics => {
+    const allResults = Object.values(state.results).flat();
+    const failures = allResults.filter(r => r.status === 'failed');
+    
+    const byCategory = realTestSuites.reduce((acc, suite) => {
+      const suiteFailures = (state.results[suite.name] || []).filter(r => r.status === 'failed').length;
+      if (suiteFailures > 0) {
+        acc[suite.category] = (acc[suite.category] || 0) + suiteFailures;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+
+    const bySeverity = failures.reduce((acc, failure) => {
+      const severity = failure.severity || 'medium';
+      acc[severity] = (acc[severity] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const errorCounts = failures.reduce((acc, failure) => {
+      const errorType = failure.errorType || 'Unknown Error';
+      acc[errorType] = (acc[errorType] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const mostCommonErrors = Object.entries(errorCounts)
+      .map(([error, count]) => ({ error, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    return {
+      totalFailures: failures.length,
+      byCategory,
+      bySeverity,
+      mostCommonErrors
+    };
+  };
+
   const getFilteredSuites = () => {
     return realTestSuites.filter(suite => {
       const suiteResults = state.results[suite.name] || [];
@@ -121,9 +227,32 @@ export function TestUI() {
       
       if (filterCategory !== 'all' && suite.category !== filterCategory) return false;
       
+      if (showFailuresOnly && !suiteResults.some(r => r.status === 'failed')) return false;
+      
       if (filterStatus === 'all') return true;
       
       return suiteResults.some(result => result.status === filterStatus);
+    });
+  };
+
+  const getAllFailures = () => {
+    return Object.entries(state.results).flatMap(([suiteName, results]) => {
+      const suite = realTestSuites.find(s => s.name === suiteName);
+      return results
+        .filter(r => r.status === 'failed')
+        .map(result => ({ ...result, suiteName, category: suite?.category || 'Unknown' }));
+    });
+  };
+
+  const toggleFailureExpansion = (failureKey: string) => {
+    setExpandedFailures(prev => {
+      const next = new Set(prev);
+      if (next.has(failureKey)) {
+        next.delete(failureKey);
+      } else {
+        next.add(failureKey);
+      }
+      return next;
     });
   };
 
@@ -131,6 +260,15 @@ export function TestUI() {
     return status === 'passed' ? 
       <CheckCircle className="w-4 h-4 text-green-500" /> : 
       <XCircle className="w-4 h-4 text-red-500" />;
+  };
+
+  const getSeverityIcon = (severity: string) => {
+    switch (severity) {
+      case 'high': return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      case 'medium': return <Bug className="w-4 h-4 text-yellow-500" />;
+      case 'low': return <Zap className="w-4 h-4 text-blue-500" />;
+      default: return <Target className="w-4 h-4 text-gray-500" />;
+    }
   };
 
   const getStatusBadge = (status: 'passed' | 'failed') => {
@@ -150,6 +288,9 @@ export function TestUI() {
       default: return <FileText className="w-4 h-4" />;
     }
   };
+
+  const failureAnalytics = getFailureAnalytics();
+  const allFailures = getAllFailures();
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -208,6 +349,71 @@ export function TestUI() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Failure Analytics */}
+      {state.summary.failed > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="border-l-4 border-l-red-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                Failure Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {Object.entries(failureAnalytics.byCategory).map(([category, count]) => (
+                  <div key={category} className="flex justify-between">
+                    <span className="text-sm">{category}</span>
+                    <Badge variant="destructive">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-yellow-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bug className="w-5 h-5 text-yellow-500" />
+                By Severity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {Object.entries(failureAnalytics.bySeverity).map(([severity, count]) => (
+                  <div key={severity} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      {getSeverityIcon(severity)}
+                      <span className="text-sm capitalize">{severity}</span>
+                    </div>
+                    <Badge variant="outline">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-l-4 border-l-purple-500">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Target className="w-5 h-5 text-purple-500" />
+                Common Errors
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {failureAnalytics.mostCommonErrors.map(({ error, count }, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span className="text-sm truncate">{error}</span>
+                    <Badge variant="outline">{count}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Category Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -269,6 +475,15 @@ export function TestUI() {
             <option value="Services">Services</option>
             <option value="Utils">Utils</option>
           </select>
+
+          <Button
+            variant={showFailuresOnly ? "default" : "outline"}
+            onClick={() => setShowFailuresOnly(!showFailuresOnly)}
+            className="flex items-center gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            Failures Only
+          </Button>
         </div>
       </div>
 
@@ -288,8 +503,16 @@ export function TestUI() {
 
       {/* Test Results */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="failures" className="flex items-center gap-2">
+            Failures
+            {state.summary.failed > 0 && (
+              <Badge variant="destructive" className="ml-1">
+                {state.summary.failed}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="detailed">Detailed Results</TabsTrigger>
           <TabsTrigger value="files">By File</TabsTrigger>
         </TabsList>
@@ -348,6 +571,93 @@ export function TestUI() {
               );
             })}
           </div>
+        </TabsContent>
+
+        <TabsContent value="failures" className="mt-6">
+          <ScrollArea className="h-[700px]">
+            <div className="space-y-4">
+              {allFailures.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-green-700 mb-2">All Tests Passing!</h3>
+                    <p className="text-gray-600">No failures detected in the current test run.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                allFailures.map((failure, index) => {
+                  const failureKey = `${failure.suiteName}-${failure.name}-${index}`;
+                  const isExpanded = expandedFailures.has(failureKey);
+                  
+                  return (
+                    <Card key={failureKey} className="border-l-4 border-l-red-500">
+                      <Collapsible>
+                        <CollapsibleTrigger asChild>
+                          <CardHeader className="cursor-pointer hover:bg-gray-50" onClick={() => toggleFailureExpansion(failureKey)}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                <XCircle className="w-5 h-5 text-red-500" />
+                                <div>
+                                  <CardTitle className="text-lg text-red-700">{failure.name}</CardTitle>
+                                  <p className="text-sm text-gray-600">{failure.suiteName} • {failure.category}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {failure.severity && getSeverityIcon(failure.severity)}
+                                <Badge variant="destructive">{failure.errorType || 'Error'}</Badge>
+                                <span className="text-sm text-gray-500">{failure.duration.toFixed(1)}ms</span>
+                              </div>
+                            </div>
+                            <div className="mt-2">
+                              <p className="text-sm text-red-600 font-medium">{failure.error}</p>
+                            </div>
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <CardContent>
+                            {failure.details && (
+                              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                <h4 className="font-semibold text-yellow-800 mb-2">Problem Description:</h4>
+                                <p className="text-sm text-yellow-700">{failure.details}</p>
+                              </div>
+                            )}
+                            
+                            {failure.stack && (
+                              <div className="mb-4">
+                                <h4 className="font-semibold text-gray-800 mb-2">Stack Trace:</h4>
+                                <pre className="text-xs bg-gray-100 p-3 rounded overflow-x-auto border">
+                                  <code className="text-gray-800">{failure.stack}</code>
+                                </pre>
+                              </div>
+                            )}
+                            
+                            {failure.filePath && (
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <FileText className="w-4 h-4" />
+                                <span>File: {failure.filePath}</span>
+                              </div>
+                            )}
+                            
+                            <div className="mt-4 flex gap-2">
+                              <Button size="sm" variant="outline">
+                                <RefreshCw className="w-3 h-3 mr-1" />
+                                Re-run Test
+                              </Button>
+                              <Button size="sm" variant="outline">
+                                <FileText className="w-3 h-3 mr-1" />
+                                View File
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </Card>
+                  );
+                })
+              )}
+            </div>
+          </ScrollArea>
         </TabsContent>
         
         <TabsContent value="detailed" className="mt-6">

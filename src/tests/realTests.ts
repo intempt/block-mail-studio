@@ -1,4 +1,3 @@
-
 export interface TestCase {
   name: string;
   shouldPass: boolean;
@@ -19,6 +18,11 @@ export interface TestResult {
   status: 'passed' | 'failed';
   duration: number;
   error?: string;
+  errorType?: string;
+  severity?: 'low' | 'medium' | 'high';
+  stack?: string;
+  details?: string;
+  filePath?: string;
 }
 
 // Extract real test cases from actual test files
