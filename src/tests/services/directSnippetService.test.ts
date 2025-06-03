@@ -1,4 +1,5 @@
 
+import { describe, it, expect, beforeEach } from 'vitest';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailBlock } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -63,7 +64,7 @@ describe('DirectSnippetService', () => {
     });
 
     it('should notify listeners when snippet is created', () => {
-      const listener = jest.fn();
+      const listener = vi.fn();
       DirectSnippetService.addChangeListener(listener);
 
       const block: EmailBlock = {
@@ -111,7 +112,7 @@ describe('DirectSnippetService', () => {
       };
 
       const snippet = DirectSnippetService.createSnippet(block, 'Test', 'Test');
-      const listener = jest.fn();
+      const listener = vi.fn();
       DirectSnippetService.addChangeListener(listener);
 
       DirectSnippetService.deleteSnippet(snippet.id);
@@ -243,8 +244,8 @@ describe('DirectSnippetService', () => {
 
   describe('Listener Management', () => {
     it('should add and remove listeners correctly', () => {
-      const listener1 = jest.fn();
-      const listener2 = jest.fn();
+      const listener1 = vi.fn();
+      const listener2 = vi.fn();
       
       DirectSnippetService.addChangeListener(listener1);
       DirectSnippetService.addChangeListener(listener2);

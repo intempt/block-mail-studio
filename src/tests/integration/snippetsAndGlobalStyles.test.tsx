@@ -1,18 +1,20 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { EmailEditor } from '@/components/EmailEditor';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailBlock } from '@/types/emailBlocks';
 
 // Mock services
-jest.mock('@/services/directSnippetService');
-jest.mock('@/services/directTemplateService');
+vi.mock('@/services/directSnippetService');
+vi.mock('@/services/directTemplateService');
 
 describe('Snippets and Global Styles Integration', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     DirectSnippetService.clearCustomSnippets();
   });
 
@@ -41,7 +43,7 @@ describe('Snippets and Global Styles Integration', () => {
       render(
         <EmailEditor 
           initialContent={{ blocks: mockBlocks }}
-          onContentChange={jest.fn()}
+          onContentChange={vi.fn()}
         />
       );
 

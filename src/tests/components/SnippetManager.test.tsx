@@ -1,13 +1,15 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SnippetManager } from '@/components/SnippetManager';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 
 // Mock the DirectSnippetService
-jest.mock('@/services/directSnippetService');
+vi.mock('@/services/directSnippetService');
 
 const mockSnippets: EmailSnippet[] = [
   {
@@ -69,12 +71,12 @@ const mockSnippets: EmailSnippet[] = [
 ];
 
 describe('SnippetManager', () => {
-  const mockOnSnippetSelect = jest.fn();
+  const mockOnSnippetSelect = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (DirectSnippetService.getAllSnippets as jest.Mock).mockReturnValue(mockSnippets);
-    (DirectSnippetService.getCustomSnippets as jest.Mock).mockReturnValue(mockSnippets);
+    vi.clearAllMocks();
+    (DirectSnippetService.getAllSnippets as any).mockReturnValue(mockSnippets);
+    (DirectSnippetService.getCustomSnippets as any).mockReturnValue(mockSnippets);
   });
 
   describe('Rendering', () => {
@@ -88,7 +90,7 @@ describe('SnippetManager', () => {
     });
 
     it('should render empty state when no snippets available', () => {
-      (DirectSnippetService.getAllSnippets as jest.Mock).mockReturnValue([]);
+      (DirectSnippetService.getAllSnippets as any).mockReturnValue([]);
       
       render(<SnippetManager onSnippetSelect={mockOnSnippetSelect} />);
       
@@ -185,7 +187,7 @@ describe('SnippetManager', () => {
       
       // Mock window.confirm
       const originalConfirm = window.confirm;
-      window.confirm = jest.fn(() => true);
+      window.confirm = vi.fn(() => true);
       
       render(<SnippetManager onSnippetSelect={mockOnSnippetSelect} />);
       
@@ -210,7 +212,7 @@ describe('SnippetManager', () => {
       
       // Mock window.confirm to return false
       const originalConfirm = window.confirm;
-      window.confirm = jest.fn(() => false);
+      window.confirm = vi.fn(() => false);
       
       render(<SnippetManager onSnippetSelect={mockOnSnippetSelect} />);
       
@@ -240,7 +242,7 @@ describe('SnippetManager', () => {
       expect(DirectSnippetService.getAllSnippets).toHaveBeenCalled();
       
       // Clear the mock call count
-      (DirectSnippetService.getAllSnippets as jest.Mock).mockClear();
+      (DirectSnippetService.getAllSnippets as any).mockClear();
       
       rerender(
         <SnippetManager onSnippetSelect={mockOnSnippetSelect} refreshTrigger={1} />

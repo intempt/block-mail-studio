@@ -1,14 +1,16 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GlobalStylesPanel } from '@/components/GlobalStylesPanel';
 
 describe('GlobalStylesPanel', () => {
-  const mockOnStylesChange = jest.fn();
+  const mockOnStylesChange = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering', () => {

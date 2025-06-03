@@ -1,13 +1,15 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SnippetRibbon } from '@/components/SnippetRibbon';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 
 // Mock the DirectSnippetService
-jest.mock('@/services/directSnippetService');
+vi.mock('@/services/directSnippetService');
 
 const mockSnippets: EmailSnippet[] = [
   {
@@ -41,15 +43,15 @@ const mockSnippets: EmailSnippet[] = [
 ];
 
 describe('SnippetRibbon', () => {
-  const mockOnSnippetSelect = jest.fn();
-  const mockAddChangeListener = jest.fn();
-  const mockRemoveChangeListener = jest.fn();
+  const mockOnSnippetSelect = vi.fn();
+  const mockAddChangeListener = vi.fn();
+  const mockRemoveChangeListener = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (DirectSnippetService.getCustomSnippets as jest.Mock).mockReturnValue(mockSnippets);
-    (DirectSnippetService.addChangeListener as jest.Mock).mockImplementation(mockAddChangeListener);
-    (DirectSnippetService.removeChangeListener as jest.Mock).mockImplementation(mockRemoveChangeListener);
+    vi.clearAllMocks();
+    (DirectSnippetService.getCustomSnippets as any).mockReturnValue(mockSnippets);
+    (DirectSnippetService.addChangeListener as any).mockImplementation(mockAddChangeListener);
+    (DirectSnippetService.removeChangeListener as any).mockImplementation(mockRemoveChangeListener);
   });
 
   describe('Visibility and Rendering', () => {
@@ -62,7 +64,7 @@ describe('SnippetRibbon', () => {
     });
 
     it('should not render when no custom snippets exist', () => {
-      (DirectSnippetService.getCustomSnippets as jest.Mock).mockReturnValue([]);
+      (DirectSnippetService.getCustomSnippets as any).mockReturnValue([]);
       
       const { container } = render(<SnippetRibbon onSnippetSelect={mockOnSnippetSelect} />);
       
@@ -114,7 +116,7 @@ describe('SnippetRibbon', () => {
         const dragEvent = new Event('dragstart', { bubbles: true });
         Object.defineProperty(dragEvent, 'dataTransfer', {
           value: {
-            setData: jest.fn(),
+            setData: vi.fn(),
             effectAllowed: ''
           }
         });
@@ -197,7 +199,7 @@ describe('SnippetRibbon', () => {
       );
       
       // Clear initial call
-      (DirectSnippetService.getCustomSnippets as jest.Mock).mockClear();
+      (DirectSnippetService.getCustomSnippets as any).mockClear();
       
       rerender(
         <SnippetRibbon onSnippetSelect={mockOnSnippetSelect} refreshTrigger={1} />
@@ -217,7 +219,7 @@ describe('SnippetRibbon', () => {
         blockType: 'button'
       };
       
-      (DirectSnippetService.getCustomSnippets as jest.Mock).mockReturnValue([
+      (DirectSnippetService.getCustomSnippets as any).mockReturnValue([
         mockSnippets[0],
         buttonSnippet
       ]);

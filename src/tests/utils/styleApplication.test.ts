@@ -1,4 +1,5 @@
 
+import { describe, it, expect } from 'vitest';
 import { EmailBlock } from '@/types/emailBlocks';
 
 // Mock style utility functions that would exist in the codebase
