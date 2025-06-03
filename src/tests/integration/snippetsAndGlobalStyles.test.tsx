@@ -1,9 +1,8 @@
-
 import React from 'react';
-import { render } from '@testing-library/react';
-import { screen, fireEvent, waitFor } from '@testing-library/dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import '@testing-library/jest-dom';
 import EmailEditor from '@/components/EmailEditor';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailBlock } from '@/types/emailBlocks';
@@ -42,7 +41,11 @@ describe('Snippets and Global Styles Integration', () => {
 
       render(
         <EmailEditor 
+          content="<h1>Styled Header</h1>"
+          subject="Test Email"
           onContentChange={vi.fn()}
+          onSubjectChange={vi.fn()}
+          onBack={vi.fn()}
         />
       );
 
