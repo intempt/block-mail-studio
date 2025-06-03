@@ -210,9 +210,9 @@ describe('Style Application and Inheritance', () => {
         type: 'text',
         content: { html: '<p>Responsive</p>' },
         styling: {
-          desktop: { fontSize: '18px', lineHeight: '1.6' },
-          tablet: { fontSize: '16px', lineHeight: '1.5' },
-          mobile: { fontSize: '14px', lineHeight: '1.4' }
+          desktop: { width: '100%', height: 'auto', fontSize: '18px', lineHeight: '1.6' },
+          tablet: { width: '100%', height: 'auto', fontSize: '16px', lineHeight: '1.5' },
+          mobile: { width: '100%', height: 'auto', fontSize: '14px', lineHeight: '1.4' }
         },
         position: { x: 0, y: 0 },
         displayOptions: {

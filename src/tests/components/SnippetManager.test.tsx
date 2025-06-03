@@ -1,7 +1,5 @@
-
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SnippetManager } from '@/components/SnippetManager';

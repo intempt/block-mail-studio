@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SnippetRibbon } from '@/components/SnippetRibbon';
@@ -113,17 +112,19 @@ describe('SnippetRibbon', () => {
       
       const snippetCard = screen.getByText('Header Block').closest('div');
       if (snippetCard) {
-        const dragEvent = new Event('dragstart', { bubbles: true });
+        const dragEvent = new DragEvent('dragstart', { bubbles: true });
+        const mockDataTransfer = {
+          setData: vi.fn(),
+          effectAllowed: ''
+        };
         Object.defineProperty(dragEvent, 'dataTransfer', {
-          value: {
-            setData: vi.fn(),
-            effectAllowed: ''
-          }
+          value: mockDataTransfer,
+          writable: true
         });
         
         fireEvent(snippetCard, dragEvent);
         
-        expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith(
+        expect(mockDataTransfer.setData).toHaveBeenCalledWith(
           'application/json',
           JSON.stringify({
             snippetId: 'snippet-1',

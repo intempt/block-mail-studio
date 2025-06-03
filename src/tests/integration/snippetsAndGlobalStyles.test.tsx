@@ -1,10 +1,8 @@
-
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { EmailEditor } from '@/components/EmailEditor';
+import EmailEditor from '@/components/EmailEditor';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailBlock } from '@/types/emailBlocks';
 
