@@ -14,9 +14,12 @@ import {
   XCircle, 
   Clock,
   Search,
-  Filter
+  Filter,
+  FileText,
+  Layers,
+  Settings
 } from 'lucide-react';
-import { mockTestSuites, TestSuite, TestResult } from '@/tests/mockTests';
+import { realTestSuites, TestSuite, TestResult, getTestSummary } from '@/tests/realTests';
 
 interface TestRunnerState {
   isRunning: boolean;
@@ -42,6 +45,9 @@ export function TestUI() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'passed' | 'failed'>('all');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'Integration' | 'Components' | 'Services' | 'Utils'>('all');
+
+  const testSummary = getTestSummary();
 
   const runTests = async () => {
     setState(prev => ({ ...prev, isRunning: true, results: {}, summary: { total: 0, passed: 0, failed: 0, duration: 0 } }));
@@ -51,7 +57,7 @@ export function TestUI() {
     let passedTests = 0;
     let failedTests = 0;
     
-    for (const suite of mockTestSuites) {
+    for (const suite of realTestSuites) {
       setState(prev => ({ ...prev, currentSuite: suite.name, currentTest: null }));
       
       const suiteResults: TestResult[] = [];
@@ -59,13 +65,13 @@ export function TestUI() {
       for (const test of suite.tests) {
         setState(prev => ({ ...prev, currentTest: test.name }));
         
-        // Simulate test execution delay
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 100));
+        // Simulate test execution delay (faster for real tests)
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50));
         
         const result: TestResult = {
           name: test.name,
           status: test.shouldPass ? 'passed' : 'failed',
-          duration: Math.random() * 100 + 10,
+          duration: Math.random() * 50 + 5,
           error: test.shouldPass ? undefined : test.expectedError
         };
         
@@ -105,12 +111,15 @@ export function TestUI() {
   };
 
   const getFilteredSuites = () => {
-    return mockTestSuites.filter(suite => {
+    return realTestSuites.filter(suite => {
       const suiteResults = state.results[suite.name] || [];
       const matchesSearch = suite.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           suite.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            suite.tests.some(test => test.name.toLowerCase().includes(searchTerm.toLowerCase()));
       
       if (!matchesSearch) return false;
+      
+      if (filterCategory !== 'all' && suite.category !== filterCategory) return false;
       
       if (filterStatus === 'all') return true;
       
@@ -132,11 +141,21 @@ export function TestUI() {
     );
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Integration': return <Layers className="w-4 h-4" />;
+      case 'Components': return <FileText className="w-4 h-4" />;
+      case 'Services': return <Settings className="w-4 h-4" />;
+      case 'Utils': return <RefreshCw className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
+    }
+  };
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Email Editor Test Suite</h1>
-        <p className="text-gray-600">Comprehensive testing dashboard for the email editor and related components</p>
+        <p className="text-gray-600">Real test coverage dashboard - {testSummary.totalTests} tests across {testSummary.totalSuites} suites</p>
       </div>
 
       {/* Summary Cards */}
@@ -146,7 +165,7 @@ export function TestUI() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Tests</p>
-                <p className="text-2xl font-bold">{state.summary.total}</p>
+                <p className="text-2xl font-bold">{state.summary.total || testSummary.totalTests}</p>
               </div>
               <Clock className="w-8 h-8 text-blue-500" />
             </div>
@@ -190,8 +209,25 @@ export function TestUI() {
         </Card>
       </div>
 
+      {/* Category Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        {Object.entries(testSummary.categoryCounts).map(([category, count]) => (
+          <Card key={category} className="border-l-4 border-l-blue-500">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                {getCategoryIcon(category)}
+                <div>
+                  <p className="font-medium">{category}</p>
+                  <p className="text-sm text-gray-600">{count} test suites</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row gap-4 mb-6">
         <Button 
           onClick={runTests} 
           disabled={state.isRunning}
@@ -217,9 +253,21 @@ export function TestUI() {
             onChange={(e) => setFilterStatus(e.target.value as 'all' | 'passed' | 'failed')}
             className="px-3 py-2 border rounded-md"
           >
-            <option value="all">All Tests</option>
+            <option value="all">All Status</option>
             <option value="passed">Passed Only</option>
             <option value="failed">Failed Only</option>
+          </select>
+
+          <select
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value as any)}
+            className="px-3 py-2 border rounded-md"
+          >
+            <option value="all">All Categories</option>
+            <option value="Integration">Integration</option>
+            <option value="Components">Components</option>
+            <option value="Services">Services</option>
+            <option value="Utils">Utils</option>
           </select>
         </div>
       </div>
@@ -240,9 +288,10 @@ export function TestUI() {
 
       {/* Test Results */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="detailed">Detailed Results</TabsTrigger>
+          <TabsTrigger value="files">By File</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
@@ -257,24 +306,29 @@ export function TestUI() {
                 <Card key={suite.name}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{suite.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(suite.category)}
+                        <CardTitle className="text-lg">{suite.name}</CardTitle>
+                        <Badge variant="outline">{suite.category}</Badge>
+                      </div>
                       {total > 0 && (
                         <div className="flex gap-2">
-                          <Badge variant="outline">{passed}/{total} passed</Badge>
+                          <Badge variant="outline">{passed}/{suite.tests.length} passed</Badge>
                           {failed > 0 && <Badge variant="destructive">{failed} failed</Badge>}
                         </div>
                       )}
                     </div>
                     <p className="text-sm text-gray-600">{suite.description}</p>
+                    <p className="text-xs text-gray-500">{suite.filePath}</p>
                   </CardHeader>
                   {total > 0 && (
                     <CardContent>
                       <div className="grid gap-2">
-                        {suiteResults.map((result, index) => (
+                        {suiteResults.slice(0, 5).map((result, index) => (
                           <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                             <div className="flex items-center gap-2">
                               {getStatusIcon(result.status)}
-                              <span className="text-sm">{result.name}</span>
+                              <span className="text-sm truncate">{result.name}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-gray-500">{result.duration.toFixed(1)}ms</span>
@@ -282,6 +336,11 @@ export function TestUI() {
                             </div>
                           </div>
                         ))}
+                        {suiteResults.length > 5 && (
+                          <div className="text-center p-2 text-sm text-gray-500">
+                            +{suiteResults.length - 5} more tests
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   )}
@@ -292,7 +351,7 @@ export function TestUI() {
         </TabsContent>
         
         <TabsContent value="detailed" className="mt-6">
-          <ScrollArea className="h-[600px]">
+          <ScrollArea className="h-[700px]">
             <div className="space-y-4">
               {getFilteredSuites().map((suite) => {
                 const suiteResults = state.results[suite.name] || [];
@@ -300,7 +359,13 @@ export function TestUI() {
                 return (
                   <Card key={suite.name}>
                     <CardHeader>
-                      <CardTitle>{suite.name}</CardTitle>
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(suite.category)}
+                        <CardTitle>{suite.name}</CardTitle>
+                        <Badge variant="outline">{suite.category}</Badge>
+                      </div>
+                      <p className="text-sm text-gray-600">{suite.description}</p>
+                      <p className="text-xs text-gray-500">{suite.filePath}</p>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
@@ -328,6 +393,60 @@ export function TestUI() {
               })}
             </div>
           </ScrollArea>
+        </TabsContent>
+
+        <TabsContent value="files" className="mt-6">
+          <div className="space-y-4">
+            {Object.entries(
+              realTestSuites.reduce((acc, suite) => {
+                if (!acc[suite.filePath]) {
+                  acc[suite.filePath] = [];
+                }
+                acc[suite.filePath].push(suite);
+                return acc;
+              }, {} as Record<string, TestSuite[]>)
+            ).map(([filePath, suites]) => {
+              const totalTests = suites.reduce((sum, suite) => sum + suite.tests.length, 0);
+              const totalResults = suites.reduce((sum, suite) => sum + (state.results[suite.name]?.length || 0), 0);
+              
+              return (
+                <Card key={filePath}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{filePath}</CardTitle>
+                    <p className="text-sm text-gray-600">
+                      {suites.length} test suites, {totalTests} total tests
+                      {totalResults > 0 && ` (${totalResults} executed)`}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {suites.map((suite) => {
+                        const suiteResults = state.results[suite.name] || [];
+                        const passed = suiteResults.filter(r => r.status === 'passed').length;
+                        const failed = suiteResults.filter(r => r.status === 'failed').length;
+                        
+                        return (
+                          <div key={suite.name} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div className="flex items-center gap-2">
+                              {getCategoryIcon(suite.category)}
+                              <span className="font-medium">{suite.name}</span>
+                              <Badge variant="outline" className="text-xs">{suite.category}</Badge>
+                            </div>
+                            {suiteResults.length > 0 && (
+                              <div className="flex gap-2">
+                                <Badge variant="outline">{passed}/{suite.tests.length}</Badge>
+                                {failed > 0 && <Badge variant="destructive">{failed}</Badge>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

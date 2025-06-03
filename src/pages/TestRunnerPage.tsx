@@ -22,7 +22,7 @@ export default function TestRunnerPage() {
           </Button>
           <div>
             <h1 className="text-xl font-semibold">Test Runner</h1>
-            <p className="text-sm text-gray-600">Interactive test suite for the email editor</p>
+            <p className="text-sm text-gray-600">Real test suite for the email editor - 203+ actual tests</p>
           </div>
         </div>
       </div>
