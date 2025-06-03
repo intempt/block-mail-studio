@@ -179,54 +179,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     }
   };
 
-  const handleQuickAIEnhance = async () => {
-    if (!editor || !editor.getText().trim()) {
-      toast.error('No text available to enhance');
-      return;
-    }
-
-    const selectedText = editor.state.selection.empty 
-      ? editor.getText() 
-      : editor.state.doc.textBetween(editor.state.selection.from, editor.state.selection.to);
-
-    if (!selectedText.trim()) {
-      toast.error('Please select text or ensure there is content to enhance');
-      return;
-    }
-
-    setIsAIProcessing(true);
-    setAiOperation('enhance');
-
-    try {
-      // Use smart analysis to determine best operation
-      const analysis = await TipTapAIService.analyzeTextContext(selectedText, emailContext.emailHTML);
-      const bestOperation = analysis.suggestedOperations[0] || 'improve';
-
-      const result = await TipTapAIService.enhanceText(
-        selectedText, 
-        bestOperation, 
-        {
-          blockType: 'text',
-          ...emailContext
-        }
-      );
-
-      if (editor.state.selection.empty) {
-        editor.commands.setContent(result.content);
-      } else {
-        editor.chain().focus().deleteSelection().insertContent(result.content).run();
-      }
-
-      toast.success(`Text enhanced using ${bestOperation} operation`);
-    } catch (error) {
-      console.error('AI enhance failed:', error);
-      toast.error('Failed to enhance text');
-    } finally {
-      setIsAIProcessing(false);
-      setAiOperation(null);
-    }
-  };
-
   const handleTextColorChange = (color: string) => {
     editor.chain().focus().setColor(color).run();
     setShowColorPicker(false);
@@ -268,7 +220,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
             title="AI Assistant"
             disabled={isAIProcessing}
           >
-            {isAIProcessing && aiOperation !== 'enhance' ? (
+            {isAIProcessing ? (
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
             ) : (
               <Sparkles className="w-4 h-4 mr-1" />
@@ -518,25 +470,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         title="Insert Image"
       >
         <Image className="w-4 h-4" />
-      </Button>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* AI Enhancement */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleQuickAIEnhance}
-        className="h-8 px-3 text-blue-600 hover:bg-blue-50"
-        title="AI Enhance"
-        disabled={isAIProcessing}
-      >
-        {isAIProcessing && aiOperation === 'enhance' ? (
-          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-        ) : (
-          <Wand2 className="w-4 h-4 mr-1" />
-        )}
-        Enhance
       </Button>
     </div>
   );
