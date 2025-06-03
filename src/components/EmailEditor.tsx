@@ -1,10 +1,10 @@
+
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useDebounce } from 'usehooks-ts';
 import { ArrowLeft, Eye, Code, Tablet, Monitor, Smartphone } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { OmnipresentRibbon } from '@/components/OmnipresentRibbon';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
 import { CompactAISuggestions } from '@/components/CompactAISuggestions';
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import TestRunnerDialog from './TestRunnerDialog';
+import { EmailBlock } from '@/types/emailBlocks';
 
 interface EmailEditorProps {
   content: string;
@@ -28,9 +29,12 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
   const [canvasWidth, setCanvasWidth] = useState<number>(1200);
   const [isCompact, setIsCompact] = useState<boolean>(false);
   const [showAIAnalytics, setShowAIAnalytics] = useState<boolean>(false);
+  const [blocks, setBlocks] = useState<EmailBlock[]>([]);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [debouncedCanvasWidth] = useDebounce(canvasWidth, 500);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const canvasRef = useRef<any>(null);
 
   const queryClient = new QueryClient();
 
@@ -47,21 +51,30 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
     onContentChange(content);
   }, [onContentChange]);
 
-  useKeyboardShortcuts({
-    'ctrl+s': () => {
-      toast({
-        title: "Saved!",
-        description: "Your email has been saved.",
-      })
-    },
-    'ctrl+shift+c': () => {
-      setIsCompact(!isCompact);
-      toast({
-        title: "Compact Mode Toggled!",
-        description: `Compact mode is now ${isCompact ? 'off' : 'on'}.`,
-      })
-    }
-  });
+  const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
+    console.log('Adding block:', blockType, layoutConfig);
+    // Block addition logic would be implemented here
+  }, []);
+
+  const handleBlockSelect = useCallback((blockId: string | null) => {
+    setSelectedBlockId(blockId);
+  }, []);
+
+  // Simplified keyboard shortcuts - just handle save
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        toast({
+          title: "Saved!",
+          description: "Your email has been saved.",
+        });
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [toast]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -113,7 +126,22 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
         <div className="flex-grow flex overflow-hidden">
           {/* Left Sidebar (OmnipresentRibbon) */}
           <div className="flex-none w-64 border-r border-gray-200 bg-gray-100 overflow-y-auto">
-            <OmnipresentRibbon />
+            <OmnipresentRibbon
+              onBlockAdd={handleBlockAdd}
+              universalContent={[]}
+              onUniversalContentAdd={() => {}}
+              onGlobalStylesChange={() => {}}
+              emailHTML=""
+              subjectLine={subject}
+              canvasWidth={canvasWidth}
+              deviceMode="desktop"
+              onDeviceChange={() => {}}
+              onWidthChange={setCanvasWidth}
+              onPreview={() => {}}
+              onSaveTemplate={() => {}}
+              onPublish={() => {}}
+              blocks={blocks}
+            />
           </div>
 
           {/* Email Canvas */}
@@ -140,7 +168,9 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
             </div>
 
             <EmailBlockCanvas
+              ref={canvasRef}
               onContentChange={handleContentChangeFromCanvas}
+              onBlockSelect={handleBlockSelect}
               previewWidth={debouncedCanvasWidth}
               previewMode={previewMode}
               compactMode={isCompact}
