@@ -1,6 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import EmailEditor from '@/components/EmailEditor';
+import FloatingTestRunner from '@/components/FloatingTestRunner';
 
 const Index = () => {
   const [emailContent, setEmailContent] = useState<string>('');
@@ -15,12 +16,15 @@ const Index = () => {
   }, []);
 
   return (
-    <EmailEditor 
-      content={emailContent}
-      subject={subjectLine}
-      onContentChange={handleContentChange}
-      onSubjectChange={handleSubjectChange}
-    />
+    <>
+      <EmailEditor 
+        content={emailContent}
+        subject={subjectLine}
+        onContentChange={handleContentChange}
+        onSubjectChange={handleSubjectChange}
+      />
+      <FloatingTestRunner />
+    </>
   );
 };
 

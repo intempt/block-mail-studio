@@ -2,9 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { useDebounce } from 'usehooks-ts';
 import { ArrowLeft, Eye, Code, Tablet, Monitor, Smartphone } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
 import { OmnipresentRibbon } from '@/components/OmnipresentRibbon';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
 import { CompactAISuggestions } from '@/components/CompactAISuggestions';
@@ -13,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import TestRunnerDialog from './TestRunnerDialog';
 import { EmailBlock } from '@/types/emailBlocks';
 
 interface EmailEditorProps {
@@ -31,9 +28,7 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
   const [showAIAnalytics, setShowAIAnalytics] = useState<boolean>(false);
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-  const [debouncedCanvasWidth] = useDebounce(canvasWidth, 500);
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
   const canvasRef = useRef<any>(null);
 
   const queryClient = new QueryClient();
@@ -60,22 +55,6 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
     setSelectedBlockId(blockId);
   }, []);
 
-  // Simplified keyboard shortcuts - just handle save
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === 's') {
-        event.preventDefault();
-        toast({
-          title: "Saved!",
-          description: "Your email has been saved.",
-        });
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [toast]);
-
   return (
     <QueryClientProvider client={queryClient}>
       <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -92,7 +71,6 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
               <h1 className="text-lg font-semibold text-gray-900">Email Builder Pro</h1>
             </div>
             <div className="flex items-center space-x-2">
-              <TestRunnerDialog />
               <Button variant="outline" size="sm" onClick={() => console.log('Preview clicked')}>
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
@@ -171,7 +149,7 @@ const EmailEditor: React.FC<EmailEditorProps> = ({ content, subject, onContentCh
               ref={canvasRef}
               onContentChange={handleContentChangeFromCanvas}
               onBlockSelect={handleBlockSelect}
-              previewWidth={debouncedCanvasWidth}
+              previewWidth={canvasWidth}
               previewMode={previewMode}
               compactMode={isCompact}
               subject={subject}
