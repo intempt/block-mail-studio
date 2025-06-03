@@ -305,6 +305,130 @@ export const realTestSuites: TestSuite[] = [
       { name: 'should handle complex block configurations', shouldPass: true, filePath: 'tests/utils/blockFactory.test.ts' },
       { name: 'should throw error for unknown block type', shouldPass: false, expectedError: 'Unknown block type: unknown', filePath: 'tests/utils/blockFactory.test.ts' }
     ]
+  },
+
+  // New Snippet Tests
+  {
+    name: 'DirectSnippetService',
+    description: 'Comprehensive service tests for snippet creation, management, and real-time updates',
+    category: 'Services',
+    filePath: 'tests/services/directSnippetService.test.ts',
+    tests: [
+      { name: 'should create snippet from EmailBlock with auto-generated ID', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should use default name from block type when name not provided', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should notify listeners when snippet is created', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should delete snippet and notify listeners', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should update snippet name and timestamp', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should increment usage count', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should return all snippets including defaults and custom', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should return empty array when no custom snippets exist', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should find snippet by ID', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' },
+      { name: 'should add and remove listeners correctly', shouldPass: true, filePath: 'tests/services/directSnippetService.test.ts' }
+    ]
+  },
+
+  {
+    name: 'SnippetManager Component',
+    description: 'UI component tests for snippet management interface',
+    category: 'Components',
+    filePath: 'tests/components/SnippetManager.test.tsx',
+    tests: [
+      { name: 'should render snippet list when snippets are available', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should render empty state when no snippets available', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should render in compact mode', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should call onSnippetSelect when "Use Snippet" is clicked', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should update usage count when snippet is used', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should show delete button for custom snippets', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should enter edit mode when edit button is clicked', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should save new name when Enter is pressed', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should cancel edit when Escape is pressed', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should delete snippet when delete button is clicked and confirmed', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should not delete snippet when deletion is cancelled', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' },
+      { name: 'should refresh snippets when refreshTrigger changes', shouldPass: true, filePath: 'tests/components/SnippetManager.test.tsx' }
+    ]
+  },
+
+  {
+    name: 'SnippetRibbon Component',
+    description: 'Tests for the compact snippet ribbon interface',
+    category: 'Components',
+    filePath: 'tests/components/SnippetRibbon.test.tsx',
+    tests: [
+      { name: 'should render ribbon when custom snippets exist', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should not render when no custom snippets exist', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should be collapsible', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should call onSnippetSelect when snippet card is clicked', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should support drag and drop with correct data format', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should show edit and delete buttons on hover', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should enter edit mode when edit button is clicked', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should save name changes', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should register change listener on mount', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should unregister change listener on unmount', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should update when refreshTrigger changes', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' },
+      { name: 'should display correct icon for different block types', shouldPass: true, filePath: 'tests/components/SnippetRibbon.test.tsx' }
+    ]
+  },
+
+  {
+    name: 'GlobalStylesPanel Component',
+    description: 'Tests for global styles configuration interface',
+    category: 'Components',
+    filePath: 'tests/components/GlobalStylesPanel.test.tsx',
+    tests: [
+      { name: 'should render all global style sections', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should render in compact mode', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should handle font family changes', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should apply font family to preview elements', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should handle color preset changes', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should display color swatches for themes', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should handle heading style changes', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should show typography preview', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should display link styling options', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should show link style indicators', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should call onStylesChange with correct structure', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should maintain style consistency across changes', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should handle compact mode correctly', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' },
+      { name: 'should adapt to container width', shouldPass: true, filePath: 'tests/components/GlobalStylesPanel.test.tsx' }
+    ]
+  },
+
+  {
+    name: 'Snippets and Global Styles Integration',
+    description: 'Integration tests for snippets working with global styles',
+    category: 'Integration',
+    filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx',
+    tests: [
+      { name: 'should create snippet that inherits global styles', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should apply global font changes to existing snippets', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should handle color theme changes across snippets', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should apply current global styles to reused snippets', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should maintain snippet original styling when global styles change', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should generate correct MJML when combining snippets and global styles', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should handle responsive styling in snippet-based emails', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should handle conflicts between snippet styles and global styles', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' },
+      { name: 'should apply global styles to new snippet instances', shouldPass: true, filePath: 'tests/integration/snippetsAndGlobalStyles.test.tsx' }
+    ]
+  },
+
+  {
+    name: 'Style Application and Inheritance',
+    description: 'Utility tests for style application, merging, and CSS generation',
+    category: 'Utils',
+    filePath: 'tests/utils/styleApplication.test.ts',
+    tests: [
+      { name: 'should apply global font family to blocks', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should apply global color theme to blocks', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should preserve existing block styles when applying globals', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should merge styles with priority to override styles', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should handle nested style objects', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should generate valid CSS from style objects', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should handle missing style properties gracefully', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should generate empty string for empty styles', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should handle different styles for different devices', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should fallback to desktop styles for missing device styles', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should validate CSS property values', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' },
+      { name: 'should sanitize style values', shouldPass: true, filePath: 'tests/utils/styleApplication.test.ts' }
+    ]
   }
 ];
 
