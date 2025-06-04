@@ -54,15 +54,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-20 h-20" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-20 h-20" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-20 h-20" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-20 h-20" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-20 h-20" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-20 h-20" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-20 h-20" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-20 h-20" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-20 h-20" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-12 h-12" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-12 h-12" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-12 h-12" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-12 h-12" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-12 h-12" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-12 h-12" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-12 h-12" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-12 h-12" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-12 h-12" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -365,7 +365,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar - Remove all padding and gaps */}
+      {/* Toolbar */}
       <div className="px-0 py-0">
         <div className="flex items-center justify-center overflow-x-auto">
           {/* Content Blocks */}
@@ -376,19 +376,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={block.id}
                   variant="ghost"
                   size="lg"
-                  className="p-0 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-16 [&_svg]:!h-16"
+                  className="p-4 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-12 [&_svg]:!h-12"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-16 h-16" })}
+                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-12 h-12" })}
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-20" />
+          <Separator orientation="vertical" className="h-16" />
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
@@ -398,7 +398,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={layout.id}
                   variant="ghost"
                   size="lg"
-                  className={`p-0 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-16 [&_svg]:!h-16 ${
+                  className={`p-4 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-12 [&_svg]:!h-12 ${
                     draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
                   }`}
                   draggable
@@ -407,13 +407,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-16 h-16" />
+                  <DynamicLayoutIcon layout={layout} className="w-12 h-12" />
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-20" />
+          <Separator orientation="vertical" className="h-16" />
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
@@ -421,53 +421,53 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-16 [&_svg]:!h-16"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-16 h-16" />
+                <Settings className="w-12 h-12" />
               </Button>
 
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-16 [&_svg]:!h-16"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-16 h-16" />
+                <Type className="w-12 h-12" />
               </Button>
 
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
                 size="lg"
-                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-16 [&_svg]:!h-16"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
                 }}
                 title="Buttons"
               >
-                <MousePointer className="w-16 h-16" />
+                <MousePointer className="w-12 h-12" />
               </Button>
 
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
                 size="lg"
-                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-16 [&_svg]:!h-16"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
                 }}
                 title="Links"
               >
-                <Link className="w-16 h-16" />
+                <Link className="w-12 h-12" />
               </Button>
             </div>
           </div>
