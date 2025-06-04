@@ -46,6 +46,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const [urlValue, setUrlValue] = useState(content);
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+  const [hasTextSelection, setHasTextSelection] = useState(false);
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
@@ -102,17 +103,28 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       }
     },
     onSelectionUpdate: ({ editor }) => {
-      if (!editor.state.selection.empty) {
+      const hasSelection = !editor.state.selection.empty;
+      setHasTextSelection(hasSelection);
+      
+      if (hasSelection) {
         updateToolbarPosition();
         setShowToolbar(true);
       } else {
-        setShowToolbar(false);
+        // Short delay before hiding to allow for formatting operations
+        setTimeout(() => {
+          if (!editor.state.selection || editor.state.selection.empty) {
+            setShowToolbar(false);
+          }
+        }, 150);
       }
     },
     onFocus: () => {
       if (!isUrlMode) {
         updateToolbarPosition();
-        setShowToolbar(true);
+        // Only show toolbar if there's a selection
+        if (!editor?.state.selection.empty) {
+          setShowToolbar(true);
+        }
       }
     },
     onBlur: ({ event }) => {
@@ -219,10 +231,10 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           placeholder={placeholder}
         />
 
-        {/* Full Toolbar with AI Integration - Industry Standard */}
+        {/* Enhanced Toolbar - Only show when text is selected */}
         <FullTipTapToolbar
           editor={editor}
-          isVisible={showToolbar}
+          isVisible={showToolbar && hasTextSelection}
           position={toolbarPosition}
           emailContext={aiEmailContext}
         />

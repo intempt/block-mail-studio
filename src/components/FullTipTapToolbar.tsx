@@ -79,10 +79,12 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [selectedText, setSelectedText] = useState('');
+  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
 
   // Check if text is selected for link functionality
   const hasTextSelection = editor && !editor.state.selection.empty;
 
+  // Debounced position calculation to prevent jumping
   const calculateOptimalPosition = useCallback(() => {
     if (!toolbarRef.current || !isVisible) return;
 
@@ -92,48 +94,53 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     
     let { top, left } = position;
 
-    // Full toolbar width
+    // Full toolbar dimensions
     const toolbarWidth = 800;
     const toolbarHeight = 60;
 
-    // Position toolbar above selection if there's space, otherwise below
-    if (top >= toolbarHeight + 10) {
-      top = top - toolbarHeight - 10;
-    } else if (viewportHeight - top >= toolbarHeight + 10) {
-      top = top + 30;
+    // Position above selection with improved spacing
+    if (top >= toolbarHeight + 15) {
+      top = top - toolbarHeight - 15;
+    } else if (viewportHeight - top >= toolbarHeight + 15) {
+      top = top + 35;
     } else {
-      top = Math.max(10, top - toolbarHeight - 10);
+      top = Math.max(15, top - toolbarHeight - 15);
     }
 
-    // Center horizontally, but keep within viewport
-    left = Math.max(10, Math.min(left - toolbarWidth / 2, viewportWidth - toolbarWidth - 10));
+    // Center horizontally with viewport constraints
+    left = Math.max(15, Math.min(left - toolbarWidth / 2, viewportWidth - toolbarWidth - 15));
 
-    // Handle container constraints if provided
+    // Container constraints
     if (containerElement) {
       const containerRect = containerElement.getBoundingClientRect();
-      left = Math.max(containerRect.left + 10, Math.min(left, containerRect.right - toolbarWidth - 10));
-      top = Math.max(containerRect.top + 10, Math.min(top, containerRect.bottom - toolbarHeight - 10));
+      left = Math.max(containerRect.left + 15, Math.min(left, containerRect.right - toolbarWidth - 15));
+      top = Math.max(containerRect.top + 15, Math.min(top, containerRect.bottom - toolbarHeight - 15));
     }
 
     setFinalPosition({ top, left });
   }, [position, isVisible, containerElement]);
 
   useEffect(() => {
-    calculateOptimalPosition();
-  }, [calculateOptimalPosition]);
+    if (isVisible) {
+      calculateOptimalPosition();
+    }
+  }, [calculateOptimalPosition, isVisible]);
 
-  useEffect(() => {
-    const handleResize = () => calculateOptimalPosition();
-    const handleScroll = () => calculateOptimalPosition();
+  // Handle formatting operations with improved UX
+  const handleFormatOperation = useCallback((operation: () => void) => {
+    if (!editor) return;
     
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll, true);
+    setIsOperationInProgress(true);
     
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll, true);
-    };
-  }, [calculateOptimalPosition]);
+    // Execute the operation
+    operation();
+    
+    // Brief delay to show operation feedback, then restore focus
+    setTimeout(() => {
+      editor.commands.focus();
+      setIsOperationInProgress(false);
+    }, 100);
+  }, [editor]);
 
   const handleAIOperation = async (operationType: string) => {
     if (!editor || !editor.getText().trim()) {
@@ -153,6 +160,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     setIsAIProcessing(true);
     setAiOperation(operationType);
     setShowAIMenu(false);
+    setIsOperationInProgress(true);
 
     try {
       const result = await TipTapAIService.enhanceText(
@@ -165,35 +173,46 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
       );
 
       if (editor.state.selection.empty) {
-        // Replace all content
         editor.commands.setContent(result.content);
       } else {
-        // Replace selected text
         editor.chain().focus().deleteSelection().insertContent(result.content).run();
       }
 
       toast.success(`Text ${operationType} completed successfully`);
+      
+      // Keep focus after AI operation
+      setTimeout(() => {
+        editor.commands.focus();
+      }, 150);
+      
     } catch (error) {
       console.error('AI operation failed:', error);
       toast.error(`Failed to ${operationType} text`);
     } finally {
       setIsAIProcessing(false);
       setAiOperation(null);
+      setIsOperationInProgress(false);
     }
   };
 
   const handleTextColorChange = (color: string) => {
-    editor.chain().focus().setColor(color).run();
+    handleFormatOperation(() => {
+      editor?.chain().focus().setColor(color).run();
+    });
     setShowColorPicker(false);
   };
 
   const handleHighlightChange = (color: string) => {
-    editor.chain().focus().setHighlight({ color }).run();
+    handleFormatOperation(() => {
+      editor?.chain().focus().setHighlight({ color }).run();
+    });
     setShowHighlightPicker(false);
   };
 
   const handleFontSizeChange = (size: string) => {
-    editor.chain().focus().setFontSize(size).run();
+    handleFormatOperation(() => {
+      editor?.chain().focus().setFontSize(size).run();
+    });
   };
 
   const handleLinkClick = () => {
@@ -202,7 +221,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
       return;
     }
 
-    // Get selected text
     const text = editor.state.doc.textBetween(
       editor.state.selection.from, 
       editor.state.selection.to
@@ -210,6 +228,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     setSelectedText(text);
     setLinkUrl('');
     setShowLinkDialog(true);
+    setIsOperationInProgress(true);
     onLinkClick?.();
   };
 
@@ -219,7 +238,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
       return;
     }
 
-    // Validate URL format
     try {
       new URL(linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`);
     } catch {
@@ -228,34 +246,49 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     }
 
     const finalUrl = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
-    editor.chain().focus().setLink({ href: finalUrl }).run();
+    
+    handleFormatOperation(() => {
+      editor.chain().focus().setLink({ href: finalUrl }).run();
+    });
+    
     setLinkUrl('');
     setShowLinkDialog(false);
+    setIsOperationInProgress(false);
     toast.success('Link added successfully');
   };
 
   const handleRemoveLink = () => {
     if (editor) {
-      editor.chain().focus().unsetLink().run();
+      handleFormatOperation(() => {
+        editor.chain().focus().unsetLink().run();
+      });
       setShowLinkDialog(false);
+      setIsOperationInProgress(false);
       toast.success('Link removed');
     }
   };
 
+  // Enhanced toolbar styling with smooth transitions
   const toolbarStyle = {
     top: finalPosition.top,
     left: finalPosition.left,
     zIndex: 9999,
-    maxWidth: 'calc(100vw - 20px)',
+    maxWidth: 'calc(100vw - 30px)',
+    opacity: isVisible ? 1 : 0,
+    transform: `translateY(${isVisible ? 0 : -10}px)`,
+    transition: 'opacity 0.2s ease-out, transform 0.2s ease-out',
+    pointerEvents: (isVisible ? 'auto' : 'none') as 'auto' | 'none'
   };
 
-  if (!editor || !isVisible) return null;
+  if (!editor) return null;
 
   return (
     <>
       <div
         ref={toolbarRef}
-        className="full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 animate-scale-in"
+        className={`full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 ${
+          isOperationInProgress ? 'ring-2 ring-blue-200' : ''
+        }`}
         style={toolbarStyle}
         onMouseDown={(e) => e.preventDefault()}
         onClick={(e) => e.stopPropagation()}
@@ -306,17 +339,19 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         {/* Headings */}
         <Select onValueChange={(value) => {
-          if (value === 'paragraph') {
-            editor.chain().focus().setParagraph().run();
-          } else {
-            const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
-            editor.chain().focus().toggleHeading({ level }).run();
-          }
+          handleFormatOperation(() => {
+            if (value === 'paragraph') {
+              editor.chain().focus().setParagraph().run();
+            } else {
+              const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+              editor.chain().focus().toggleHeading({ level }).run();
+            }
+          });
         }}>
           <SelectTrigger className="h-8 w-20 text-xs">
             <SelectValue placeholder="Style" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-[120]">
             <SelectItem value="paragraph">Normal</SelectItem>
             <SelectItem value="h1">H1</SelectItem>
             <SelectItem value="h2">H2</SelectItem>
@@ -329,7 +364,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
           <SelectTrigger className="h-8 w-16 text-xs">
             <SelectValue placeholder="Size" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-[120]">
             {fontSizes.map((size) => (
               <SelectItem key={size.value} value={size.value}>
                 {size.label}
@@ -340,31 +375,31 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-        {/* Text Formatting */}
+        {/* Text Formatting with improved feedback */}
         <Button
           variant={editor.isActive('bold') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className="h-8 w-8 p-0"
-          title="Bold"
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleBold().run())}
+          className="h-8 w-8 p-0 transition-all duration-150"
+          title="Bold (Ctrl+B)"
         >
           <Bold className="w-4 h-4" />
         </Button>
         <Button
           variant={editor.isActive('italic') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className="h-8 w-8 p-0"
-          title="Italic"
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleItalic().run())}
+          className="h-8 w-8 p-0 transition-all duration-150"
+          title="Italic (Ctrl+I)"
         >
           <Italic className="w-4 h-4" />
         </Button>
         <Button
           variant={editor.isActive('underline') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className="h-8 w-8 p-0"
-          title="Underline"
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleUnderline().run())}
+          className="h-8 w-8 p-0 transition-all duration-150"
+          title="Underline (Ctrl+U)"
         >
           <Underline className="w-4 h-4" />
         </Button>
@@ -383,7 +418,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
               <Palette className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+          <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[120]" sideOffset={5}>
             <div className="grid grid-cols-4 gap-1">
               {textColors.map((color) => (
                 <button
@@ -410,7 +445,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
               <Highlighter className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+          <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[120]" sideOffset={5}>
             <div className="grid grid-cols-4 gap-1">
               {highlightColors.map((color) => (
                 <button
@@ -431,7 +466,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().setTextAlign('left').run())}
           className="h-8 w-8 p-0"
           title="Align Left"
         >
@@ -440,7 +475,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().setTextAlign('center').run())}
           className="h-8 w-8 p-0"
           title="Center"
         >
@@ -449,7 +484,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().setTextAlign('right').run())}
           className="h-8 w-8 p-0"
           title="Align Right"
         >
@@ -462,7 +497,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleBulletList().run())}
           className="h-8 w-8 p-0"
           title="Bullet List"
         >
@@ -471,7 +506,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleOrderedList().run())}
           className="h-8 w-8 p-0"
           title="Numbered List"
         >
@@ -484,7 +519,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleBlockquote().run())}
           className="h-8 w-8 p-0"
           title="Quote"
         >
@@ -493,7 +528,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant={editor.isActive('code') ? 'default' : 'ghost'}
           size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onClick={() => handleFormatOperation(() => editor.chain().focus().toggleCode().run())}
           className="h-8 w-8 p-0"
           title="Inline Code"
         >
@@ -502,7 +537,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-        {/* Link - Industry Standard: Only works with selected text */}
+        {/* Link */}
         <Button
           variant={editor.isActive('link') ? 'default' : 'ghost'}
           size="sm"
@@ -515,10 +550,10 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         </Button>
       </div>
 
-      {/* Link Dialog - Industry Standard */}
+      {/* Link Dialog with improved positioning */}
       {showLinkDialog && (
         <div 
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-[9999] animate-scale-in"
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-[9999] animate-in fade-in-0 slide-in-from-top-2 duration-200"
           style={{
             top: finalPosition.top + 70,
             left: finalPosition.left,
@@ -548,6 +583,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                     handleLinkAdd();
                   } else if (e.key === 'Escape') {
                     setShowLinkDialog(false);
+                    setIsOperationInProgress(false);
                   }
                 }}
                 autoFocus
@@ -562,7 +598,14 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                     Remove Link
                   </Button>
                 )}
-                <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowLinkDialog(false);
+                    setIsOperationInProgress(false);
+                  }}
+                >
                   Cancel
                 </Button>
               </div>

@@ -49,9 +49,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   const [wordCount, setWordCount] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [hasTextSelection, setHasTextSelection] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
-  const blurTimeoutRef = useRef<NodeJS.Timeout>();
+  const hideTimeoutRef = useRef<NodeJS.Timeout>();
+  const positionUpdateRef = useRef<NodeJS.Timeout>();
 
   const editor = useEditor({
     extensions: [
@@ -128,18 +130,47 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       }, 500);
     },
     onSelectionUpdate: ({ editor }) => {
-      if (isEditing && !editor.state.selection.empty) {
-        updateToolbarPosition();
-        setShowToolbar(true);
+      if (!isEditing) return;
+      
+      const hasSelection = !editor.state.selection.empty;
+      setHasTextSelection(hasSelection);
+      
+      if (hasSelection) {
+        // Clear any pending hide timeout
+        if (hideTimeoutRef.current) {
+          clearTimeout(hideTimeoutRef.current);
+          hideTimeoutRef.current = undefined;
+        }
+        
+        // Update toolbar position with debounce
+        if (positionUpdateRef.current) {
+          clearTimeout(positionUpdateRef.current);
+        }
+        
+        positionUpdateRef.current = setTimeout(() => {
+          updateToolbarPosition();
+          setShowToolbar(true);
+        }, 50);
       } else {
-        setShowToolbar(false);
+        // Hide toolbar after a short delay when no selection
+        if (hideTimeoutRef.current) {
+          clearTimeout(hideTimeoutRef.current);
+        }
+        
+        hideTimeoutRef.current = setTimeout(() => {
+          if (!hasTextSelection) {
+            setShowToolbar(false);
+          }
+        }, 150);
       }
     },
     onFocus: () => {
       console.log('Editor focused');
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
-        blurTimeoutRef.current = undefined;
+      
+      // Clear any hide timeout
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = undefined;
       }
       
       if (!isEditing && !isTransitioning) {
@@ -153,7 +184,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       console.log('Editor blur event triggered');
       const relatedTarget = event.relatedTarget as HTMLElement;
       
-      // Don't close if clicking on toolbar, dialogs, or other editor UI elements
+      // Don't close if clicking on toolbar or related UI elements
       if (relatedTarget?.closest('.full-tiptap-toolbar') || 
           relatedTarget?.closest('.link-dialog') ||
           relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
@@ -167,20 +198,19 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         return;
       }
       
-      // Clear any existing timeout
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
+      // Set a timeout to close editor, but allow cancellation
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
       }
       
-      // Delay closing to allow for UI interactions
-      blurTimeoutRef.current = setTimeout(() => {
+      hideTimeoutRef.current = setTimeout(() => {
         console.log('Closing editor after blur timeout');
         setShowToolbar(false);
         setShowLinkDialog(false);
         if (isEditing) {
           onEditEnd();
         }
-      }, 300);
+      }, 150);
     },
     immediatelyRender: false,
   });
@@ -213,8 +243,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+      if (positionUpdateRef.current) {
+        clearTimeout(positionUpdateRef.current);
       }
     };
   }, []);
@@ -241,9 +274,15 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     if (isEditing && e.key === 'Escape') {
       e.preventDefault();
       console.log('Escape pressed - closing editor');
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
+      
+      // Clear all timeouts
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
       }
+      if (positionUpdateRef.current) {
+        clearTimeout(positionUpdateRef.current);
+      }
+      
       setShowToolbar(false);
       setShowLinkDialog(false);
       editor?.commands.blur();
@@ -266,7 +305,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     targetAudience: 'general'
   };
 
-  // Provide default styling values to avoid TypeScript errors
+  // Provide default styling values
   const styling = block.styling?.desktop;
   const defaultStyling = {
     backgroundColor: styling?.backgroundColor || 'transparent',
@@ -309,25 +348,30 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           }}
         />
 
-        {/* Status Indicators - Only show when editing and relevant */}
+        {/* Status Indicators */}
         {isEditing && (
           <div className="absolute top-2 right-2 flex gap-2 z-10">
             {hasUnsavedChanges && (
-              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
+              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 animate-pulse">
                 Saving...
               </Badge>
             )}
             <Badge variant="outline" className="text-xs bg-white">
               {wordCount} words
             </Badge>
+            {hasTextSelection && (
+              <Badge variant="default" className="text-xs bg-blue-100 text-blue-800">
+                Text Selected
+              </Badge>
+            )}
           </div>
         )}
       </div>
 
-      {/* Full TipTap Toolbar with AI Integration - Removed onImageInsert */}
+      {/* Enhanced TipTap Toolbar */}
       <FullTipTapToolbar
         editor={editor}
-        isVisible={showToolbar && isEditing}
+        isVisible={showToolbar && isEditing && hasTextSelection}
         position={toolbarPosition}
         onLinkClick={() => setShowLinkDialog(true)}
         containerElement={editorRef.current}
@@ -337,7 +381,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       {/* Link Dialog */}
       {showLinkDialog && (
         <div 
-          className="link-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
+          className="link-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-in fade-in-0 slide-in-from-top-2 duration-200"
           onMouseDown={(e) => e.preventDefault()}
         >
           <div className="flex flex-col gap-3">
@@ -368,11 +412,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         </div>
       )}
 
-      {/* Keyboard Shortcut Hints - Only show when editing */}
+      {/* Keyboard Shortcut Hints */}
       {isEditing && (
         <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
           <Badge variant="outline" className="text-xs text-gray-500 bg-white">
-            Press Esc to finish editing
+            Press Esc to finish • Select text for formatting
           </Badge>
         </div>
       )}
