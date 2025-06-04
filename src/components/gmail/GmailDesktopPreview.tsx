@@ -11,7 +11,7 @@ import {
   Menu,
   Archive,
   Delete,
-  MarkEmailRead,
+  MailOpen,
   Star,
   Reply,
   ReplyAll,
@@ -139,7 +139,7 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
                   <Delete className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm">
-                  <MarkEmailRead className="w-4 h-4" />
+                  <MailOpen className="w-4 h-4" />
                 </Button>
               </div>
             </div>
@@ -204,7 +204,7 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
                   <Delete className="w-4 h-4" />
                 </Button>
                 <Button variant="ghost" size="sm">
-                  <MarkEmailRead className="w-4 h-4" />
+                  <MailOpen className="w-4 h-4" />
                 </Button>
               </div>
               
