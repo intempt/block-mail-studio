@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,6 @@ import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { EmailPreview } from './EmailPreview';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
-import { CompactAISuggestions } from './CompactAISuggestions';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { StatusBar } from './StatusBar';
 import { PerformanceAnalyzer } from './PerformanceAnalyzer';
@@ -45,6 +45,7 @@ export default function EmailEditor({
   const [subject, setSubject] = useState<string>(initialSubject);
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [globalStyles, setGlobalStyles] = useState<any>({});
+  const [universalContent, setUniversalContent] = useState<UniversalContent[]>([]);
   const [showLeftPanel, setShowLeftPanel] = useState<boolean>(true);
   const [showRightPanel, setShowRightPanel] = useState<boolean>(true);
   const [rightPanelTab, setRightPanelTab] = useState<'properties' | 'preview'>('properties');
@@ -56,9 +57,9 @@ export default function EmailEditor({
   const canvasRef = useRef<any>(null);
 
   useKeyboardShortcuts({
-    'meta+k': () => setShowLeftPanel(prev => !prev),
-    'meta+shift+k': () => setShowRightPanel(prev => !prev),
-    'meta+alt+k': () => setShowPerformanceAnalyzer(true)
+    'cmd+k': () => setShowLeftPanel(prev => !prev),
+    'cmd+shift+k': () => setShowRightPanel(prev => !prev),
+    'cmd+alt+k': () => setShowPerformanceAnalyzer(true)
   });
 
   useEffect(() => {
@@ -90,6 +91,7 @@ export default function EmailEditor({
   }, []);
 
   const handleUniversalContentAdd = useCallback((content: UniversalContent) => {
+    setUniversalContent(prev => [...prev, content]);
     if (canvasRef.current) {
       canvasRef.current.handleUniversalContentAdd(content);
     }
@@ -182,6 +184,13 @@ export default function EmailEditor({
           onTemplateLibraryOpen={() => setShowTemplateLibrary(true)}
           onPreviewModeChange={setDeviceMode}
           previewMode={deviceMode}
+          canvasWidth={deviceMode === 'desktop' ? 600 : 375}
+          deviceMode={deviceMode}
+          onDeviceChange={setDeviceMode}
+          onWidthChange={() => {}}
+          onZoomChange={() => {}}
+          onPerformanceToggle={() => setShowPerformanceAnalyzer(true)}
+          onFullscreenToggle={toggleFullscreen}
         />
       )}
 
@@ -221,21 +230,12 @@ export default function EmailEditor({
               >
                 <EmailBlockCanvas
                   ref={canvasRef}
-                  blocks={blocks}
                   onBlocksChange={handleBlocksChange}
                   globalStyles={globalStyles}
                   canvasWidth={deviceMode === 'desktop' ? 600 : 375}
                 />
               </div>
             </div>
-          </div>
-
-          {/* AI Suggestions */}
-          <div className="border-t border-brand bg-brand-bg">
-            <CompactAISuggestions 
-              emailContent={emailHTML}
-              subjectLine={subject}
-            />
           </div>
         </div>
 
@@ -289,16 +289,16 @@ export default function EmailEditor({
 
       {/* Status Bar */}
       <StatusBar 
-        blocksCount={blocks.length}
+        blockCount={blocks.length}
         canvasWidth={deviceMode === 'desktop' ? 600 : 375}
-        deviceMode={deviceMode}
-        emailHTML={emailHTML}
-        subjectLine={subject}
+        previewMode={deviceMode}
+        wordCount={emailHTML.length}
       />
 
       {/* Template Library Modal */}
       {showTemplateLibrary && (
         <EmailTemplateLibrary 
+          isOpen={showTemplateLibrary}
           onClose={() => setShowTemplateLibrary(false)}
           onTemplateSelect={handleTemplateSelect}
         />
@@ -307,6 +307,7 @@ export default function EmailEditor({
       {/* Performance Analyzer Modal */}
       {showPerformanceAnalyzer && (
         <PerformanceAnalyzer
+          isOpen={showPerformanceAnalyzer}
           emailHTML={emailHTML}
           subjectLine={subject}
           onClose={() => setShowPerformanceAnalyzer(false)}
