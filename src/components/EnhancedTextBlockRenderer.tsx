@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -44,9 +45,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
   const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [showImageDialog, setShowImageDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -157,14 +156,13 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       // Don't close if clicking on toolbar, dialogs, or other editor UI elements
       if (relatedTarget?.closest('.full-tiptap-toolbar') || 
           relatedTarget?.closest('.link-dialog') ||
-          relatedTarget?.closest('.image-dialog') ||
           relatedTarget?.closest('[data-radix-popper-content-wrapper]') ||
           relatedTarget?.closest('.radix-select-content') ||
           relatedTarget?.closest('[data-radix-select-content]') ||
           relatedTarget?.closest('.popover-content') ||
           relatedTarget?.closest('[data-radix-popover-content]') ||
           relatedTarget?.closest('.enhanced-text-block') ||
-          showLinkDialog || showImageDialog) {
+          showLinkDialog) {
         console.log('Blur ignored - clicking on UI element');
         return;
       }
@@ -179,7 +177,6 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         console.log('Closing editor after blur timeout');
         setShowToolbar(false);
         setShowLinkDialog(false);
-        setShowImageDialog(false);
         if (isEditing) {
           onEditEnd();
         }
@@ -249,7 +246,6 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       }
       setShowToolbar(false);
       setShowLinkDialog(false);
-      setShowImageDialog(false);
       editor?.commands.blur();
       onEditEnd();
     }
@@ -260,17 +256,6 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       editor.chain().focus().setLink({ href: linkUrl }).run();
       setLinkUrl('');
       setShowLinkDialog(false);
-    }
-  };
-
-  const handleImageInsert = () => {
-    if (imageUrl.trim() && editor) {
-      editor.chain().focus().setImage({ 
-        src: imageUrl.trim(), 
-        alt: 'Image' 
-      }).run();
-      setImageUrl('');
-      setShowImageDialog(false);
     }
   };
 
@@ -339,13 +324,12 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
         )}
       </div>
 
-      {/* Full TipTap Toolbar with AI Integration */}
+      {/* Full TipTap Toolbar with AI Integration - Removed onImageInsert */}
       <FullTipTapToolbar
         editor={editor}
         isVisible={showToolbar && isEditing}
         position={toolbarPosition}
         onLinkClick={() => setShowLinkDialog(true)}
-        onImageInsert={() => setShowImageDialog(true)}
         containerElement={editorRef.current}
         emailContext={aiEmailContext}
       />
@@ -377,40 +361,6 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
                 Add
               </Button>
               <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Image Dialog */}
-      {showImageDialog && (
-        <div 
-          className="image-dialog absolute top-full left-0 mt-2 p-4 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in"
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          <div className="flex flex-col gap-3">
-            <div className="text-sm font-medium text-gray-700">Insert Image</div>
-            <div className="flex gap-2">
-              <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Enter image URL..."
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleImageInsert();
-                  } else if (e.key === 'Escape') {
-                    setShowImageDialog(false);
-                  }
-                }}
-                autoFocus
-              />
-              <Button size="sm" onClick={handleImageInsert} disabled={!imageUrl.trim()}>
-                Add
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>
                 Cancel
               </Button>
             </div>
