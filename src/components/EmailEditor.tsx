@@ -1,5 +1,4 @@
 
-
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,8 +133,8 @@ export default function EmailEditor({
   return (
     <div className="h-screen flex flex-col bg-brand-bg text-brand-fg font-switzer">
       {/* Top Navigation Bar */}
-      <div className="bg-brand-bg border-b border-brand flex items-center justify-between px-brand-4 py-brand-2">
-        <div className="flex items-center gap-brand-3">
+      <div className="bg-brand-bg border-b border-brand flex items-center justify-between u-p-4">
+        <div className="flex items-center u-gap-3">
           {onBack && (
             <Button
               variant="ghost" 
@@ -143,7 +142,7 @@ export default function EmailEditor({
               onClick={onBack}
               className="text-brand-fg hover:bg-brand-muted"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 u-m-2" />
               Back
             </Button>
           )}
@@ -155,7 +154,7 @@ export default function EmailEditor({
           />
         </div>
         
-        <div className="flex items-center gap-brand-2">
+        <div className="flex items-center u-gap-2">
           <Badge variant="secondary" className="text-caption bg-brand-muted text-brand-fg">
             {deviceMode === 'desktop' ? 'Desktop' : 'Mobile'} Preview
           </Badge>
@@ -165,7 +164,7 @@ export default function EmailEditor({
             onClick={handlePreviewToggle}
             className="border-brand text-brand-fg hover:bg-brand-muted"
           >
-            <Eye className="w-4 h-4 mr-2" />
+            <Eye className="w-4 h-4 u-m-2" />
             Preview
           </Button>
           <Button
@@ -197,8 +196,6 @@ export default function EmailEditor({
           canvasWidth={deviceMode === 'desktop' ? 600 : 375}
           deviceMode={deviceMode}
           onDeviceChange={handleDeviceChange}
-          onWidthChange={() => {}}
-          onZoomChange={() => {}}
           onPerformanceToggle={() => setShowPerformanceAnalyzer(true)}
           onFullscreenToggle={toggleFullscreen}
         />
@@ -209,8 +206,8 @@ export default function EmailEditor({
         {/* Left Sidebar - Block Palette */}
         {showLeftPanel && !isFullscreen && (
           <div className="w-80 bg-brand-bg border-r border-brand flex flex-col panel-transition">
-            <div className="p-brand-4 border-b border-brand">
-              <h3 className="text-h3 text-brand-fg mb-brand-2">Blocks & Elements</h3>
+            <div className="u-p-4 border-b border-brand">
+              <h3 className="text-h3 text-brand-fg u-m-2">Blocks & Elements</h3>
               <p className="text-caption text-brand-fg opacity-75">Drag blocks to build your email</p>
             </div>
             
@@ -233,7 +230,7 @@ export default function EmailEditor({
           <div className="flex-1 overflow-auto bg-brand-muted">
             <div className="u-p-6 flex justify-center">
               <div 
-                className={`bg-brand-bg rounded-brand-lg shadow-sm border border-brand transition-all duration-300 ${
+                className={`bg-brand-bg rounded-lg shadow-sm border border-brand transition-all duration-300 ${
                   deviceMode === 'desktop' ? 'w-full max-w-4xl' : 'w-96'
                 }`}
                 data-testid="email-canvas"
@@ -241,7 +238,6 @@ export default function EmailEditor({
                 <EmailBlockCanvas
                   ref={canvasRef}
                   onBlocksChange={handleBlocksChange}
-                  canvasWidth={deviceMode === 'desktop' ? 600 : 375}
                 />
               </div>
             </div>
@@ -251,10 +247,10 @@ export default function EmailEditor({
         {/* Right Sidebar - Properties & Preview */}
         {showRightPanel && !isFullscreen && (
           <div className="w-80 bg-brand-bg border-l border-brand flex flex-col panel-transition">
-            <div className="p-brand-4 border-b border-brand">
-              <div className="flex items-center justify-between mb-brand-2">
+            <div className="u-p-4 border-b border-brand">
+              <div className="flex items-center justify-between u-m-2">
                 <h3 className="text-h3 text-brand-fg">Properties</h3>
-                <div className="flex gap-brand-1">
+                <div className="flex u-gap-1">
                   <Button
                     variant={rightPanelTab === 'properties' ? 'default' : 'ghost'}
                     size="sm"
@@ -307,7 +303,6 @@ export default function EmailEditor({
       {/* Template Library Modal */}
       {showTemplateLibrary && (
         <EmailTemplateLibrary 
-          onClose={() => setShowTemplateLibrary(false)}
           onTemplateSelect={handleTemplateSelect}
         />
       )}
@@ -317,10 +312,8 @@ export default function EmailEditor({
         <PerformanceAnalyzer
           emailHTML={emailHTML}
           subjectLine={subject}
-          onClose={() => setShowPerformanceAnalyzer(false)}
         />
       )}
     </div>
   );
 }
-
