@@ -23,13 +23,23 @@ import {
   Eye,
   Layout,
   User,
-  Brain
+  Brain,
+  Type,
+  Image,
+  Link,
+  Mail,
+  Globe,
+  Accessibility,
+  Timer,
+  MessageSquare,
+  Star
 } from 'lucide-react';
 import { useEmailAnalytics } from '@/analytics/react/useEmailAnalytics';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 import { CentralizedAIAnalysisService, CompleteAnalysisResult } from '@/services/CentralizedAIAnalysisService';
 import { ApiKeyService } from '@/services/apiKeyService';
 import { toast } from 'sonner';
+import { ComprehensiveMetricsService, ComprehensiveEmailMetrics } from '@/services/comprehensiveMetricsService';
 
 interface CanvasStatusProps {
   selectedBlockId: string | null;
@@ -53,6 +63,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState<CompleteAnalysisResult | null>(null);
   const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
   const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
+  const [comprehensiveMetrics, setComprehensiveMetrics] = useState<ComprehensiveEmailMetrics | null>(null);
 
   const { analyze, result, isAnalyzing: isAnalyticsAnalyzing, clearCache } = useEmailAnalytics();
 
@@ -66,20 +77,21 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     setAnalysisTimestamp(Date.now());
     
     try {
+      // Calculate comprehensive metrics using the new service
+      const metrics = ComprehensiveMetricsService.calculateMetrics(emailHTML, subjectLine);
+      setComprehensiveMetrics(metrics);
+
       // Clear previous results and cache
       setCriticalSuggestions([]);
       setComprehensiveAnalysis(null);
       setAppliedFixes(new Set());
       clearCache();
 
-      // Run analytics analysis
       await analyze({ html: emailHTML, subjectLine });
 
-      // Run critical analysis
       const critical = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
       setCriticalSuggestions(critical);
 
-      // Run comprehensive analysis if API key available
       if (ApiKeyService.isKeyAvailable()) {
         const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
         setComprehensiveAnalysis(comprehensive);
@@ -94,6 +106,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     }
   };
 
+  // Auto-calculate metrics when content changes
+  useEffect(() => {
+    if (emailHTML.trim()) {
+      const metrics = ComprehensiveMetricsService.calculateMetrics(emailHTML, subjectLine);
+      setComprehensiveMetrics(metrics);
+    }
+  }, [emailHTML, subjectLine]);
+
   const handleApplyFix = async (suggestion: CriticalSuggestion) => {
     if (appliedFixes.has(suggestion.id)) {
       toast.warning('Fix already applied');
@@ -104,21 +124,17 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       let updatedContent = emailHTML;
       let fixType: 'subject' | 'content' = 'content';
 
-      // Apply the fix based on suggestion type
       if (suggestion.category === 'subject' && suggestion.suggested) {
-        // Subject line fix
         onApplyFix(suggestion.suggested, 'subject');
         fixType = 'subject';
         toast.success('Subject line updated!');
       } else if (suggestion.current && suggestion.suggested) {
-        // Content fix - replace current text with suggested
         updatedContent = emailHTML.replace(suggestion.current, suggestion.suggested);
         
         if (updatedContent !== emailHTML) {
           onApplyFix(updatedContent, 'content');
           toast.success('Content updated!');
         } else {
-          // Try a more generic replacement approach
           const lines = emailHTML.split('\n');
           const updatedLines = lines.map(line => {
             if (line.includes(suggestion.current)) {
@@ -141,7 +157,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         return;
       }
 
-      // Mark fix as applied - keep analysis results visible
       setAppliedFixes(prev => new Set([...prev, suggestion.id]));
       
     } catch (error) {
@@ -162,7 +177,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
     for (const suggestion of autoFixableSuggestions) {
       await handleApplyFix(suggestion);
-      // Small delay between fixes
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
@@ -192,6 +206,15 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       case 'tone': return <Brain className="w-4 h-4" />;
       default: return <Lightbulb className="w-4 h-4" />;
     }
+  };
+
+  const getMetricColor = (value: number, type: 'score' | 'count' | 'size') => {
+    if (type === 'score') {
+      if (value >= 80) return 'text-green-600';
+      if (value >= 60) return 'text-yellow-600';
+      return 'text-red-600';
+    }
+    return 'text-blue-600';
   };
 
   const hasAnalysisResults = criticalSuggestions.length > 0 || comprehensiveAnalysis || result;
@@ -263,10 +286,126 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          {/* Performance Metrics */}
+          {/* Enhanced Comprehensive Metrics Display */}
+          {comprehensiveMetrics && (
+            <Card className="p-3">
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Comprehensive Email Metrics
+              </h4>
+              
+              {/* Ultra-Compact Metrics Grid - 5x3 = 15 metrics */}
+              <div className="grid grid-cols-5 gap-1 mb-4">
+                {/* Row 1: Content Metrics */}
+                <div className="text-center p-1.5 bg-blue-50 rounded-md border border-blue-100">
+                  <Type className="w-3 h-3 mx-auto mb-0.5 text-blue-600" />
+                  <div className="text-sm font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
+                  <div className="text-xs text-gray-600 leading-tight">Words</div>
+                </div>
+                <div className="text-center p-1.5 bg-green-50 rounded-md border border-green-100">
+                  <Timer className="w-3 h-3 mx-auto mb-0.5 text-green-600" />
+                  <div className="text-sm font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
+                  <div className="text-xs text-gray-600 leading-tight">Read</div>
+                </div>
+                <div className="text-center p-1.5 bg-purple-50 rounded-md border border-purple-100">
+                  <Image className="w-3 h-3 mx-auto mb-0.5 text-purple-600" />
+                  <div className="text-sm font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
+                  <div className="text-xs text-gray-600 leading-tight">Images</div>
+                </div>
+                <div className="text-center p-1.5 bg-indigo-50 rounded-md border border-indigo-100">
+                  <Link className="w-3 h-3 mx-auto mb-0.5 text-indigo-600" />
+                  <div className="text-sm font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
+                  <div className="text-xs text-gray-600 leading-tight">Links</div>
+                </div>
+                <div className="text-center p-1.5 bg-orange-50 rounded-md border border-orange-100">
+                  <Target className="w-3 h-3 mx-auto mb-0.5 text-orange-600" />
+                  <div className="text-sm font-bold text-orange-600">{comprehensiveMetrics.ctaCount}</div>
+                  <div className="text-xs text-gray-600 leading-tight">CTAs</div>
+                </div>
+
+                {/* Row 2: Technical & Performance */}
+                <div className="text-center p-1.5 bg-gray-50 rounded-md border border-gray-100">
+                  <Globe className="w-3 h-3 mx-auto mb-0.5 text-gray-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
+                    {comprehensiveMetrics.sizeKB}KB
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">Size</div>
+                </div>
+                <div className="text-center p-1.5 bg-yellow-50 rounded-md border border-yellow-100">
+                  <Clock className="w-3 h-3 mx-auto mb-0.5 text-yellow-600" />
+                  <div className="text-sm font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
+                  <div className="text-xs text-gray-600 leading-tight">Load</div>
+                </div>
+                <div className="text-center p-1.5 bg-pink-50 rounded-md border border-pink-100">
+                  <Smartphone className="w-3 h-3 mx-auto mb-0.5 text-pink-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
+                    {comprehensiveMetrics.mobileScore}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">Mobile</div>
+                </div>
+                <div className="text-center p-1.5 bg-teal-50 rounded-md border border-teal-100">
+                  <Eye className="w-3 h-3 mx-auto mb-0.5 text-teal-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
+                    {comprehensiveMetrics.accessibilityScore}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">A11y</div>
+                </div>
+                <div className="text-center p-1.5 bg-red-50 rounded-md border border-red-100">
+                  <Shield className="w-3 h-3 mx-auto mb-0.5 text-red-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
+                    {comprehensiveMetrics.spamScore}%
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">Spam</div>
+                </div>
+
+                {/* Row 3: Deliverability & Engagement */}
+                <div className="text-center p-1.5 bg-emerald-50 rounded-md border border-emerald-100">
+                  <Mail className="w-3 h-3 mx-auto mb-0.5 text-emerald-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
+                    {comprehensiveMetrics.deliverabilityScore}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">Deliver</div>
+                </div>
+                <div className="text-center p-1.5 bg-cyan-50 rounded-md border border-cyan-100">
+                  <MessageSquare className="w-3 h-3 mx-auto mb-0.5 text-cyan-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
+                    {comprehensiveMetrics.subjectLineScore}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">Subject</div>
+                </div>
+                <div className="text-center p-1.5 bg-violet-50 rounded-md border border-violet-100">
+                  <User className="w-3 h-3 mx-auto mb-0.5 text-violet-600" />
+                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.personalizationLevel, 'score')}`}>
+                    {comprehensiveMetrics.personalizationLevel}
+                  </div>
+                  <div className="text-xs text-gray-600 leading-tight">Personal</div>
+                </div>
+                <div className="text-center p-1.5 bg-rose-50 rounded-md border border-rose-100">
+                  <TrendingUp className="w-3 h-3 mx-auto mb-0.5 text-rose-600" />
+                  <div className="text-sm font-bold text-rose-600">{comprehensiveMetrics.engagementPrediction}%</div>
+                  <div className="text-xs text-gray-600 leading-tight">Engage</div>
+                </div>
+                <div className="text-center p-1.5 bg-amber-50 rounded-md border border-amber-100">
+                  <Star className="w-3 h-3 mx-auto mb-0.5 text-amber-600" />
+                  <div className="text-sm font-bold text-amber-600">{comprehensiveMetrics.conversionPrediction}%</div>
+                  <div className="text-xs text-gray-600 leading-tight">Convert</div>
+                </div>
+              </div>
+              
+              {/* Quick Stats Summary */}
+              <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gray-100">
+                <span>{comprehensiveMetrics.characterCount.toLocaleString()} chars</span>
+                <span>{comprehensiveMetrics.paragraphCount} paragraphs</span>
+                <span>{comprehensiveMetrics.htmlComplexity}% complexity</span>
+                <span>Risk: {comprehensiveMetrics.unsubscribeRisk}%</span>
+              </div>
+            </Card>
+          )}
+
+          {/* Performance Metrics from Analytics */}
           {result && (
             <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3">Performance Metrics</h4>
+              <h4 className="font-medium text-gray-900 mb-3">AI Analytics Results</h4>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{result.scores?.overallScore || 0}</div>
@@ -275,14 +414,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{result.scores?.deliverabilityScore || 0}</div>
                   <div className="text-xs text-gray-600">Deliverability</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{result.scores?.mobileScore || 0}</div>
-                  <div className="text-xs text-gray-600">Mobile Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{result.scores?.spamScore || 0}</div>
-                  <div className="text-xs text-gray-600">Spam Risk</div>
                 </div>
               </div>
               
@@ -301,7 +432,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             </Card>
           )}
 
-          {/* Critical Suggestions */}
+          {/* Critical Suggestions - keep existing implementation */}
           {criticalSuggestions.length > 0 && (
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
