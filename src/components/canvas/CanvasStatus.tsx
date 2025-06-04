@@ -220,7 +220,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                     <div className="space-y-2">
                       {result.suggestions.slice(0, 3).map((suggestion, index) => (
                         <div key={index} className="text-xs bg-amber-50 border border-amber-200 rounded p-2">
-                          💡 {suggestion.message || suggestion}
+                          💡 {suggestion.description}
                         </div>
                       ))}
                     </div>
