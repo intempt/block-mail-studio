@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -701,8 +702,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       border: '1px solid #e5e7eb',
       borderRadius: '12px',
       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      position: 'relative' as const,
-      overflow: 'hidden'
+      position: 'relative' as const
     };
 
     // Enhanced visual feedback when dragging
@@ -747,6 +747,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       <div
         style={canvasStyle}
         className="email-canvas"
+        data-testid="email-canvas"
         onDrop={dragDropHandler.handleCanvasDrop}
         onDragOver={dragDropHandler.handleCanvasDragOver}
         onDragEnter={dragDropHandler.handleCanvasDragEnter}
