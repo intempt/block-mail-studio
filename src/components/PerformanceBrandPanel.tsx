@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,12 +28,12 @@ export const PerformanceBrandPanel: React.FC<PerformanceBrandPanelProps> = ({
   return (
     <div className="h-full flex flex-col">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-        <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="performance" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 u-m-4">
+          <TabsTrigger value="performance" className="flex items-center u-gap-2">
             <BarChart3 className="w-4 h-4" />
             Performance
           </TabsTrigger>
-          <TabsTrigger value="brand" className="flex items-center gap-2">
+          <TabsTrigger value="brand" className="flex items-center u-gap-2">
             <Target className="w-4 h-4" />
             Brand Voice
           </TabsTrigger>

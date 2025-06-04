@@ -20,11 +20,11 @@ export const VariableTag: React.FC<VariableTagProps> = ({
   return (
     <Badge 
       variant="secondary" 
-      className={`inline-flex items-center gap-1 bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition-colors px-2 py-1 rounded-md ${className}`}
+      className={`inline-flex items-center u-gap-1 bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition-colors u-p-2 py-1 rounded-md ${className}`}
       style={{ display: 'inline-flex', verticalAlign: 'middle' }}
     >
       <Variable className="w-3 h-3" />
-      <span className="text-xs font-medium">{text}</span>
+      <span className="text-caption font-medium">{text}</span>
       <Button
         size="sm"
         variant="ghost"

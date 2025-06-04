@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -55,17 +56,17 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const renderTemplatesTab = () => (
-    <div className="flex items-center gap-2 p-3">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Template Library</span>
+    <div className="flex items-center u-gap-2 u-p-3">
+      <div className="flex items-center u-gap-2">
+        <span className="text-caption font-medium text-brand-fg">Template Library</span>
         <Button variant="outline" size="sm" onClick={onTemplateLibraryOpen}>
           <FileText className="w-4 h-4 mr-2" />
           Browse Templates
         </Button>
       </div>
-      <div className="h-6 w-px bg-gray-300" />
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Actions</span>
+      <div className="h-6 w-px bg-brand-secondary" />
+      <div className="flex items-center u-gap-2">
+        <span className="text-caption font-medium text-brand-fg">Actions</span>
         <Button variant="outline" size="sm">
           Save Template
         </Button>
@@ -77,10 +78,10 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   );
 
   const renderLayoutTab = () => (
-    <div className="flex items-center gap-2 p-3">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Preview Mode</span>
-        <div className="flex border rounded-md">
+    <div className="flex items-center u-gap-2 u-p-3">
+      <div className="flex items-center u-gap-2">
+        <span className="text-caption font-medium text-brand-fg">Preview Mode</span>
+        <div className="flex border border-brand rounded-md">
           <Button
             variant={previewMode === 'desktop' ? 'default' : 'ghost'}
             size="sm"
@@ -99,23 +100,23 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
           </Button>
         </div>
       </div>
-      <div className="h-6 w-px bg-gray-300" />
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Canvas</span>
+      <div className="h-6 w-px bg-brand-secondary" />
+      <div className="flex items-center u-gap-2">
+        <span className="text-caption font-medium text-brand-fg">Canvas</span>
         <Badge variant="outline">600px</Badge>
       </div>
     </div>
   );
 
   const renderViewTab = () => (
-    <div className="flex items-center gap-2 p-3">
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Zoom</span>
+    <div className="flex items-center u-gap-2 u-p-3">
+      <div className="flex items-center u-gap-2">
+        <span className="text-caption font-medium text-brand-fg">Zoom</span>
         <Button variant="outline" size="sm">100%</Button>
       </div>
-      <div className="h-6 w-px bg-gray-300" />
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Display</span>
+      <div className="h-6 w-px bg-brand-secondary" />
+      <div className="flex items-center u-gap-2">
+        <span className="text-caption font-medium text-brand-fg">Display</span>
         <Button variant="outline" size="sm">
           <Eye className="w-4 h-4 mr-2" />
           Guidelines
@@ -126,15 +127,15 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
 
   if (isCollapsed) {
     return (
-      <div className="bg-white border-b border-gray-200 flex items-center justify-between px-4 py-2">
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">Ribbon Hidden</Badge>
+      <div className="bg-brand-bg border-b border-brand flex items-center justify-between u-p-4 py-2">
+        <div className="flex items-center u-gap-2">
+          <Badge variant="secondary" className="text-caption">Ribbon Hidden</Badge>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(false)}
-          className="text-gray-600"
+          className="text-brand-fg"
         >
           <ChevronDown className="w-4 h-4" />
         </Button>
@@ -143,26 +144,26 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   }
 
   return (
-    <div className="bg-white border-b border-gray-200">
+    <div className="bg-brand-bg border-b border-brand">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between px-4 py-1 border-b border-gray-100">
-          <TabsList className="bg-transparent gap-3">
-            <TabsTrigger value="templates" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+        <div className="flex items-center justify-between u-p-4 py-1 border-b border-brand">
+          <TabsList className="bg-transparent u-gap-3">
+            <TabsTrigger value="templates" className="data-[state=active]:bg-brand-secondary data-[state=active]:text-brand-primary">
               Templates
             </TabsTrigger>
-            <TabsTrigger value="home" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+            <TabsTrigger value="home" className="data-[state=active]:bg-brand-secondary data-[state=active]:text-brand-primary">
               Home
             </TabsTrigger>
-            <TabsTrigger value="insert" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+            <TabsTrigger value="insert" className="data-[state=active]:bg-brand-secondary data-[state=active]:text-brand-primary">
               Insert
             </TabsTrigger>
-            <TabsTrigger value="layout" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+            <TabsTrigger value="layout" className="data-[state=active]:bg-brand-secondary data-[state=active]:text-brand-primary">
               Layout
             </TabsTrigger>
-            <TabsTrigger value="design" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+            <TabsTrigger value="design" className="data-[state=active]:bg-brand-secondary data-[state=active]:text-brand-primary">
               Design
             </TabsTrigger>
-            <TabsTrigger value="view" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
+            <TabsTrigger value="view" className="data-[state=active]:bg-brand-secondary data-[state=active]:text-brand-primary">
               View
             </TabsTrigger>
           </TabsList>
@@ -170,7 +171,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => setIsCollapsed(true)}
-            className="text-gray-600"
+            className="text-brand-fg"
           >
             <ChevronUp className="w-4 h-4" />
           </Button>
