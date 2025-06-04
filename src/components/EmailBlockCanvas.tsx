@@ -728,6 +728,20 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     return baseStyle;
   }, [canvasWidth, isDraggingOver, currentDragType]);
 
+  // Add handler for applying fixes from AI Analysis
+  const handleApplyFix = useCallback((fixedContent: string, fixType?: 'subject' | 'content') => {
+    if (fixType === 'subject') {
+      onSubjectChange(fixedContent);
+    } else {
+      // Update the email content
+      onContentChange(fixedContent);
+      
+      // Parse the fixed content back into blocks to keep the canvas in sync
+      // For now, we'll let the content change propagate naturally
+      console.log('Applied AI fix to email content');
+    }
+  }, [onContentChange, onSubjectChange]);
+
   return (
     <div className="relative">
       <div
@@ -782,6 +796,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           previewMode={previewMode}
           emailHTML={currentEmailHTML}
           subjectLine={subject}
+          onApplyFix={handleApplyFix}
         />
       )}
     </div>
