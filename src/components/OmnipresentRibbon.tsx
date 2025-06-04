@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Type, 
   Image, 
-  MousePointer, 
+  MousePointerClick, 
   Space, 
   Video, 
   Share2, 
@@ -55,7 +56,7 @@ interface LayoutOption {
 const blockItems: BlockItem[] = [
   { id: 'text', name: 'Text', icon: <Type className="w-9 h-9" /> },
   { id: 'image', name: 'Image', icon: <Image className="w-9 h-9" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-9 h-9" /> },
+  { id: 'button', name: 'Button', icon: <MousePointerClick className="w-9 h-9" /> },
   { id: 'spacer', name: 'Spacer', icon: <Space className="w-9 h-9" /> },
   { id: 'divider', name: 'Divider', icon: <Minus className="w-9 h-9" /> },
   { id: 'video', name: 'Video', icon: <Video className="w-9 h-9" /> },
