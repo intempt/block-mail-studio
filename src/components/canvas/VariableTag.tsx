@@ -28,7 +28,7 @@ export const VariableTag: React.FC<VariableTagProps> = ({
       <Button
         size="sm"
         variant="ghost"
-        className="w-4 h-4 p-0 hover:bg-purple-300 rounded-full ml-1"
+        className="w-4 h-4 p-0 hover:bg-purple-300 rounded-md ml-1"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
