@@ -54,15 +54,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-10 h-10" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-10 h-10" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-10 h-10" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-10 h-10" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-10 h-10" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-10 h-10" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-10 h-10" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-10 h-10" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-10 h-10" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-20 h-20" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-20 h-20" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-20 h-20" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-20 h-20" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-20 h-20" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-20 h-20" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-20 h-20" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-20 h-20" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-20 h-20" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -382,13 +382,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-24 h-24" })}
+                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-32 h-32" })}
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-20" />
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
@@ -407,13 +407,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-24 h-24" />
+                  <DynamicLayoutIcon layout={layout} className="w-32 h-32" />
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-16" />
+          <Separator orientation="vertical" className="h-20" />
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
@@ -428,7 +428,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-24 h-24" />
+                <Settings className="w-32 h-32" />
               </Button>
 
               <Button
@@ -441,7 +441,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-24 h-24" />
+                <Type className="w-32 h-32" />
               </Button>
 
               <Button
@@ -454,7 +454,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Buttons"
               >
-                <MousePointer className="w-24 h-24" />
+                <MousePointer className="w-32 h-32" />
               </Button>
 
               <Button
@@ -467,7 +467,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 }}
                 title="Links"
               >
-                <Link className="w-24 h-24" />
+                <Link className="w-32 h-32" />
               </Button>
             </div>
           </div>
