@@ -219,20 +219,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                <BarChart3 className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900">AI Analysis Center</h3>
-                <p className="text-sm text-gray-600">Analyze • Suggest • Fix your email automatically</p>
-              </div>
-            </div>
-          </div>
-
+        {/* Simplified Action Buttons */}
+        <div className="p-4 border-b border-gray-200">
           {!hasAnalysisResults ? (
             <Button 
               onClick={runCompleteAnalysis} 
@@ -282,8 +270,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             {comprehensiveMetrics && (
               <Card className="p-3">
                 <Collapsible open={!isMetricsCollapsed} onOpenChange={setIsMetricsCollapsed}>
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium text-gray-900">Comprehensive Email Metrics</h4>
+                  <div className="flex items-center justify-end mb-2">
                     <CollapsibleTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                         {isMetricsCollapsed ? (
@@ -580,16 +567,9 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               </Card>
             )}
 
-            {/* Critical Suggestions - keep existing implementation */}
+            {/* Critical Suggestions */}
             {criticalSuggestions.length > 0 && (
               <Card className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-900">AI Suggestions & Auto-Fixes</h4>
-                  <Badge variant="outline" className="text-xs">
-                    {criticalSuggestions.length} suggestions
-                  </Badge>
-                </div>
-                
                 <div className="space-y-3">
                   {criticalSuggestions.map((suggestion) => (
                     <div key={suggestion.id} className="border rounded-lg p-3">
