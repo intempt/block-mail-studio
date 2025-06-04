@@ -21,8 +21,8 @@ export default function TestRunnerPage() {
             Back to Editor
           </Button>
           <div>
-            <h1 className="text-xl font-semibold">Test Runner</h1>
-            <p className="text-sm text-gray-600">Real test suite for the email editor - 203+ actual tests</p>
+            <h1 className="text-xl font-semibold">Unified Test Runner</h1>
+            <p className="text-sm text-gray-600">Comprehensive testing suite with 80+ tests across all application layers</p>
           </div>
         </div>
       </div>
