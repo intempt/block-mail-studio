@@ -229,6 +229,8 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
 
   // Handle variable insertion
   const handleInsertVariable = useCallback((variable: VariableOption) => {
+    console.log('handleInsertVariable called with savedCaretPosition:', savedCaretPosition);
+    
     if (!editor) return;
     
     // If we have a saved caret position, restore it
