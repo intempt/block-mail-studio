@@ -365,18 +365,18 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar - Centered with bigger icons */}
-      <div className="px-3 py-3">
-        <div className="flex items-center justify-center gap-4 overflow-x-auto">
+      {/* Toolbar - Remove all padding and gaps */}
+      <div className="px-0 py-0">
+        <div className="flex items-center justify-center overflow-x-auto">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
-            <div className="flex gap-2">
+            <div className="flex">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="ghost"
                   size="lg"
-                  className="p-4 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  className="p-0 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-32 [&_svg]:!h-32"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
@@ -392,13 +392,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
-            <div className="flex gap-2">
+            <div className="flex">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="ghost"
                   size="lg"
-                  className={`p-4 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ${
+                  className={`p-0 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-32 [&_svg]:!h-32 ${
                     draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
                   }`}
                   draggable
@@ -417,11 +417,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
-            <div className="flex gap-2">
+            <div className="flex">
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-4 hover:bg-blue-50 hover:text-blue-600"
+                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-32 [&_svg]:!h-32"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
@@ -434,7 +434,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-4 hover:bg-blue-50 hover:text-blue-600"
+                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-32 [&_svg]:!h-32"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
@@ -447,7 +447,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
                 size="lg"
-                className="p-4 hover:bg-blue-50 hover:text-blue-600"
+                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-32 [&_svg]:!h-32"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
@@ -460,7 +460,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
                 size="lg"
-                className="p-4 hover:bg-blue-50 hover:text-blue-600"
+                className="p-0 hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-32 [&_svg]:!h-32"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
