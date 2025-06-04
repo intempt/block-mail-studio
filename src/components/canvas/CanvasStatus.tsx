@@ -4,6 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { 
   BarChart3, 
   CheckCircle, 
@@ -32,7 +34,9 @@ import {
   Accessibility,
   Timer,
   MessageSquare,
-  Star
+  Star,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useEmailAnalytics } from '@/analytics/react/useEmailAnalytics';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
@@ -64,6 +68,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
   const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
   const [comprehensiveMetrics, setComprehensiveMetrics] = useState<ComprehensiveEmailMetrics | null>(null);
+  const [isMetricsCollapsed, setIsMetricsCollapsed] = useState(false);
 
   const { analyze, result, isAnalyzing: isAnalyticsAnalyzing, clearCache } = useEmailAnalytics();
 
@@ -212,283 +217,444 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const autoFixableCount = criticalSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900">AI Analysis Center</h3>
-              <p className="text-sm text-gray-600">Analyze • Suggest • Fix your email automatically</p>
+    <TooltipProvider>
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <BarChart3 className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">AI Analysis Center</h3>
+                <p className="text-sm text-gray-600">Analyze • Suggest • Fix your email automatically</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800">
-              {previewMode === 'mobile' ? 'Mobile' : 'Desktop'} View
-            </Badge>
-          </div>
-        </div>
 
-        {!hasAnalysisResults ? (
-          <Button 
-            onClick={runCompleteAnalysis} 
-            disabled={isAnalyzing || !emailHTML.trim()}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-          >
-            {isAnalyzing ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Analyzing Email...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 mr-2" />
-                Analyze & Fix Email
-              </>
-            )}
-          </Button>
-        ) : (
-          <div className="flex gap-2">
+          {!hasAnalysisResults ? (
             <Button 
               onClick={runCompleteAnalysis} 
-              disabled={isAnalyzing}
-              variant="outline"
-              size="sm"
+              disabled={isAnalyzing || !emailHTML.trim()}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-analyze
+              {isAnalyzing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Analyzing Email...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Analyze & Fix Email
+                </>
+              )}
             </Button>
-            {autoFixableCount > 0 && (
+          ) : (
+            <div className="flex gap-2">
               <Button 
-                onClick={handleApplyAllAutoFixes}
+                onClick={runCompleteAnalysis} 
+                disabled={isAnalyzing}
+                variant="outline"
                 size="sm"
-                className="bg-green-600 hover:bg-green-700"
               >
-                <Zap className="w-4 h-4 mr-2" />
-                Apply All Auto-Fixes ({autoFixableCount})
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Re-analyze
               </Button>
-            )}
-          </div>
-        )}
-      </div>
-
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          {/* Compact Horizontal Metrics Strip */}
-          {comprehensiveMetrics && (
-            <Card className="p-3">
-              {/* Horizontal Scrollable Metrics Strip */}
-              <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                
-                {/* Content Group */}
-                <div className="flex items-center gap-1 pr-3 border-r border-gray-200">
-                  <div className="text-center p-1 bg-blue-50 rounded border border-blue-100 min-w-[48px]">
-                    <Type className="w-2 h-2 mx-auto mb-0.5 text-blue-600" />
-                    <div className="text-xs font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Words</div>
-                  </div>
-                  <div className="text-center p-1 bg-green-50 rounded border border-green-100 min-w-[48px]">
-                    <Timer className="w-2 h-2 mx-auto mb-0.5 text-green-600" />
-                    <div className="text-xs font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Read</div>
-                  </div>
-                  <div className="text-center p-1 bg-purple-50 rounded border border-purple-100 min-w-[48px]">
-                    <Image className="w-2 h-2 mx-auto mb-0.5 text-purple-600" />
-                    <div className="text-xs font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Images</div>
-                  </div>
-                  <div className="text-center p-1 bg-indigo-50 rounded border border-indigo-100 min-w-[48px]">
-                    <Link className="w-2 h-2 mx-auto mb-0.5 text-indigo-600" />
-                    <div className="text-xs font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Links</div>
-                  </div>
-                  <div className="text-center p-1 bg-orange-50 rounded border border-orange-100 min-w-[48px]">
-                    <Target className="w-2 h-2 mx-auto mb-0.5 text-orange-600" />
-                    <div className="text-xs font-bold text-orange-600">{comprehensiveMetrics.ctaCount}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">CTAs</div>
-                  </div>
-                </div>
-
-                {/* Performance Group */}
-                <div className="flex items-center gap-1 px-3 border-r border-gray-200">
-                  <div className="text-center p-1 bg-gray-50 rounded border border-gray-100 min-w-[48px]">
-                    <Globe className="w-2 h-2 mx-auto mb-0.5 text-gray-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
-                      {comprehensiveMetrics.sizeKB}KB
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Size</div>
-                  </div>
-                  <div className="text-center p-1 bg-yellow-50 rounded border border-yellow-100 min-w-[48px]">
-                    <Clock className="w-2 h-2 mx-auto mb-0.5 text-yellow-600" />
-                    <div className="text-xs font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Load</div>
-                  </div>
-                  <div className="text-center p-1 bg-pink-50 rounded border border-pink-100 min-w-[48px]">
-                    <Smartphone className="w-2 h-2 mx-auto mb-0.5 text-pink-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
-                      {comprehensiveMetrics.mobileScore}
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Mobile</div>
-                  </div>
-                  <div className="text-center p-1 bg-teal-50 rounded border border-teal-100 min-w-[48px]">
-                    <Eye className="w-2 h-2 mx-auto mb-0.5 text-teal-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
-                      {comprehensiveMetrics.accessibilityScore}
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">A11y</div>
-                  </div>
-                </div>
-
-                {/* Deliverability Group */}
-                <div className="flex items-center gap-1 px-3 border-r border-gray-200">
-                  <div className="text-center p-1 bg-red-50 rounded border border-red-100 min-w-[48px]">
-                    <Shield className="w-2 h-2 mx-auto mb-0.5 text-red-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
-                      {comprehensiveMetrics.spamScore}%
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Spam</div>
-                  </div>
-                  <div className="text-center p-1 bg-emerald-50 rounded border border-emerald-100 min-w-[48px]">
-                    <Mail className="w-2 h-2 mx-auto mb-0.5 text-emerald-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
-                      {comprehensiveMetrics.deliverabilityScore}
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Deliver</div>
-                  </div>
-                  <div className="text-center p-1 bg-cyan-50 rounded border border-cyan-100 min-w-[48px]">
-                    <MessageSquare className="w-2 h-2 mx-auto mb-0.5 text-cyan-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
-                      {comprehensiveMetrics.subjectLineScore}
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Subject</div>
-                  </div>
-                </div>
-
-                {/* Engagement Group */}
-                <div className="flex items-center gap-1 px-3 border-r border-gray-200">
-                  <div className="text-center p-1 bg-violet-50 rounded border border-violet-100 min-w-[48px]">
-                    <User className="w-2 h-2 mx-auto mb-0.5 text-violet-600" />
-                    <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.personalizationLevel, 'score')}`}>
-                      {comprehensiveMetrics.personalizationLevel}
-                    </div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Personal</div>
-                  </div>
-                  <div className="text-center p-1 bg-rose-50 rounded border border-rose-100 min-w-[48px]">
-                    <TrendingUp className="w-2 h-2 mx-auto mb-0.5 text-rose-600" />
-                    <div className="text-xs font-bold text-rose-600">{comprehensiveMetrics.engagementPrediction}%</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Engage</div>
-                  </div>
-                  <div className="text-center p-1 bg-amber-50 rounded border border-amber-100 min-w-[48px]">
-                    <Star className="w-2 h-2 mx-auto mb-0.5 text-amber-600" />
-                    <div className="text-xs font-bold text-amber-600">{comprehensiveMetrics.conversionPrediction}%</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Convert</div>
-                  </div>
-                </div>
-
-                {/* Technical Group */}
-                <div className="flex items-center gap-1 pl-3">
-                  <div className="text-center p-1 bg-slate-50 rounded border border-slate-100 min-w-[48px]">
-                    <Type className="w-2 h-2 mx-auto mb-0.5 text-slate-600" />
-                    <div className="text-xs font-bold text-slate-600">{Math.round(comprehensiveMetrics.characterCount / 1000)}K</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Chars</div>
-                  </div>
-                  <div className="text-center p-1 bg-stone-50 rounded border border-stone-100 min-w-[48px]">
-                    <Layout className="w-2 h-2 mx-auto mb-0.5 text-stone-600" />
-                    <div className="text-xs font-bold text-stone-600">{comprehensiveMetrics.paragraphCount}</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Paras</div>
-                  </div>
-                  <div className="text-center p-1 bg-zinc-50 rounded border border-zinc-100 min-w-[48px]">
-                    <BarChart3 className="w-2 h-2 mx-auto mb-0.5 text-zinc-600" />
-                    <div className="text-xs font-bold text-zinc-600">{comprehensiveMetrics.htmlComplexity}%</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Complex</div>
-                  </div>
-                  <div className="text-center p-1 bg-neutral-50 rounded border border-neutral-100 min-w-[48px]">
-                    <AlertTriangle className="w-2 h-2 mx-auto mb-0.5 text-neutral-600" />
-                    <div className="text-xs font-bold text-neutral-600">{comprehensiveMetrics.unsubscribeRisk}%</div>
-                    <div className="text-[10px] text-gray-600 leading-tight">Risk</div>
-                  </div>
-                </div>
-              </div>
-            </Card>
+              {autoFixableCount > 0 && (
+                <Button 
+                  onClick={handleApplyAllAutoFixes}
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Apply All Auto-Fixes ({autoFixableCount})
+                </Button>
+              )}
+            </div>
           )}
+        </div>
 
-          {/* Critical Suggestions - keep existing implementation */}
-          {criticalSuggestions.length > 0 && (
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900">AI Suggestions & Auto-Fixes</h4>
-                <Badge variant="outline" className="text-xs">
-                  {criticalSuggestions.length} suggestions
-                </Badge>
-              </div>
-              
-              <div className="space-y-3">
-                {criticalSuggestions.map((suggestion) => (
-                  <div key={suggestion.id} className="border rounded-lg p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-2 flex-1">
-                        {getCategoryIcon(suggestion.category)}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium text-sm">{suggestion.title}</span>
-                            {getSeverityIcon(suggestion.severity)}
-                            <Badge 
-                              variant="outline" 
-                              className={`text-xs ${CriticalEmailAnalysisService.getSeverityColor(suggestion.severity)}`}
-                            >
-                              {suggestion.severity}
-                            </Badge>
-                            {suggestion.autoFixable && (
-                              <Badge variant="secondary" className="text-xs bg-green-50 text-green-700">
-                                Auto-fixable
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
+            {/* Collapsible Comprehensive Metrics Strip */}
+            {comprehensiveMetrics && (
+              <Card className="p-3">
+                <Collapsible open={!isMetricsCollapsed} onOpenChange={setIsMetricsCollapsed}>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium text-gray-900">Comprehensive Email Metrics</h4>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        {isMetricsCollapsed ? (
+                          <ChevronDown className="w-4 h-4" />
+                        ) : (
+                          <ChevronUp className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                  
+                  <CollapsibleContent>
+                    {/* Horizontal Scrollable Metrics Strip */}
+                    <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      
+                      {/* Content Group */}
+                      <div className="flex items-center gap-1 pr-3 border-r border-gray-200">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-blue-50 rounded border border-blue-100 min-w-[48px] cursor-help hover:bg-blue-100 transition-colors">
+                              <Type className="w-2 h-2 mx-auto mb-0.5 text-blue-600" />
+                              <div className="text-xs font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Words</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Total word count in email content. Optimal range: 150-300 words</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-green-50 rounded border border-green-100 min-w-[48px] cursor-help hover:bg-green-100 transition-colors">
+                              <Timer className="w-2 h-2 mx-auto mb-0.5 text-green-600" />
+                              <div className="text-xs font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Read</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Estimated reading time based on average reading speed (200 wpm)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-purple-50 rounded border border-purple-100 min-w-[48px] cursor-help hover:bg-purple-100 transition-colors">
+                              <Image className="w-2 h-2 mx-auto mb-0.5 text-purple-600" />
+                              <div className="text-xs font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Images</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Number of images in email. Affects loading time and deliverability</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-indigo-50 rounded border border-indigo-100 min-w-[48px] cursor-help hover:bg-indigo-100 transition-colors">
+                              <Link className="w-2 h-2 mx-auto mb-0.5 text-indigo-600" />
+                              <div className="text-xs font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Links</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Total clickable links. Too many can trigger spam filters</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-orange-50 rounded border border-orange-100 min-w-[48px] cursor-help hover:bg-orange-100 transition-colors">
+                              <Target className="w-2 h-2 mx-auto mb-0.5 text-orange-600" />
+                              <div className="text-xs font-bold text-orange-600">{comprehensiveMetrics.ctaCount}</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">CTAs</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Call-to-action buttons/links. Optimal: 1-3 per email</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* Performance Group */}
+                      <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-gray-50 rounded border border-gray-100 min-w-[48px] cursor-help hover:bg-gray-100 transition-colors">
+                              <Globe className="w-2 h-2 mx-auto mb-0.5 text-gray-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
+                                {comprehensiveMetrics.sizeKB}KB
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Size</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Email file size in KB. Keep under 100KB for best performance</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-yellow-50 rounded border border-yellow-100 min-w-[48px] cursor-help hover:bg-yellow-100 transition-colors">
+                              <Clock className="w-2 h-2 mx-auto mb-0.5 text-yellow-600" />
+                              <div className="text-xs font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Load</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Estimated loading time. Faster = better engagement</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-pink-50 rounded border border-pink-100 min-w-[48px] cursor-help hover:bg-pink-100 transition-colors">
+                              <Smartphone className="w-2 h-2 mx-auto mb-0.5 text-pink-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
+                                {comprehensiveMetrics.mobileScore}
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Mobile</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Mobile-friendliness score out of 100</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-teal-50 rounded border border-teal-100 min-w-[48px] cursor-help hover:bg-teal-100 transition-colors">
+                              <Eye className="w-2 h-2 mx-auto mb-0.5 text-teal-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
+                                {comprehensiveMetrics.accessibilityScore}
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">A11y</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Accessibility score for screen readers and disabilities</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* Deliverability Group */}
+                      <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-red-50 rounded border border-red-100 min-w-[48px] cursor-help hover:bg-red-100 transition-colors">
+                              <Shield className="w-2 h-2 mx-auto mb-0.5 text-red-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
+                                {comprehensiveMetrics.spamScore}%
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Spam</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Spam risk percentage. Lower is better</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-emerald-50 rounded border border-emerald-100 min-w-[48px] cursor-help hover:bg-emerald-100 transition-colors">
+                              <Mail className="w-2 h-2 mx-auto mb-0.5 text-emerald-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
+                                {comprehensiveMetrics.deliverabilityScore}
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Deliver</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Deliverability score out of 100</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-cyan-50 rounded border border-cyan-100 min-w-[48px] cursor-help hover:bg-cyan-100 transition-colors">
+                              <MessageSquare className="w-2 h-2 mx-auto mb-0.5 text-cyan-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
+                                {comprehensiveMetrics.subjectLineScore}
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Subject</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Subject line effectiveness score</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* Engagement Group */}
+                      <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-violet-50 rounded border border-violet-100 min-w-[48px] cursor-help hover:bg-violet-100 transition-colors">
+                              <User className="w-2 h-2 mx-auto mb-0.5 text-violet-600" />
+                              <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.personalizationLevel, 'score')}`}>
+                                {comprehensiveMetrics.personalizationLevel}
+                              </div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Personal</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Personalization level score</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-rose-50 rounded border border-rose-100 min-w-[48px] cursor-help hover:bg-rose-100 transition-colors">
+                              <TrendingUp className="w-2 h-2 mx-auto mb-0.5 text-rose-600" />
+                              <div className="text-xs font-bold text-rose-600">{comprehensiveMetrics.engagementPrediction}%</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Engage</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Predicted engagement rate percentage</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-amber-50 rounded border border-amber-100 min-w-[48px] cursor-help hover:bg-amber-100 transition-colors">
+                              <Star className="w-2 h-2 mx-auto mb-0.5 text-amber-600" />
+                              <div className="text-xs font-bold text-amber-600">{comprehensiveMetrics.conversionPrediction}%</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Convert</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Predicted conversion rate percentage</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      {/* Technical Group */}
+                      <div className="flex items-center gap-1 pl-3">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-slate-50 rounded border border-slate-100 min-w-[48px] cursor-help hover:bg-slate-100 transition-colors">
+                              <Type className="w-2 h-2 mx-auto mb-0.5 text-slate-600" />
+                              <div className="text-xs font-bold text-slate-600">{Math.round(comprehensiveMetrics.characterCount / 1000)}K</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Chars</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Character count in thousands</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-stone-50 rounded border border-stone-100 min-w-[48px] cursor-help hover:bg-stone-100 transition-colors">
+                              <Layout className="w-2 h-2 mx-auto mb-0.5 text-stone-600" />
+                              <div className="text-xs font-bold text-stone-600">{comprehensiveMetrics.paragraphCount}</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Paras</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Number of paragraphs for readability</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-zinc-50 rounded border border-zinc-100 min-w-[48px] cursor-help hover:bg-zinc-100 transition-colors">
+                              <BarChart3 className="w-2 h-2 mx-auto mb-0.5 text-zinc-600" />
+                              <div className="text-xs font-bold text-zinc-600">{comprehensiveMetrics.htmlComplexity}%</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Complex</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>HTML complexity percentage</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="text-center p-1 bg-neutral-50 rounded border border-neutral-100 min-w-[48px] cursor-help hover:bg-neutral-100 transition-colors">
+                              <AlertTriangle className="w-2 h-2 mx-auto mb-0.5 text-neutral-600" />
+                              <div className="text-xs font-bold text-neutral-600">{comprehensiveMetrics.unsubscribeRisk}%</div>
+                              <div className="text-[10px] text-gray-600 leading-tight">Risk</div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Unsubscribe risk percentage</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            )}
+
+            {/* Critical Suggestions - keep existing implementation */}
+            {criticalSuggestions.length > 0 && (
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-900">AI Suggestions & Auto-Fixes</h4>
+                  <Badge variant="outline" className="text-xs">
+                    {criticalSuggestions.length} suggestions
+                  </Badge>
+                </div>
+                
+                <div className="space-y-3">
+                  {criticalSuggestions.map((suggestion) => (
+                    <div key={suggestion.id} className="border rounded-lg p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-2 flex-1">
+                          {getCategoryIcon(suggestion.category)}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm">{suggestion.title}</span>
+                              {getSeverityIcon(suggestion.severity)}
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs ${CriticalEmailAnalysisService.getSeverityColor(suggestion.severity)}`}
+                              >
+                                {suggestion.severity}
                               </Badge>
+                              {suggestion.autoFixable && (
+                                <Badge variant="secondary" className="text-xs bg-green-50 text-green-700">
+                                  Auto-fixable
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{suggestion.reason}</p>
+                            {suggestion.businessImpact && (
+                              <p className="text-xs text-blue-600 mb-2">💡 {suggestion.businessImpact}</p>
+                            )}
+                            {suggestion.current && suggestion.suggested && (
+                              <div className="text-xs space-y-1">
+                                <div className="text-gray-500">Current: "{suggestion.current}"</div>
+                                <div className="text-green-600">Suggested: "{suggestion.suggested}"</div>
+                              </div>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{suggestion.reason}</p>
-                          {suggestion.businessImpact && (
-                            <p className="text-xs text-blue-600 mb-2">💡 {suggestion.businessImpact}</p>
-                          )}
-                          {suggestion.current && suggestion.suggested && (
-                            <div className="text-xs space-y-1">
-                              <div className="text-gray-500">Current: "{suggestion.current}"</div>
-                              <div className="text-green-600">Suggested: "{suggestion.suggested}"</div>
-                            </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          {appliedFixes.has(suggestion.id) ? (
+                            <Badge variant="default" className="bg-green-100 text-green-700">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Applied
+                            </Badge>
+                          ) : suggestion.autoFixable ? (
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleApplyFix(suggestion)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <Zap className="w-3 h-3 mr-1" />
+                              Auto-Fix
+                            </Button>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              Manual Fix
+                            </Badge>
                           )}
                         </div>
                       </div>
-                      
-                      <div className="flex gap-2">
-                        {appliedFixes.has(suggestion.id) ? (
-                          <Badge variant="default" className="bg-green-100 text-green-700">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Applied
-                          </Badge>
-                        ) : suggestion.autoFixable ? (
-                          <Button 
-                            size="sm" 
-                            onClick={() => handleApplyFix(suggestion)}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <Zap className="w-3 h-3 mr-1" />
-                            Auto-Fix
-                          </Button>
-                        ) : (
-                          <Badge variant="outline" className="text-xs">
-                            Manual Fix
-                          </Badge>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-        </div>
-      </ScrollArea>
-    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    </TooltipProvider>
   );
 };
