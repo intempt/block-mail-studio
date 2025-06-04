@@ -415,36 +415,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             </Card>
           )}
 
-          {/* Performance Metrics from Analytics */}
-          {result && (
-            <Card className="p-4">
-              <h4 className="font-medium text-gray-900 mb-3">AI Analytics Results</h4>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{result.scores?.overallScore || 0}</div>
-                  <div className="text-xs text-gray-600">Overall Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{result.scores?.deliverabilityScore || 0}</div>
-                  <div className="text-xs text-gray-600">Deliverability</div>
-                </div>
-              </div>
-              
-              {result.prediction && (
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Predicted Open Rate:</span>
-                    <span className="font-medium">{result.prediction.openRate}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Predicted Click Rate:</span>
-                    <span className="font-medium">{result.prediction.clickRate}%</span>
-                  </div>
-                </div>
-              )}
-            </Card>
-          )}
-
           {/* Critical Suggestions - keep existing implementation */}
           {criticalSuggestions.length > 0 && (
             <Card className="p-4">
