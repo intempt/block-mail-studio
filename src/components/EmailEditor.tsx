@@ -31,6 +31,7 @@ import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
+import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 
 interface Block {
   id: string;
@@ -79,6 +80,9 @@ export default function EmailEditor({
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [showGmailPreview, setShowGmailPreview] = useState(false);
   const [gmailPreviewMode, setGmailPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  
+  // New state for integrated preview
+  const [showIntegratedPreview, setShowIntegratedPreview] = useState(false);
 
   const canvasRef = useRef<any>(null);
 
@@ -349,6 +353,16 @@ export default function EmailEditor({
     console.log('Applied auto-fix:', fix);
   };
 
+  // New handler for integrated Gmail preview
+  const handleToggleIntegratedPreview = () => {
+    setShowIntegratedPreview(prev => !prev);
+  };
+
+  const handleIntegratedPreviewModeChange = (mode: 'desktop' | 'mobile') => {
+    setPreviewMode(mode);
+    setGmailPreviewMode(mode);
+  };
+
   const handleGmailPreview = (mode: 'desktop' | 'mobile') => {
     setGmailPreviewMode(mode);
     setShowGmailPreview(true);
@@ -383,6 +397,8 @@ export default function EmailEditor({
         onImportBlocks={handleImportBlocks}
         blocks={emailBlocks}
         onGmailPreview={handleGmailPreview}
+        onToggleIntegratedPreview={handleToggleIntegratedPreview}
+        showIntegratedPreview={showIntegratedPreview}
       />
 
       {/* Snippet Ribbon */}
@@ -391,20 +407,37 @@ export default function EmailEditor({
         refreshTrigger={snippetRefreshTrigger}
       />
 
-      <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
-        <div className="max-w-4xl mx-auto">
-          <EmailBlockCanvas
-            ref={canvasRef}
-            onContentChange={handleContentChangeFromCanvas}
-            onBlockSelect={handleBlockSelect}
-            onBlocksChange={handleBlocksChange}
-            previewWidth={canvasWidth}
-            previewMode={previewMode}
-            compactMode={false}
-            subject={subject}
-            onSubjectChange={onSubjectChange}
-            showAIAnalytics={false}
-          />
+      <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
+        <div className={`h-full ${showIntegratedPreview ? 'flex' : ''}`}>
+          {/* Main Canvas Area */}
+          <div className={`${showIntegratedPreview ? 'flex-1' : 'w-full'} p-6`}>
+            <div className="max-w-4xl mx-auto">
+              <EmailBlockCanvas
+                ref={canvasRef}
+                onContentChange={handleContentChangeFromCanvas}
+                onBlockSelect={handleBlockSelect}
+                onBlocksChange={handleBlocksChange}
+                previewWidth={showIntegratedPreview ? Math.min(canvasWidth, 800) : canvasWidth}
+                previewMode={previewMode}
+                compactMode={showIntegratedPreview}
+                subject={subject}
+                onSubjectChange={onSubjectChange}
+                showAIAnalytics={false}
+              />
+            </div>
+          </div>
+
+          {/* Integrated Gmail Preview Panel */}
+          {showIntegratedPreview && (
+            <div className="w-1/2 min-w-[400px] max-w-[600px]">
+              <IntegratedGmailPreview
+                emailHtml={content}
+                subject={subject}
+                previewMode={previewMode}
+                onPreviewModeChange={handleIntegratedPreviewModeChange}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -420,6 +453,7 @@ export default function EmailEditor({
         />
       </div>
 
+      {/* Keep existing modals */}
       {showPreview && (
         <EmailPreview
           html={content}
@@ -444,7 +478,6 @@ export default function EmailEditor({
               </Button>
             </div>
             <div className="flex-1 overflow-hidden">
-              {/* Gmail Preview Component will be imported and used here */}
               <div className="w-full h-full flex items-center justify-center bg-gray-100">
                 <div className="text-center">
                   <h3 className="text-lg font-medium mb-2">Gmail {gmailPreviewMode} Preview</h3>

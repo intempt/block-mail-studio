@@ -22,7 +22,8 @@ import {
   Edit3,
   Trash2,
   Minus,
-  Code
+  Code,
+  Eye
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -105,6 +106,8 @@ interface OmnipresentRibbonProps {
   onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
   blocks: EmailBlock[];
   onGmailPreview?: (mode: 'desktop' | 'mobile') => void;
+  onToggleIntegratedPreview?: () => void;
+  showIntegratedPreview?: boolean;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -133,7 +136,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onToggleAIAnalytics,
   onImportBlocks,
   blocks,
-  onGmailPreview
+  onGmailPreview,
+  onToggleIntegratedPreview,
+  showIntegratedPreview = false
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -318,8 +323,20 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
         
-        {/* Gmail Preview Buttons - Updated to open Gmail preview directly */}
+        {/* Gmail Preview Controls */}
         <div className="flex items-center gap-4">
+          {/* Integrated Preview Toggle */}
+          <Button
+            variant={showIntegratedPreview ? 'default' : 'outline'}
+            size="sm"
+            onClick={onToggleIntegratedPreview}
+            className="flex items-center gap-2"
+            title="Toggle Gmail Preview Panel"
+          >
+            <Eye className="w-4 h-4" />
+            {showIntegratedPreview ? 'Hide Preview' : 'Show Preview'}
+          </Button>
+
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
               variant="ghost"
