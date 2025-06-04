@@ -104,6 +104,7 @@ interface OmnipresentRibbonProps {
   onToggleAIAnalytics?: () => void;
   onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
   blocks: EmailBlock[];
+  onGmailPreview?: (mode: 'desktop' | 'mobile') => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -131,7 +132,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onSubjectLineChange,
   onToggleAIAnalytics,
   onImportBlocks,
-  blocks
+  blocks,
+  onGmailPreview
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -259,6 +261,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     setShowImportDialog(false);
   };
 
+  const handleDesktopClick = () => {
+    onPreviewModeChange?.('desktop');
+    onGmailPreview?.('desktop');
+  };
+
+  const handleMobileClick = () => {
+    onPreviewModeChange?.('mobile');
+    onGmailPreview?.('mobile');
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 relative">
       {/* Top Header */}
@@ -306,18 +318,19 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
         
-        {/* Fixed Desktop/Mobile Toggle with Better Text Visibility */}
+        {/* Gmail Preview Buttons - Updated to open Gmail preview directly */}
         <div className="flex items-center gap-4">
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onPreviewModeChange?.('desktop')}
+              onClick={handleDesktopClick}
               className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
                 previewMode === 'desktop' 
                   ? 'bg-white shadow-sm text-gray-900 font-medium' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
+              title="Open Gmail Desktop Preview"
             >
               <Monitor className="w-4 h-4" />
               <span className="text-sm">Desktop</span>
@@ -325,12 +338,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onPreviewModeChange?.('mobile')}
+              onClick={handleMobileClick}
               className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
                 previewMode === 'mobile' 
                   ? 'bg-white shadow-sm text-gray-900 font-medium' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
+              title="Open Gmail Mobile Preview"
             >
               <Smartphone className="w-4 h-4" />
               <span className="text-sm">Mobile</span>

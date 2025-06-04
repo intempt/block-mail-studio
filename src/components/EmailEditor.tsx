@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -78,6 +77,8 @@ export default function EmailEditor({
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [showGmailPreview, setShowGmailPreview] = useState(false);
+  const [gmailPreviewMode, setGmailPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const canvasRef = useRef<any>(null);
 
@@ -348,6 +349,11 @@ export default function EmailEditor({
     console.log('Applied auto-fix:', fix);
   };
 
+  const handleGmailPreview = (mode: 'desktop' | 'mobile') => {
+    setGmailPreviewMode(mode);
+    setShowGmailPreview(true);
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -376,8 +382,10 @@ export default function EmailEditor({
         onToggleAIAnalytics={handleToggleAIAnalytics}
         onImportBlocks={handleImportBlocks}
         blocks={emailBlocks}
+        onGmailPreview={handleGmailPreview}
       />
 
+      {/* Snippet Ribbon */}
       <SnippetRibbon
         onSnippetSelect={handleSnippetSelect}
         refreshTrigger={snippetRefreshTrigger}
@@ -418,6 +426,37 @@ export default function EmailEditor({
           previewMode={previewMode}
           subject={subject}
         />
+      )}
+
+      {showGmailPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full h-5/6 m-4 flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">
+                Gmail Preview - {gmailPreviewMode === 'desktop' ? 'Desktop' : 'Mobile'}
+              </h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowGmailPreview(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              {/* Gmail Preview Component will be imported and used here */}
+              <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium mb-2">Gmail {gmailPreviewMode} Preview</h3>
+                  <p className="text-gray-600">Subject: {subject}</p>
+                  <div className="mt-4 p-4 bg-white rounded border max-w-md">
+                    <div dangerouslySetInnerHTML={{ __html: content }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {showTemplateLibrary && (
