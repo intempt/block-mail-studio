@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,9 @@ import {
   Wand2,
   Type,
   Plus,
-  Loader2
+  Loader2,
+  Check,
+  X
 } from 'lucide-react';
 
 interface FullTipTapToolbarProps {
@@ -70,19 +73,70 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   emailContext = {}
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const linkInputRef = useRef<HTMLInputElement>(null);
   const [finalPosition, setFinalPosition] = useState(position);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [showAIMenu, setShowAIMenu] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [aiOperation, setAiOperation] = useState<string | null>(null);
+  
+  // Simplified link state management
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [selectedText, setSelectedText] = useState('');
-  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
+  const [storedSelection, setStoredSelection] = useState<{ from: number; to: number } | null>(null);
 
   // Check if text is selected for link functionality
   const hasTextSelection = editor && !editor.state.selection.empty;
+
+  // Store selection when opening link dialog
+  const storeCurrentSelection = useCallback(() => {
+    if (editor && hasTextSelection) {
+      const { from, to } = editor.state.selection;
+      setStoredSelection({ from, to });
+      const text = editor.state.doc.textBetween(from, to);
+      setSelectedText(text);
+      
+      // Check if the selected text is already a link
+      const existingLink = editor.getAttributes('link');
+      if (existingLink.href) {
+        setLinkUrl(existingLink.href);
+      } else {
+        // Auto-detect if selected text looks like a URL
+        const urlPattern = /^(https?:\/\/|www\.|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i;
+        if (urlPattern.test(text)) {
+          setLinkUrl(text.startsWith('http') ? text : `https://${text}`);
+        } else {
+          setLinkUrl('');
+        }
+      }
+    }
+  }, [editor, hasTextSelection]);
+
+  // Restore selection and apply link
+  const restoreSelectionAndApplyLink = useCallback((url: string) => {
+    if (!editor || !storedSelection) return false;
+
+    try {
+      // Restore the selection
+      editor.commands.setTextSelection({
+        from: storedSelection.from,
+        to: storedSelection.to
+      });
+
+      // Apply the link
+      const finalUrl = url.startsWith('http') || url.startsWith('mailto:') || url.startsWith('tel:') 
+        ? url 
+        : `https://${url}`;
+      
+      editor.chain().focus().setLink({ href: finalUrl }).run();
+      return true;
+    } catch (error) {
+      console.error('Failed to apply link:', error);
+      return false;
+    }
+  }, [editor, storedSelection]);
 
   // Debounced position calculation to prevent jumping
   const calculateOptimalPosition = useCallback(() => {
@@ -130,16 +184,13 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   const handleFormatOperation = useCallback((operation: () => void) => {
     if (!editor) return;
     
-    setIsOperationInProgress(true);
-    
     // Execute the operation
     operation();
     
     // Brief delay to show operation feedback, then restore focus
     setTimeout(() => {
       editor.commands.focus();
-      setIsOperationInProgress(false);
-    }, 100);
+    }, 50);
   }, [editor]);
 
   const handleAIOperation = async (operationType: string) => {
@@ -160,7 +211,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     setIsAIProcessing(true);
     setAiOperation(operationType);
     setShowAIMenu(false);
-    setIsOperationInProgress(true);
 
     try {
       const result = await TipTapAIService.enhanceText(
@@ -191,7 +241,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     } finally {
       setIsAIProcessing(false);
       setAiOperation(null);
-      setIsOperationInProgress(false);
     }
   };
 
@@ -215,56 +264,71 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     });
   };
 
+  // Simplified link handling
   const handleLinkClick = () => {
     if (!hasTextSelection) {
       toast.error('Please select text first to add a link');
       return;
     }
 
-    const text = editor.state.doc.textBetween(
-      editor.state.selection.from, 
-      editor.state.selection.to
-    );
-    setSelectedText(text);
-    setLinkUrl('');
+    storeCurrentSelection();
     setShowLinkDialog(true);
-    setIsOperationInProgress(true);
     onLinkClick?.();
+    
+    // Focus the input after a brief delay
+    setTimeout(() => {
+      linkInputRef.current?.focus();
+    }, 100);
   };
 
-  const handleLinkAdd = () => {
-    if (!linkUrl.trim() || !editor || !hasTextSelection) {
+  const handleLinkSubmit = () => {
+    if (!linkUrl.trim()) {
       toast.error('Please enter a valid URL');
       return;
     }
 
-    try {
-      new URL(linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`);
-    } catch {
-      toast.error('Please enter a valid URL');
-      return;
+    const success = restoreSelectionAndApplyLink(linkUrl);
+    if (success) {
+      setShowLinkDialog(false);
+      setLinkUrl('');
+      setStoredSelection(null);
+      toast.success('Link added successfully');
+    } else {
+      toast.error('Failed to add link. Please try again.');
     }
-
-    const finalUrl = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
-    
-    handleFormatOperation(() => {
-      editor.chain().focus().setLink({ href: finalUrl }).run();
-    });
-    
-    setLinkUrl('');
-    setShowLinkDialog(false);
-    setIsOperationInProgress(false);
-    toast.success('Link added successfully');
   };
 
   const handleRemoveLink = () => {
-    if (editor) {
-      handleFormatOperation(() => {
-        editor.chain().focus().unsetLink().run();
+    if (editor && storedSelection) {
+      editor.commands.setTextSelection({
+        from: storedSelection.from,
+        to: storedSelection.to
       });
+      editor.chain().focus().unsetLink().run();
       setShowLinkDialog(false);
-      setIsOperationInProgress(false);
+      setLinkUrl('');
+      setStoredSelection(null);
       toast.success('Link removed');
+    }
+  };
+
+  const handleLinkCancel = () => {
+    setShowLinkDialog(false);
+    setLinkUrl('');
+    setStoredSelection(null);
+    if (editor) {
+      editor.commands.focus();
+    }
+  };
+
+  // Handle keyboard shortcuts
+  const handleLinkKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleLinkSubmit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleLinkCancel();
     }
   };
 
@@ -286,9 +350,7 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     <>
       <div
         ref={toolbarRef}
-        className={`full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 ${
-          isOperationInProgress ? 'ring-2 ring-blue-200' : ''
-        }`}
+        className="full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1"
         style={toolbarStyle}
         onMouseDown={(e) => e.preventDefault()}
         onClick={(e) => e.stopPropagation()}
@@ -537,77 +599,97 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
-        {/* Link */}
+        {/* Enhanced Link Button */}
         <Button
           variant={editor.isActive('link') ? 'default' : 'ghost'}
           size="sm"
           onClick={handleLinkClick}
           className="h-8 w-8 p-0"
-          title={hasTextSelection ? "Add Link to Selected Text" : "Select text first to add link"}
+          title={hasTextSelection ? "Add Link (Ctrl+K)" : "Select text first to add link"}
           disabled={!hasTextSelection}
         >
           <LinkIcon className="w-4 h-4" />
         </Button>
       </div>
 
-      {/* Link Dialog with improved positioning */}
+      {/* Streamlined Link Dialog */}
       {showLinkDialog && (
         <div 
-          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-[9999] animate-in fade-in-0 slide-in-from-top-2 duration-200"
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-[9999] animate-in fade-in-0 duration-150"
           style={{
             top: finalPosition.top + 70,
             left: finalPosition.left,
             transform: 'translateX(-50%)',
-            minWidth: '320px',
+            minWidth: '350px',
             maxWidth: 'calc(100vw - 40px)'
           }}
           onMouseDown={(e) => e.preventDefault()}
         >
           <div className="space-y-3">
-            <div className="text-sm font-medium text-gray-700">Add Link to Selected Text</div>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium text-gray-700">
+                {editor.isActive('link') ? 'Edit Link' : 'Add Link'}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLinkCancel}
+                className="h-6 w-6 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
             
             {selectedText && (
               <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                Selected: "{selectedText}"
+                Selected: <span className="font-medium">"{selectedText}"</span>
               </div>
             )}
             
             <div className="space-y-2">
               <Input
+                ref={linkInputRef}
                 value={linkUrl}
                 onChange={(e) => setLinkUrl(e.target.value)}
                 placeholder="https://example.com or mailto:email@domain.com"
                 className="w-full"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleLinkAdd();
-                  } else if (e.key === 'Escape') {
-                    setShowLinkDialog(false);
-                    setIsOperationInProgress(false);
-                  }
-                }}
-                autoFocus
+                onKeyDown={handleLinkKeyDown}
               />
               
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleLinkAdd} disabled={!linkUrl.trim()}>
-                  Add Link
+                <Button 
+                  size="sm" 
+                  onClick={handleLinkSubmit} 
+                  disabled={!linkUrl.trim()}
+                  className="flex items-center gap-1"
+                >
+                  <Check className="w-3 h-3" />
+                  {editor.isActive('link') ? 'Update' : 'Add'} Link
                 </Button>
+                
                 {editor.isActive('link') && (
-                  <Button size="sm" variant="outline" onClick={handleRemoveLink}>
-                    Remove Link
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={handleRemoveLink}
+                    className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                  >
+                    <X className="w-3 h-3" />
+                    Remove
                   </Button>
                 )}
+                
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  onClick={() => {
-                    setShowLinkDialog(false);
-                    setIsOperationInProgress(false);
-                  }}
+                  onClick={handleLinkCancel}
                 >
                   Cancel
                 </Button>
+              </div>
+              
+              <div className="text-xs text-gray-500">
+                Press Enter to confirm, Esc to cancel
               </div>
             </div>
           </div>
