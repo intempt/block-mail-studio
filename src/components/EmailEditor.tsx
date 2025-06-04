@@ -416,6 +416,7 @@ export default function EmailEditor({
         <EmailPreview
           html={content}
           previewMode={previewMode}
+          subject={subject}
         />
       )}
 
