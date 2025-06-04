@@ -172,15 +172,21 @@
 /* ---------------------------------------------------------------------------
    Brand color utilities
    ------------------------------------------------------------------------- */
+.bg-brand-bg { background-color: var(--color-bg); }
 .bg-brand-primary { background-color: var(--color-primary-500); }
 .bg-brand-primary-hover { background-color: var(--color-primary-600); }
 .bg-brand-secondary { background-color: var(--color-secondary-100); }
+.bg-brand-secondary-200 { background-color: var(--color-secondary-200); }
 .bg-brand-muted { background-color: var(--color-muted); }
 
 .text-brand-primary { color: var(--color-primary-500); }
 .text-brand-fg { color: var(--color-fg); }
 
 .border-brand { border-color: var(--color-border); }
+
+.hover\:bg-brand-primary:hover { background-color: var(--color-primary-500); }
+.hover\:bg-brand-primary-hover:hover { background-color: var(--color-primary-600); }
+.hover\:bg-brand-secondary:hover { background-color: var(--color-secondary-100); }
 
 /* ---------------------------------------------------------------------------
    Component overrides using design tokens

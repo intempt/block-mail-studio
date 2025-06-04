@@ -104,10 +104,10 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Card className="absolute top-full left-0 right-0 z-50 mt-2 mx-6 shadow-lg border border-gray-200">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
+    <Card className="absolute top-full left-0 right-0 z-50 mt-2 mx-6 shadow-lg border border-brand">
+      <div className="u-p-4">
+        <div className="flex items-center justify-between u-m-4">
+          <h3 className="text-h4 font-semibold flex items-center u-gap-2">
             <MousePointer className="w-4 h-4" />
             Buttons
           </h3>
@@ -115,7 +115,7 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
             variant="ghost"
             size="sm"
             onClick={onToggle}
-            className="text-gray-500"
+            className="text-brand-fg"
           >
             <ChevronDown className="w-4 h-4" />
           </Button>
@@ -124,10 +124,10 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
         <div className="space-y-4">
           {/* Font Selection */}
           <div>
-            <Label className="text-xs font-medium mb-2 block">Font</Label>
-            <div className="flex flex-wrap gap-1 mb-2">
+            <Label className="text-caption font-medium u-m-2 block">Font</Label>
+            <div className="flex flex-wrap u-gap-1 u-m-2">
               {buttonStyles.fontFamily.map((font) => (
-                <Badge key={font} variant="secondary" className="text-xs flex items-center gap-1">
+                <Badge key={font} variant="secondary" className="text-caption flex items-center u-gap-1">
                   {font.split(',')[0]}
                   <X 
                     className="w-3 h-3 cursor-pointer hover:text-red-500" 
@@ -150,10 +150,10 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
             </Select>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 u-gap-3">
             {/* Style */}
             <div>
-              <Label className="text-xs">Style</Label>
+              <Label className="text-caption">Style</Label>
               <Select value={buttonStyles.style} onValueChange={(value) => handleButtonStyleChange('style', value)}>
                 <SelectTrigger className="h-8 mt-1">
                   <SelectValue />
@@ -168,88 +168,88 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
 
             {/* Text Color */}
             <div>
-              <Label className="text-xs">Text Color</Label>
-              <div className="flex gap-2 mt-1">
+              <Label className="text-caption">Text Color</Label>
+              <div className="flex u-gap-2 mt-1">
                 <input
                   type="color"
                   value={buttonStyles.textColor}
                   onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  className="w-8 h-8 border border-brand rounded cursor-pointer"
                 />
                 <Input
                   value={buttonStyles.textColor}
                   onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
-                  className="flex-1 h-8 text-xs font-mono"
+                  className="flex-1 h-8 text-caption font-mono"
                 />
               </div>
             </div>
 
             {/* Button Color */}
             <div>
-              <Label className="text-xs">Button Color</Label>
-              <div className="flex gap-2 mt-1">
+              <Label className="text-caption">Button Color</Label>
+              <div className="flex u-gap-2 mt-1">
                 <input
                   type="color"
                   value={buttonStyles.backgroundColor}
                   onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  className="w-8 h-8 border border-brand rounded cursor-pointer"
                 />
                 <Input
                   value={buttonStyles.backgroundColor}
                   onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
-                  className="flex-1 h-8 text-xs font-mono"
+                  className="flex-1 h-8 text-caption font-mono"
                 />
               </div>
             </div>
 
             {/* Font Size */}
             <div>
-              <Label className="text-xs">Size</Label>
+              <Label className="text-caption">Size</Label>
               <div className="flex items-center mt-1">
                 <Input
                   type="number"
                   value={buttonStyles.fontSize}
                   onChange={(e) => handleButtonStyleChange('fontSize', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption"
                 />
-                <span className="text-xs text-gray-500 ml-1">px</span>
+                <span className="text-caption text-muted-foreground ml-1">px</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 u-gap-3">
             {/* Line Height */}
             <div>
-              <Label className="text-xs">Line Height</Label>
-              <div className="flex items-center gap-1 mt-1">
+              <Label className="text-caption">Line Height</Label>
+              <div className="flex items-center u-gap-1 mt-1">
                 <Input
                   type="number"
                   value={buttonStyles.lineHeight}
                   onChange={(e) => handleButtonStyleChange('lineHeight', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption"
                 />
-                <span className="text-xs text-gray-500">%</span>
+                <span className="text-caption text-muted-foreground">%</span>
               </div>
             </div>
 
             {/* Letter Spacing */}
             <div>
-              <Label className="text-xs">Letter Spacing</Label>
-              <div className="flex items-center gap-1 mt-1">
+              <Label className="text-caption">Letter Spacing</Label>
+              <div className="flex items-center u-gap-1 mt-1">
                 <Input
                   type="number"
                   value={buttonStyles.letterSpacing}
                   onChange={(e) => handleButtonStyleChange('letterSpacing', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption"
                 />
-                <span className="text-xs text-gray-500">px</span>
+                <span className="text-caption text-muted-foreground">px</span>
               </div>
             </div>
 
             {/* Text Formatting */}
             <div>
-              <Label className="text-xs">Format</Label>
-              <div className="flex gap-1 mt-1">
+              <Label className="text-caption">Format</Label>
+              <div className="flex u-gap-1 mt-1">
                 <Button
                   variant={buttonStyles.italic ? 'default' : 'outline'}
                   size="sm"
@@ -271,44 +271,44 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
           </div>
 
           {/* Padding Controls */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 u-gap-3">
             <div>
-              <Label className="text-xs">Top/Bottom Padding</Label>
-              <div className="flex items-center gap-2 mt-1">
+              <Label className="text-caption">Top/Bottom Padding</Label>
+              <div className="flex items-center u-gap-2 mt-1">
                 <Input
                   type="number"
                   value={buttonStyles.paddingTopBottom}
                   onChange={(e) => handlePaddingChange('topBottom', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption"
                 />
-                <span className="text-xs text-gray-500">px</span>
+                <span className="text-caption text-muted-foreground">px</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-8 w-8 p-0"
                   onClick={togglePaddingLock}
                 >
-                  <Lock className={`w-3 h-3 ${buttonStyles.paddingLocked ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Lock className={`w-3 h-3 ${buttonStyles.paddingLocked ? 'text-blue-600' : 'text-muted-foreground'}`} />
                 </Button>
               </div>
             </div>
             <div>
-              <Label className="text-xs">Left/Right Padding</Label>
-              <div className="flex items-center gap-2 mt-1">
+              <Label className="text-caption">Left/Right Padding</Label>
+              <div className="flex items-center u-gap-2 mt-1">
                 <Input
                   type="number"
                   value={buttonStyles.paddingLeftRight}
                   onChange={(e) => handlePaddingChange('leftRight', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption"
                 />
-                <span className="text-xs text-gray-500">px</span>
+                <span className="text-caption text-muted-foreground">px</span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-            <Badge variant="secondary" className="text-xs">
+          <div className="flex items-center justify-between u-p-2 border-t border-brand">
+            <Badge variant="secondary" className="text-caption">
               Applied to all buttons
             </Badge>
           </div>
