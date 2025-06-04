@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,15 +54,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-5 h-5" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-5 h-5" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-5 h-5" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-5 h-5" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-5 h-5" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-5 h-5" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-5 h-5" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-5 h-5" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-5 h-5" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-10 h-10" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-10 h-10" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-10 h-10" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-10 h-10" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-10 h-10" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-10 h-10" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-10 h-10" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-10 h-10" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-10 h-10" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -366,40 +365,40 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar - Centered with bigger icons but reduced height */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-center gap-3 overflow-x-auto">
+      {/* Toolbar - Centered with bigger icons */}
+      <div className="px-3 py-3">
+        <div className="flex items-center justify-center gap-4 overflow-x-auto">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="ghost"
-                  size="sm"
-                  className="p-2 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  size="lg"
+                  className="p-4 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-12 h-12" })}
+                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-24 h-24" })}
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-16" />
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="ghost"
-                  size="sm"
-                  className={`p-2 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ${
+                  size="lg"
+                  className={`p-4 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ${
                     draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
                   }`}
                   draggable
@@ -408,67 +407,67 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-12 h-12" />
+                  <DynamicLayoutIcon layout={layout} className="w-24 h-24" />
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-16" />
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-12 h-12" />
+                <Settings className="w-24 h-24" />
               </Button>
 
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-12 h-12" />
+                <Type className="w-24 h-24" />
               </Button>
 
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
                 }}
                 title="Buttons"
               >
-                <MousePointer className="w-12 h-12" />
+                <MousePointer className="w-24 h-24" />
               </Button>
 
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-4 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
                 }}
                 title="Links"
               >
-                <Link className="w-12 h-12" />
+                <Link className="w-24 h-24" />
               </Button>
             </div>
           </div>
