@@ -165,7 +165,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                       <Button variant="ghost" className="w-full justify-between p-0 h-auto mb-2">
                         <div className={`${compactMode ? 'text-xs' : 'text-sm'} font-medium flex items-center gap-2`}>
                           <Blocks className={compactMode ? 'w-3 h-3' : 'w-4 h-4'} />
-                          Content Blocks
+                          Content
                         </div>
                         {sectionsExpanded.blocks ? 
                           <ChevronDown className="w-4 h-4" /> : 
