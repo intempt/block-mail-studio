@@ -1,4 +1,5 @@
 
+@import url('./styles/design-tokens.css');
 @import url('./components/animations.css');
 @tailwind base;
 @tailwind components;
@@ -67,5 +68,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Switzer", var(--text-body-family);
   }
 }

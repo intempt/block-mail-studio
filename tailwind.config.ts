@@ -20,6 +20,7 @@ export default {
 		},
 		extend: {
 			fontFamily: {
+				'switzer': ['Switzer', 'sans-serif'],
 				'inter': ['Inter', 'sans-serif'],
 				'roboto': ['Roboto', 'sans-serif'],
 				'open-sans': ['Open Sans', 'sans-serif'],
@@ -33,7 +34,49 @@ export default {
 				'playfair': ['Playfair Display', 'serif'],
 				'merriweather': ['Merriweather', 'serif'],
 			},
+			fontSize: {
+				'brand-xs': 'var(--font-xs)',
+				'brand-sm': 'var(--font-sm)',
+				'brand-base': 'var(--font-base)',
+				'brand-md': 'var(--font-md)',
+				'brand-lg': 'var(--font-lg)',
+				'brand-xl': 'var(--font-xl)',
+			},
+			spacing: {
+				'brand-0': 'var(--space-0)',
+				'brand-1': 'var(--space-1)',
+				'brand-2': 'var(--space-2)',
+				'brand-3': 'var(--space-3)',
+				'brand-4': 'var(--space-4)',
+				'brand-6': 'var(--space-6)',
+				'brand-8': 'var(--space-8)',
+			},
+			borderRadius: {
+				'brand-sm': 'var(--radius-1)',
+				'brand': 'var(--radius-2)',
+				'brand-md': 'var(--radius-3)',
+				'brand-lg': 'var(--radius-4)',
+				'brand-xl': 'var(--radius-5)',
+				'brand-card': 'var(--radius-card)',
+				lg: 'var(--radius)',
+				md: 'calc(var(--radius) - 2px)',
+				sm: 'calc(var(--radius) - 4px)'
+			},
 			colors: {
+				brand: {
+					bg: 'var(--color-bg)',
+					fg: 'var(--color-fg)',
+					primary: {
+						500: 'var(--color-primary-500)',
+						600: 'var(--color-primary-600)',
+					},
+					secondary: {
+						100: 'var(--color-secondary-100)',
+						200: 'var(--color-secondary-200)',
+					},
+					border: 'var(--color-border)',
+					muted: 'var(--color-muted)',
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -77,11 +120,6 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
-			},
-			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
 			},
 			keyframes: {
 				'accordion-down': {
