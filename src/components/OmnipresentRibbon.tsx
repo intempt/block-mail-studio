@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,15 +54,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-12 h-12" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-12 h-12" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-12 h-12" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-12 h-12" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-12 h-12" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-12 h-12" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-12 h-12" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-12 h-12" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-12 h-12" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-9 h-9" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-9 h-9" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-9 h-9" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-9 h-9" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-9 h-9" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-9 h-9" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-9 h-9" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-9 h-9" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-9 h-9" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -377,13 +376,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={block.id}
                   variant="ghost"
                   size="lg"
-                  className="p-2 rounded-full cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-12 [&_svg]:!h-12"
+                  className="p-2 rounded-full cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-12 h-12" })}
+                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-9 h-9" })}
                 </Button>
               ))}
             </div>
@@ -399,7 +398,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={layout.id}
                   variant="ghost"
                   size="lg"
-                  className={`p-2 rounded-full cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-12 [&_svg]:!h-12 ${
+                  className={`p-2 rounded-full cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
                     draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
                   }`}
                   draggable
@@ -408,7 +407,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-12 h-12" />
+                  <DynamicLayoutIcon layout={layout} className="w-9 h-9" />
                 </Button>
               ))}
             </div>
@@ -422,53 +421,53 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
+                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-12 h-12" />
+                <Settings className="w-9 h-9" />
               </Button>
 
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
+                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-12 h-12" />
+                <Type className="w-9 h-9" />
               </Button>
 
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
+                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
                 }}
                 title="Buttons"
               >
-                <MousePointer className="w-12 h-12" />
+                <MousePointer className="w-9 h-9" />
               </Button>
 
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-12 [&_svg]:!h-12"
+                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
                 }}
                 title="Links"
               >
-                <Link className="w-12 h-12" />
+                <Link className="w-9 h-9" />
               </Button>
             </div>
           </div>
