@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { 
   Type, 
@@ -391,8 +390,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-20" />
-
           {/* Layout Options */}
           <div className="flex-shrink-0 mx-6">
             <div className="flex flex-col items-center gap-2">
@@ -418,8 +415,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               </div>
             </div>
           </div>
-
-          <Separator orientation="vertical" className="h-20" />
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0 ml-6">
