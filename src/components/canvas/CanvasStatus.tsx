@@ -5,7 +5,7 @@ import {
   RefreshCw, 
   Sparkles
 } from 'lucide-react';
-import { UnifiedEmailAnalyticsService, UnifiedEmailAnalytics } from '@/services/unifiedEmailAnalytics';
+import { useEmailAnalytics } from '@/analytics/react/useEmailAnalytics';
 
 interface CanvasStatusProps {
   selectedBlockId: string | null;
@@ -22,8 +22,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   emailHTML = '',
   subjectLine = ''
 }) => {
-  const [analytics, setAnalytics] = useState<UnifiedEmailAnalytics | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { analyze, result, isAnalyzing, error, clearCache } = useEmailAnalytics();
   const [hasContent, setHasContent] = useState(false);
 
   // Check if there's content to analyze
@@ -34,23 +33,17 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   const analyzeEmail = async () => {
     if (!emailHTML.trim()) {
-      setAnalytics(null);
       return;
     }
 
-    setIsAnalyzing(true);
-    try {
-      const result = await UnifiedEmailAnalyticsService.analyzeEmail(emailHTML, subjectLine);
-      setAnalytics(result);
-    } catch (error) {
-      console.error('Analytics error:', error);
-    } finally {
-      setIsAnalyzing(false);
-    }
+    await analyze({
+      html: emailHTML,
+      subjectLine: subjectLine
+    });
   };
 
-  const refreshAnalytics = () => {
-    UnifiedEmailAnalyticsService.clearCache();
+  const refreshAnalytics = async () => {
+    await clearCache();
     analyzeEmail();
   };
 
@@ -69,7 +62,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           </div>
           
           <div className="flex items-center gap-3">
-            {analytics && (
+            {result && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -96,10 +89,16 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               ) : (
                 <Sparkles className="w-4 h-4 mr-2" />
               )}
-              {isAnalyzing ? 'Analyzing...' : analytics ? 'Re-analyze Email' : 'Analyze Email'}
+              {isAnalyzing ? 'Analyzing...' : result ? 'Re-analyze Email' : 'Analyze Email'}
             </Button>
           </div>
         </div>
+        
+        {error && (
+          <div className="mt-3 px-3 py-2 bg-red-500/20 border border-red-400/30 rounded text-red-100 text-sm">
+            {error}
+          </div>
+        )}
       </div>
     </div>
   );
