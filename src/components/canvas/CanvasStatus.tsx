@@ -528,7 +528,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-gray-700">
-                  AI Analysis Center
+                  Suggestions AI
                 </span>
                 {hasAnalysisResults && (
                   <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
