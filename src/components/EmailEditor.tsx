@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -24,7 +25,6 @@ import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { SnippetRibbon } from './SnippetRibbon';
-import { CompactAISuggestions } from './CompactAISuggestions';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { CanvasStatus } from './canvas/CanvasStatus';
 import { EmailTemplate } from './TemplateManager';
@@ -47,18 +47,6 @@ interface LayoutConfig {
 }
 
 type LeftPanelTab = 'blocks' | 'design' | 'performance';
-
-interface BasicAISuggestion {
-  id: string;
-  type: 'subject' | 'copy' | 'cta' | 'tone';
-  title: string;
-  current: string;
-  suggested: string;
-  reason: string;
-  impact: 'high' | 'medium' | 'low';
-  confidence: number;
-  applied?: boolean;
-}
 
 interface EmailEditorProps {
   content: string;
@@ -155,30 +143,6 @@ export default function EmailEditor({
     console.log('EmailEditor: Received blocks update from canvas:', newBlocks.length);
     setEmailBlocks(newBlocks);
   }, []);
-
-  const handleApplyCriticalSuggestion = useCallback(async (suggestion: any) => {
-    try {
-      if (suggestion.type === 'subject') {
-        onSubjectChange(suggestion.suggested);
-      } else if (canvasRef?.current) {
-        switch (suggestion.type) {
-          case 'copy':
-          case 'cta':
-          case 'tone':
-          case 'structure':
-          case 'accessibility':
-            if (canvasRef.current.findAndReplaceText) {
-              canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
-            }
-            break;
-        }
-      }
-
-      console.log(`Applied critical suggestion: ${suggestion.title}`);
-    } catch (error) {
-      console.error('Failed to apply critical suggestion:', error);
-    }
-  }, [onSubjectChange]);
 
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
@@ -371,6 +335,19 @@ export default function EmailEditor({
     console.log('EmailEditor: Import completed');
   };
 
+  // Handle auto-fix suggestions from AI Analysis Center
+  const handleApplyFix = (fix: string) => {
+    if (canvasRef.current && canvasRef.current.findAndReplaceText) {
+      // Try to apply the fix by finding and replacing content
+      canvasRef.current.findAndReplaceText('', fix);
+    } else {
+      // Fallback: append the fix to the content
+      const updatedContent = content + '\n' + fix;
+      onContentChange(updatedContent);
+    }
+    console.log('Applied auto-fix:', fix);
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -406,13 +383,6 @@ export default function EmailEditor({
         refreshTrigger={snippetRefreshTrigger}
       />
 
-      {/* Critical AI Suggestions Header - Always Visible */}
-      <CompactAISuggestions
-        emailHTML={content}
-        subjectLine={subject}
-        onApplySuggestion={handleApplyCriticalSuggestion}
-      />
-
       <div className="flex-1 overflow-auto bg-gray-100 p-6 min-h-0">
         <div className="max-w-4xl mx-auto">
           <EmailBlockCanvas
@@ -430,7 +400,7 @@ export default function EmailEditor({
         </div>
       </div>
 
-      {/* AI Analytics Footer - Always visible */}
+      {/* Unified AI Analysis Center Footer - Always visible */}
       <div className="bg-white border-t border-gray-200 shadow-lg">
         <CanvasStatus 
           selectedBlockId={selectedBlockId}
@@ -438,6 +408,7 @@ export default function EmailEditor({
           previewMode={previewMode}
           emailHTML={content}
           subjectLine={subject}
+          onApplyFix={handleApplyFix}
         />
       </div>
 
