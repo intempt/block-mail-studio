@@ -227,9 +227,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     immediatelyRender: false,
   });
 
-  // Handle variable insertion
+  // Handle variable insertion - simplified approach
   const handleInsertVariable = useCallback((variable: VariableOption) => {
     console.log('handleInsertVariable called with savedCaretPosition:', savedCaretPosition);
+    console.log('editor exists:', !!editor);
+    console.log('variable:', variable);
     
     if (!editor) return;
     
@@ -248,13 +250,19 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     editor.commands.focus();
   }, [editor, savedCaretPosition]);
 
-  // Expose the insert variable function to parent
+  // Use effect to handle variable insertion from parent
   useEffect(() => {
-    if (onInsertVariable) {
-      // This is a bit of a hack, but we need to expose the function to the parent
-      (onInsertVariable as any).current = handleInsertVariable;
+    if (onInsertVariable && isEditing) {
+      console.log('Setting up variable insertion handler for block:', block.id);
+      // Store the handler function directly
+      (window as any)[`insertVariable_${block.id}`] = handleInsertVariable;
+      
+      // Cleanup on unmount or when editing ends
+      return () => {
+        delete (window as any)[`insertVariable_${block.id}`];
+      };
     }
-  }, [handleInsertVariable, onInsertVariable]);
+  }, [handleInsertVariable, onInsertVariable, isEditing, block.id]);
 
   const updateToolbarPosition = useCallback(() => {
     if (!editor || !editorRef.current) return;
