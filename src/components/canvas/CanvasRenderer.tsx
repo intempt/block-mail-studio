@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
@@ -70,65 +71,12 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return;
     }
     
-    console.log('No handler found, falling back to block update approach');
+    console.log('No handler found, falling back to onAddVariable callback');
     
-    // Fallback for other block types
-    setBlocks(prev => prev.map(block => {
-      if (block.id === blockId && block.type !== 'text') {
-        if (block.type === 'button') {
-          // Add variable to button text
-          const currentText = block.content.text || '';
-          const newText = currentText + ` ${variable.value}`;
-          
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              text: newText
-            }
-          };
-        }
-      } else if (block.type === 'columns') {
-        // Handle columns recursively
-        const updatedColumns = block.content.columns.map(column => ({
-          ...column,
-          blocks: column.blocks.map(columnBlock => {
-            if (columnBlock.id === blockId) {
-              if (columnBlock.type === 'text') {
-                // Text blocks in columns should also use the handler
-                const columnHandler = (window as any)[`insertVariable_${blockId}`];
-                if (columnHandler) {
-                  columnHandler(variable);
-                }
-                return columnBlock;
-              } else if (columnBlock.type === 'button') {
-                const currentText = columnBlock.content.text || '';
-                const newText = currentText + ` ${variable.value}`;
-                
-                return {
-                  ...columnBlock,
-                  content: {
-                    ...columnBlock.content,
-                    text: newText
-                  }
-                };
-              }
-            }
-            return columnBlock;
-          })
-        }));
-        
-        return {
-          ...block,
-          content: {
-            ...block.content,
-            columns: updatedColumns
-          }
-        };
-      }
-      
-      return block;
-    }));
+    // Fallback to parent handler for other block types
+    if (onAddVariable) {
+      onAddVariable(blockId, variable);
+    }
   };
 
   const renderBlock = (block: EmailBlock, index: number) => {
