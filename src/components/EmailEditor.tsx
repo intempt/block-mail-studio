@@ -196,7 +196,6 @@ export default function EmailEditor({
           canvasWidth={deviceMode === 'desktop' ? 600 : 375}
           deviceMode={deviceMode}
           onDeviceChange={handleDeviceChange}
-          onPerformanceToggle={() => setShowPerformanceAnalyzer(true)}
           onFullscreenToggle={toggleFullscreen}
         />
       )}
@@ -238,6 +237,8 @@ export default function EmailEditor({
                 <EmailBlockCanvas
                   ref={canvasRef}
                   onBlocksChange={handleBlocksChange}
+                  onContentChange={handleContentChange}
+                  onBlockSelect={() => {}}
                 />
               </div>
             </div>
@@ -303,13 +304,14 @@ export default function EmailEditor({
       {/* Template Library Modal */}
       {showTemplateLibrary && (
         <EmailTemplateLibrary 
-          onTemplateSelect={handleTemplateSelect}
+          editor={canvasRef.current}
         />
       )}
 
       {/* Performance Analyzer Modal */}
       {showPerformanceAnalyzer && (
         <PerformanceAnalyzer
+          editor={canvasRef.current}
           emailHTML={emailHTML}
           subjectLine={subject}
         />
