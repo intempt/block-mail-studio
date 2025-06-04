@@ -219,7 +219,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     }
   };
 
-  const hasAnalysisResults = criticalSuggestions.length > 0 || comprehensiveAnalysis || result;
+  const hasAnalysisResults = criticalSuggestions.length > 0 || comprehensiveAnalysis;
   const autoFixableCount = criticalSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
   const totalSuggestionsCount = criticalSuggestions.length;
 
@@ -821,41 +821,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                             <div className="text-xs text-yellow-600 mt-1">Fix: {issue.fix}</div>
                           </div>
                         ))}
-                      </div>
-                    </div>
-                  )}
-                </Card>
-              )}
-
-              {/* Analytics Results */}
-              {result && (
-                <Card className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Analytics</h3>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="text-center p-3 bg-blue-50 rounded">
-                      <div className="text-2xl font-bold text-blue-600">{result.scores?.overallScore || 0}</div>
-                      <div className="text-sm text-gray-600">Overall Score</div>
-                    </div>
-                    <div className="text-center p-3 bg-green-50 rounded">
-                      <div className="text-2xl font-bold text-green-600">{result.prediction?.openRate || 0}%</div>
-                      <div className="text-sm text-gray-600">Predicted Open Rate</div>
-                    </div>
-                  </div>
-
-                  {result.metrics && (
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      <div className="text-center p-2 bg-gray-50 rounded">
-                        <div className="font-semibold">{result.metrics.sizeKB}KB</div>
-                        <div className="text-gray-600">Size</div>
-                      </div>
-                      <div className="text-center p-2 bg-gray-50 rounded">
-                        <div className="font-semibold">{result.metrics.wordCount}</div>
-                        <div className="text-gray-600">Words</div>
-                      </div>
-                      <div className="text-center p-2 bg-gray-50 rounded">
-                        <div className="font-semibold">{result.metrics.imageCount}</div>
-                        <div className="text-gray-600">Images</div>
                       </div>
                     </div>
                   )}
