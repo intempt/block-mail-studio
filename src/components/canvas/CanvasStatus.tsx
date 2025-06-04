@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -208,15 +209,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     }
   };
 
-  const getMetricColor = (value: number, type: 'score' | 'count' | 'size') => {
-    if (type === 'score') {
-      if (value >= 80) return 'text-green-600';
-      if (value >= 60) return 'text-yellow-600';
-      return 'text-red-600';
-    }
-    return 'text-blue-600';
-  };
-
   const hasAnalysisResults = criticalSuggestions.length > 0 || comprehensiveAnalysis || result;
   const autoFixableCount = criticalSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
 
@@ -286,7 +278,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          {/* Enhanced Comprehensive Metrics Display */}
+          {/* Compact Horizontal Metrics Strip */}
           {comprehensiveMetrics && (
             <Card className="p-3">
               <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
@@ -294,110 +286,147 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 Comprehensive Email Metrics
               </h4>
               
-              {/* Ultra-Compact Metrics Grid - 5x3 = 15 metrics */}
-              <div className="grid grid-cols-5 gap-1 mb-4">
-                {/* Row 1: Content Metrics */}
-                <div className="text-center p-1.5 bg-blue-50 rounded-md border border-blue-100">
-                  <Type className="w-3 h-3 mx-auto mb-0.5 text-blue-600" />
-                  <div className="text-sm font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
-                  <div className="text-xs text-gray-600 leading-tight">Words</div>
-                </div>
-                <div className="text-center p-1.5 bg-green-50 rounded-md border border-green-100">
-                  <Timer className="w-3 h-3 mx-auto mb-0.5 text-green-600" />
-                  <div className="text-sm font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
-                  <div className="text-xs text-gray-600 leading-tight">Read</div>
-                </div>
-                <div className="text-center p-1.5 bg-purple-50 rounded-md border border-purple-100">
-                  <Image className="w-3 h-3 mx-auto mb-0.5 text-purple-600" />
-                  <div className="text-sm font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
-                  <div className="text-xs text-gray-600 leading-tight">Images</div>
-                </div>
-                <div className="text-center p-1.5 bg-indigo-50 rounded-md border border-indigo-100">
-                  <Link className="w-3 h-3 mx-auto mb-0.5 text-indigo-600" />
-                  <div className="text-sm font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
-                  <div className="text-xs text-gray-600 leading-tight">Links</div>
-                </div>
-                <div className="text-center p-1.5 bg-orange-50 rounded-md border border-orange-100">
-                  <Target className="w-3 h-3 mx-auto mb-0.5 text-orange-600" />
-                  <div className="text-sm font-bold text-orange-600">{comprehensiveMetrics.ctaCount}</div>
-                  <div className="text-xs text-gray-600 leading-tight">CTAs</div>
-                </div>
+              {/* Horizontal Scrollable Metrics Strip */}
+              <div className="relative">
+                <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  
+                  {/* Content Group */}
+                  <div className="flex items-center gap-1 pr-3 border-r border-gray-200">
+                    <div className="text-center p-1 bg-blue-50 rounded border border-blue-100 min-w-[48px]">
+                      <Type className="w-2 h-2 mx-auto mb-0.5 text-blue-600" />
+                      <div className="text-xs font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Words</div>
+                    </div>
+                    <div className="text-center p-1 bg-green-50 rounded border border-green-100 min-w-[48px]">
+                      <Timer className="w-2 h-2 mx-auto mb-0.5 text-green-600" />
+                      <div className="text-xs font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Read</div>
+                    </div>
+                    <div className="text-center p-1 bg-purple-50 rounded border border-purple-100 min-w-[48px]">
+                      <Image className="w-2 h-2 mx-auto mb-0.5 text-purple-600" />
+                      <div className="text-xs font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Images</div>
+                    </div>
+                    <div className="text-center p-1 bg-indigo-50 rounded border border-indigo-100 min-w-[48px]">
+                      <Link className="w-2 h-2 mx-auto mb-0.5 text-indigo-600" />
+                      <div className="text-xs font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Links</div>
+                    </div>
+                    <div className="text-center p-1 bg-orange-50 rounded border border-orange-100 min-w-[48px]">
+                      <Target className="w-2 h-2 mx-auto mb-0.5 text-orange-600" />
+                      <div className="text-xs font-bold text-orange-600">{comprehensiveMetrics.ctaCount}</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">CTAs</div>
+                    </div>
+                  </div>
 
-                {/* Row 2: Technical & Performance */}
-                <div className="text-center p-1.5 bg-gray-50 rounded-md border border-gray-100">
-                  <Globe className="w-3 h-3 mx-auto mb-0.5 text-gray-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
-                    {comprehensiveMetrics.sizeKB}KB
+                  {/* Performance Group */}
+                  <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+                    <div className="text-center p-1 bg-gray-50 rounded border border-gray-100 min-w-[48px]">
+                      <Globe className="w-2 h-2 mx-auto mb-0.5 text-gray-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
+                        {comprehensiveMetrics.sizeKB}KB
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Size</div>
+                    </div>
+                    <div className="text-center p-1 bg-yellow-50 rounded border border-yellow-100 min-w-[48px]">
+                      <Clock className="w-2 h-2 mx-auto mb-0.5 text-yellow-600" />
+                      <div className="text-xs font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Load</div>
+                    </div>
+                    <div className="text-center p-1 bg-pink-50 rounded border border-pink-100 min-w-[48px]">
+                      <Smartphone className="w-2 h-2 mx-auto mb-0.5 text-pink-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
+                        {comprehensiveMetrics.mobileScore}
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Mobile</div>
+                    </div>
+                    <div className="text-center p-1 bg-teal-50 rounded border border-teal-100 min-w-[48px]">
+                      <Eye className="w-2 h-2 mx-auto mb-0.5 text-teal-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
+                        {comprehensiveMetrics.accessibilityScore}
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">A11y</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600 leading-tight">Size</div>
-                </div>
-                <div className="text-center p-1.5 bg-yellow-50 rounded-md border border-yellow-100">
-                  <Clock className="w-3 h-3 mx-auto mb-0.5 text-yellow-600" />
-                  <div className="text-sm font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
-                  <div className="text-xs text-gray-600 leading-tight">Load</div>
-                </div>
-                <div className="text-center p-1.5 bg-pink-50 rounded-md border border-pink-100">
-                  <Smartphone className="w-3 h-3 mx-auto mb-0.5 text-pink-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
-                    {comprehensiveMetrics.mobileScore}
-                  </div>
-                  <div className="text-xs text-gray-600 leading-tight">Mobile</div>
-                </div>
-                <div className="text-center p-1.5 bg-teal-50 rounded-md border border-teal-100">
-                  <Eye className="w-3 h-3 mx-auto mb-0.5 text-teal-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
-                    {comprehensiveMetrics.accessibilityScore}
-                  </div>
-                  <div className="text-xs text-gray-600 leading-tight">A11y</div>
-                </div>
-                <div className="text-center p-1.5 bg-red-50 rounded-md border border-red-100">
-                  <Shield className="w-3 h-3 mx-auto mb-0.5 text-red-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
-                    {comprehensiveMetrics.spamScore}%
-                  </div>
-                  <div className="text-xs text-gray-600 leading-tight">Spam</div>
-                </div>
 
-                {/* Row 3: Deliverability & Engagement */}
-                <div className="text-center p-1.5 bg-emerald-50 rounded-md border border-emerald-100">
-                  <Mail className="w-3 h-3 mx-auto mb-0.5 text-emerald-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
-                    {comprehensiveMetrics.deliverabilityScore}
+                  {/* Deliverability Group */}
+                  <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+                    <div className="text-center p-1 bg-red-50 rounded border border-red-100 min-w-[48px]">
+                      <Shield className="w-2 h-2 mx-auto mb-0.5 text-red-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
+                        {comprehensiveMetrics.spamScore}%
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Spam</div>
+                    </div>
+                    <div className="text-center p-1 bg-emerald-50 rounded border border-emerald-100 min-w-[48px]">
+                      <Mail className="w-2 h-2 mx-auto mb-0.5 text-emerald-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
+                        {comprehensiveMetrics.deliverabilityScore}
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Deliver</div>
+                    </div>
+                    <div className="text-center p-1 bg-cyan-50 rounded border border-cyan-100 min-w-[48px]">
+                      <MessageSquare className="w-2 h-2 mx-auto mb-0.5 text-cyan-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
+                        {comprehensiveMetrics.subjectLineScore}
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Subject</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600 leading-tight">Deliver</div>
-                </div>
-                <div className="text-center p-1.5 bg-cyan-50 rounded-md border border-cyan-100">
-                  <MessageSquare className="w-3 h-3 mx-auto mb-0.5 text-cyan-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
-                    {comprehensiveMetrics.subjectLineScore}
+
+                  {/* Engagement Group */}
+                  <div className="flex items-center gap-1 px-3 border-r border-gray-200">
+                    <div className="text-center p-1 bg-violet-50 rounded border border-violet-100 min-w-[48px]">
+                      <User className="w-2 h-2 mx-auto mb-0.5 text-violet-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.personalizationLevel, 'score')}`}>
+                        {comprehensiveMetrics.personalizationLevel}
+                      </div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Personal</div>
+                    </div>
+                    <div className="text-center p-1 bg-rose-50 rounded border border-rose-100 min-w-[48px]">
+                      <TrendingUp className="w-2 h-2 mx-auto mb-0.5 text-rose-600" />
+                      <div className="text-xs font-bold text-rose-600">{comprehensiveMetrics.engagementPrediction}%</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Engage</div>
+                    </div>
+                    <div className="text-center p-1 bg-amber-50 rounded border border-amber-100 min-w-[48px]">
+                      <Star className="w-2 h-2 mx-auto mb-0.5 text-amber-600" />
+                      <div className="text-xs font-bold text-amber-600">{comprehensiveMetrics.conversionPrediction}%</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Convert</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600 leading-tight">Subject</div>
-                </div>
-                <div className="text-center p-1.5 bg-violet-50 rounded-md border border-violet-100">
-                  <User className="w-3 h-3 mx-auto mb-0.5 text-violet-600" />
-                  <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.personalizationLevel, 'score')}`}>
-                    {comprehensiveMetrics.personalizationLevel}
+
+                  {/* Technical Group */}
+                  <div className="flex items-center gap-1 pl-3">
+                    <div className="text-center p-1 bg-slate-50 rounded border border-slate-100 min-w-[48px]">
+                      <Type className="w-2 h-2 mx-auto mb-0.5 text-slate-600" />
+                      <div className="text-xs font-bold text-slate-600">{Math.round(comprehensiveMetrics.characterCount / 1000)}K</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Chars</div>
+                    </div>
+                    <div className="text-center p-1 bg-stone-50 rounded border border-stone-100 min-w-[48px]">
+                      <Layout className="w-2 h-2 mx-auto mb-0.5 text-stone-600" />
+                      <div className="text-xs font-bold text-stone-600">{comprehensiveMetrics.paragraphCount}</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Paras</div>
+                    </div>
+                    <div className="text-center p-1 bg-zinc-50 rounded border border-zinc-100 min-w-[48px]">
+                      <BarChart3 className="w-2 h-2 mx-auto mb-0.5 text-zinc-600" />
+                      <div className="text-xs font-bold text-zinc-600">{comprehensiveMetrics.htmlComplexity}%</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Complex</div>
+                    </div>
+                    <div className="text-center p-1 bg-neutral-50 rounded border border-neutral-100 min-w-[48px]">
+                      <AlertTriangle className="w-2 h-2 mx-auto mb-0.5 text-neutral-600" />
+                      <div className="text-xs font-bold text-neutral-600">{comprehensiveMetrics.unsubscribeRisk}%</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Risk</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-600 leading-tight">Personal</div>
-                </div>
-                <div className="text-center p-1.5 bg-rose-50 rounded-md border border-rose-100">
-                  <TrendingUp className="w-3 h-3 mx-auto mb-0.5 text-rose-600" />
-                  <div className="text-sm font-bold text-rose-600">{comprehensiveMetrics.engagementPrediction}%</div>
-                  <div className="text-xs text-gray-600 leading-tight">Engage</div>
-                </div>
-                <div className="text-center p-1.5 bg-amber-50 rounded-md border border-amber-100">
-                  <Star className="w-3 h-3 mx-auto mb-0.5 text-amber-600" />
-                  <div className="text-sm font-bold text-amber-600">{comprehensiveMetrics.conversionPrediction}%</div>
-                  <div className="text-xs text-gray-600 leading-tight">Convert</div>
                 </div>
               </div>
               
-              {/* Quick Stats Summary */}
-              <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t border-gray-100">
-                <span>{comprehensiveMetrics.characterCount.toLocaleString()} chars</span>
-                <span>{comprehensiveMetrics.paragraphCount} paragraphs</span>
-                <span>{comprehensiveMetrics.htmlComplexity}% complexity</span>
-                <span>Risk: {comprehensiveMetrics.unsubscribeRisk}%</span>
+              {/* Compact Summary Stats */}
+              <div className="flex justify-between items-center text-[10px] text-gray-500 pt-2 border-t border-gray-100 mt-2">
+                <span>{comprehensiveMetrics.sentenceCount} sentences</span>
+                <span>{comprehensiveMetrics.videoCount} videos</span>
+                <span>{comprehensiveMetrics.cssInlineCount} inline styles</span>
+                <span>Auth: {comprehensiveMetrics.authenticationScore}</span>
               </div>
             </Card>
           )}
