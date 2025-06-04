@@ -181,7 +181,7 @@ export const realTestSuites: TestSuite[] = [
       { name: 'should render OmnipresentRibbon with correct props', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
       { name: 'should handle canvas width and device mode changes', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
       { name: 'should handle preview mode switching', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
-      { name: 'should render CompactAISuggestions component', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
+      { name: 'should render CompactAISuggestions component', shouldPass: true, filePath: 'tests/components/CompactAISuggestions.test.tsx' },
       { name: 'should handle back navigation when provided', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
       { name: 'should initialize with empty canvas when no content provided', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
       { name: 'should handle content updates from canvas', shouldPass: true, filePath: 'tests/components/EmailEditor.test.tsx' },
@@ -446,4 +446,27 @@ export const getTestSummary = () => {
     totalTests,
     categoryCounts
   };
+};
+
+// Combined summary including analytics tests
+export const getCombinedTestSummary = () => {
+  const generalSummary = getTestSummary();
+
+  // Import analytics summary dynamically to avoid circular dependencies
+  return import('../tests/analytics/analyticsTestSuites').then(({ getAnalyticsTestSummary }) => {
+    const analyticsSummary = getAnalyticsTestSummary();
+
+    return {
+      general: generalSummary,
+      analytics: analyticsSummary,
+      combined: {
+        totalSuites: generalSummary.totalSuites + analyticsSummary.totalSuites,
+        totalTests: generalSummary.totalTests + analyticsSummary.totalTests,
+        categoryCounts: {
+          ...generalSummary.categoryCounts,
+          ...analyticsSummary.categoryCounts
+        }
+      }
+    };
+  });
 };
