@@ -366,109 +366,118 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       </div>
 
       {/* Toolbar */}
-      <div className="px-0 py-0">
-        <div className="flex items-center justify-center overflow-x-auto">
+      <div className="px-0 py-2">
+        <div className="flex items-end justify-center overflow-x-auto gap-6">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
-              {blockItems.map((block) => (
-                <Button
-                  key={block.id}
-                  variant="ghost"
-                  size="lg"
-                  className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
-                  draggable
-                  onDragStart={(e) => handleDragStart(e, block.id)}
-                  onClick={() => onBlockAdd(block.id)}
-                  title={`Add ${block.name}`}
-                >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-9 h-9" })}
-                </Button>
-              ))}
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content Blocks</span>
+              <div className="flex gap-1">
+                {blockItems.map((block) => (
+                  <Button
+                    key={block.id}
+                    variant="ghost"
+                    size="lg"
+                    className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, block.id)}
+                    onClick={() => onBlockAdd(block.id)}
+                    title={`Add ${block.name}`}
+                  >
+                    {React.cloneElement(block.icon as React.ReactElement, { className: "w-9 h-9" })}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-14" />
+          <Separator orientation="vertical" className="h-20" />
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
-              {layoutOptions.map((layout) => (
-                <Button
-                  key={layout.id}
-                  variant="ghost"
-                  size="lg"
-                  className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
-                    draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
-                  }`}
-                  draggable
-                  onDragStart={(e) => handleLayoutDragStart(e, layout)}
-                  onDragEnd={handleLayoutDragEnd}
-                  onClick={() => handleLayoutSelect(layout)}
-                  title={`Add ${layout.name} Layout`}
-                >
-                  <DynamicLayoutIcon layout={layout} className="w-9 h-9" />
-                </Button>
-              ))}
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Layouts</span>
+              <div className="flex gap-1">
+                {layoutOptions.map((layout) => (
+                  <Button
+                    key={layout.id}
+                    variant="ghost"
+                    size="lg"
+                    className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
+                      draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
+                    }`}
+                    draggable
+                    onDragStart={(e) => handleLayoutDragStart(e, layout)}
+                    onDragEnd={handleLayoutDragEnd}
+                    onClick={() => handleLayoutSelect(layout)}
+                    title={`Add ${layout.name} Layout`}
+                  >
+                    <DynamicLayoutIcon layout={layout} className="w-9 h-9" />
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-14" />
+          <Separator orientation="vertical" className="h-20" />
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
-              <Button
-                variant={showEmailSettings ? 'default' : 'ghost'}
-                size="lg"
-                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                onClick={() => {
-                  closeAllPanels();
-                  setShowEmailSettings(!showEmailSettings);
-                }}
-                title="Email Settings"
-              >
-                <Settings className="w-9 h-9" />
-              </Button>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Tools</span>
+              <div className="flex gap-1">
+                <Button
+                  variant={showEmailSettings ? 'default' : 'ghost'}
+                  size="lg"
+                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                  onClick={() => {
+                    closeAllPanels();
+                    setShowEmailSettings(!showEmailSettings);
+                  }}
+                  title="Email Settings"
+                >
+                  <Settings className="w-9 h-9" />
+                </Button>
 
-              <Button
-                variant={showTextHeadings ? 'default' : 'ghost'}
-                size="lg"
-                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                onClick={() => {
-                  closeAllPanels();
-                  setShowTextHeadings(!showTextHeadings);
-                }}
-                title="Text & Headings"
-              >
-                <Type className="w-9 h-9" />
-              </Button>
+                <Button
+                  variant={showTextHeadings ? 'default' : 'ghost'}
+                  size="lg"
+                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                  onClick={() => {
+                    closeAllPanels();
+                    setShowTextHeadings(!showTextHeadings);
+                  }}
+                  title="Text & Headings"
+                >
+                  <Type className="w-9 h-9" />
+                </Button>
 
-              <Button
-                variant={showButtons ? 'default' : 'ghost'}
-                size="lg"
-                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                onClick={() => {
-                  closeAllPanels();
-                  setShowButtons(!showButtons);
-                }}
-                title="Buttons"
-              >
-                <MousePointer className="w-9 h-9" />
-              </Button>
+                <Button
+                  variant={showButtons ? 'default' : 'ghost'}
+                  size="lg"
+                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                  onClick={() => {
+                    closeAllPanels();
+                    setShowButtons(!showButtons);
+                  }}
+                  title="Buttons"
+                >
+                  <MousePointer className="w-9 h-9" />
+                </Button>
 
-              <Button
-                variant={showLinks ? 'default' : 'ghost'}
-                size="lg"
-                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                onClick={() => {
-                  closeAllPanels();
-                  setShowLinks(!showLinks);
-                }}
-                title="Links"
-              >
-                <Link className="w-9 h-9" />
-              </Button>
+                <Button
+                  variant={showLinks ? 'default' : 'ghost'}
+                  size="lg"
+                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                  onClick={() => {
+                    closeAllPanels();
+                    setShowLinks(!showLinks);
+                  }}
+                  title="Links"
+                >
+                  <Link className="w-9 h-9" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
