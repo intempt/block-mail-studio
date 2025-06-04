@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,23 +52,9 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [criticalSuggestions, setCriticalSuggestions] = useState<CriticalSuggestion[]>([]);
   const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState<CompleteAnalysisResult | null>(null);
   const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
-  const [currentAnalysisContent, setCurrentAnalysisContent] = useState({ html: '', subject: '' });
+  const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
 
   const { analyze, result, isAnalyzing: isAnalyticsAnalyzing, clearCache } = useEmailAnalytics();
-
-  // Track content changes to invalidate analysis
-  useEffect(() => {
-    const contentChanged = currentAnalysisContent.html !== emailHTML || 
-                          currentAnalysisContent.subject !== subjectLine;
-    
-    if (contentChanged && (currentAnalysisContent.html || currentAnalysisContent.subject)) {
-      // Content has changed since last analysis, clear previous results
-      setCriticalSuggestions([]);
-      setComprehensiveAnalysis(null);
-      setAppliedFixes(new Set());
-      clearCache();
-    }
-  }, [emailHTML, subjectLine, currentAnalysisContent, clearCache]);
 
   const runCompleteAnalysis = async () => {
     if (!emailHTML.trim() || emailHTML.length < 50) {
@@ -78,7 +63,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     }
 
     setIsAnalyzing(true);
-    setCurrentAnalysisContent({ html: emailHTML, subject: subjectLine });
+    setAnalysisTimestamp(Date.now());
     
     try {
       // Clear previous results and cache
@@ -156,11 +141,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         return;
       }
 
-      // Mark fix as applied
+      // Mark fix as applied - keep analysis results visible
       setAppliedFixes(prev => new Set([...prev, suggestion.id]));
-      
-      // Clear cache to ensure fresh analysis on next run
-      clearCache();
       
     } catch (error) {
       console.error('Error applying fix:', error);
@@ -391,32 +373,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               </div>
             </Card>
           )}
-
-          {/* Canvas Info */}
-          <Card className="p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Canvas Status</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Canvas Width:</span>
-                <span className="font-medium">{canvasWidth}px</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Preview Mode:</span>
-                <span className="font-medium flex items-center gap-1">
-                  {previewMode === 'mobile' ? <Smartphone className="w-3 h-3" /> : <Monitor className="w-3 h-3" />}
-                  {previewMode}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Selected Block:</span>
-                <span className="font-medium">{selectedBlockId || 'None'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Content Length:</span>
-                <span className="font-medium">{emailHTML.length} chars</span>
-              </div>
-            </div>
-          </Card>
         </div>
       </ScrollArea>
     </div>
