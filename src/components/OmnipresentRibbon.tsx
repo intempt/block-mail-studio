@@ -371,7 +371,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <div className="flex-shrink-0">
             <div className="flex flex-col items-center gap-2">
               <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content Blocks</span>
-              <div className="flex gap-1">
+              <div className="flex gap-0">
                 {blockItems.map((block) => (
                   <Button
                     key={block.id}
@@ -394,7 +394,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <div className="flex-shrink-0">
             <div className="flex flex-col items-center gap-2">
               <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Layouts</span>
-              <div className="flex gap-1">
+              <div className="flex gap-0">
                 {layoutOptions.map((layout) => (
                   <Button
                     key={layout.id}
@@ -420,7 +420,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           <div className="flex-shrink-0">
             <div className="flex flex-col items-center gap-2">
               <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Tools</span>
-              <div className="flex gap-1">
+              <div className="flex gap-0">
                 <Button
                   variant={showEmailSettings ? 'default' : 'ghost'}
                   size="lg"
