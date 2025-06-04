@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,9 +58,12 @@ export default function EmailEditor({
   const canvasRef = useRef<any>(null);
 
   useKeyboardShortcuts({
-    'cmd+k': () => setShowLeftPanel(prev => !prev),
-    'cmd+shift+k': () => setShowRightPanel(prev => !prev),
-    'cmd+alt+k': () => setShowPerformanceAnalyzer(true)
+    editor: null,
+    canvasRef,
+    onToggleLeftPanel: () => setShowLeftPanel(prev => !prev),
+    onToggleRightPanel: () => setShowRightPanel(prev => !prev),
+    onToggleFullscreen: () => setIsFullscreen(prev => !prev),
+    onSave: () => console.log('Save shortcut triggered')
   });
 
   useEffect(() => {
@@ -119,6 +123,12 @@ export default function EmailEditor({
 
   const toggleFullscreen = () => {
     setIsFullscreen(prev => !prev);
+  };
+
+  const handleDeviceChange = (device: 'desktop' | 'mobile' | 'tablet' | 'custom') => {
+    if (device === 'desktop' || device === 'mobile') {
+      setDeviceMode(device);
+    }
   };
 
   return (
@@ -186,7 +196,7 @@ export default function EmailEditor({
           previewMode={deviceMode}
           canvasWidth={deviceMode === 'desktop' ? 600 : 375}
           deviceMode={deviceMode}
-          onDeviceChange={setDeviceMode}
+          onDeviceChange={handleDeviceChange}
           onWidthChange={() => {}}
           onZoomChange={() => {}}
           onPerformanceToggle={() => setShowPerformanceAnalyzer(true)}
@@ -231,7 +241,6 @@ export default function EmailEditor({
                 <EmailBlockCanvas
                   ref={canvasRef}
                   onBlocksChange={handleBlocksChange}
-                  globalStyles={globalStyles}
                   canvasWidth={deviceMode === 'desktop' ? 600 : 375}
                 />
               </div>
@@ -298,7 +307,6 @@ export default function EmailEditor({
       {/* Template Library Modal */}
       {showTemplateLibrary && (
         <EmailTemplateLibrary 
-          isOpen={showTemplateLibrary}
           onClose={() => setShowTemplateLibrary(false)}
           onTemplateSelect={handleTemplateSelect}
         />
@@ -307,7 +315,6 @@ export default function EmailEditor({
       {/* Performance Analyzer Modal */}
       {showPerformanceAnalyzer && (
         <PerformanceAnalyzer
-          isOpen={showPerformanceAnalyzer}
           emailHTML={emailHTML}
           subjectLine={subject}
           onClose={() => setShowPerformanceAnalyzer(false)}
@@ -316,3 +323,4 @@ export default function EmailEditor({
     </div>
   );
 }
+
