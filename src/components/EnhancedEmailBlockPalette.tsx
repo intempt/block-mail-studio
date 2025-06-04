@@ -174,7 +174,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                       </Button>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className={`grid ${compactMode ? 'grid-cols-2 gap-1' : 'grid-cols-2 gap-2'} mb-4`}>
+                      <div className={`grid ${compactMode ? 'grid-cols-2 gap-1' : 'grid-cols-2 gap-1'} mb-4`}>
                         {blockItems.map(renderBlockItem)}
                       </div>
                     </CollapsibleContent>

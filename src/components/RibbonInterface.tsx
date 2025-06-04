@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -147,7 +146,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
     <div className="bg-white border-b border-gray-200">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between px-4 py-1 border-b border-gray-100">
-          <TabsList className="bg-transparent gap-4">
+          <TabsList className="bg-transparent gap-3">
             <TabsTrigger value="templates" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               Templates
             </TabsTrigger>
