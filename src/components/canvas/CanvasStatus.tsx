@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -220,6 +221,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   const hasAnalysisResults = criticalSuggestions.length > 0 || comprehensiveAnalysis || result;
   const autoFixableCount = criticalSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
+  const totalSuggestionsCount = criticalSuggestions.length;
 
   return (
     <TooltipProvider>
@@ -249,7 +251,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                     <div className="text-center p-1 bg-green-50 rounded border border-green-100 min-w-[48px] cursor-help hover:bg-green-100 transition-colors">
                       <Timer className="w-2 h-2 mx-auto mb-0.5 text-green-600" />
                       <div className="text-xs font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
-                      <div className="text-[10px] text-gray-600 leading-tight">Read</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Read Time</div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -319,7 +321,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                     <div className="text-center p-1 bg-yellow-50 rounded border border-yellow-100 min-w-[48px] cursor-help hover:bg-yellow-100 transition-colors">
                       <Clock className="w-2 h-2 mx-auto mb-0.5 text-yellow-600" />
                       <div className="text-xs font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
-                      <div className="text-[10px] text-gray-600 leading-tight">Load</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Load Time</div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -367,7 +369,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                       <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
                         {comprehensiveMetrics.spamScore}%
                       </div>
-                      <div className="text-[10px] text-gray-600 leading-tight">Spam</div>
+                      <div className="text-[10px] text-gray-600 leading-tight">Spam Risk</div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -508,7 +510,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           </Card>
         )}
 
-        {/* Main Analysis Center Shelf Header */}
+        {/* Enhanced AI Suggestions Toolbar with Always-Visible Actions */}
         <div className="p-3 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -528,14 +530,30 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-blue-600" />
                 <span className="text-sm font-medium text-gray-700">
-                  Suggestions AI
+                  AI Suggestions
                 </span>
-                {hasAnalysisResults && (
-                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                    {criticalSuggestions.length} suggestions
+                
+                {/* Quick Stats Badges */}
+                {totalSuggestionsCount > 0 && (
+                  <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                    {totalSuggestionsCount} issues
                   </Badge>
                 )}
-                {analysisTimestamp > 0 && (
+                
+                {autoFixableCount > 0 && (
+                  <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                    {autoFixableCount} auto-fixable
+                  </Badge>
+                )}
+                
+                {isAnalyzing && (
+                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                    <RefreshCw className="w-2 h-2 mr-1 animate-spin" />
+                    Analyzing...
+                  </Badge>
+                )}
+                
+                {analysisTimestamp > 0 && !isAnalyzing && (
                   <span className="text-xs text-gray-500">
                     Updated {new Date(analysisTimestamp).toLocaleTimeString()}
                   </span>
@@ -543,52 +561,52 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               </div>
             </div>
 
-            {!isAnalysisCenterCollapsed && (
-              <div className="flex items-center gap-2">
-                {!hasAnalysisResults ? (
+            {/* Always-Visible Action Buttons */}
+            <div className="flex items-center gap-2">
+              {!hasAnalysisResults ? (
+                <Button 
+                  onClick={runCompleteAnalysis} 
+                  disabled={isAnalyzing || !emailHTML.trim()}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-3 h-3 mr-2" />
+                      Analyze & Fix Email
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <>
                   <Button 
                     onClick={runCompleteAnalysis} 
-                    disabled={isAnalyzing || !emailHTML.trim()}
+                    disabled={isAnalyzing}
+                    variant="outline"
                     size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    className="border-gray-300 hover:bg-gray-50"
                   >
-                    {isAnalyzing ? (
-                      <>
-                        <RefreshCw className="w-3 h-3 mr-2 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      <>
-                        <Zap className="w-3 h-3 mr-2" />
-                        Analyze & Fix
-                      </>
-                    )}
+                    <RefreshCw className="w-3 h-3 mr-2" />
+                    Re-analyze
                   </Button>
-                ) : (
-                  <>
+                  {autoFixableCount > 0 && (
                     <Button 
-                      onClick={runCompleteAnalysis} 
-                      disabled={isAnalyzing}
-                      variant="outline"
+                      onClick={handleApplyAllAutoFixes}
                       size="sm"
+                      className="bg-green-600 hover:bg-green-700"
                     >
-                      <RefreshCw className="w-3 h-3 mr-2" />
-                      Re-analyze
+                      <Zap className="w-3 h-3 mr-2" />
+                      Apply All Auto-Fixes ({autoFixableCount})
                     </Button>
-                    {autoFixableCount > 0 && (
-                      <Button 
-                        onClick={handleApplyAllAutoFixes}
-                        size="sm"
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <Zap className="w-3 h-3 mr-2" />
-                        Apply All ({autoFixableCount})
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -598,90 +616,249 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             <div className="p-4 space-y-4">
               {/* Show message when no analysis has been run */}
               {!hasAnalysisResults && !isAnalyzing && (
-                <Card className="p-6 text-center">
-                  <div className="space-y-3">
-                    <BarChart3 className="w-12 h-12 mx-auto text-gray-400" />
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Analyze</h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Get AI-powered suggestions to improve your email's performance, deliverability, and engagement.
-                      </p>
-                      <Button 
-                        onClick={runCompleteAnalysis} 
-                        disabled={!emailHTML.trim()}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                      >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Start Analysis
-                      </Button>
+                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                  <Brain className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">AI Analysis Ready</h3>
+                  <p className="text-gray-600 mb-4 max-w-md mx-auto">
+                    Get intelligent suggestions to improve your email's performance, deliverability, and engagement.
+                  </p>
+                  <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      Spam Detection
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-blue-500" />
+                      Mobile Optimization
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-purple-500" />
+                      Auto-Fixes
                     </div>
                   </div>
-                </Card>
+                </div>
               )}
 
-              {/* Critical Suggestions */}
+              {/* AI Suggestions & Auto-Fixes */}
               {criticalSuggestions.length > 0 && (
                 <Card className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">AI Suggestions & Auto-Fixes</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        {criticalSuggestions.filter(s => s.severity === 'critical').length} critical
+                      </Badge>
+                      <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                        {criticalSuggestions.filter(s => s.severity === 'high').length} high
+                      </Badge>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        {autoFixableCount} auto-fixable
+                      </Badge>
+                    </div>
+                  </div>
+
                   <div className="space-y-3">
                     {criticalSuggestions.map((suggestion) => (
-                      <div key={suggestion.id} className="border rounded-lg p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-2 flex-1">
+                      <div
+                        key={suggestion.id}
+                        className={`p-4 rounded-lg border ${
+                          appliedFixes.has(suggestion.id)
+                            ? 'bg-green-50 border-green-200'
+                            : 'bg-white border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
                             {getCategoryIcon(suggestion.category)}
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-sm">{suggestion.title}</span>
-                                {getSeverityIcon(suggestion.severity)}
-                                <Badge 
-                                  variant="outline" 
-                                  className={`text-xs ${CriticalEmailAnalysisService.getSeverityColor(suggestion.severity)}`}
-                                >
-                                  {suggestion.severity}
-                                </Badge>
-                                {suggestion.autoFixable && (
-                                  <Badge variant="secondary" className="text-xs bg-green-50 text-green-700">
-                                    Auto-fixable
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-gray-600 mb-2">{suggestion.reason}</p>
-                              {suggestion.businessImpact && (
-                                <p className="text-xs text-blue-600 mb-2">💡 {suggestion.businessImpact}</p>
-                              )}
-                              {suggestion.current && suggestion.suggested && (
-                                <div className="text-xs space-y-1">
-                                  <div className="text-gray-500">Current: "{suggestion.current}"</div>
-                                  <div className="text-green-600">Suggested: "{suggestion.suggested}"</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2">
-                            {appliedFixes.has(suggestion.id) ? (
-                              <Badge variant="default" className="bg-green-100 text-green-700">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Applied
-                              </Badge>
-                            ) : suggestion.autoFixable ? (
-                              <Button 
-                                size="sm" 
-                                onClick={() => handleApplyFix(suggestion)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Zap className="w-3 h-3 mr-1" />
-                                Auto-Fix
-                              </Button>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">
-                                Manual Fix
+                            <span className="font-medium text-gray-900">{suggestion.title}</span>
+                            <Badge
+                              variant="outline"
+                              className={`text-xs ${
+                                suggestion.severity === 'critical'
+                                  ? 'bg-red-50 text-red-700 border-red-200'
+                                  : suggestion.severity === 'high'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200'
+                                  : suggestion.severity === 'medium'
+                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                  : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}
+                            >
+                              {suggestion.severity}
+                            </Badge>
+                            {suggestion.autoFixable && (
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                Auto-fixable
                               </Badge>
                             )}
                           </div>
+                          <div className="flex items-center gap-1">
+                            {getSeverityIcon(suggestion.severity)}
+                            <span className="text-xs text-gray-500">{suggestion.confidence}% confidence</span>
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-gray-600 mb-3">{suggestion.reason}</p>
+
+                        {suggestion.businessImpact && (
+                          <p className="text-sm text-blue-600 mb-3 italic">💼 {suggestion.businessImpact}</p>
+                        )}
+
+                        {suggestion.current && suggestion.suggested && (
+                          <div className="space-y-2 mb-3">
+                            <div className="text-xs">
+                              <span className="text-gray-500">Current:</span>
+                              <div className="bg-red-50 p-2 rounded text-red-700 mt-1 text-sm font-mono">
+                                {suggestion.current}
+                              </div>
+                            </div>
+                            <div className="text-xs">
+                              <span className="text-gray-500">Suggested:</span>
+                              <div className="bg-green-50 p-2 rounded text-green-700 mt-1 text-sm font-mono">
+                                {suggestion.suggested}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2">
+                          {suggestion.autoFixable ? (
+                            <Button
+                              size="sm"
+                              onClick={() => handleApplyFix(suggestion)}
+                              disabled={appliedFixes.has(suggestion.id)}
+                              className={
+                                appliedFixes.has(suggestion.id)
+                                  ? 'bg-green-600 hover:bg-green-700'
+                                  : 'bg-blue-600 hover:bg-blue-700'
+                              }
+                            >
+                              {appliedFixes.has(suggestion.id) ? (
+                                <>
+                                  <CheckCircle className="w-3 h-3 mr-2" />
+                                  Applied
+                                </>
+                              ) : (
+                                <>
+                                  <Zap className="w-3 h-3 mr-2" />
+                                  Auto-Fix
+                                </>
+                              )}
+                            </Button>
+                          ) : (
+                            <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200">
+                              Manual review required
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
+                </Card>
+              )}
+
+              {/* Comprehensive Analysis Results */}
+              {comprehensiveAnalysis && (
+                <Card className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Comprehensive Analysis</h3>
+                  
+                  {comprehensiveAnalysis.brandVoice?.suggestions && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Brand Voice & Tone</h4>
+                      <div className="space-y-2">
+                        {comprehensiveAnalysis.brandVoice.suggestions.map((suggestion, index) => (
+                          <div key={index} className="p-3 bg-purple-50 rounded border border-purple-200">
+                            <div className="font-medium text-purple-900">{suggestion.title}</div>
+                            <div className="text-sm text-purple-700 mt-1">{suggestion.reason}</div>
+                            {suggestion.current && suggestion.suggested && (
+                              <div className="mt-2 text-xs">
+                                <div className="text-purple-600">Current: {suggestion.current}</div>
+                                <div className="text-purple-800 font-medium">Suggested: {suggestion.suggested}</div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {comprehensiveAnalysis.subjectVariants && comprehensiveAnalysis.subjectVariants.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Subject Line Alternatives</h4>
+                      <div className="space-y-1">
+                        {comprehensiveAnalysis.subjectVariants.map((variant, index) => (
+                          <div key={index} className="p-2 bg-blue-50 rounded border border-blue-200 text-sm text-blue-800">
+                            {variant}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {comprehensiveAnalysis.optimizations && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Content Optimizations</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(comprehensiveAnalysis.optimizations).map(([key, value]) => (
+                          value && (
+                            <div key={key} className="p-2 bg-green-50 rounded border border-green-200">
+                              <div className="text-xs font-medium text-green-800 capitalize">{key}</div>
+                              <div className="text-xs text-green-700">{value}</div>
+                            </div>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {comprehensiveAnalysis.performance?.accessibilityIssues && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-gray-900 mb-2">Accessibility Issues</h4>
+                      <div className="space-y-2">
+                        {comprehensiveAnalysis.performance.accessibilityIssues.map((issue, index) => (
+                          <div key={index} className="p-2 bg-yellow-50 rounded border border-yellow-200">
+                            <div className="text-sm font-medium text-yellow-800">{issue.type}</div>
+                            <div className="text-xs text-yellow-700">{issue.description}</div>
+                            <div className="text-xs text-yellow-600 mt-1">Fix: {issue.fix}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              )}
+
+              {/* Analytics Results */}
+              {result && (
+                <Card className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Analytics</h3>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded">
+                      <div className="text-2xl font-bold text-blue-600">{result.scores?.overallScore || 0}</div>
+                      <div className="text-sm text-gray-600">Overall Score</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded">
+                      <div className="text-2xl font-bold text-green-600">{result.prediction?.openRate || 0}%</div>
+                      <div className="text-sm text-gray-600">Predicted Open Rate</div>
+                    </div>
+                  </div>
+
+                  {result.metrics && (
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div className="text-center p-2 bg-gray-50 rounded">
+                        <div className="font-semibold">{result.metrics.sizeKB}KB</div>
+                        <div className="text-gray-600">Size</div>
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded">
+                        <div className="font-semibold">{result.metrics.wordCount}</div>
+                        <div className="text-gray-600">Words</div>
+                      </div>
+                      <div className="text-center p-2 bg-gray-50 rounded">
+                        <div className="font-semibold">{result.metrics.imageCount}</div>
+                        <div className="text-gray-600">Images</div>
+                      </div>
+                    </div>
+                  )}
                 </Card>
               )}
             </div>
