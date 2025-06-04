@@ -23,7 +23,8 @@ import {
   Trash2,
   Minus,
   Code,
-  Eye
+  Eye,
+  Edit
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -79,6 +80,8 @@ const layoutOptions: LayoutOption[] = [
   { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
 ];
 
+type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
+
 interface OmnipresentRibbonProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
   onSnippetAdd?: (snippet: EmailSnippet) => void;
@@ -106,8 +109,8 @@ interface OmnipresentRibbonProps {
   onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
   blocks: EmailBlock[];
   onGmailPreview?: (mode: 'desktop' | 'mobile') => void;
-  onToggleIntegratedPreview?: () => void;
-  showIntegratedPreview?: boolean;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -137,8 +140,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onImportBlocks,
   blocks,
   onGmailPreview,
-  onToggleIntegratedPreview,
-  showIntegratedPreview = false
+  viewMode = 'edit',
+  onViewModeChange
 }) => {
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
@@ -267,21 +270,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleDesktopClick = () => {
-    // Show integrated preview if not already visible
-    if (!showIntegratedPreview && onToggleIntegratedPreview) {
-      onToggleIntegratedPreview();
-    }
-    // Change preview mode to desktop
-    onPreviewModeChange?.('desktop');
+    onViewModeChange?.('desktop-preview');
   };
 
   const handleMobileClick = () => {
-    // Show integrated preview if not already visible
-    if (!showIntegratedPreview && onToggleIntegratedPreview) {
-      onToggleIntegratedPreview();
-    }
-    // Change preview mode to mobile
-    onPreviewModeChange?.('mobile');
+    onViewModeChange?.('mobile-preview');
+  };
+
+  const handleEditClick = () => {
+    onViewModeChange?.('edit');
   };
 
   return (
@@ -331,27 +328,29 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
         
-        {/* Gmail Preview Controls */}
+        {/* View Mode Controls */}
         <div className="flex items-center gap-4">
-          {/* Integrated Preview Toggle */}
-          <Button
-            variant={showIntegratedPreview ? 'default' : 'outline'}
-            size="sm"
-            onClick={onToggleIntegratedPreview}
-            className="flex items-center gap-2"
-            title="Toggle Gmail Preview Panel"
-          >
-            <Eye className="w-4 h-4" />
-            {showIntegratedPreview ? 'Hide Preview' : 'Show Preview'}
-          </Button>
-
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleEditClick}
+              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+                viewMode === 'edit' 
+                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+              title="Switch to Edit Mode"
+            >
+              <Edit className="w-4 h-4" />
+              <span className="text-sm">Edit</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDesktopClick}
               className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
-                previewMode === 'desktop' 
+                viewMode === 'desktop-preview' 
                   ? 'bg-white shadow-sm text-gray-900 font-medium' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
@@ -365,7 +364,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               size="sm"
               onClick={handleMobileClick}
               className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
-                previewMode === 'mobile' 
+                viewMode === 'mobile-preview' 
                   ? 'bg-white shadow-sm text-gray-900 font-medium' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
@@ -403,144 +402,150 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="px-0 py-2">
-        <div className="flex items-end justify-center overflow-x-auto gap-0">
-          {/* Content Blocks */}
-          <div className="flex-shrink-0">
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content Blocks</span>
-              <div className="flex gap-0">
-                {blockItems.map((block) => (
-                  <Button
-                    key={block.id}
-                    variant="ghost"
-                    size="lg"
-                    className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, block.id)}
-                    onClick={() => onBlockAdd(block.id)}
-                    title={`Add ${block.name}`}
-                  >
-                    {React.cloneElement(block.icon as React.ReactElement, { className: "w-9 h-9" })}
-                  </Button>
-                ))}
+      {/* Toolbar - Only show in edit mode */}
+      {viewMode === 'edit' && (
+        <div className="px-0 py-2">
+          <div className="flex items-end justify-center overflow-x-auto gap-0">
+            {/* Content Blocks */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content Blocks</span>
+                <div className="flex gap-0">
+                  {blockItems.map((block) => (
+                    <Button
+                      key={block.id}
+                      variant="ghost"
+                      size="lg"
+                      className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, block.id)}
+                      onClick={() => onBlockAdd(block.id)}
+                      title={`Add ${block.name}`}
+                    >
+                      {React.cloneElement(block.icon as React.ReactElement, { className: "w-9 h-9" })}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Layout Options */}
-          <div className="flex-shrink-0">
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Layouts</span>
-              <div className="flex gap-0">
-                {layoutOptions.map((layout) => (
-                  <Button
-                    key={layout.id}
-                    variant="ghost"
-                    size="lg"
-                    className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
-                      draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
-                    }`}
-                    draggable
-                    onDragStart={(e) => handleLayoutDragStart(e, layout)}
-                    onDragEnd={handleLayoutDragEnd}
-                    onClick={() => handleLayoutSelect(layout)}
-                    title={`Add ${layout.name} Layout`}
-                  >
-                    <DynamicLayoutIcon layout={layout} className="w-9 h-9" />
-                  </Button>
-                ))}
+            {/* Layout Options */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Layouts</span>
+                <div className="flex gap-0">
+                  {layoutOptions.map((layout) => (
+                    <Button
+                      key={layout.id}
+                      variant="ghost"
+                      size="lg"
+                      className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
+                        draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => handleLayoutDragStart(e, layout)}
+                      onDragEnd={handleLayoutDragEnd}
+                      onClick={() => handleLayoutSelect(layout)}
+                      title={`Add ${layout.name} Layout`}
+                    >
+                      <DynamicLayoutIcon layout={layout} className="w-9 h-9" />
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Tool Buttons */}
-          <div className="flex-shrink-0">
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Styles</span>
-              <div className="flex gap-0">
-                <Button
-                  variant={showEmailSettings ? 'default' : 'ghost'}
-                  size="lg"
-                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                  onClick={() => {
-                    closeAllPanels();
-                    setShowEmailSettings(!showEmailSettings);
-                  }}
-                  title="Email Styles"
-                >
-                  <Mail className="w-9 h-9" />
-                </Button>
+            {/* Tool Buttons */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Styles</span>
+                <div className="flex gap-0">
+                  <Button
+                    variant={showEmailSettings ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowEmailSettings(!showEmailSettings);
+                    }}
+                    title="Email Styles"
+                  >
+                    <Mail className="w-9 h-9" />
+                  </Button>
 
-                <Button
-                  variant={showTextHeadings ? 'default' : 'ghost'}
-                  size="lg"
-                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                  onClick={() => {
-                    closeAllPanels();
-                    setShowTextHeadings(!showTextHeadings);
-                  }}
-                  title="Text & Headings"
-                >
-                  <Type className="w-9 h-9" />
-                </Button>
+                  <Button
+                    variant={showTextHeadings ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowTextHeadings(!showTextHeadings);
+                    }}
+                    title="Text & Headings"
+                  >
+                    <Type className="w-9 h-9" />
+                  </Button>
 
-                <Button
-                  variant={showButtons ? 'default' : 'ghost'}
-                  size="lg"
-                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                  onClick={() => {
-                    closeAllPanels();
-                    setShowButtons(!showButtons);
-                  }}
-                  title="Buttons"
-                >
-                  <MousePointerClick className="w-9 h-9" />
-                </Button>
+                  <Button
+                    variant={showButtons ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowButtons(!showButtons);
+                    }}
+                    title="Buttons"
+                  >
+                    <MousePointerClick className="w-9 h-9" />
+                  </Button>
 
-                <Button
-                  variant={showLinks ? 'default' : 'ghost'}
-                  size="lg"
-                  className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
-                  onClick={() => {
-                    closeAllPanels();
-                    setShowLinks(!showLinks);
-                  }}
-                  title="Links"
-                >
-                  <Link className="w-9 h-9" />
-                </Button>
+                  <Button
+                    variant={showLinks ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowLinks(!showLinks);
+                    }}
+                    title="Links"
+                  >
+                    <Link className="w-9 h-9" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Settings Panels */}
-      <EmailSettingsCard
-        isOpen={showEmailSettings}
-        onToggle={() => setShowEmailSettings(!showEmailSettings)}
-        onStylesChange={onGlobalStylesChange}
-      />
+      {/* Settings Panels - Only show in edit mode */}
+      {viewMode === 'edit' && (
+        <>
+          <EmailSettingsCard
+            isOpen={showEmailSettings}
+            onToggle={() => setShowEmailSettings(!showEmailSettings)}
+            onStylesChange={onGlobalStylesChange}
+          />
 
-      <TextHeadingsCard
-        isOpen={showTextHeadings}
-        onToggle={() => setShowTextHeadings(!showTextHeadings)}
-        onStylesChange={onGlobalStylesChange}
-      />
+          <TextHeadingsCard
+            isOpen={showTextHeadings}
+            onToggle={() => setShowTextHeadings(!showTextHeadings)}
+            onStylesChange={onGlobalStylesChange}
+          />
 
-      <ButtonsCard
-        isOpen={showButtons}
-        onToggle={() => setShowButtons(!showButtons)}
-        onStylesChange={onGlobalStylesChange}
-      />
+          <ButtonsCard
+            isOpen={showButtons}
+            onToggle={() => setShowButtons(!showButtons)}
+            onStylesChange={onGlobalStylesChange}
+          />
 
-      <LinksCard
-        isOpen={showLinks}
-        onToggle={() => setShowLinks(!showLinks)}
-        onStylesChange={onGlobalStylesChange}
-      />
+          <LinksCard
+            isOpen={showLinks}
+            onToggle={() => setShowLinks(!showLinks)}
+            onStylesChange={onGlobalStylesChange}
+          />
+        </>
+      )}
 
       <EmailImportDialog
         isOpen={showImportDialog}

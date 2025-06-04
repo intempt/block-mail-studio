@@ -56,6 +56,8 @@ interface EmailEditorProps {
   onBack?: () => void;
 }
 
+type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
+
 export default function EmailEditor({ 
   content,
   subject,
@@ -81,8 +83,8 @@ export default function EmailEditor({
   const [showGmailPreview, setShowGmailPreview] = useState(false);
   const [gmailPreviewMode, setGmailPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   
-  // New state for integrated preview
-  const [showIntegratedPreview, setShowIntegratedPreview] = useState(false);
+  // Replace showIntegratedPreview with viewMode
+  const [viewMode, setViewMode] = useState<ViewMode>('edit');
 
   const canvasRef = useRef<any>(null);
 
@@ -293,6 +295,18 @@ export default function EmailEditor({
 
   const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
     setPreviewMode(mode);
+    if (viewMode !== 'edit') {
+      setViewMode(mode === 'desktop' ? 'desktop-preview' : 'mobile-preview');
+    }
+  };
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    if (mode === 'desktop-preview') {
+      setPreviewMode('desktop');
+    } else if (mode === 'mobile-preview') {
+      setPreviewMode('mobile');
+    }
   };
 
   const handleTemplateLibraryOpen = () => {
@@ -355,7 +369,6 @@ export default function EmailEditor({
 
   // New handler for integrated Gmail preview
   const handleToggleIntegratedPreview = () => {
-    setShowIntegratedPreview(prev => !prev);
   };
 
   const handleIntegratedPreviewModeChange = (mode: 'desktop' | 'mobile') => {
@@ -397,8 +410,8 @@ export default function EmailEditor({
         onImportBlocks={handleImportBlocks}
         blocks={emailBlocks}
         onGmailPreview={handleGmailPreview}
-        onToggleIntegratedPreview={handleToggleIntegratedPreview}
-        showIntegratedPreview={showIntegratedPreview}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
       />
 
       {/* Snippet Ribbon */}
@@ -408,36 +421,46 @@ export default function EmailEditor({
       />
 
       <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
-        <div className={`h-full ${showIntegratedPreview ? 'flex' : ''}`}>
-          {/* Main Canvas Area */}
-          <div className={`${showIntegratedPreview ? 'flex-1' : 'w-full'} p-6`}>
-            <div className="max-w-4xl mx-auto">
+        <div className="h-full w-full p-6">
+          <div className="max-w-4xl mx-auto">
+            {/* Edit Mode - Show Canvas */}
+            {viewMode === 'edit' && (
               <EmailBlockCanvas
                 ref={canvasRef}
                 onContentChange={handleContentChangeFromCanvas}
                 onBlockSelect={handleBlockSelect}
                 onBlocksChange={handleBlocksChange}
-                previewWidth={showIntegratedPreview ? Math.min(canvasWidth, 800) : canvasWidth}
+                previewWidth={canvasWidth}
                 previewMode={previewMode}
-                compactMode={showIntegratedPreview}
+                compactMode={false}
                 subject={subject}
                 onSubjectChange={onSubjectChange}
                 showAIAnalytics={false}
               />
-            </div>
-          </div>
+            )}
 
-          {/* Integrated Gmail Preview Panel */}
-          {showIntegratedPreview && (
-            <div className="w-1/2 min-w-[400px] max-w-[600px]">
+            {/* Desktop Preview Mode - Show Full Gmail Desktop Preview */}
+            {viewMode === 'desktop-preview' && (
               <IntegratedGmailPreview
                 emailHtml={content}
                 subject={subject}
-                previewMode={previewMode}
-                onPreviewModeChange={handleIntegratedPreviewModeChange}
+                previewMode="desktop"
+                onPreviewModeChange={handlePreviewModeChange}
+                fullWidth={true}
               />
-            </div>
-          )}
+            )}
+
+            {/* Mobile Preview Mode - Show Full Gmail Mobile Preview */}
+            {viewMode === 'mobile-preview' && (
+              <IntegratedGmailPreview
+                emailHtml={content}
+                subject={subject}
+                previewMode="mobile"
+                onPreviewModeChange={handlePreviewModeChange}
+                fullWidth={true}
+              />
+            )}
+          </div>
         </div>
       </div>
 
