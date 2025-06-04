@@ -4,16 +4,32 @@ import { Button } from '@/components/ui/button';
 import { Monitor, Smartphone, Mail } from 'lucide-react';
 import { GmailPreviewContainer } from './gmail/GmailPreviewContainer';
 
+interface SenderInfo {
+  name: string;
+  email: string;
+  avatar?: string;
+  initials?: string;
+}
+
+interface RecipientInfo {
+  name: string;
+  email: string;
+}
+
 interface EmailPreviewProps {
   html: string;
   previewMode: 'desktop' | 'mobile';
   subject?: string;
+  sender?: SenderInfo;
+  recipient?: RecipientInfo;
 }
 
 export const EmailPreview: React.FC<EmailPreviewProps> = ({ 
   html, 
   previewMode,
-  subject = 'Email Preview'
+  subject = 'Email Preview',
+  sender,
+  recipient
 }) => {
   const [showGmailPreview, setShowGmailPreview] = useState(false);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
@@ -89,6 +105,8 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
         <GmailPreviewContainer
           emailHtml={html}
           subject={subject}
+          sender={sender}
+          recipient={recipient}
           initialMode={previewMode}
           onClose={() => setShowGmailPreview(false)}
         />

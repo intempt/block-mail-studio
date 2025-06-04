@@ -7,9 +7,23 @@ import { GmailDesktopPreview } from './GmailDesktopPreview';
 import { GmailMobilePreview } from './GmailMobilePreview';
 import { EmailCompatibilityProcessor } from '@/services/emailCompatibilityProcessor';
 
+interface SenderInfo {
+  name: string;
+  email: string;
+  avatar?: string;
+  initials?: string;
+}
+
+interface RecipientInfo {
+  name: string;
+  email: string;
+}
+
 interface GmailPreviewContainerProps {
   emailHtml: string;
   subject: string;
+  sender?: SenderInfo;
+  recipient?: RecipientInfo;
   initialMode?: 'desktop' | 'mobile';
   onClose: () => void;
 }
@@ -17,6 +31,8 @@ interface GmailPreviewContainerProps {
 export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   emailHtml,
   subject,
+  sender,
+  recipient,
   initialMode = 'desktop',
   onClose
 }) => {
@@ -98,6 +114,8 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
         <GmailDesktopPreview
           emailHtml={processedHtml}
           subject={subject}
+          sender={sender}
+          recipient={recipient}
           onClose={onClose}
         />
       ) : (
@@ -105,6 +123,8 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
           <GmailMobilePreview
             emailHtml={processedHtml}
             subject={subject}
+            sender={sender}
+            recipient={recipient}
             onClose={onClose}
           />
         </div>

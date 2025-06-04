@@ -2,17 +2,35 @@
 import React from 'react';
 import { ArrowLeft, Archive, Trash2, MoreHorizontal, Reply, Forward, Star } from 'lucide-react';
 
+interface SenderInfo {
+  name: string;
+  email: string;
+  avatar?: string;
+  initials?: string;
+}
+
+interface RecipientInfo {
+  name: string;
+  email: string;
+}
+
 interface GmailDesktopPreviewProps {
   emailHtml: string;
   subject: string;
+  sender?: SenderInfo;
+  recipient?: RecipientInfo;
   onClose: () => void;
 }
 
 export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
   emailHtml,
   subject,
+  sender = { name: 'Sender Name', email: 'sender@example.com', initials: 'S' },
+  recipient = { name: 'me', email: 'recipient@example.com' },
   onClose
 }) => {
+  const senderInitials = sender.initials || sender.name.charAt(0).toUpperCase();
+  
   return (
     <div className="w-full h-full bg-gray-50 flex items-center justify-center">
       <div className="w-full max-w-5xl bg-white h-full overflow-auto shadow-sm">
@@ -69,7 +87,11 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-blue-500 flex-shrink-0"
                 style={{ backgroundColor: '#1a73e8' }}
               >
-                S
+                {sender.avatar ? (
+                  <img src={sender.avatar} alt={sender.name} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  senderInitials
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -82,7 +104,7 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
                       fontFamily: 'Roboto, Arial, sans-serif'
                     }}
                   >
-                    Sender Name
+                    {sender.name}
                   </span>
                   <span 
                     className="text-xs"
@@ -92,7 +114,7 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
                       fontFamily: 'Roboto, Arial, sans-serif'
                     }}
                   >
-                    &lt;sender@example.com&gt;
+                    &lt;{sender.email}&gt;
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs">
@@ -103,7 +125,7 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
                       fontFamily: 'Roboto, Arial, sans-serif'
                     }}
                   >
-                    to me
+                    to {recipient.name}
                   </span>
                   <span 
                     style={{ 

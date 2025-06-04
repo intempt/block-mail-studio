@@ -7,10 +7,24 @@ import { GmailDesktopPreview } from './gmail/GmailDesktopPreview';
 import { GmailMobilePreview } from './gmail/GmailMobilePreview';
 import { EmailCompatibilityProcessor } from '@/services/emailCompatibilityProcessor';
 
+interface SenderInfo {
+  name: string;
+  email: string;
+  avatar?: string;
+  initials?: string;
+}
+
+interface RecipientInfo {
+  name: string;
+  email: string;
+}
+
 interface IntegratedGmailPreviewProps {
   emailHtml: string;
   subject: string;
   previewMode: 'desktop' | 'mobile';
+  sender?: SenderInfo;
+  recipient?: RecipientInfo;
   onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
   fullWidth?: boolean;
 }
@@ -19,6 +33,8 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
   emailHtml,
   subject,
   previewMode,
+  sender,
+  recipient,
   onPreviewModeChange,
   fullWidth = false
 }) => {
@@ -80,6 +96,8 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
               <GmailDesktopPreview
                 emailHtml={processedHtml}
                 subject={subject}
+                sender={sender}
+                recipient={recipient}
                 onClose={() => {}} // No close needed in integrated mode
               />
             </div>
@@ -93,6 +111,8 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
               <GmailMobilePreview
                 emailHtml={processedHtml}
                 subject={subject}
+                sender={sender}
+                recipient={recipient}
                 onClose={() => {}} // No close needed in integrated mode
               />
             </div>

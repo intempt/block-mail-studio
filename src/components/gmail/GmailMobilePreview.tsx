@@ -2,17 +2,35 @@
 import React from 'react';
 import { ArrowLeft, MoreVertical, Reply, Forward, Archive } from 'lucide-react';
 
+interface SenderInfo {
+  name: string;
+  email: string;
+  avatar?: string;
+  initials?: string;
+}
+
+interface RecipientInfo {
+  name: string;
+  email: string;
+}
+
 interface GmailMobilePreviewProps {
   emailHtml: string;
   subject: string;
+  sender?: SenderInfo;
+  recipient?: RecipientInfo;
   onClose: () => void;
 }
 
 export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
   emailHtml,
   subject,
+  sender = { name: 'Sender Name', email: 'sender@example.com', initials: 'S' },
+  recipient = { name: 'me', email: 'recipient@example.com' },
   onClose
 }) => {
+  const senderInitials = sender.initials || sender.name.charAt(0).toUpperCase();
+
   return (
     <div className="w-full h-full bg-white flex items-center justify-center p-4">
       <div 
@@ -69,7 +87,11 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-blue-500 flex-shrink-0"
                 style={{ backgroundColor: '#1a73e8' }}
               >
-                S
+                {sender.avatar ? (
+                  <img src={sender.avatar} alt={sender.name} className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  senderInitials
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
@@ -82,7 +104,7 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
                       fontFamily: 'Roboto, Arial, sans-serif'
                     }}
                   >
-                    Sender Name
+                    {sender.name}
                   </span>
                   <span 
                     className="text-xs flex-shrink-0 ml-2"
@@ -106,7 +128,7 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
                     fontFamily: 'Roboto, Arial, sans-serif'
                   }}
                 >
-                  to me
+                  to {recipient.name}
                 </div>
               </div>
             </div>
