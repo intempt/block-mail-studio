@@ -54,6 +54,7 @@ export default function EmailEditor({
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile'>('desktop');
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState<number>(0);
+  const [canvasWidth, setCanvasWidth] = useState<number>(600);
   const canvasRef = useRef<any>(null);
 
   useKeyboardShortcuts({
@@ -127,7 +128,24 @@ export default function EmailEditor({
   const handleDeviceChange = (device: 'desktop' | 'mobile' | 'tablet' | 'custom') => {
     if (device === 'desktop' || device === 'mobile') {
       setDeviceMode(device);
+      setCanvasWidth(device === 'desktop' ? 600 : 375);
     }
+  };
+
+  const handleWidthChange = (width: number) => {
+    setCanvasWidth(width);
+  };
+
+  const handlePreview = () => {
+    handlePreviewToggle();
+  };
+
+  const handleSaveTemplate = (template: any) => {
+    console.log('Save template:', template);
+  };
+
+  const handlePublish = () => {
+    console.log('Publish email');
   };
 
   return (
@@ -193,9 +211,14 @@ export default function EmailEditor({
           onTemplateLibraryOpen={() => setShowTemplateLibrary(true)}
           onPreviewModeChange={setDeviceMode}
           previewMode={deviceMode}
-          canvasWidth={deviceMode === 'desktop' ? 600 : 375}
+          canvasWidth={canvasWidth}
           deviceMode={deviceMode}
           onDeviceChange={handleDeviceChange}
+          onWidthChange={handleWidthChange}
+          onPreview={handlePreview}
+          onSaveTemplate={handleSaveTemplate}
+          onPublish={handlePublish}
+          blocks={blocks}
         />
       )}
 
@@ -295,7 +318,7 @@ export default function EmailEditor({
       {/* Status Bar */}
       <StatusBar 
         blockCount={blocks.length}
-        canvasWidth={deviceMode === 'desktop' ? 600 : 375}
+        canvasWidth={canvasWidth}
         previewMode={deviceMode}
         wordCount={emailHTML.length}
       />
