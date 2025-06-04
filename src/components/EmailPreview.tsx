@@ -42,11 +42,11 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
 
   return (
     <>
-      <div className="h-full flex flex-col bg-gray-50">
+      <div className="h-full flex flex-col bg-brand-muted">
         {/* Enhanced Preview Controls */}
-        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="flex items-center gap-1">
+        <div className="flex items-center justify-between p-brand-4 bg-brand-bg border-b border-brand">
+          <div className="flex items-center gap-brand-2 text-caption text-brand-fg">
+            <div className="flex items-center gap-brand-1">
               {previewMode === 'desktop' ? (
                 <Monitor className="w-4 h-4" />
               ) : (
@@ -58,11 +58,11 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-brand-2">
             <Button
               onClick={handleGmailPreview}
               size="sm"
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 hover:bg-red-600 text-white text-button"
             >
               <Mail className="w-4 h-4 mr-2" />
               Gmail Preview
@@ -71,16 +71,16 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
         </div>
 
         {/* Clean Preview Area */}
-        <div className="flex-1 overflow-auto p-8 flex items-start justify-center">
+        <div className="flex-1 overflow-auto p-brand-8 flex items-start justify-center">
           <div 
-            className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden transition-all duration-300"
+            className="bg-brand-bg border border-brand shadow-sm rounded-brand-lg overflow-hidden transition-all duration-300"
             style={{ width: previewWidth, maxWidth: '100%' }}
           >
             <div 
               className="email-content overflow-auto"
               dangerouslySetInnerHTML={{ __html: html }}
               style={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontFamily: 'var(--text-body-family)',
                 lineHeight: '1.6'
               }}
             />
@@ -88,12 +88,12 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
         </div>
 
         {/* Enhanced Preview Info */}
-        <div className="bg-white border-t border-gray-200 p-3">
+        <div className="bg-brand-bg border-t border-brand p-brand-3">
           <div className="flex items-center justify-between">
-            <div className="text-xs text-gray-500">
+            <div className="text-caption text-brand-fg opacity-75">
               Preview at {previewMode} width ({previewWidth}px)
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-caption text-brand-fg opacity-50">
               Click "Gmail Preview" for realistic email client rendering
             </div>
           </div>

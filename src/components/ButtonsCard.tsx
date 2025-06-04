@@ -104,10 +104,10 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
   if (!isOpen) return null;
 
   return (
-    <Card className="absolute top-full left-0 right-0 z-50 mt-2 mx-6 shadow-lg border border-gray-200">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
+    <Card className="absolute top-full left-0 right-0 z-50 mt-brand-2 mx-brand-6 shadow-lg border border-brand bg-brand-bg">
+      <div className="p-brand-4">
+        <div className="flex items-center justify-between mb-brand-4">
+          <h3 className="text-h4 font-medium flex items-center gap-brand-2 text-brand-fg">
             <MousePointer className="w-4 h-4" />
             Buttons
           </h3>
@@ -115,19 +115,19 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
             variant="ghost"
             size="sm"
             onClick={onToggle}
-            className="text-gray-500"
+            className="text-brand-fg hover:bg-brand-muted"
           >
             <ChevronDown className="w-4 h-4" />
           </Button>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-brand-4">
           {/* Font Selection */}
           <div>
-            <Label className="text-xs font-medium mb-2 block">Font</Label>
-            <div className="flex flex-wrap gap-1 mb-2">
+            <Label className="text-caption font-medium mb-brand-2 block text-brand-fg">Font</Label>
+            <div className="flex flex-wrap gap-brand-1 mb-brand-2">
               {buttonStyles.fontFamily.map((font) => (
-                <Badge key={font} variant="secondary" className="text-xs flex items-center gap-1">
+                <Badge key={font} variant="secondary" className="text-caption flex items-center gap-brand-1 bg-brand-muted text-brand-fg">
                   {font.split(',')[0]}
                   <X 
                     className="w-3 h-3 cursor-pointer hover:text-red-500" 
@@ -137,12 +137,12 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
               ))}
             </div>
             <Select onValueChange={(value) => addFont(value)}>
-              <SelectTrigger className="h-8">
+              <SelectTrigger className="h-8 border-brand">
                 <SelectValue placeholder="Add font..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-brand-bg border-brand">
                 {fontOptions.map((font) => (
-                  <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                  <SelectItem key={font} value={font} style={{ fontFamily: font }} className="text-brand-fg hover:bg-brand-muted">
                     {font.split(',')[0]}
                   </SelectItem>
                 ))}
@@ -150,106 +150,106 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
             </Select>
           </div>
 
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-brand-3">
             {/* Style */}
             <div>
-              <Label className="text-xs">Style</Label>
+              <Label className="text-caption text-brand-fg">Style</Label>
               <Select value={buttonStyles.style} onValueChange={(value) => handleButtonStyleChange('style', value)}>
-                <SelectTrigger className="h-8 mt-1">
+                <SelectTrigger className="h-8 mt-brand-1 border-brand">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Normal">Normal</SelectItem>
-                  <SelectItem value="Bold">Bold</SelectItem>
-                  <SelectItem value="Light">Light</SelectItem>
+                <SelectContent className="bg-brand-bg border-brand">
+                  <SelectItem value="Normal" className="text-brand-fg hover:bg-brand-muted">Normal</SelectItem>
+                  <SelectItem value="Bold" className="text-brand-fg hover:bg-brand-muted">Bold</SelectItem>
+                  <SelectItem value="Light" className="text-brand-fg hover:bg-brand-muted">Light</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Text Color */}
             <div>
-              <Label className="text-xs">Text Color</Label>
-              <div className="flex gap-2 mt-1">
+              <Label className="text-caption text-brand-fg">Text Color</Label>
+              <div className="flex gap-brand-2 mt-brand-1">
                 <input
                   type="color"
                   value={buttonStyles.textColor}
                   onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  className="w-8 h-8 border border-brand rounded-brand cursor-pointer"
                 />
                 <Input
                   value={buttonStyles.textColor}
                   onChange={(e) => handleButtonStyleChange('textColor', e.target.value)}
-                  className="flex-1 h-8 text-xs font-mono"
+                  className="flex-1 h-8 text-caption font-mono border-brand bg-brand-bg text-brand-fg"
                 />
               </div>
             </div>
 
             {/* Button Color */}
             <div>
-              <Label className="text-xs">Button Color</Label>
-              <div className="flex gap-2 mt-1">
+              <Label className="text-caption text-brand-fg">Button Color</Label>
+              <div className="flex gap-brand-2 mt-brand-1">
                 <input
                   type="color"
                   value={buttonStyles.backgroundColor}
                   onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  className="w-8 h-8 border border-brand rounded-brand cursor-pointer"
                 />
                 <Input
                   value={buttonStyles.backgroundColor}
                   onChange={(e) => handleButtonStyleChange('backgroundColor', e.target.value)}
-                  className="flex-1 h-8 text-xs font-mono"
+                  className="flex-1 h-8 text-caption font-mono border-brand bg-brand-bg text-brand-fg"
                 />
               </div>
             </div>
 
             {/* Font Size */}
             <div>
-              <Label className="text-xs">Size</Label>
-              <div className="flex items-center mt-1">
+              <Label className="text-caption text-brand-fg">Size</Label>
+              <div className="flex items-center mt-brand-1">
                 <Input
                   type="number"
                   value={buttonStyles.fontSize}
                   onChange={(e) => handleButtonStyleChange('fontSize', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption border-brand bg-brand-bg text-brand-fg"
                 />
-                <span className="text-xs text-gray-500 ml-1">px</span>
+                <span className="text-caption text-brand-fg opacity-75 ml-brand-1">px</span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-brand-3">
             {/* Line Height */}
             <div>
-              <Label className="text-xs">Line Height</Label>
-              <div className="flex items-center gap-1 mt-1">
+              <Label className="text-caption text-brand-fg">Line Height</Label>
+              <div className="flex items-center gap-brand-1 mt-brand-1">
                 <Input
                   type="number"
                   value={buttonStyles.lineHeight}
                   onChange={(e) => handleButtonStyleChange('lineHeight', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption border-brand bg-brand-bg text-brand-fg"
                 />
-                <span className="text-xs text-gray-500">%</span>
+                <span className="text-caption text-brand-fg opacity-75">%</span>
               </div>
             </div>
 
             {/* Letter Spacing */}
             <div>
-              <Label className="text-xs">Letter Spacing</Label>
-              <div className="flex items-center gap-1 mt-1">
+              <Label className="text-caption text-brand-fg">Letter Spacing</Label>
+              <div className="flex items-center gap-brand-1 mt-brand-1">
                 <Input
                   type="number"
                   value={buttonStyles.letterSpacing}
                   onChange={(e) => handleButtonStyleChange('letterSpacing', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption border-brand bg-brand-bg text-brand-fg"
                 />
-                <span className="text-xs text-gray-500">px</span>
+                <span className="text-caption text-brand-fg opacity-75">px</span>
               </div>
             </div>
 
             {/* Text Formatting */}
             <div>
-              <Label className="text-xs">Format</Label>
-              <div className="flex gap-1 mt-1">
+              <Label className="text-caption text-brand-fg">Format</Label>
+              <div className="flex gap-brand-1 mt-brand-1">
                 <Button
                   variant={buttonStyles.italic ? 'default' : 'outline'}
                   size="sm"
@@ -271,44 +271,44 @@ export const ButtonsCard: React.FC<ButtonsCardProps> = ({
           </div>
 
           {/* Padding Controls */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-brand-3">
             <div>
-              <Label className="text-xs">Top/Bottom Padding</Label>
-              <div className="flex items-center gap-2 mt-1">
+              <Label className="text-caption text-brand-fg">Top/Bottom Padding</Label>
+              <div className="flex items-center gap-brand-2 mt-brand-1">
                 <Input
                   type="number"
                   value={buttonStyles.paddingTopBottom}
                   onChange={(e) => handlePaddingChange('topBottom', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption border-brand bg-brand-bg text-brand-fg"
                 />
-                <span className="text-xs text-gray-500">px</span>
+                <span className="text-caption text-brand-fg opacity-75">px</span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 hover:bg-brand-muted"
                   onClick={togglePaddingLock}
                 >
-                  <Lock className={`w-3 h-3 ${buttonStyles.paddingLocked ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Lock className={`w-3 h-3 ${buttonStyles.paddingLocked ? 'text-brand-primary' : 'text-brand-fg opacity-50'}`} />
                 </Button>
               </div>
             </div>
             <div>
-              <Label className="text-xs">Left/Right Padding</Label>
-              <div className="flex items-center gap-2 mt-1">
+              <Label className="text-caption text-brand-fg">Left/Right Padding</Label>
+              <div className="flex items-center gap-brand-2 mt-brand-1">
                 <Input
                   type="number"
                   value={buttonStyles.paddingLeftRight}
                   onChange={(e) => handlePaddingChange('leftRight', e.target.value)}
-                  className="h-8 text-xs"
+                  className="h-8 text-caption border-brand bg-brand-bg text-brand-fg"
                 />
-                <span className="text-xs text-gray-500">px</span>
+                <span className="text-caption text-brand-fg opacity-75">px</span>
               </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-            <Badge variant="secondary" className="text-xs">
+          <div className="flex items-center justify-between pt-brand-2 border-t border-brand">
+            <Badge variant="secondary" className="text-caption bg-brand-muted text-brand-fg">
               Applied to all buttons
             </Badge>
           </div>

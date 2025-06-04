@@ -1,52 +1,30 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo
-} from 'react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import { Link } from '@tiptap/extension-link';
-import { Image } from '@tiptap/extension-image';
-import { Underline } from '@tiptap/extension-underline';
-import { Placeholder } from '@tiptap/extension-placeholder';
-import { Color } from '@tiptap/extension-color';
-import TextStyle from '@tiptap/extension-text-style';
-import TextAlign from '@tiptap/extension-text-align';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  ArrowLeft,
-  Eye,
-  Send
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { 
+  ArrowLeft, 
+  Eye, 
+  Monitor, 
+  Smartphone, 
+  Download,
+  Settings,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
-import { EmailPreview } from './EmailPreview';
 import { EmailBlockCanvas } from './EmailBlockCanvas';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
+import { GlobalStylesPanel } from './GlobalStylesPanel';
+import { EmailPreview } from './EmailPreview';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
-import { SnippetRibbon } from './SnippetRibbon';
+import { CompactAISuggestions } from './CompactAISuggestions';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
-import { CanvasStatus } from './canvas/CanvasStatus';
-import { EmailTemplate } from './TemplateManager';
-import { DirectTemplateService } from '@/services/directTemplateService';
-import { UniversalContent } from '@/types/emailBlocks';
+import { StatusBar } from './StatusBar';
+import { PerformanceAnalyzer } from './PerformanceAnalyzer';
+import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-import { EmailBlock } from '@/types/emailBlocks';
-import { IntegratedGmailPreview } from './IntegratedGmailPreview';
-
-interface Block {
-  id: string;
-  type: string;
-  content: string;
-  styles: Record<string, string>;
-}
-
-interface LayoutConfig {
-  direction: 'row' | 'column';
-  alignItems: 'start' | 'center' | 'end';
-  justifyContent: 'start' | 'center' | 'space-between';
-}
-
-type LeftPanelTab = 'blocks' | 'design' | 'performance';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import './EmailEditor.css';
 
 interface EmailEditorProps {
   content: string;
@@ -56,433 +34,282 @@ interface EmailEditorProps {
   onBack?: () => void;
 }
 
-type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
-
-export default function EmailEditor({ 
-  content,
-  subject,
+export default function EmailEditor({
+  content: initialContent,
+  subject: initialSubject,
   onContentChange,
   onSubjectChange,
-  onBack 
+  onBack
 }: EmailEditorProps) {
-  console.log('EmailEditor: Component starting to render');
-
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
-  const [universalContent] = useState<UniversalContent[]>([]);
-  const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
-  const [showAIAnalytics, setShowAIAnalytics] = useState(true);
-  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-
-  const [canvasWidth, setCanvasWidth] = useState(600);
-  const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
-  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [showGmailPreview, setShowGmailPreview] = useState(false);
-  const [gmailPreviewMode, setGmailPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  
-  // Replace showIntegratedPreview with viewMode
-  const [viewMode, setViewMode] = useState<ViewMode>('edit');
-
+  const [emailHTML, setEmailHTML] = useState<string>(initialContent);
+  const [subject, setSubject] = useState<string>(initialSubject);
+  const [blocks, setBlocks] = useState<EmailBlock[]>([]);
+  const [globalStyles, setGlobalStyles] = useState<any>({});
+  const [showLeftPanel, setShowLeftPanel] = useState<boolean>(true);
+  const [showRightPanel, setShowRightPanel] = useState<boolean>(true);
+  const [rightPanelTab, setRightPanelTab] = useState<'properties' | 'preview'>('properties');
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState<boolean>(false);
+  const [showPerformanceAnalyzer, setShowPerformanceAnalyzer] = useState<boolean>(false);
+  const [deviceMode, setDeviceMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState<number>(0);
   const canvasRef = useRef<any>(null);
 
-  const layoutConfig = useMemo<LayoutConfig>(() => ({
-    direction: 'column',
-    alignItems: 'center',
-    justifyContent: 'start'
-  }), []);
-
-  console.log('EmailEditor: State initialized, creating extensions');
-
-  const extensions = useMemo(() => {
-    console.log('EmailEditor: Creating TipTap extensions');
-    return [
-      StarterKit.configure({
-        history: false,
-      }),
-      Underline,
-      Link,
-      Image,
-      Placeholder.configure({
-        placeholder: 'Write something here...'
-      }),
-      TextStyle,
-      Color,
-      TextAlign.configure({
-        types: ['heading', 'paragraph']
-      }),
-    ];
-  }, []);
-
-  const handleEditorUpdate = useCallback(({ editor }) => {
-    const newContent = editor.getHTML();
-    onContentChange(newContent);
-  }, [onContentChange]);
-
-  console.log('EmailEditor: About to create TipTap editor');
-
-  const editor = useEditor({
-    extensions,
-    content: '',
-    onUpdate: handleEditorUpdate,
-    immediatelyRender: false,
+  useKeyboardShortcuts({
+    'meta+k': () => setShowLeftPanel(prev => !prev),
+    'meta+shift+k': () => setShowRightPanel(prev => !prev),
+    'meta+alt+k': () => setShowPerformanceAnalyzer(true)
   });
 
-  console.log('EmailEditor: TipTap editor created', { editor: !!editor });
-
   useEffect(() => {
-    if (editor && editor.getHTML() !== content) {
-      console.log('EmailEditor: Updating editor content from prop');
-      editor.commands.setContent(content);
-    }
-  }, [editor, content]);
+    setEmailHTML(initialContent);
+    setSubject(initialSubject);
+  }, [initialContent, initialSubject]);
 
-  useEffect(() => {
-    console.log('EmailEditor: Loading templates');
-    const initialTemplates = DirectTemplateService.getAllTemplates();
-    setTemplates(initialTemplates);
-  }, []);
+  const handleContentChange = useCallback((content: string) => {
+    setEmailHTML(content);
+    onContentChange(content);
+  }, [onContentChange]);
 
-  // Handle blocks change from canvas
-  const handleBlocksChange = useCallback((newBlocks: EmailBlock[]) => {
-    console.log('EmailEditor: Received blocks update from canvas:', newBlocks.length);
-    setEmailBlocks(newBlocks);
-  }, []);
+  const handleSubjectChange = useCallback((subject: string) => {
+    setSubject(subject);
+    onSubjectChange(subject);
+  }, [onSubjectChange]);
 
-  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
-    setDeviceMode(device);
-    const widthMap = {
-      desktop: 1200,
-      tablet: 768,
-      mobile: 375,
-      custom: canvasWidth
-    };
-    if (device !== 'custom') {
-      setCanvasWidth(widthMap[device]);
-    }
-    setPreviewMode(device === 'mobile' ? 'mobile' : 'desktop');
-  };
-
-  const handleWidthChange = (width: number) => {
-    setCanvasWidth(width);
-    setDeviceMode('custom');
-  };
-
-  const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
-    console.log('EmailEditor: handleBlockAdd called with:', { blockType, layoutConfig });
-    
-    if (!canvasRef.current) {
-      console.warn('EmailEditor: Canvas ref not available, cannot add block');
-      return;
-    }
-
-    // Handle layout blocks specifically
-    if (blockType === 'columns' && layoutConfig) {
-      console.log('EmailEditor: Processing layout configuration:', layoutConfig);
-      
-      // Create the layout block data structure
-      const columnCount = layoutConfig.columnCount || layoutConfig.columns || 2;
-      const columnRatio = layoutConfig.columnRatio || layoutConfig.ratio || '50-50';
-      const columnElements = layoutConfig.columnElements || [];
-      
-      const newLayoutBlock: EmailBlock = {
-        id: `layout-${Date.now()}`,
-        type: 'columns',
-        content: {
-          columnCount: columnCount as 1 | 2 | 3 | 4,
-          columnRatio: columnRatio,
-          columns: columnElements.length > 0 ? columnElements : Array.from({ length: columnCount }, (_, i) => ({
-            id: `col-${i}-${Date.now()}`,
-            blocks: [],
-            width: `${100 / columnCount}%`
-          })),
-          gap: '16px'
-        },
-        styling: {
-          desktop: { width: '100%', height: 'auto' },
-          tablet: { width: '100%', height: 'auto' },
-          mobile: { width: '100%', height: 'auto' }
-        },
-        position: { x: 0, y: 0 },
-        displayOptions: {
-          showOnDesktop: true,
-          showOnTablet: true,
-          showOnMobile: true
-        }
-      };
-
-      console.log('EmailEditor: Created layout block:', newLayoutBlock);
-      
-      // Add the block directly to the canvas
-      if (canvasRef.current) {
-        canvasRef.current.addBlock(newLayoutBlock);
-      }
-      
-      return;
-    }
-
-    // Handle regular blocks
-    const newBlock: Block = {
-      id: `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: blockType,
-      content: `New ${blockType} block`,
-      styles: {}
-    };
-
-    console.log('EmailEditor: Created regular block:', newBlock);
-    setBlocks(prev => [...prev, newBlock]);
-  };
-
-  const handleBlocksChange2 = (newBlocks: Block[]) => {
-    setBlocks(newBlocks);
-  };
-
-  const handleBlockUpdate = (block: EmailBlock) => {
-    setEmailBlocks(prev => 
-      prev.map(b => b.id === block.id ? block : b)
-    );
-  };
-
-  const handleBlockDelete = (blockId: string) => {
-    setBlocks(prev => prev.filter(block => block.id !== blockId));
-    setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
-  };
-
-  const handleGlobalStylesChange = (styles: any) => {
-    console.log('Applying global styles:', styles);
-  };
-
-  const handlePreview = () => {
-    setShowPreview(true);
-  };
-
-  const handlePublish = async () => {
-    const existingTemplateNames = templates.map(t => t.name);
-    const newTemplate = DirectTemplateService.savePublishedTemplate(
-      content,
-      subject,
-      existingTemplateNames
-    );
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowTemplateLibrary(false);
-  };
-
-  const handleTemplateLoad = (template: EmailTemplate) => {
-    onContentChange(template.html);
-    onSubjectChange(template.subject);
-  };
-
-  const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    const newTemplate = DirectTemplateService.saveTemplate(template);
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowTemplateLibrary(false);
-  };
-
-  const handleSnippetAdd = (snippet: EmailSnippet) => {
-    console.log('Adding snippet:', snippet);
-    setSnippetRefreshTrigger(prev => prev + 1);
-  };
-
-  const handleUniversalContentAdd = (content: UniversalContent) => {
-    console.log('Adding universal content:', content);
-  };
-
-  const handleContentChangeFromCanvas = (newContent: string) => {
-    onContentChange(newContent);
-  };
-
-  const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
-    setPreviewMode(mode);
-    if (viewMode !== 'edit') {
-      setViewMode(mode === 'desktop' ? 'desktop-preview' : 'mobile-preview');
-    }
-  };
-
-  const handleViewModeChange = (mode: ViewMode) => {
-    setViewMode(mode);
-    if (mode === 'desktop-preview') {
-      setPreviewMode('desktop');
-    } else if (mode === 'mobile-preview') {
-      setPreviewMode('mobile');
-    }
-  };
-
-  const handleTemplateLibraryOpen = () => {
-    setShowTemplateLibrary(true);
-  };
-
-  const handleSnippetSelect = (snippet: EmailSnippet) => {
-    console.log('Adding snippet to canvas:', snippet);
-    if (canvasRef.current && snippet.blockData) {
-      // Create a new block from the snippet data
-      const newBlock: EmailBlock = {
-        ...snippet.blockData,
-        id: `block-${Date.now()}`, // Generate new unique ID
-      };
-      canvasRef.current.addBlock(newBlock);
-      setSnippetRefreshTrigger(prev => prev + 1);
-    }
-  };
-
-  const handleToggleAIAnalytics = () => {
-    setShowAIAnalytics(prev => !prev);
-  };
-
-  const handleBlockSelect = (blockId: string | null) => {
-    setSelectedBlockId(blockId);
-  };
-
-  const handleImportBlocks = (blocks: EmailBlock[], importedSubject?: string) => {
-    console.log('EmailEditor: Importing blocks', { blocks, importedSubject });
-    
-    // Clear existing blocks and replace with imported ones
-    setBlocks([]);
-    setEmailBlocks(blocks);
-    
-    // Update subject if provided
-    if (importedSubject) {
-      onSubjectChange(importedSubject);
-    }
-    
-    // Update canvas with new blocks
+  const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
     if (canvasRef.current) {
-      canvasRef.current.replaceAllBlocks(blocks);
+      canvasRef.current.handleBlockAdd(blockType, layoutConfig);
     }
-    
-    console.log('EmailEditor: Import completed');
-  };
+  }, []);
 
-  // Handle auto-fix suggestions from AI Analysis Center
-  const handleApplyFix = (fix: string) => {
-    if (canvasRef.current && canvasRef.current.findAndReplaceText) {
-      // Try to apply the fix by finding and replacing content
-      canvasRef.current.findAndReplaceText('', fix);
-    } else {
-      // Fallback: append the fix to the content
-      const updatedContent = content + '\n' + fix;
-      onContentChange(updatedContent);
+  const handleSnippetAdd = useCallback((snippet: EmailSnippet) => {
+    if (canvasRef.current) {
+      canvasRef.current.handleSnippetAdd(snippet);
     }
-    console.log('Applied auto-fix:', fix);
+    setSnippetRefreshTrigger(prev => prev + 1);
+  }, []);
+
+  const handleUniversalContentAdd = useCallback((content: UniversalContent) => {
+    if (canvasRef.current) {
+      canvasRef.current.handleUniversalContentAdd(content);
+    }
+  }, []);
+
+  const handleBlocksChange = useCallback((newBlocks: EmailBlock[]) => {
+    setBlocks(newBlocks);
+    const htmlContent = canvasRef.current ? canvasRef.current.getHTML() : '';
+    handleContentChange(htmlContent);
+  }, [handleContentChange]);
+
+  const handleGlobalStylesChange = useCallback((newStyles: any) => {
+    setGlobalStyles(newStyles);
+  }, []);
+
+  const handleTemplateSelect = useCallback((templateHTML: string) => {
+    handleContentChange(templateHTML);
+    setShowTemplateLibrary(false);
+  }, [handleContentChange]);
+
+  const handlePreviewToggle = () => {
+    setShowRightPanel(prev => !prev);
+    setRightPanelTab('preview');
   };
 
-  // New handler for integrated Gmail preview
-  const handleToggleIntegratedPreview = () => {
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => !prev);
   };
-
-  const handleIntegratedPreviewModeChange = (mode: 'desktop' | 'mobile') => {
-    setPreviewMode(mode);
-    setGmailPreviewMode(mode);
-  };
-
-  const handleGmailPreview = (mode: 'desktop' | 'mobile') => {
-    setGmailPreviewMode(mode);
-    setShowGmailPreview(true);
-  };
-
-  console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <OmnipresentRibbon
-        onBlockAdd={handleBlockAdd}
-        onSnippetAdd={handleSnippetAdd}
-        universalContent={universalContent}
-        onUniversalContentAdd={handleUniversalContentAdd}
-        onGlobalStylesChange={handleGlobalStylesChange}
-        emailHTML={content}
-        subjectLine={subject}
-        editor={editor}
-        snippetRefreshTrigger={snippetRefreshTrigger}
-        onTemplateLibraryOpen={handleTemplateLibraryOpen}
-        onPreviewModeChange={handlePreviewModeChange}
-        previewMode={previewMode}
-        onBack={onBack}
-        canvasWidth={canvasWidth}
-        deviceMode={deviceMode}
-        onDeviceChange={handleDeviceChange}
-        onWidthChange={handleWidthChange}
-        onPreview={handlePreview}
-        onSaveTemplate={handleSaveAsTemplate}
-        onPublish={handlePublish}
-        onToggleAIAnalytics={handleToggleAIAnalytics}
-        onImportBlocks={handleImportBlocks}
-        blocks={emailBlocks}
-        onGmailPreview={handleGmailPreview}
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
-      />
-
-      {/* Snippet Ribbon - Only show in edit mode */}
-      {viewMode === 'edit' && (
-        <SnippetRibbon
-          onSnippetSelect={handleSnippetSelect}
-          refreshTrigger={snippetRefreshTrigger}
-        />
-      )}
-
-      <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
-        <div className="h-full w-full p-6">
-          <div className="max-w-4xl mx-auto h-full">
-            {/* Edit Mode - Show Canvas */}
-            {viewMode === 'edit' && (
-              <div className="h-full transition-all duration-300 ease-in-out">
-                <EmailBlockCanvas
-                  ref={canvasRef}
-                  onContentChange={handleContentChangeFromCanvas}
-                  onBlockSelect={handleBlockSelect}
-                  onBlocksChange={handleBlocksChange}
-                  previewWidth={canvasWidth}
-                  previewMode={previewMode}
-                  compactMode={false}
-                  subject={subject}
-                  onSubjectChange={onSubjectChange}
-                  showAIAnalytics={false}
-                />
-              </div>
-            )}
-
-            {/* Preview Modes - Show Gmail Preview */}
-            {(viewMode === 'desktop-preview' || viewMode === 'mobile-preview') && (
-              <div className="h-full transition-all duration-300 ease-in-out">
-                <IntegratedGmailPreview
-                  emailHtml={content}
-                  subject={subject}
-                  previewMode={viewMode === 'desktop-preview' ? 'desktop' : 'mobile'}
-                  onPreviewModeChange={handlePreviewModeChange}
-                  fullWidth={true}
-                />
-              </div>
-            )}
-          </div>
+    <div className="h-screen flex flex-col bg-brand-bg text-brand-fg font-switzer">
+      {/* Top Navigation Bar */}
+      <div className="bg-brand-bg border-b border-brand flex items-center justify-between px-brand-4 py-brand-2">
+        <div className="flex items-center gap-brand-3">
+          {onBack && (
+            <Button
+              variant="ghost" 
+              size="sm"
+              onClick={onBack}
+              className="text-brand-fg hover:bg-brand-muted"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          <Input 
+            value={subject}
+            onChange={(e) => onSubjectChange(e.target.value)}
+            className="text-h2 border-none bg-transparent focus:ring-0 focus:border-none p-0 font-switzer"
+            placeholder="Email Subject Line"
+          />
+        </div>
+        
+        <div className="flex items-center gap-brand-2">
+          <Badge variant="secondary" className="text-caption bg-brand-muted text-brand-fg">
+            {deviceMode === 'desktop' ? 'Desktop' : 'Mobile'} Preview
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviewToggle}
+            className="border-brand text-brand-fg hover:bg-brand-muted"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Preview
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleFullscreen}
+            className="text-brand-fg hover:bg-brand-muted"
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </Button>
         </div>
       </div>
 
-      {/* Unified AI Analysis Center Footer - Always visible */}
-      <div className="bg-white border-t border-gray-200 shadow-lg">
-        <CanvasStatus 
-          selectedBlockId={selectedBlockId}
-          canvasWidth={canvasWidth}
-          previewMode={previewMode}
-          emailHTML={content}
+      {/* Omnipresent Ribbon */}
+      {!isFullscreen && (
+        <OmnipresentRibbon
+          onBlockAdd={handleBlockAdd}
+          onSnippetAdd={handleSnippetAdd}
+          universalContent={universalContent}
+          onUniversalContentAdd={handleUniversalContentAdd}
+          onGlobalStylesChange={handleGlobalStylesChange}
+          emailHTML={emailHTML}
           subjectLine={subject}
-          onApplyFix={handleApplyFix}
-        />
-      </div>
-
-      {/* Keep existing modals */}
-      {showPreview && (
-        <EmailPreview
-          html={content}
-          previewMode={previewMode}
-          subject={subject}
+          editor={canvasRef.current}
+          snippetRefreshTrigger={snippetRefreshTrigger}
+          onTemplateLibraryOpen={() => setShowTemplateLibrary(true)}
+          onPreviewModeChange={setDeviceMode}
+          previewMode={deviceMode}
         />
       )}
 
+      {/* Main Editor Layout */}
+      <div className={`flex-1 flex overflow-hidden ${isFullscreen ? 'fullscreen-mode' : ''}`}>
+        {/* Left Sidebar - Block Palette */}
+        {showLeftPanel && !isFullscreen && (
+          <div className="w-80 bg-brand-bg border-r border-brand flex flex-col panel-transition">
+            <div className="p-brand-4 border-b border-brand">
+              <h3 className="text-h3 text-brand-fg mb-brand-2">Blocks & Elements</h3>
+              <p className="text-caption text-brand-fg opacity-75">Drag blocks to build your email</p>
+            </div>
+            
+            <div className="flex-1 overflow-hidden">
+              <EnhancedEmailBlockPalette 
+                onBlockAdd={handleBlockAdd}
+                onSnippetAdd={handleSnippetAdd}
+                universalContent={universalContent}
+                onUniversalContentAdd={handleUniversalContentAdd}
+                compactMode={false}
+                snippetRefreshTrigger={snippetRefreshTrigger}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Center Canvas Area */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Canvas Container */}
+          <div className="flex-1 overflow-auto bg-brand-muted">
+            <div className="u-p-6 flex justify-center">
+              <div 
+                className={`bg-brand-bg rounded-brand-lg shadow-sm border border-brand transition-all duration-300 ${
+                  deviceMode === 'desktop' ? 'w-full max-w-4xl' : 'w-96'
+                }`}
+                data-testid="email-canvas"
+              >
+                <EmailBlockCanvas
+                  ref={canvasRef}
+                  blocks={blocks}
+                  onBlocksChange={handleBlocksChange}
+                  globalStyles={globalStyles}
+                  canvasWidth={deviceMode === 'desktop' ? 600 : 375}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* AI Suggestions */}
+          <div className="border-t border-brand bg-brand-bg">
+            <CompactAISuggestions 
+              emailContent={emailHTML}
+              subjectLine={subject}
+            />
+          </div>
+        </div>
+
+        {/* Right Sidebar - Properties & Preview */}
+        {showRightPanel && !isFullscreen && (
+          <div className="w-80 bg-brand-bg border-l border-brand flex flex-col panel-transition">
+            <div className="p-brand-4 border-b border-brand">
+              <div className="flex items-center justify-between mb-brand-2">
+                <h3 className="text-h3 text-brand-fg">Properties</h3>
+                <div className="flex gap-brand-1">
+                  <Button
+                    variant={rightPanelTab === 'properties' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setRightPanelTab('properties')}
+                    className="text-xs"
+                  >
+                    <Settings className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant={rightPanelTab === 'preview' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setRightPanelTab('preview')}
+                    className="text-xs"
+                  >
+                    <Eye className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              {rightPanelTab === 'properties' && (
+                <div className="h-full overflow-auto">
+                  <GlobalStylesPanel 
+                    onStylesChange={handleGlobalStylesChange}
+                  />
+                </div>
+              )}
+              
+              {rightPanelTab === 'preview' && (
+                <EmailPreview 
+                  html={emailHTML}
+                  previewMode={deviceMode}
+                  subject={subject}
+                />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Status Bar */}
+      <StatusBar 
+        blocksCount={blocks.length}
+        canvasWidth={deviceMode === 'desktop' ? 600 : 375}
+        deviceMode={deviceMode}
+        emailHTML={emailHTML}
+        subjectLine={subject}
+      />
+
+      {/* Template Library Modal */}
       {showTemplateLibrary && (
-        <EmailTemplateLibrary
-          editor={editor}
+        <EmailTemplateLibrary 
+          onClose={() => setShowTemplateLibrary(false)}
+          onTemplateSelect={handleTemplateSelect}
+        />
+      )}
+
+      {/* Performance Analyzer Modal */}
+      {showPerformanceAnalyzer && (
+        <PerformanceAnalyzer
+          emailHTML={emailHTML}
+          subjectLine={subject}
+          onClose={() => setShowPerformanceAnalyzer(false)}
         />
       )}
     </div>
