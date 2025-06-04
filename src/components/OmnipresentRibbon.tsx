@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -458,7 +457,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   }}
                   title="Buttons"
                 >
-                  <MousePointer className="w-9 h-9" />
+                  <MousePointerClick className="w-9 h-9" />
                 </Button>
 
                 <Button
