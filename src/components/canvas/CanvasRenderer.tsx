@@ -85,11 +85,12 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
 
     // Handle columns blocks specially
     if (block.type === 'columns') {
+      // Type assertion with proper check
       const columnsBlock = block as ColumnsBlock;
       return (
         <div
           key={block.id}
-          className={`email-block group relative mb-brand-4 ${isSelected ? 'selected ring-2 ring-brand-primary ring-opacity-50' : ''}`}
+          className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-purple-400 ring-opacity-50' : ''}`}
           draggable
           onDragStart={(e) => onBlockDragStart(e, block.id)}
           onDrop={(e) => onBlockDrop(e, index)}
@@ -147,7 +148,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onUpdate={onBlockUpdate}
             onEditStart={() => onBlockEditStart(block.id)}
             onEditEnd={onBlockEditEnd}
-            onInsertVariable={() => {}}
+            onInsertVariable={() => {}} // Simplified - we're using global handler now
           />
         </div>
       );
@@ -157,9 +158,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     return (
       <div
         key={block.id}
-        className={`email-block group relative mb-brand-4 ${
-          isSelected ? 'selected ring-2 ring-brand-primary ring-opacity-50' : ''
-        } hover:shadow-lg transition-all duration-300 rounded-brand-lg`}
+        className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-blue-400 ring-opacity-50' : ''} hover:shadow-lg transition-all duration-200 rounded-lg`}
         draggable
         onDragStart={(e) => onBlockDragStart(e, block.id)}
         onDrop={(e) => onBlockDrop(e, index)}
@@ -191,7 +190,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   return (
     <div className="canvas-renderer min-h-64">
       {blocks.length === 0 ? (
-        <div className="text-center py-brand-8">
+        <div className="text-center py-16">
           {isDraggingOver && currentDragType ? (
             <DropZoneIndicator
               isVisible={true}
@@ -200,21 +199,21 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               className="min-h-48"
             />
           ) : (
-            <div className="text-brand-fg opacity-75">
-              <div className="text-h2 font-medium mb-brand-3">Ready to build!</div>
-              <div className="text-body">Drag a layout from the toolbar above to start building your email</div>
+            <div className="text-gray-500">
+              <div className="text-xl font-medium mb-3">Ready to build!</div>
+              <div className="text-sm">Drag a layout from the toolbar above to start building your email</div>
             </div>
           )}
         </div>
       ) : (
-        <div className="space-y-brand-6">
+        <div className="space-y-6">
           {/* Top drop zone */}
           {isDraggingOver && dragOverIndex === 0 && currentDragType && (
             <DropZoneIndicator
               isVisible={true}
               dragType={currentDragType}
               position="top"
-              className="mb-brand-4"
+              className="mb-4"
             />
           )}
 
@@ -226,7 +225,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                   isVisible={true}
                   dragType={currentDragType}
                   position="top"
-                  className="mb-brand-4"
+                  className="mb-4"
                 />
               )}
               
@@ -238,7 +237,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                   isVisible={true}
                   dragType={currentDragType}
                   position="bottom"
-                  className="mt-brand-4"
+                  className="mt-4"
                 />
               )}
             </React.Fragment>
@@ -250,7 +249,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               isVisible={true}
               dragType={currentDragType}
               position="bottom"
-              className="mt-brand-6"
+              className="mt-6"
             />
           )}
         </div>
