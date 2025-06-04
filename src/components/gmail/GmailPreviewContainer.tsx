@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Monitor, Smartphone, RotateCcw } from 'lucide-react';
+import { X, Monitor, Smartphone, RotateCcw, User, Mail } from 'lucide-react';
 import { GmailDesktopPreview } from './GmailDesktopPreview';
 import { GmailMobilePreview } from './GmailMobilePreview';
 import { EmailCompatibilityProcessor } from '@/services/emailCompatibilityProcessor';
@@ -28,6 +28,33 @@ interface GmailPreviewContainerProps {
   onClose: () => void;
 }
 
+// Generate realistic sender/recipient data if not provided
+const generateRealisticData = (emailHtml: string, subject: string) => {
+  const defaultSenders = [
+    { name: 'Marketing Team', email: 'marketing@company.com', initials: 'MT' },
+    { name: 'Sarah Wilson', email: 'sarah.wilson@business.com', initials: 'SW' },
+    { name: 'Customer Success', email: 'success@startup.io', initials: 'CS' },
+    { name: 'Newsletter', email: 'newsletter@brand.com', initials: 'NL' },
+    { name: 'Alex Chen', email: 'alex@techcorp.com', initials: 'AC' }
+  ];
+  
+  const defaultRecipients = [
+    { name: 'John Doe', email: 'john.doe@gmail.com' },
+    { name: 'Maria Garcia', email: 'maria.garcia@outlook.com' },
+    { name: 'David Smith', email: 'david.smith@yahoo.com' },
+    { name: 'Lisa Johnson', email: 'lisa.j@company.com' },
+    { name: 'Mike Brown', email: 'mike.brown@email.com' }
+  ];
+  
+  // Simple hash to consistently pick same data for same content
+  const contentHash = (emailHtml + subject).length % 5;
+  
+  return {
+    sender: defaultSenders[contentHash],
+    recipient: defaultRecipients[contentHash]
+  };
+};
+
 export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   emailHtml,
   subject,
@@ -39,6 +66,11 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   const [viewMode, setViewMode] = useState<'desktop' | 'mobile'>(initialMode);
   const [processedHtml, setProcessedHtml] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(true);
+  
+  // Generate realistic data if not provided
+  const realisticData = generateRealisticData(emailHtml, subject);
+  const finalSender = sender || realisticData.sender;
+  const finalRecipient = recipient || realisticData.recipient;
 
   useEffect(() => {
     const processEmail = async () => {
@@ -69,7 +101,17 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
             <h3 className="text-lg font-medium mb-2">Preparing Gmail Preview</h3>
-            <p className="text-gray-600 text-sm">Processing email for Gmail compatibility...</p>
+            <p className="text-gray-600 text-sm">Processing email for pixel-perfect Gmail rendering...</p>
+            <div className="mt-4 text-xs text-gray-500">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <User className="w-4 h-4" />
+                <span>From: {finalSender.name}</span>
+              </div>
+              <div className="flex items-center justify-center gap-2">
+                <Mail className="w-4 h-4" />
+                <span>To: {finalRecipient.name}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -77,8 +119,8 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Preview Mode Selector */}
+    <div className="fixed inset-0 z-50 bg-gray-100">
+      {/* Enhanced Preview Mode Selector */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2 flex items-center gap-2">
           <Button
@@ -88,7 +130,7 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
             className="flex items-center gap-2"
           >
             <Monitor className="w-4 h-4" />
-            Desktop
+            Desktop Gmail
           </Button>
           <Button
             variant={viewMode === 'mobile' ? 'default' : 'ghost'}
@@ -97,12 +139,15 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
             className="flex items-center gap-2"
           >
             <Smartphone className="w-4 h-4" />
-            Mobile
+            Mobile Gmail
           </Button>
           <div className="h-6 w-px bg-gray-300 mx-2" />
-          <Badge variant="outline" className="text-xs">
-            Gmail Preview
-          </Badge>
+          <div className="flex items-center gap-2 text-xs text-gray-600">
+            <User className="w-3 h-3" />
+            <span>{finalSender.name}</span>
+            <span>→</span>
+            <span>{finalRecipient.name}</span>
+          </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="w-4 h-4" />
           </Button>
@@ -110,25 +155,27 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
       </div>
 
       {/* Preview Content */}
-      {viewMode === 'desktop' ? (
-        <GmailDesktopPreview
-          emailHtml={processedHtml}
-          subject={subject}
-          sender={sender}
-          recipient={recipient}
-          onClose={onClose}
-        />
-      ) : (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
-          <GmailMobilePreview
+      <div className="w-full h-full">
+        {viewMode === 'desktop' ? (
+          <GmailDesktopPreview
             emailHtml={processedHtml}
             subject={subject}
-            sender={sender}
-            recipient={recipient}
+            sender={finalSender}
+            recipient={finalRecipient}
             onClose={onClose}
           />
-        </div>
-      )}
+        ) : (
+          <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+            <GmailMobilePreview
+              emailHtml={processedHtml}
+              subject={subject}
+              sender={finalSender}
+              recipient={finalRecipient}
+              onClose={onClose}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

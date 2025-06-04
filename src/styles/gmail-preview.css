@@ -1,0 +1,139 @@
+
+/* Gmail Desktop Preview Styles */
+.gmail-content {
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  color: #202124;
+}
+
+.gmail-content h1,
+.gmail-content h2,
+.gmail-content h3,
+.gmail-content h4,
+.gmail-content h5,
+.gmail-content h6 {
+  font-family: "Google Sans", Roboto, Arial, sans-serif;
+  color: #202124;
+  margin: 16px 0 8px 0;
+}
+
+.gmail-content h1 { font-size: 24px; font-weight: 400; }
+.gmail-content h2 { font-size: 20px; font-weight: 500; }
+.gmail-content h3 { font-size: 18px; font-weight: 500; }
+.gmail-content h4 { font-size: 16px; font-weight: 500; }
+.gmail-content h5 { font-size: 14px; font-weight: 500; }
+.gmail-content h6 { font-size: 12px; font-weight: 500; }
+
+.gmail-content p {
+  margin: 8px 0;
+  line-height: 20px;
+}
+
+.gmail-content a {
+  color: #1a73e8;
+  text-decoration: none;
+}
+
+.gmail-content a:hover {
+  text-decoration: underline;
+}
+
+.gmail-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.gmail-content table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.gmail-content td,
+.gmail-content th {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #e8eaed;
+}
+
+/* Gmail Mobile Preview Styles */
+.gmail-mobile-content {
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  color: #202124;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.gmail-mobile-content h1,
+.gmail-mobile-content h2,
+.gmail-mobile-content h3,
+.gmail-mobile-content h4,
+.gmail-mobile-content h5,
+.gmail-mobile-content h6 {
+  font-family: Roboto, Arial, sans-serif;
+  color: #202124;
+  margin: 16px 0 8px 0;
+}
+
+.gmail-mobile-content h1 { font-size: 22px; font-weight: 500; }
+.gmail-mobile-content h2 { font-size: 20px; font-weight: 500; }
+.gmail-mobile-content h3 { font-size: 18px; font-weight: 500; }
+.gmail-mobile-content h4 { font-size: 16px; font-weight: 500; }
+
+.gmail-mobile-content p {
+  margin: 12px 0;
+  line-height: 24px;
+}
+
+.gmail-mobile-content a {
+  color: #1a73e8;
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.gmail-mobile-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.gmail-mobile-content table {
+  width: 100%;
+  font-size: 14px;
+  border-collapse: collapse;
+}
+
+.gmail-mobile-content td,
+.gmail-mobile-content th {
+  padding: 8px 4px;
+  text-align: left;
+  border-bottom: 1px solid #e8eaed;
+}
+
+/* Button Styles for Gmail */
+.gmail-content .button,
+.gmail-mobile-content .button {
+  display: inline-block;
+  padding: 12px 24px;
+  background-color: #1a73e8;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  margin: 8px 0;
+}
+
+.gmail-content .button:hover,
+.gmail-mobile-content .button:hover {
+  background-color: #1557b0;
+  text-decoration: none;
+}
+
+/* Safe area for mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
