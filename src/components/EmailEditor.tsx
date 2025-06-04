@@ -196,7 +196,6 @@ export default function EmailEditor({
           canvasWidth={deviceMode === 'desktop' ? 600 : 375}
           deviceMode={deviceMode}
           onDeviceChange={handleDeviceChange}
-          onFullscreenToggle={toggleFullscreen}
         />
       )}
 
