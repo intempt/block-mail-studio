@@ -20,14 +20,15 @@ export const VariableTag: React.FC<VariableTagProps> = ({
   return (
     <Badge 
       variant="secondary" 
-      className={`inline-flex items-center justify-center gap-1 bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition-colors w-8 h-8 rounded-sm ${className}`}
+      className={`inline-flex items-center gap-1 bg-purple-100 text-purple-800 border border-purple-200 hover:bg-purple-200 transition-colors px-2 py-1 ${className}`}
       style={{ display: 'inline-flex', verticalAlign: 'middle' }}
     >
       <Variable className="w-3 h-3" />
+      <span className="text-xs font-medium">{text}</span>
       <Button
         size="sm"
         variant="ghost"
-        className="absolute w-4 h-4 p-0 hover:bg-purple-300 rounded-full opacity-0 hover:opacity-100 transition-opacity"
+        className="w-4 h-4 p-0 hover:bg-purple-300 rounded-full ml-1"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
