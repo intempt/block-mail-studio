@@ -32,6 +32,9 @@ export const Variable = Node.create<VariableOptions>({
 
   atom: true,
 
+  // Remove any content specification - this should be empty for atomic nodes
+  content: '',
+
   addAttributes() {
     return {
       text: {
@@ -70,7 +73,7 @@ export const Variable = Node.create<VariableOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes), 0];
+    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes)];
   },
 
   addNodeView() {
