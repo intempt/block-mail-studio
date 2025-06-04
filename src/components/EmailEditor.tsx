@@ -414,51 +414,46 @@ export default function EmailEditor({
         onViewModeChange={handleViewModeChange}
       />
 
-      {/* Snippet Ribbon */}
-      <SnippetRibbon
-        onSnippetSelect={handleSnippetSelect}
-        refreshTrigger={snippetRefreshTrigger}
-      />
+      {/* Snippet Ribbon - Only show in edit mode */}
+      {viewMode === 'edit' && (
+        <SnippetRibbon
+          onSnippetSelect={handleSnippetSelect}
+          refreshTrigger={snippetRefreshTrigger}
+        />
+      )}
 
       <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
         <div className="h-full w-full p-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto h-full">
             {/* Edit Mode - Show Canvas */}
             {viewMode === 'edit' && (
-              <EmailBlockCanvas
-                ref={canvasRef}
-                onContentChange={handleContentChangeFromCanvas}
-                onBlockSelect={handleBlockSelect}
-                onBlocksChange={handleBlocksChange}
-                previewWidth={canvasWidth}
-                previewMode={previewMode}
-                compactMode={false}
-                subject={subject}
-                onSubjectChange={onSubjectChange}
-                showAIAnalytics={false}
-              />
+              <div className="h-full transition-all duration-300 ease-in-out">
+                <EmailBlockCanvas
+                  ref={canvasRef}
+                  onContentChange={handleContentChangeFromCanvas}
+                  onBlockSelect={handleBlockSelect}
+                  onBlocksChange={handleBlocksChange}
+                  previewWidth={canvasWidth}
+                  previewMode={previewMode}
+                  compactMode={false}
+                  subject={subject}
+                  onSubjectChange={onSubjectChange}
+                  showAIAnalytics={false}
+                />
+              </div>
             )}
 
-            {/* Desktop Preview Mode - Show Full Gmail Desktop Preview */}
-            {viewMode === 'desktop-preview' && (
-              <IntegratedGmailPreview
-                emailHtml={content}
-                subject={subject}
-                previewMode="desktop"
-                onPreviewModeChange={handlePreviewModeChange}
-                fullWidth={true}
-              />
-            )}
-
-            {/* Mobile Preview Mode - Show Full Gmail Mobile Preview */}
-            {viewMode === 'mobile-preview' && (
-              <IntegratedGmailPreview
-                emailHtml={content}
-                subject={subject}
-                previewMode="mobile"
-                onPreviewModeChange={handlePreviewModeChange}
-                fullWidth={true}
-              />
+            {/* Preview Modes - Show Gmail Preview */}
+            {(viewMode === 'desktop-preview' || viewMode === 'mobile-preview') && (
+              <div className="h-full transition-all duration-300 ease-in-out">
+                <IntegratedGmailPreview
+                  emailHtml={content}
+                  subject={subject}
+                  previewMode={viewMode === 'desktop-preview' ? 'desktop' : 'mobile'}
+                  onPreviewModeChange={handlePreviewModeChange}
+                  fullWidth={true}
+                />
+              </div>
             )}
           </div>
         </div>
@@ -483,36 +478,6 @@ export default function EmailEditor({
           previewMode={previewMode}
           subject={subject}
         />
-      )}
-
-      {showGmailPreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full h-5/6 m-4 flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">
-                Gmail Preview - {gmailPreviewMode === 'desktop' ? 'Desktop' : 'Mobile'}
-              </h2>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowGmailPreview(false)}
-              >
-                ✕
-              </Button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                <div className="text-center">
-                  <h3 className="text-lg font-medium mb-2">Gmail {gmailPreviewMode} Preview</h3>
-                  <p className="text-gray-600">Subject: {subject}</p>
-                  <div className="mt-4 p-4 bg-white rounded border max-w-md">
-                    <div dangerouslySetInnerHTML={{ __html: content }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       {showTemplateLibrary && (

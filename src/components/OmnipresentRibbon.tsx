@@ -328,16 +328,16 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           </div>
         </div>
         
-        {/* View Mode Controls */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+        {/* Prominent View Mode Controls - Always Visible */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleEditClick}
-              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
                 viewMode === 'edit' 
-                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
               title="Switch to Edit Mode"
@@ -349,12 +349,12 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleDesktopClick}
-              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
                 viewMode === 'desktop-preview' 
-                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
-              title="Switch to Desktop Preview"
+              title="Gmail Desktop Preview"
             >
               <Monitor className="w-4 h-4" />
               <span className="text-sm">Desktop</span>
@@ -363,12 +363,12 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleMobileClick}
-              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
                 viewMode === 'mobile-preview' 
-                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
-              title="Switch to Mobile Preview"
+              title="Gmail Mobile Preview"
             >
               <Smartphone className="w-4 h-4" />
               <span className="text-sm">Mobile</span>
@@ -514,6 +514,18 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Mode Indicator */}
+      {viewMode !== 'edit' && (
+        <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center justify-center gap-2">
+            <Eye className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">
+              {viewMode === 'desktop-preview' ? 'Gmail Desktop Preview' : 'Gmail Mobile Preview'}
+            </span>
           </div>
         </div>
       )}

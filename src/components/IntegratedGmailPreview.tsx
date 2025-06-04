@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Monitor, Smartphone } from 'lucide-react';
+import { Monitor, Smartphone, ArrowLeft } from 'lucide-react';
 import { GmailDesktopPreview } from './gmail/GmailDesktopPreview';
 import { GmailMobilePreview } from './gmail/GmailMobilePreview';
 import { EmailCompatibilityProcessor } from '@/services/emailCompatibilityProcessor';
@@ -51,8 +51,9 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
     return (
       <div className="h-full flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-sm">Processing Gmail preview...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h3 className="text-lg font-medium mb-2">Preparing Gmail Preview</h3>
+          <p className="text-gray-600 text-sm">Processing email for Gmail compatibility...</p>
         </div>
       </div>
     );
@@ -64,56 +65,30 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
 
   return (
     <div className={containerClass}>
-      {/* Preview Mode Header - Hide when fullWidth since mode is controlled elsewhere */}
-      {!fullWidth && onPreviewModeChange && (
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">Gmail Preview</Badge>
-          </div>
-          <div className="flex items-center bg-white rounded-lg p-1 border">
-            <Button
-              variant={previewMode === 'desktop' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onPreviewModeChange('desktop')}
-              className="flex items-center gap-1 h-7 px-2 text-xs"
-            >
-              <Monitor className="w-3 h-3" />
-              Desktop
-            </Button>
-            <Button
-              variant={previewMode === 'mobile' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onPreviewModeChange('mobile')}
-              className="flex items-center gap-1 h-7 px-2 text-xs"
-            >
-              <Smartphone className="w-3 h-3" />
-              Mobile
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Content */}
-      <div className="flex-1 overflow-auto">
+      {/* Preview Content - Optimized for canvas integration */}
+      <div className="flex-1 overflow-hidden bg-gray-100">
         {previewMode === 'desktop' ? (
-          <div 
-            className="h-full w-full flex items-center justify-center"
-            style={{ 
-              transform: fullWidth ? 'scale(0.9)' : 'scale(0.75)', 
-              transformOrigin: 'top center'
-            }}
-          >
-            <GmailDesktopPreview
-              emailHtml={processedHtml}
-              subject={subject}
-              onClose={() => {}} // No close needed in integrated mode
-            />
+          <div className="h-full w-full flex items-center justify-center p-4">
+            <div 
+              className="w-full max-w-7xl h-full rounded-lg overflow-hidden shadow-lg"
+              style={{ 
+                transform: fullWidth ? 'scale(0.8)' : 'scale(0.7)', 
+                transformOrigin: 'center center',
+                minHeight: '600px'
+              }}
+            >
+              <GmailDesktopPreview
+                emailHtml={processedHtml}
+                subject={subject}
+                onClose={() => {}} // No close needed in integrated mode
+              />
+            </div>
           </div>
         ) : (
-          <div className="flex justify-center p-4">
+          <div className="h-full flex items-center justify-center p-8">
             <div style={{ 
-              transform: fullWidth ? 'scale(1)' : 'scale(0.9)', 
-              transformOrigin: 'top center' 
+              transform: fullWidth ? 'scale(1.2)' : 'scale(1)', 
+              transformOrigin: 'center center' 
             }}>
               <GmailMobilePreview
                 emailHtml={processedHtml}
