@@ -12,9 +12,17 @@ import {
   BarChart3,
   Shield,
   Smartphone,
-  TrendingUp
+  TrendingUp,
+  Zap,
+  CheckCircle,
+  Copy,
+  Target,
+  Brain,
+  Lightbulb
 } from 'lucide-react';
 import { useEmailAnalytics } from '@/analytics/react/useEmailAnalytics';
+import { CentralizedAIAnalysisService } from '@/services/CentralizedAIAnalysisService';
+import { CriticalEmailAnalysisService } from '@/services/criticalEmailAnalysisService';
 
 interface CanvasStatusProps {
   selectedBlockId: string | null;
@@ -22,6 +30,21 @@ interface CanvasStatusProps {
   previewMode: 'desktop' | 'mobile';
   emailHTML?: string;
   subjectLine?: string;
+  onApplyFix?: (fix: string) => void;
+}
+
+interface UnifiedSuggestion {
+  id: string;
+  type: 'critical' | 'performance' | 'enhancement';
+  category: string;
+  title: string;
+  description: string;
+  current: string;
+  suggested: string;
+  impact: 'critical' | 'high' | 'medium' | 'low';
+  confidence: number;
+  autoFixable: boolean;
+  fix?: string;
 }
 
 export const CanvasStatus: React.FC<CanvasStatusProps> = ({
@@ -29,11 +52,15 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   canvasWidth,
   previewMode,
   emailHTML = '',
-  subjectLine = ''
+  subjectLine = '',
+  onApplyFix
 }) => {
   const { analyze, result, isAnalyzing, error, clearCache } = useEmailAnalytics();
   const [hasContent, setHasContent] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [unifiedSuggestions, setUnifiedSuggestions] = useState<UnifiedSuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
 
   // Check if there's content to analyze
   useEffect(() => {
@@ -45,8 +72,95 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   useEffect(() => {
     if (result && !isAnalyzing) {
       setShowResults(true);
+      loadUnifiedSuggestions();
     }
   }, [result, isAnalyzing]);
+
+  const loadUnifiedSuggestions = async () => {
+    if (!emailHTML.trim()) return;
+
+    setIsLoadingSuggestions(true);
+    try {
+      // Get comprehensive analysis and critical issues
+      const [comprehensiveAnalysis, criticalIssues] = await Promise.all([
+        CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine),
+        CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine)
+      ]);
+
+      const suggestions: UnifiedSuggestion[] = [];
+
+      // Add critical issues first
+      criticalIssues.forEach(issue => {
+        suggestions.push({
+          id: issue.id,
+          type: 'critical',
+          category: issue.category,
+          title: issue.title,
+          description: issue.reason,
+          current: issue.current,
+          suggested: issue.suggested,
+          impact: issue.severity,
+          confidence: issue.confidence,
+          autoFixable: issue.autoFixable,
+          fix: issue.suggested
+        });
+      });
+
+      // Add performance suggestions
+      if (comprehensiveAnalysis.performance?.accessibilityIssues) {
+        comprehensiveAnalysis.performance.accessibilityIssues.forEach((issue, index) => {
+          suggestions.push({
+            id: `perf_${index}`,
+            type: 'performance',
+            category: 'accessibility',
+            title: `Fix ${issue.type}`,
+            description: issue.description,
+            current: issue.description,
+            suggested: issue.fix,
+            impact: issue.severity as any,
+            confidence: 85,
+            autoFixable: true,
+            fix: issue.fix
+          });
+        });
+      }
+
+      // Add enhancement suggestions from brand voice analysis
+      if (comprehensiveAnalysis.brandVoice?.suggestions) {
+        comprehensiveAnalysis.brandVoice.suggestions.forEach((suggestion, index) => {
+          suggestions.push({
+            id: `brand_${index}`,
+            type: 'enhancement',
+            category: 'brand',
+            title: suggestion.title,
+            description: suggestion.reason,
+            current: suggestion.current,
+            suggested: suggestion.suggested,
+            impact: suggestion.impact as any,
+            confidence: suggestion.confidence,
+            autoFixable: false,
+            fix: suggestion.suggested
+          });
+        });
+      }
+
+      // Sort by priority: critical first, then by impact
+      suggestions.sort((a, b) => {
+        if (a.type !== b.type) {
+          const typeOrder = { critical: 3, performance: 2, enhancement: 1 };
+          return typeOrder[b.type] - typeOrder[a.type];
+        }
+        const impactOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+        return impactOrder[b.impact] - impactOrder[a.impact];
+      });
+
+      setUnifiedSuggestions(suggestions);
+    } catch (error) {
+      console.error('Error loading unified suggestions:', error);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
 
   const analyzeEmail = async () => {
     if (!emailHTML.trim()) {
@@ -61,13 +175,50 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   const refreshAnalytics = async () => {
     await clearCache();
+    CriticalEmailAnalysisService.clearCache();
+    setUnifiedSuggestions([]);
+    setAppliedFixes(new Set());
     analyzeEmail();
+  };
+
+  const applyFix = (suggestion: UnifiedSuggestion) => {
+    if (suggestion.fix && onApplyFix) {
+      onApplyFix(suggestion.fix);
+      setAppliedFixes(prev => new Set(prev).add(suggestion.id));
+      console.log(`Applied fix: ${suggestion.title}`);
+    }
+  };
+
+  const copyFix = (suggestion: UnifiedSuggestion) => {
+    if (suggestion.fix) {
+      navigator.clipboard.writeText(suggestion.fix);
+      console.log(`Copied fix: ${suggestion.title}`);
+    }
   };
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
+  };
+
+  const getImpactColor = (impact: string) => {
+    switch (impact) {
+      case 'critical': return 'bg-red-100 text-red-700 border-red-300';
+      case 'high': return 'bg-orange-100 text-orange-700 border-orange-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+      case 'low': return 'bg-blue-100 text-blue-700 border-blue-300';
+      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'critical': return <Zap className="w-4 h-4 text-red-600" />;
+      case 'performance': return <BarChart3 className="w-4 h-4 text-orange-600" />;
+      case 'enhancement': return <Sparkles className="w-4 h-4 text-blue-600" />;
+      default: return <Lightbulb className="w-4 h-4" />;
+    }
   };
 
   return (
@@ -79,8 +230,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-white font-semibold text-base">Email Analytics</h3>
-              <p className="text-purple-100 text-sm">Get AI-powered email optimization suggestions</p>
+              <h3 className="text-white font-semibold text-base">AI Analysis Center</h3>
+              <p className="text-purple-100 text-sm">Analyze • Suggest • Fix your email automatically</p>
             </div>
           </div>
           
@@ -110,9 +261,9 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               {isAnalyzing ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Brain className="w-4 h-4 mr-2" />
               )}
-              {isAnalyzing ? 'Analyzing...' : result ? 'Re-analyze Email' : 'Analyze Email'}
+              {isAnalyzing ? 'Analyzing...' : result ? 'Re-analyze & Fix' : 'Analyze & Fix Email'}
             </Button>
           </div>
         </div>
@@ -123,7 +274,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           </div>
         )}
 
-        {/* Analytics Results Panel */}
+        {/* Unified Analysis Results Panel */}
         {result && (
           <Collapsible open={showResults} onOpenChange={setShowResults} className="mt-4">
             <CollapsibleTrigger asChild>
@@ -131,7 +282,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 variant="ghost" 
                 className="w-full justify-between text-white hover:bg-white/10 p-3"
               >
-                <span className="font-medium">Analysis Results</span>
+                <span className="font-medium">Analysis Results & AI Suggestions</span>
                 {showResults ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
             </CollapsibleTrigger>
@@ -213,19 +364,92 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   </div>
                 </div>
 
-                {/* Suggestions */}
-                {result.suggestions && result.suggestions.length > 0 && (
-                  <div className="border-t pt-3">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">AI Suggestions</h4>
-                    <div className="space-y-2">
-                      {result.suggestions.slice(0, 3).map((suggestion, index) => (
-                        <div key={index} className="text-xs bg-amber-50 border border-amber-200 rounded p-2">
-                          💡 {suggestion.description}
+                {/* Unified AI Suggestions & Fixes */}
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      AI Suggestions & Auto-Fixes
+                    </h4>
+                    {isLoadingSuggestions && (
+                      <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+                    )}
+                  </div>
+
+                  {unifiedSuggestions.length > 0 ? (
+                    <div className="space-y-3 max-h-80 overflow-y-auto">
+                      {unifiedSuggestions.map((suggestion) => (
+                        <div key={suggestion.id} className="border rounded-lg p-3 bg-white">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              {getTypeIcon(suggestion.type)}
+                              <span className="font-medium text-sm">{suggestion.title}</span>
+                              <Badge className={`text-xs ${getImpactColor(suggestion.impact)}`}>
+                                {suggestion.impact}
+                              </Badge>
+                              {suggestion.autoFixable && (
+                                <Badge className="text-xs bg-green-100 text-green-700 border-green-300">
+                                  Auto-fixable
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <CheckCircle className="w-3 h-3" />
+                              {suggestion.confidence}%
+                            </div>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mb-2">{suggestion.description}</p>
+                          
+                          {suggestion.fix && (
+                            <div className="text-sm bg-green-50 border border-green-200 p-2 rounded mb-3">
+                              <span className="text-green-800">✨ {suggestion.fix}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2">
+                            {suggestion.autoFixable && suggestion.fix && !appliedFixes.has(suggestion.id) && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => applyFix(suggestion)}
+                                className="flex-1 text-xs h-7 bg-green-600 hover:bg-green-700"
+                              >
+                                <Zap className="w-3 h-3 mr-1" />
+                                Auto-Fix
+                              </Button>
+                            )}
+                            {appliedFixes.has(suggestion.id) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled
+                                className="flex-1 text-xs h-7 bg-green-50 text-green-700"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Applied
+                              </Button>
+                            )}
+                            {suggestion.fix && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => copyFix(suggestion)}
+                                className="text-xs h-7"
+                              >
+                                <Copy className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : !isLoadingSuggestions ? (
+                    <div className="text-center py-4 text-gray-500 text-sm">
+                      No specific suggestions found. Your email looks good!
+                    </div>
+                  ) : null}
+                </div>
               </Card>
             </CollapsibleContent>
           </Collapsible>
