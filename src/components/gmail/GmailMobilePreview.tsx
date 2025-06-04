@@ -13,41 +13,96 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
   onClose
 }) => {
   return (
-    <div className="w-full h-full bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-lg shadow-sm overflow-hidden" style={{ minHeight: '600px' }}>
-        {/* Gmail Mobile Email Content */}
-        <div className="p-4">
-          {/* Subject Line */}
-          <div className="mb-4">
-            <h1 className="text-lg font-medium text-black mb-3" style={{ fontFamily: 'Roboto, sans-serif' }}>
+    <div className="w-full h-full bg-white flex items-center justify-center p-4">
+      <div 
+        className="bg-white h-full overflow-auto"
+        style={{ 
+          width: '375px',
+          minHeight: '667px',
+          maxHeight: '667px'
+        }}
+      >
+        {/* Gmail Mobile Email View - Accurate Recreation */}
+        <div className="bg-white h-full">
+          {/* Subject Line - Gmail Mobile Style */}
+          <div className="px-4 py-4 border-b border-gray-100">
+            <h1 
+              className="font-medium text-gray-900 mb-3 leading-tight"
+              style={{ 
+                fontFamily: 'Roboto, Arial, sans-serif',
+                color: '#202124',
+                fontSize: '20px',
+                fontWeight: '500',
+                lineHeight: '24px'
+              }}
+            >
               {subject}
             </h1>
             
-            {/* Sender Info */}
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-              <div className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center text-white font-medium">
+            {/* Sender Info - Gmail Mobile Layout */}
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-blue-500 flex-shrink-0"
+                style={{ backgroundColor: '#1a73e8' }}
+              >
                 S
               </div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">Sender Name</div>
-                <div className="text-xs text-gray-600">
-                  to me • {new Date().toLocaleDateString()}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span 
+                    className="font-medium text-sm truncate"
+                    style={{ 
+                      color: '#202124',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      fontFamily: 'Roboto, Arial, sans-serif'
+                    }}
+                  >
+                    Sender Name
+                  </span>
+                  <span 
+                    className="text-xs flex-shrink-0 ml-2"
+                    style={{ 
+                      color: '#5f6368',
+                      fontSize: '12px',
+                      fontFamily: 'Roboto, Arial, sans-serif'
+                    }}
+                  >
+                    {new Date().toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+                <div 
+                  className="text-xs"
+                  style={{ 
+                    color: '#5f6368',
+                    fontSize: '12px',
+                    fontFamily: 'Roboto, Arial, sans-serif'
+                  }}
+                >
+                  to me
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Email Body Content */}
-          <div 
-            className="gmail-mobile-content"
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontSize: '16px',
-              lineHeight: '1.5',
-              color: '#222'
-            }}
-            dangerouslySetInnerHTML={{ __html: emailHtml }}
-          />
+          {/* Email Body Content - Gmail Mobile Styling */}
+          <div className="px-4 py-4">
+            <div 
+              className="gmail-mobile-content"
+              style={{
+                fontFamily: 'Roboto, Arial, sans-serif',
+                fontSize: '16px',
+                lineHeight: '24px',
+                color: '#202124',
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }}
+              dangerouslySetInnerHTML={{ __html: emailHtml }}
+            />
+          </div>
         </div>
       </div>
     </div>

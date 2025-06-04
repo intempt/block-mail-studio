@@ -13,41 +13,101 @@ export const GmailDesktopPreview: React.FC<GmailDesktopPreviewProps> = ({
   onClose
 }) => {
   return (
-    <div className="w-full h-full bg-white flex items-center justify-center p-8">
-      <div className="w-full max-w-3xl bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        {/* Gmail Desktop Email Content */}
-        <div className="p-6">
-          {/* Subject Line */}
-          <div className="mb-6">
-            <h1 className="text-xl font-normal text-black mb-3" style={{ fontFamily: 'Roboto, sans-serif' }}>
+    <div className="w-full h-full bg-white flex items-center justify-center">
+      <div className="w-full max-w-4xl bg-white h-full overflow-auto">
+        {/* Gmail Desktop Email View - Accurate Recreation */}
+        <div className="bg-white min-h-full">
+          {/* Subject Line - Gmail Desktop Style */}
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h1 
+              className="text-2xl font-normal text-gray-900 mb-3 leading-tight"
+              style={{ 
+                fontFamily: '"Google Sans", Roboto, Arial, sans-serif',
+                color: '#202124',
+                fontSize: '24px',
+                fontWeight: '400',
+                lineHeight: '28px'
+              }}
+            >
               {subject}
             </h1>
             
-            {/* Sender Info */}
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+            {/* Sender Info - Gmail Desktop Layout */}
+            <div className="flex items-start gap-3">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium bg-blue-500 flex-shrink-0"
+                style={{ backgroundColor: '#1a73e8' }}
+              >
                 S
               </div>
-              <div>
-                <div className="text-sm font-medium text-gray-900">Sender Name</div>
-                <div className="text-sm text-gray-600">
-                  to me • {new Date().toLocaleDateString()}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span 
+                    className="font-medium text-sm"
+                    style={{ 
+                      color: '#202124',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      fontFamily: 'Roboto, Arial, sans-serif'
+                    }}
+                  >
+                    Sender Name
+                  </span>
+                  <span 
+                    className="text-xs"
+                    style={{ 
+                      color: '#5f6368',
+                      fontSize: '12px',
+                      fontFamily: 'Roboto, Arial, sans-serif'
+                    }}
+                  >
+                    &lt;sender@example.com&gt;
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <span 
+                    style={{ 
+                      color: '#5f6368',
+                      fontSize: '12px',
+                      fontFamily: 'Roboto, Arial, sans-serif'
+                    }}
+                  >
+                    to me
+                  </span>
+                  <span 
+                    style={{ 
+                      color: '#5f6368',
+                      fontSize: '12px',
+                      fontFamily: 'Roboto, Arial, sans-serif'
+                    }}
+                  >
+                    {new Date().toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </span>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Email Body Content */}
-          <div 
-            className="gmail-email-content"
-            style={{
-              fontFamily: 'Roboto, sans-serif',
-              fontSize: '14px',
-              lineHeight: '1.4',
-              color: '#222'
-            }}
-            dangerouslySetInnerHTML={{ __html: emailHtml }}
-          />
+          {/* Email Body Content - Gmail Desktop Styling */}
+          <div className="px-6 py-6">
+            <div 
+              className="gmail-desktop-content max-w-none"
+              style={{
+                fontFamily: 'Roboto, Arial, sans-serif',
+                fontSize: '14px',
+                lineHeight: '20px',
+                color: '#202124',
+                wordWrap: 'break-word'
+              }}
+              dangerouslySetInnerHTML={{ __html: emailHtml }}
+            />
+          </div>
         </div>
       </div>
     </div>
