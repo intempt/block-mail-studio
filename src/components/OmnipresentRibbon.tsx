@@ -18,7 +18,7 @@ import {
   Monitor,
   Smartphone,
   Save,
-  Settings,
+  Mail,
   Edit3,
   Trash2,
   Minus,
@@ -419,7 +419,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Tools</span>
+              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Styles</span>
               <div className="flex gap-0">
                 <Button
                   variant={showEmailSettings ? 'default' : 'ghost'}
@@ -429,9 +429,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     closeAllPanels();
                     setShowEmailSettings(!showEmailSettings);
                   }}
-                  title="Email Settings"
+                  title="Email Styles"
                 >
-                  <Settings className="w-9 h-9" />
+                  <Mail className="w-9 h-9" />
                 </Button>
 
                 <Button
