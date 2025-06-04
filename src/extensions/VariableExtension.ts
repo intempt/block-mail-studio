@@ -72,8 +72,10 @@ export const Variable = Node.create<VariableOptions>({
     ];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes)];
+  renderHTML({ HTMLAttributes, node }) {
+    // Use the variable value as the inner text content
+    const value = node.attrs.value || '';
+    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes), value];
   },
 
   addNodeView() {
