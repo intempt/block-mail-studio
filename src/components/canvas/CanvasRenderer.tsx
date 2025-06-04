@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
@@ -6,6 +5,11 @@ import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
 import { BlockControls } from './BlockControls';
 import { DropZoneIndicator } from '../DropZoneIndicator';
+
+interface VariableOption {
+  text: string;
+  value: string;
+}
 
 interface CanvasRendererProps {
   blocks: EmailBlock[];
@@ -28,6 +32,7 @@ interface CanvasRendererProps {
   onBlockEditStart: (blockId: string) => void;
   onBlockEditEnd: () => void;
   onBlockUpdate: (block: EmailBlock) => void;
+  onAddVariable?: (blockId: string, variable: VariableOption) => void;
 }
 
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
@@ -50,7 +55,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onColumnDrop,
   onBlockEditStart,
   onBlockEditEnd,
-  onBlockUpdate
+  onBlockUpdate,
+  onAddVariable
 }) => {
   const renderBlock = (block: EmailBlock, index: number) => {
     const isSelected = selectedBlockId === block.id;
@@ -79,6 +85,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onSaveAsSnippet={onSaveAsSnippet}
             isStarred={block.isStarred}
             onUnstar={onUnstarBlock}
+            onAddVariable={onAddVariable}
           />
           <ColumnRenderer
             block={columnsBlock}
@@ -111,6 +118,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onSaveAsSnippet={onSaveAsSnippet}
             isStarred={block.isStarred}
             onUnstar={onUnstarBlock}
+            onAddVariable={onAddVariable}
           />
           <EnhancedTextBlockRenderer
             block={block as any}
@@ -144,6 +152,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           onSaveAsSnippet={onSaveAsSnippet}
           isStarred={block.isStarred}
           onUnstar={onUnstarBlock}
+          onAddVariable={onAddVariable}
         />
         <BlockRenderer 
           block={block}

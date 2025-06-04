@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -7,6 +6,11 @@ import { CanvasStatus } from './canvas/CanvasStatus';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
+
+interface VariableOption {
+  text: string;
+  value: string;
+}
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -573,6 +577,83 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     ));
   }, []);
 
+  const handleAddVariable = useCallback((blockId: string, variable: VariableOption) => {
+    console.log('Adding variable to block:', blockId, variable);
+    
+    setBlocks(prev => prev.map(block => {
+      if (block.id === blockId) {
+        if (block.type === 'text') {
+          // Add variable to text block content
+          const currentHtml = block.content.html || '';
+          const newHtml = currentHtml + ` ${variable.value}`;
+          
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              html: newHtml
+            }
+          };
+        } else if (block.type === 'button') {
+          // Add variable to button text
+          const currentText = block.content.text || '';
+          const newText = currentText + ` ${variable.value}`;
+          
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              text: newText
+            }
+          };
+        }
+      } else if (block.type === 'columns') {
+        // Handle columns recursively
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.map(columnBlock => {
+            if (columnBlock.id === blockId) {
+              if (columnBlock.type === 'text') {
+                const currentHtml = columnBlock.content.html || '';
+                const newHtml = currentHtml + ` ${variable.value}`;
+                
+                return {
+                  ...columnBlock,
+                  content: {
+                    ...columnBlock.content,
+                    html: newHtml
+                  }
+                };
+              } else if (columnBlock.type === 'button') {
+                const currentText = columnBlock.content.text || '';
+                const newText = currentText + ` ${variable.value}`;
+                
+                return {
+                  ...columnBlock,
+                  content: {
+                    ...columnBlock.content,
+                    text: newText
+                  }
+                };
+              }
+            }
+            return columnBlock;
+          })
+        }));
+        
+        return {
+          ...block,
+          content: {
+            ...block.content,
+            columns: updatedColumns
+          }
+        };
+      }
+      
+      return block;
+    }));
+  }, []);
+
   const getDefaultContent = useCallback((blockType: string) => {
     switch (blockType) {
       case 'text':
@@ -785,6 +866,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
             onBlockEditStart={handleBlockEditStart}
             onBlockEditEnd={handleBlockEditEnd}
             onBlockUpdate={handleBlockUpdate}
+            onAddVariable={handleAddVariable}
           />
         </div>
       </div>

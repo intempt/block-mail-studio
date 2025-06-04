@@ -2,7 +2,13 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2, Copy, GripVertical, Star, Variable } from 'lucide-react';
+import { Trash2, Copy, GripVertical, Star } from 'lucide-react';
+import { VariableSelector } from './VariableSelector';
+
+interface VariableOption {
+  text: string;
+  value: string;
+}
 
 interface BlockControlsProps {
   blockId: string;
@@ -12,7 +18,7 @@ interface BlockControlsProps {
   onSaveAsSnippet?: (blockId: string) => void;
   isStarred?: boolean;
   onUnstar?: (blockId: string) => void;
-  onAddVariable?: (blockId: string) => void;
+  onAddVariable?: (blockId: string, variable: VariableOption) => void;
 }
 
 export const BlockControls: React.FC<BlockControlsProps> = ({
@@ -39,10 +45,9 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
     }
   };
 
-  const handleAddVariable = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleVariableSelect = (variable: VariableOption) => {
     if (onAddVariable) {
-      onAddVariable(blockId);
+      onAddVariable(blockId, variable);
     }
   };
 
@@ -69,14 +74,9 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
         {onAddVariable && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                onClick={handleAddVariable}
-              >
-                <Variable className="w-4 h-4" />
-              </Button>
+              <div>
+                <VariableSelector onSelectVariable={handleVariableSelect} />
+              </div>
             </TooltipTrigger>
             <TooltipContent>
               <p>Add variable</p>
