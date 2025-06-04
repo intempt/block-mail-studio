@@ -22,7 +22,6 @@ import {
   Code,
   Heading,
   Highlighter,
-  Image,
   Sparkles,
   Wand2,
   Type,
@@ -37,7 +36,6 @@ interface FullTipTapToolbarProps {
   onLinkClick?: () => void;
   containerElement?: HTMLElement | null;
   onAIAssist?: () => void;
-  onImageInsert?: () => void;
   emailContext?: EmailContext;
 }
 
@@ -69,7 +67,6 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   onLinkClick,
   containerElement,
   onAIAssist,
-  onImageInsert,
   emailContext = {}
 }) => {
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -79,6 +76,12 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   const [showAIMenu, setShowAIMenu] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [aiOperation, setAiOperation] = useState<string | null>(null);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [selectedText, setSelectedText] = useState('');
+
+  // Check if text is selected for link functionality
+  const hasTextSelection = editor && !editor.state.selection.empty;
 
   const calculateOptimalPosition = useCallback(() => {
     if (!toolbarRef.current || !isVisible) return;
@@ -193,6 +196,52 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     editor.chain().focus().setFontSize(size).run();
   };
 
+  const handleLinkClick = () => {
+    if (!hasTextSelection) {
+      toast.error('Please select text first to add a link');
+      return;
+    }
+
+    // Get selected text
+    const text = editor.state.doc.textBetween(
+      editor.state.selection.from, 
+      editor.state.selection.to
+    );
+    setSelectedText(text);
+    setLinkUrl('');
+    setShowLinkDialog(true);
+    onLinkClick?.();
+  };
+
+  const handleLinkAdd = () => {
+    if (!linkUrl.trim() || !editor || !hasTextSelection) {
+      toast.error('Please enter a valid URL');
+      return;
+    }
+
+    // Validate URL format
+    try {
+      new URL(linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`);
+    } catch {
+      toast.error('Please enter a valid URL');
+      return;
+    }
+
+    const finalUrl = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
+    editor.chain().focus().setLink({ href: finalUrl }).run();
+    setLinkUrl('');
+    setShowLinkDialog(false);
+    toast.success('Link added successfully');
+  };
+
+  const handleRemoveLink = () => {
+    if (editor) {
+      editor.chain().focus().unsetLink().run();
+      setShowLinkDialog(false);
+      toast.success('Link removed');
+    }
+  };
+
   const toolbarStyle = {
     top: finalPosition.top,
     left: finalPosition.left,
@@ -203,274 +252,324 @@ export const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   if (!editor || !isVisible) return null;
 
   return (
-    <div
-      ref={toolbarRef}
-      className="full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 animate-scale-in"
-      style={toolbarStyle}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* AI Assistant with Menu */}
-      <Popover open={showAIMenu} onOpenChange={setShowAIMenu}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 px-3 text-purple-600 hover:bg-purple-50"
-            title="AI Assistant"
-            disabled={isAIProcessing}
-          >
-            {isAIProcessing ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-1" />
-            )}
-            AI
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80 p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
-          <div className="space-y-3">
-            <div className="text-sm font-medium text-gray-700">AI Operations</div>
-            <div className="grid gap-1">
-              {AI_OPERATIONS.map((operation) => (
-                <Button
-                  key={operation.type}
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start h-auto p-2 text-left"
-                  onClick={() => handleAIOperation(operation.type)}
-                  disabled={isAIProcessing}
-                >
-                  <div>
-                    <div className="font-medium text-sm">{operation.label}</div>
-                    <div className="text-xs text-gray-500">{operation.description}</div>
-                  </div>
-                </Button>
+    <>
+      <div
+        ref={toolbarRef}
+        className="full-tiptap-toolbar fixed bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 animate-scale-in"
+        style={toolbarStyle}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* AI Assistant with Menu */}
+        <Popover open={showAIMenu} onOpenChange={setShowAIMenu}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-purple-600 hover:bg-purple-50"
+              title="AI Assistant"
+              disabled={isAIProcessing}
+            >
+              {isAIProcessing ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-1" />
+              )}
+              AI
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-gray-700">AI Operations</div>
+              <div className="grid gap-1">
+                {AI_OPERATIONS.map((operation) => (
+                  <Button
+                    key={operation.type}
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start h-auto p-2 text-left"
+                    onClick={() => handleAIOperation(operation.type)}
+                    disabled={isAIProcessing}
+                  >
+                    <div>
+                      <div className="font-medium text-sm">{operation.label}</div>
+                      <div className="text-xs text-gray-500">{operation.description}</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        {/* Headings */}
+        <Select onValueChange={(value) => {
+          if (value === 'paragraph') {
+            editor.chain().focus().setParagraph().run();
+          } else {
+            const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+            editor.chain().focus().toggleHeading({ level }).run();
+          }
+        }}>
+          <SelectTrigger className="h-8 w-20 text-xs">
+            <SelectValue placeholder="Style" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="paragraph">Normal</SelectItem>
+            <SelectItem value="h1">H1</SelectItem>
+            <SelectItem value="h2">H2</SelectItem>
+            <SelectItem value="h3">H3</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Font Size */}
+        <Select onValueChange={handleFontSizeChange}>
+          <SelectTrigger className="h-8 w-16 text-xs">
+            <SelectValue placeholder="Size" />
+          </SelectTrigger>
+          <SelectContent>
+            {fontSizes.map((size) => (
+              <SelectItem key={size.value} value={size.value}>
+                {size.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        {/* Text Formatting */}
+        <Button
+          variant={editor.isActive('bold') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className="h-8 w-8 p-0"
+          title="Bold"
+        >
+          <Bold className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={editor.isActive('italic') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className="h-8 w-8 p-0"
+          title="Italic"
+        >
+          <Italic className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={editor.isActive('underline') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className="h-8 w-8 p-0"
+          title="Underline"
+        >
+          <Underline className="w-4 h-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        {/* Text Color */}
+        <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Text Color"
+            >
+              <Palette className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="grid grid-cols-4 gap-1">
+              {textColors.map((color) => (
+                <button
+                  key={color}
+                  className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: color }}
+                  onClick={() => handleTextColorChange(color)}
+                  title={color}
+                />
               ))}
             </div>
-          </div>
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
 
-      <Separator orientation="vertical" className="h-6 mx-1" />
+        {/* Highlight */}
+        <Popover open={showHighlightPicker} onOpenChange={setShowHighlightPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+              size="sm"
+              className="h-8 w-8 p-0"
+              title="Highlight"
+            >
+              <Highlighter className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
+            <div className="grid grid-cols-4 gap-1">
+              {highlightColors.map((color) => (
+                <button
+                  key={color}
+                  className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
+                  style={{ backgroundColor: color }}
+                  onClick={() => handleHighlightChange(color)}
+                  title={color}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
 
-      {/* Headings */}
-      <Select onValueChange={(value) => {
-        if (value === 'paragraph') {
-          editor.chain().focus().setParagraph().run();
-        } else {
-          const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6;
-          editor.chain().focus().toggleHeading({ level }).run();
-        }
-      }}>
-        <SelectTrigger className="h-8 w-20 text-xs">
-          <SelectValue placeholder="Style" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="paragraph">Normal</SelectItem>
-          <SelectItem value="h1">H1</SelectItem>
-          <SelectItem value="h2">H2</SelectItem>
-          <SelectItem value="h3">H3</SelectItem>
-        </SelectContent>
-      </Select>
+        <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Font Size */}
-      <Select onValueChange={handleFontSizeChange}>
-        <SelectTrigger className="h-8 w-16 text-xs">
-          <SelectValue placeholder="Size" />
-        </SelectTrigger>
-        <SelectContent>
-          {fontSizes.map((size) => (
-            <SelectItem key={size.value} value={size.value}>
-              {size.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        {/* Text Alignment */}
+        <Button
+          variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          className="h-8 w-8 p-0"
+          title="Align Left"
+        >
+          <AlignLeft className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          className="h-8 w-8 p-0"
+          title="Center"
+        >
+          <AlignCenter className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          className="h-8 w-8 p-0"
+          title="Align Right"
+        >
+          <AlignRight className="w-4 h-4" />
+        </Button>
 
-      <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Text Formatting */}
-      <Button
-        variant={editor.isActive('bold') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className="h-8 w-8 p-0"
-        title="Bold"
-      >
-        <Bold className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('italic') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className="h-8 w-8 p-0"
-        title="Italic"
-      >
-        <Italic className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('underline') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        className="h-8 w-8 p-0"
-        title="Underline"
-      >
-        <Underline className="w-4 h-4" />
-      </Button>
+        {/* Lists */}
+        <Button
+          variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className="h-8 w-8 p-0"
+          title="Bullet List"
+        >
+          <List className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className="h-8 w-8 p-0"
+          title="Numbered List"
+        >
+          <ListOrdered className="w-4 h-4" />
+        </Button>
 
-      <Separator orientation="vertical" className="h-6 mx-1" />
+        <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* Text Color */}
-      <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            title="Text Color"
-          >
-            <Palette className="w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
-          <div className="grid grid-cols-4 gap-1">
-            {textColors.map((color) => (
-              <button
-                key={color}
-                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
-                style={{ backgroundColor: color }}
-                onClick={() => handleTextColorChange(color)}
-                title={color}
+        {/* Blockquote & Code */}
+        <Button
+          variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className="h-8 w-8 p-0"
+          title="Quote"
+        >
+          <Quote className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={editor.isActive('code') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          className="h-8 w-8 p-0"
+          title="Inline Code"
+        >
+          <Code className="w-4 h-4" />
+        </Button>
+
+        <Separator orientation="vertical" className="h-6 mx-1" />
+
+        {/* Link - Industry Standard: Only works with selected text */}
+        <Button
+          variant={editor.isActive('link') ? 'default' : 'ghost'}
+          size="sm"
+          onClick={handleLinkClick}
+          className="h-8 w-8 p-0"
+          title={hasTextSelection ? "Add Link to Selected Text" : "Select text first to add link"}
+          disabled={!hasTextSelection}
+        >
+          <LinkIcon className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Link Dialog - Industry Standard */}
+      {showLinkDialog && (
+        <div 
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 z-[9999] animate-scale-in"
+          style={{
+            top: finalPosition.top + 70,
+            left: finalPosition.left,
+            transform: 'translateX(-50%)',
+            minWidth: '320px',
+            maxWidth: 'calc(100vw - 40px)'
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <div className="space-y-3">
+            <div className="text-sm font-medium text-gray-700">Add Link to Selected Text</div>
+            
+            {selectedText && (
+              <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                Selected: "{selectedText}"
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://example.com or mailto:email@domain.com"
+                className="w-full"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleLinkAdd();
+                  } else if (e.key === 'Escape') {
+                    setShowLinkDialog(false);
+                  }
+                }}
+                autoFocus
               />
-            ))}
+              
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleLinkAdd} disabled={!linkUrl.trim()}>
+                  Add Link
+                </Button>
+                {editor.isActive('link') && (
+                  <Button size="sm" variant="outline" onClick={handleRemoveLink}>
+                    Remove Link
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
           </div>
-        </PopoverContent>
-      </Popover>
-
-      {/* Highlight */}
-      <Popover open={showHighlightPicker} onOpenChange={setShowHighlightPicker}>
-        <PopoverTrigger asChild>
-          <Button
-            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
-            size="sm"
-            className="h-8 w-8 p-0"
-            title="Highlight"
-          >
-            <Highlighter className="w-4 h-4" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-2 bg-white border border-gray-200 shadow-lg z-[110]" sideOffset={5}>
-          <div className="grid grid-cols-4 gap-1">
-            {highlightColors.map((color) => (
-              <button
-                key={color}
-                className="w-6 h-6 rounded border border-gray-200 hover:border-gray-400 transition-colors"
-                style={{ backgroundColor: color }}
-                onClick={() => handleHighlightChange(color)}
-                title={color}
-              />
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* Text Alignment */}
-      <Button
-        variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().setTextAlign('left').run()}
-        className="h-8 w-8 p-0"
-        title="Align Left"
-      >
-        <AlignLeft className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().setTextAlign('center').run()}
-        className="h-8 w-8 p-0"
-        title="Center"
-      >
-        <AlignCenter className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().setTextAlign('right').run()}
-        className="h-8 w-8 p-0"
-        title="Align Right"
-      >
-        <AlignRight className="w-4 h-4" />
-      </Button>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* Lists */}
-      <Button
-        variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className="h-8 w-8 p-0"
-        title="Bullet List"
-      >
-        <List className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className="h-8 w-8 p-0"
-        title="Numbered List"
-      >
-        <ListOrdered className="w-4 h-4" />
-      </Button>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* Blockquote & Code */}
-      <Button
-        variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className="h-8 w-8 p-0"
-        title="Quote"
-      >
-        <Quote className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={editor.isActive('code') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={() => editor.chain().focus().toggleCode().run()}
-        className="h-8 w-8 p-0"
-        title="Inline Code"
-      >
-        <Code className="w-4 h-4" />
-      </Button>
-
-      <Separator orientation="vertical" className="h-6 mx-1" />
-
-      {/* Link & Image */}
-      <Button
-        variant={editor.isActive('link') ? 'default' : 'ghost'}
-        size="sm"
-        onClick={onLinkClick}
-        className="h-8 w-8 p-0"
-        title="Add Link"
-      >
-        <LinkIcon className="w-4 h-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onImageInsert}
-        className="h-8 w-8 p-0"
-        title="Insert Image"
-      >
-        <Image className="w-4 h-4" />
-      </Button>
-    </div>
+        </div>
+      )}
+    </>
   );
 };

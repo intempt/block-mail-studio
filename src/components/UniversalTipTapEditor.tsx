@@ -1,8 +1,8 @@
+
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
 import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
@@ -43,11 +43,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   position,
   emailContext
 }) => {
-  const [linkUrl, setLinkUrl] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [urlValue, setUrlValue] = useState(content);
-  const [showLinkDialog, setShowLinkDialog] = useState(false);
-  const [showImageDialog, setShowImageDialog] = useState(false);
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
 
@@ -60,11 +56,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-blue-600 underline',
-        },
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'max-w-full h-auto',
         },
       }),
       TextAlign.configure({
@@ -129,8 +120,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       
       // Don't hide toolbar if clicking on toolbar or its elements
       if (relatedTarget?.closest('.full-tiptap-toolbar') || 
-          relatedTarget?.closest('[data-radix-popover-content]') ||
-          showLinkDialog || showImageDialog) {
+          relatedTarget?.closest('[data-radix-popover-content]')) {
         return;
       }
       
@@ -169,25 +159,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const handleUrlChange = (value: string) => {
     setUrlValue(value);
     onChange(value);
-  };
-
-  const handleLinkAdd = () => {
-    if (linkUrl && editor) {
-      editor.chain().focus().setLink({ href: linkUrl }).run();
-      setLinkUrl('');
-      setShowLinkDialog(false);
-    }
-  };
-
-  const handleImageInsert = () => {
-    if (imageUrl.trim() && editor) {
-      editor.chain().focus().setImage({ 
-        src: imageUrl.trim(), 
-        alt: 'Image' 
-      }).run();
-      setImageUrl('');
-      setShowImageDialog(false);
-    }
   };
 
   // Create email context for AI operations
@@ -248,77 +219,13 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           placeholder={placeholder}
         />
 
-        {/* Full Toolbar with AI Integration */}
+        {/* Full Toolbar with AI Integration - Industry Standard */}
         <FullTipTapToolbar
           editor={editor}
-          isVisible={showToolbar && !showLinkDialog && !showImageDialog}
+          isVisible={showToolbar}
           position={toolbarPosition}
-          onLinkClick={() => setShowLinkDialog(true)}
-          onImageInsert={() => setShowImageDialog(true)}
           emailContext={aiEmailContext}
         />
-
-        {/* Link Dialog */}
-        {showLinkDialog && (
-          <div className="absolute top-full left-0 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in">
-            <div className="flex flex-col gap-3">
-              <div className="text-sm font-medium text-gray-700">Add Link</div>
-              <div className="flex gap-2">
-                <Input
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                  placeholder="https://example.com"
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleLinkAdd();
-                    } else if (e.key === 'Escape') {
-                      setShowLinkDialog(false);
-                    }
-                  }}
-                  autoFocus
-                />
-                <Button size="sm" onClick={handleLinkAdd} disabled={!linkUrl.trim()}>
-                  Add
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowLinkDialog(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Image Dialog */}
-        {showImageDialog && (
-          <div className="absolute top-full left-0 mt-2 p-3 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-80 animate-scale-in">
-            <div className="flex flex-col gap-3">
-              <div className="text-sm font-medium text-gray-700">Insert Image</div>
-              <div className="flex gap-2">
-                <Input
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Enter image URL..."
-                  className="flex-1"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleImageInsert();
-                    } else if (e.key === 'Escape') {
-                      setShowImageDialog(false);
-                    }
-                  }}
-                  autoFocus
-                />
-                <Button size="sm" onClick={handleImageInsert} disabled={!imageUrl.trim()}>
-                  Add
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => setShowImageDialog(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
