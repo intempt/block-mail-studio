@@ -577,24 +577,15 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     ));
   }, []);
 
+  // Updated handleAddVariable to work with the enhanced text editor
   const handleAddVariable = useCallback((blockId: string, variable: VariableOption) => {
     console.log('Adding variable to block:', blockId, variable);
     
+    // The EnhancedTextBlockRenderer will handle the insertion through its ref
+    // For non-text blocks, we'll fall back to the original method
     setBlocks(prev => prev.map(block => {
-      if (block.id === blockId) {
-        if (block.type === 'text') {
-          // Add variable to text block content
-          const currentHtml = block.content.html || '';
-          const newHtml = currentHtml + ` ${variable.value}`;
-          
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              html: newHtml
-            }
-          };
-        } else if (block.type === 'button') {
+      if (block.id === blockId && block.type !== 'text') {
+        if (block.type === 'button') {
           // Add variable to button text
           const currentText = block.content.text || '';
           const newText = currentText + ` ${variable.value}`;
@@ -614,16 +605,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           blocks: column.blocks.map(columnBlock => {
             if (columnBlock.id === blockId) {
               if (columnBlock.type === 'text') {
-                const currentHtml = columnBlock.content.html || '';
-                const newHtml = currentHtml + ` ${variable.value}`;
-                
-                return {
-                  ...columnBlock,
-                  content: {
-                    ...columnBlock.content,
-                    html: newHtml
-                  }
-                };
+                // Text blocks in columns are handled by the editor
+                return columnBlock;
               } else if (columnBlock.type === 'button') {
                 const currentText = columnBlock.content.text || '';
                 const newText = currentText + ` ${variable.value}`;

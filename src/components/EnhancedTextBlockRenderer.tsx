@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -16,12 +15,18 @@ import Code from '@tiptap/extension-code';
 import Highlight from '@tiptap/extension-highlight';
 import Image from '@tiptap/extension-image';
 import { FontSize } from '@/extensions/FontSizeExtension';
+import { Variable } from '@/extensions/VariableExtension';
 import { TextBlock } from '@/types/emailBlocks';
 import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+
+interface VariableOption {
+  text: string;
+  value: string;
+}
 
 interface EnhancedTextBlockRendererProps {
   block: TextBlock;
@@ -31,6 +36,7 @@ interface EnhancedTextBlockRendererProps {
   onEditStart: () => void;
   onEditEnd: () => void;
   emailContext?: string;
+  onInsertVariable?: (variable: VariableOption) => void;
 }
 
 export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps> = ({
@@ -40,7 +46,8 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   onUpdate,
   onEditStart,
   onEditEnd,
-  emailContext
+  emailContext,
+  onInsertVariable
 }) => {
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
@@ -50,6 +57,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [hasTextSelection, setHasTextSelection] = useState(false);
+  const [savedCaretPosition, setSavedCaretPosition] = useState<number | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
   const hideTimeoutRef = useRef<NodeJS.Timeout>();
@@ -69,6 +77,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           class: 'max-w-full h-auto',
         },
       }),
+      Variable,
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
@@ -134,6 +143,9 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       
       const hasSelection = !editor.state.selection.empty;
       setHasTextSelection(hasSelection);
+      
+      // Save caret position for variable insertion
+      setSavedCaretPosition(editor.state.selection.from);
       
       if (hasSelection) {
         // Clear any pending hide timeout
@@ -214,6 +226,33 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     },
     immediatelyRender: false,
   });
+
+  // Handle variable insertion
+  const handleInsertVariable = useCallback((variable: VariableOption) => {
+    if (!editor) return;
+    
+    // If we have a saved caret position, restore it
+    if (savedCaretPosition !== null) {
+      editor.commands.setTextSelection(savedCaretPosition);
+    }
+    
+    // Insert the variable at the current position
+    editor.commands.insertVariable({
+      text: variable.text,
+      value: variable.value
+    });
+    
+    // Focus back to editor
+    editor.commands.focus();
+  }, [editor, savedCaretPosition]);
+
+  // Expose the insert variable function to parent
+  useEffect(() => {
+    if (onInsertVariable) {
+      // This is a bit of a hack, but we need to expose the function to the parent
+      (onInsertVariable as any).current = handleInsertVariable;
+    }
+  }, [handleInsertVariable, onInsertVariable]);
 
   const updateToolbarPosition = useCallback(() => {
     if (!editor || !editorRef.current) return;

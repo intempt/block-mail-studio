@@ -58,6 +58,16 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onBlockUpdate,
   onAddVariable
 }) => {
+  // Store refs for variable insertion
+  const blockVariableHandlers = React.useRef<Record<string, (variable: any) => void>>({});
+
+  const handleAddVariable = (blockId: string, variable: any) => {
+    const handler = blockVariableHandlers.current[blockId];
+    if (handler) {
+      handler(variable);
+    }
+  };
+
   const renderBlock = (block: EmailBlock, index: number) => {
     const isSelected = selectedBlockId === block.id;
     const isEditing = editingBlockId === block.id;
@@ -85,7 +95,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onSaveAsSnippet={onSaveAsSnippet}
             isStarred={block.isStarred}
             onUnstar={onUnstarBlock}
-            onAddVariable={onAddVariable}
+            onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
           />
           <ColumnRenderer
             block={columnsBlock}
@@ -118,7 +128,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onSaveAsSnippet={onSaveAsSnippet}
             isStarred={block.isStarred}
             onUnstar={onUnstarBlock}
-            onAddVariable={onAddVariable}
+            onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
           />
           <EnhancedTextBlockRenderer
             block={block as any}
@@ -127,6 +137,9 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onUpdate={onBlockUpdate}
             onEditStart={() => onBlockEditStart(block.id)}
             onEditEnd={onBlockEditEnd}
+            onInsertVariable={(ref: any) => {
+              blockVariableHandlers.current[block.id] = ref.current || ref;
+            }}
           />
         </div>
       );
@@ -152,7 +165,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           onSaveAsSnippet={onSaveAsSnippet}
           isStarred={block.isStarred}
           onUnstar={onUnstarBlock}
-          onAddVariable={onAddVariable}
+          onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
         />
         <BlockRenderer 
           block={block}
