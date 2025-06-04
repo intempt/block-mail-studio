@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,15 +54,15 @@ interface LayoutOption {
 }
 
 const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-5 h-5" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-5 h-5" /> },
-  { id: 'button', name: 'Button', icon: <MousePointer className="w-5 h-5" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-5 h-5" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-5 h-5" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-5 h-5" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-5 h-5" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-5 h-5" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-5 h-5" /> }
+  { id: 'text', name: 'Text', icon: <Type className="w-8 h-8" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-8 h-8" /> },
+  { id: 'button', name: 'Button', icon: <MousePointer className="w-8 h-8" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-8 h-8" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-8 h-8" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-8 h-8" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-8 h-8" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-8 h-8" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-8 h-8" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
@@ -263,23 +262,23 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
   return (
     <div className="bg-white border-b border-gray-200 relative">
-      {/* Top Header */}
-      <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
+      {/* Top Header - Increased padding */}
+      <div className="px-8 py-5 flex items-center justify-between border-b border-gray-100">
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           {onBack && (
             <Button
               variant="ghost"
-              size="sm"
+              size="lg"
               onClick={onBack}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 hover:bg-blue-50 transition-all duration-200"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              <ArrowLeft className="w-5 h-5 mr-3" />
+              <span className="text-base font-medium">Back</span>
             </Button>
           )}
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {isEditingTitle ? (
               <Input
                 value={campaignTitle}
@@ -289,118 +288,121 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   if (e.key === 'Enter') setIsEditingTitle(false);
                   if (e.key === 'Escape') setIsEditingTitle(false);
                 }}
-                className="text-xl font-semibold border-none p-0 h-auto focus:ring-0 focus:border-none"
+                className="text-2xl font-semibold border-none p-0 h-auto focus:ring-0 focus:border-none text-lg"
                 autoFocus
               />
             ) : (
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">{campaignTitle}</h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-semibold text-gray-900">{campaignTitle}</h1>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="lg"
                   onClick={() => setIsEditingTitle(true)}
-                  className="text-gray-400 hover:text-gray-600 h-6 w-6 p-0"
+                  className="text-gray-400 hover:text-gray-600 hover:bg-blue-50 h-8 w-8 p-0 transition-all duration-200"
                 >
-                  <Edit3 className="w-3 h-3" />
+                  <Edit3 className="w-4 h-4" />
                 </Button>
               </div>
             )}
           </div>
         </div>
         
-        {/* Fixed Desktop/Mobile Toggle with Better Text Visibility */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+        {/* Enhanced Desktop/Mobile Toggle */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center bg-gray-100 rounded-xl p-2">
             <Button
               variant="ghost"
-              size="sm"
+              size="lg"
               onClick={() => onPreviewModeChange?.('desktop')}
-              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+              className={`flex items-center gap-3 h-12 px-6 rounded-lg transition-all duration-200 ${
                 previewMode === 'desktop' 
-                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  ? 'bg-white shadow-md text-gray-900 font-semibold' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
             >
-              <Monitor className="w-4 h-4" />
-              <span className="text-sm">Desktop</span>
+              <Monitor className="w-5 h-5" />
+              <span className="text-base">Desktop</span>
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+              size="lg"
               onClick={() => onPreviewModeChange?.('mobile')}
-              className={`flex items-center gap-2 h-8 px-3 rounded-md transition-all ${
+              className={`flex items-center gap-3 h-12 px-6 rounded-lg transition-all duration-200 ${
                 previewMode === 'mobile' 
-                  ? 'bg-white shadow-sm text-gray-900 font-medium' 
+                  ? 'bg-white shadow-md text-gray-900 font-semibold' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
             >
-              <Smartphone className="w-4 h-4" />
-              <span className="text-sm">Mobile</span>
+              <Smartphone className="w-5 h-5" />
+              <span className="text-base">Mobile</span>
             </Button>
           </div>
           
           <Button
             variant="outline"
-            size="sm"
+            size="lg"
             onClick={handleDeleteCanvas}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-200"
           >
-            <Trash2 className="w-4 h-4" />
-            Delete
+            <Trash2 className="w-5 h-5" />
+            <span className="text-base font-medium">Delete</span>
           </Button>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button onClick={handleImport} variant="outline" size="sm">
-            <Upload className="w-4 h-4 mr-2" />
-            Import
+        <div className="flex items-center gap-4">
+          <Button onClick={handleImport} variant="outline" size="lg" className="hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-200">
+            <Upload className="w-5 h-5 mr-3" />
+            <span className="text-base font-medium">Import</span>
           </Button>
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+          <Button onClick={handleExport} variant="outline" size="lg" className="hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-all duration-200">
+            <Download className="w-5 h-5 mr-3" />
+            <span className="text-base font-medium">Export</span>
           </Button>
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700" size="sm">
-            <Save className="w-4 h-4 mr-2" />
-            Save
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white" size="lg">
+            <Save className="w-5 h-5 mr-3" />
+            <span className="text-base font-medium">Save</span>
           </Button>
         </div>
       </div>
 
-      {/* Toolbar - Centered with bigger icons but reduced height */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-center gap-3 overflow-x-auto">
+      {/* Enhanced Toolbar - Much bigger buttons and spacing */}
+      <div className="px-6 py-6">
+        <div className="flex items-center justify-center gap-6 overflow-x-auto">
           {/* Content Blocks */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-3">
               {blockItems.map((block) => (
                 <Button
                   key={block.id}
                   variant="ghost"
-                  size="sm"
-                  className="p-2 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200"
+                  size="lg"
+                  className="p-6 min-w-[80px] min-h-[80px] cursor-grab active:cursor-grabbing hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 hover:text-blue-600 hover:border-blue-200 border-2 border-transparent transition-all duration-300 transform hover:scale-105 rounded-xl shadow-sm hover:shadow-md"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
                   title={`Add ${block.name}`}
                 >
-                  {React.cloneElement(block.icon as React.ReactElement, { className: "w-12 h-12" })}
+                  <div className="flex flex-col items-center gap-2">
+                    {React.cloneElement(block.icon as React.ReactElement, { className: "w-8 h-8" })}
+                    <span className="text-xs font-medium">{block.name}</span>
+                  </div>
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-16" />
 
           {/* Layout Options */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-3">
               {layoutOptions.map((layout) => (
                 <Button
                   key={layout.id}
                   variant="ghost"
-                  size="sm"
-                  className={`p-2 cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 ${
-                    draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
+                  size="lg"
+                  className={`p-6 min-w-[80px] min-h-[80px] cursor-grab active:cursor-grabbing hover:bg-gradient-to-br hover:from-green-50 hover:to-blue-50 hover:text-green-600 hover:border-green-200 border-2 border-transparent transition-all duration-300 transform hover:scale-105 rounded-xl shadow-sm hover:shadow-md ${
+                    draggedLayout === layout.id ? 'bg-green-100 scale-105 border-green-200' : ''
                   }`}
                   draggable
                   onDragStart={(e) => handleLayoutDragStart(e, layout)}
@@ -408,67 +410,82 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   onClick={() => handleLayoutSelect(layout)}
                   title={`Add ${layout.name} Layout`}
                 >
-                  <DynamicLayoutIcon layout={layout} className="w-12 h-12" />
+                  <div className="flex flex-col items-center gap-2">
+                    <DynamicLayoutIcon layout={layout} className="w-8 h-8" />
+                    <span className="text-xs font-medium">{layout.name}</span>
+                  </div>
                 </Button>
               ))}
             </div>
           </div>
 
-          <Separator orientation="vertical" className="h-8" />
+          <Separator orientation="vertical" className="h-16" />
 
           {/* Tool Buttons */}
           <div className="flex-shrink-0">
-            <div className="flex gap-1">
+            <div className="flex gap-3">
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-6 min-w-[80px] min-h-[80px] hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 hover:text-purple-600 hover:border-purple-200 border-2 border-transparent transition-all duration-300 transform hover:scale-105 rounded-xl shadow-sm hover:shadow-md"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
                 }}
                 title="Email Settings"
               >
-                <Settings className="w-12 h-12" />
+                <div className="flex flex-col items-center gap-2">
+                  <Settings className="w-8 h-8" />
+                  <span className="text-xs font-medium">Settings</span>
+                </div>
               </Button>
 
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-6 min-w-[80px] min-h-[80px] hover:bg-gradient-to-br hover:from-orange-50 hover:to-yellow-50 hover:text-orange-600 hover:border-orange-200 border-2 border-transparent transition-all duration-300 transform hover:scale-105 rounded-xl shadow-sm hover:shadow-md"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
                 }}
                 title="Text & Headings"
               >
-                <Type className="w-12 h-12" />
+                <div className="flex flex-col items-center gap-2">
+                  <Type className="w-8 h-8" />
+                  <span className="text-xs font-medium">Text</span>
+                </div>
               </Button>
 
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-6 min-w-[80px] min-h-[80px] hover:bg-gradient-to-br hover:from-indigo-50 hover:to-blue-50 hover:text-indigo-600 hover:border-indigo-200 border-2 border-transparent transition-all duration-300 transform hover:scale-105 rounded-xl shadow-sm hover:shadow-md"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
                 }}
                 title="Buttons"
               >
-                <MousePointer className="w-12 h-12" />
+                <div className="flex flex-col items-center gap-2">
+                  <MousePointer className="w-8 h-8" />
+                  <span className="text-xs font-medium">Buttons</span>
+                </div>
               </Button>
 
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
-                size="sm"
-                className="p-2 hover:bg-blue-50 hover:text-blue-600"
+                size="lg"
+                className="p-6 min-w-[80px] min-h-[80px] hover:bg-gradient-to-br hover:from-teal-50 hover:to-cyan-50 hover:text-teal-600 hover:border-teal-200 border-2 border-transparent transition-all duration-300 transform hover:scale-105 rounded-xl shadow-sm hover:shadow-md"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
                 }}
                 title="Links"
               >
-                <Link className="w-12 h-12" />
+                <div className="flex flex-col items-center gap-2">
+                  <Link className="w-8 h-8" />
+                  <span className="text-xs font-medium">Links</span>
+                </div>
               </Button>
             </div>
           </div>
