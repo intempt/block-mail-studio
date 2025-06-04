@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { 
   ArrowLeft, Archive, Trash2, MoreHorizontal, Reply, Forward, Star, 
   Search, Settings, Menu, ChevronDown, Clock, Tag, AlertCircle,
-  Paperclip, Print, OpenInNew, MoreVertical, Plus, Inbox,
+  Paperclip, Printer, ExternalLink, MoreVertical, Plus, Inbox,
   Send, Edit3, RotateCcw, Shield
 } from 'lucide-react';
 
