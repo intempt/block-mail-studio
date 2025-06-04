@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { ArrowLeft, MoreVertical, Reply, Forward, Archive } from 'lucide-react';
 
 interface GmailMobilePreviewProps {
   emailHtml: string;
@@ -15,14 +16,37 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
   return (
     <div className="w-full h-full bg-white flex items-center justify-center p-4">
       <div 
-        className="bg-white h-full overflow-auto"
+        className="bg-white h-full overflow-auto shadow-lg"
         style={{ 
           width: '375px',
           minHeight: '667px',
-          maxHeight: '667px'
+          maxHeight: '667px',
+          borderRadius: '8px',
+          border: '1px solid #e0e0e0'
         }}
       >
-        {/* Gmail Mobile Email View - Accurate Recreation */}
+        {/* Gmail Mobile Header */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ArrowLeft className="w-6 h-6 text-gray-700" />
+              <span 
+                className="text-lg font-medium"
+                style={{ 
+                  color: '#202124',
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  fontFamily: 'Roboto, Arial, sans-serif'
+                }}
+              >
+                Gmail
+              </span>
+            </div>
+            <MoreVertical className="w-6 h-6 text-gray-700" />
+          </div>
+        </div>
+
+        {/* Gmail Mobile Email View */}
         <div className="bg-white h-full">
           {/* Subject Line - Gmail Mobile Style */}
           <div className="px-4 py-4 border-b border-gray-100">
@@ -89,7 +113,7 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
           </div>
           
           {/* Email Body Content - Gmail Mobile Styling */}
-          <div className="px-4 py-4">
+          <div className="px-4 py-4 flex-1">
             <div 
               className="gmail-mobile-content"
               style={{
@@ -102,6 +126,24 @@ export const GmailMobilePreview: React.FC<GmailMobilePreviewProps> = ({
               }}
               dangerouslySetInnerHTML={{ __html: emailHtml }}
             />
+          </div>
+
+          {/* Mobile Action Buttons - Fixed at bottom */}
+          <div className="bg-white border-t border-gray-100 px-4 py-3">
+            <div className="flex items-center justify-center gap-6">
+              <button className="flex flex-col items-center gap-1 p-2">
+                <Reply className="w-6 h-6 text-gray-600" />
+                <span className="text-xs text-gray-600">Reply</span>
+              </button>
+              <button className="flex flex-col items-center gap-1 p-2">
+                <Forward className="w-6 h-6 text-gray-600" />
+                <span className="text-xs text-gray-600">Forward</span>
+              </button>
+              <button className="flex flex-col items-center gap-1 p-2">
+                <Archive className="w-6 h-6 text-gray-600" />
+                <span className="text-xs text-gray-600">Archive</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
