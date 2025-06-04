@@ -267,13 +267,21 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   };
 
   const handleDesktopClick = () => {
+    // Show integrated preview if not already visible
+    if (!showIntegratedPreview && onToggleIntegratedPreview) {
+      onToggleIntegratedPreview();
+    }
+    // Change preview mode to desktop
     onPreviewModeChange?.('desktop');
-    onGmailPreview?.('desktop');
   };
 
   const handleMobileClick = () => {
+    // Show integrated preview if not already visible
+    if (!showIntegratedPreview && onToggleIntegratedPreview) {
+      onToggleIntegratedPreview();
+    }
+    // Change preview mode to mobile
     onPreviewModeChange?.('mobile');
-    onGmailPreview?.('mobile');
   };
 
   return (
@@ -347,7 +355,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   ? 'bg-white shadow-sm text-gray-900 font-medium' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
-              title="Open Gmail Desktop Preview"
+              title="Switch to Desktop Preview"
             >
               <Monitor className="w-4 h-4" />
               <span className="text-sm">Desktop</span>
@@ -361,7 +369,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   ? 'bg-white shadow-sm text-gray-900 font-medium' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
-              title="Open Gmail Mobile Preview"
+              title="Switch to Mobile Preview"
             >
               <Smartphone className="w-4 h-4" />
               <span className="text-sm">Mobile</span>
