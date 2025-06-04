@@ -1,19 +1,9 @@
 
 import React from 'react';
-import { NodeViewWrapper } from '@tiptap/react';
+import { NodeViewWrapper, NodeViewProps } from '@tiptap/react';
 import { VariableTag } from '../components/canvas/VariableTag';
 
-interface VariableNodeViewProps {
-  node: {
-    attrs: {
-      text: string;
-      value: string;
-    };
-  };
-  deleteNode: () => void;
-}
-
-export const VariableNodeView: React.FC<VariableNodeViewProps> = ({ node, deleteNode }) => {
+export const VariableNodeView: React.FC<NodeViewProps> = ({ node, deleteNode }) => {
   return (
     <NodeViewWrapper as="span" className="variable-node-view">
       <VariableTag
