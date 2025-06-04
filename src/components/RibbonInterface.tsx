@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -55,7 +56,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const renderTemplatesTab = () => (
-    <div className="flex items-center gap-4 p-3">
+    <div className="flex items-center gap-2 p-3">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Template Library</span>
         <Button variant="outline" size="sm" onClick={onTemplateLibraryOpen}>
@@ -77,7 +78,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   );
 
   const renderLayoutTab = () => (
-    <div className="flex items-center gap-4 p-3">
+    <div className="flex items-center gap-2 p-3">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Preview Mode</span>
         <div className="flex border rounded-md">
@@ -108,7 +109,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   );
 
   const renderViewTab = () => (
-    <div className="flex items-center gap-4 p-3">
+    <div className="flex items-center gap-2 p-3">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Zoom</span>
         <Button variant="outline" size="sm">100%</Button>
@@ -126,7 +127,7 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
 
   if (isCollapsed) {
     return (
-      <div className="bg-white border-b border-gray-200 flex items-center justify-between px-6 py-2">
+      <div className="bg-white border-b border-gray-200 flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">Ribbon Hidden</Badge>
         </div>
@@ -145,8 +146,8 @@ export const RibbonInterface: React.FC<RibbonInterfaceProps> = ({
   return (
     <div className="bg-white border-b border-gray-200">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between px-6 py-1 border-b border-gray-100">
-          <TabsList className="bg-transparent gap-6">
+        <div className="flex items-center justify-between px-4 py-1 border-b border-gray-100">
+          <TabsList className="bg-transparent gap-4">
             <TabsTrigger value="templates" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
               Templates
             </TabsTrigger>
