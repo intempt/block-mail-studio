@@ -376,7 +376,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={block.id}
                   variant="ghost"
                   size="lg"
-                  className="p-2 rounded-full cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
+                  className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9"
                   draggable
                   onDragStart={(e) => handleDragStart(e, block.id)}
                   onClick={() => onBlockAdd(block.id)}
@@ -398,7 +398,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   key={layout.id}
                   variant="ghost"
                   size="lg"
-                  className={`p-2 rounded-full cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
+                  className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-9 [&_svg]:!h-9 ${
                     draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
                   }`}
                   draggable
@@ -421,7 +421,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showEmailSettings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowEmailSettings(!showEmailSettings);
@@ -434,7 +434,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showTextHeadings ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowTextHeadings(!showTextHeadings);
@@ -447,7 +447,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showButtons ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowButtons(!showButtons);
@@ -460,7 +460,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
               <Button
                 variant={showLinks ? 'default' : 'ghost'}
                 size="lg"
-                className="p-2 rounded-full hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
+                className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-9 [&_svg]:!h-9"
                 onClick={() => {
                   closeAllPanels();
                   setShowLinks(!showLinks);
