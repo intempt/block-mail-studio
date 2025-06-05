@@ -35,7 +35,6 @@ import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface Block {
   id: string;
@@ -172,6 +171,16 @@ export default function EmailEditor({
     const initialTemplates = DirectTemplateService.getAllTemplates();
     setTemplates(initialTemplates);
   }, []);
+
+  // Function to save current state to history
+  const saveStateToHistory = useCallback(() => {
+    const currentState: EmailEditorState = {
+      content,
+      subject,
+      blocks: emailBlocks
+    };
+    pushState(currentState);
+  }, [content, subject, emailBlocks, pushState]);
 
   // Handle blocks change from canvas
   const handleBlocksChange = useCallback((newBlocks: EmailBlock[]) => {
@@ -446,24 +455,32 @@ export default function EmailEditor({
   }, [saveStateToHistory]);
 
   // Keyboard shortcuts for undo/redo
-  useKeyboardShortcuts({
-    'ctrl+z': (e) => {
-      e.preventDefault();
-      undo();
-    },
-    'cmd+z': (e) => {
-      e.preventDefault();
-      undo();
-    },
-    'ctrl+y': (e) => {
-      e.preventDefault();
-      redo();
-    },
-    'cmd+shift+z': (e) => {
-      e.preventDefault();
-      redo();
-    }
-  });
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent shortcuts when typing in inputs
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        (event.target as any)?.isContentEditable
+      ) {
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        undo();
+      } else if (
+        ((event.ctrlKey || event.metaKey) && event.key === 'y') ||
+        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')
+      ) {
+        event.preventDefault();
+        redo();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   console.log('EmailEditor: About to render main component');
 
