@@ -1,4 +1,5 @@
 
+
 export interface ProductItem {
   intempt_id: string;
   title: string;
@@ -126,7 +127,7 @@ export const dummyProductData: ProductItem[] = [
     "title": "Tie Trousers",
     "image_link": "https://cdn.shopify.com/s/files/1/0017/3611/4234/products/2015-06-04-Matt_Look_23380_40904_23109_61e79210-adfe-481d-8d46-c0725e84b4ae.jpg?v=1554810474",
     "id": "2369466269754",
-    "description": "The Tie Trouser by Hansen offers a relaxed fit and aces our everyday needs. Drop crotch. Tie belt with four button fly closure at front. Three exterior pockets. 100% Cotton. Made in EU. Matt is wearing a size Medium. Matt is 6'2", Chest 38", Waist 31", Inseam 34.5".",
+    "description": "The Tie Trouser by Hansen offers a relaxed fit and aces our everyday needs. Drop crotch. Tie belt with four button fly closure at front. Three exterior pockets. 100% Cotton. Made in EU. Matt is wearing a size Medium. Matt is 6'2\", Chest 38\", Waist 31\", Inseam 34.5\".",
     "price": 268,
     "original_price": null,
     "link": "https://intempt1.myshopify.com/products/tie-trousers"
@@ -172,3 +173,4 @@ export const dummyProductData: ProductItem[] = [
     "link": "https://intempt1.myshopify.com/products/wrapped-golf-shoe"
   }
 ];
+
