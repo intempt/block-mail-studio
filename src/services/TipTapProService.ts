@@ -14,7 +14,7 @@ export class TipTapProService {
 
   public static async generateContent(prompt: string, tone: string = 'professional'): Promise<{ success: boolean; data?: string; error?: string }> {
     try {
-      // This will use TipTap Pro's AI service once properly configured
+      // Using TipTap Pro's AI service with the proper configuration
       const response = await fetch('https://api.tiptap.dev/v1/ai/complete', {
         method: 'POST',
         headers: {
