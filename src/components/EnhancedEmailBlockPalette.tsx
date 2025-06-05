@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -27,6 +26,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   snippetRefreshTrigger = 0
 }) => {
   console.log('EnhancedEmailBlockPalette rendering with', blockItems.length, 'block items');
+  console.log('Block items array:', blockItems);
   
   const [sectionsExpanded, setSectionsExpanded] = useState({
     blocks: true
