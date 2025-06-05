@@ -79,11 +79,16 @@ export class TipTapAIService {
 
   static async expandContent(content: string, direction: string): Promise<ServiceResult<string>> {
     try {
-      const result = await EmailAIService.refineEmail(
+      const result = await TipTapProService.refineEmail(
         content,
         `Expand this content with more details about ${direction}`
       );
-      return result;
+      
+      if (result.success) {
+        return handleServiceSuccess(result.data!, 'Content expanded successfully');
+      } else {
+        return handleServiceError(new Error(result.error || 'Content expansion failed'), 'expandContent');
+      }
     } catch (error) {
       return handleServiceError(error, 'expandContent');
     }
@@ -94,13 +99,13 @@ export class TipTapAIService {
       const variations: string[] = [];
       
       for (let i = 0; i < count; i++) {
-        const variationResult = await EmailAIService.refineEmail(
+        const variationResult = await TipTapProService.refineEmail(
           content,
           `Create a variation of this content with a different approach (variation ${i + 1})`
         );
         
         if (variationResult.success) {
-          variations.push(variationResult.data);
+          variations.push(variationResult.data!);
         }
       }
       
