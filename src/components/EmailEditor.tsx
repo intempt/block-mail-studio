@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -400,7 +401,7 @@ export default function EmailEditor({
   console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 relative">
+    <div className="h-screen flex flex-col bg-gray-50 relative" data-lov-id="src/components/EmailEditor.tsx">
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
@@ -498,7 +499,7 @@ export default function EmailEditor({
         />
       </div>
 
-      {/* UndoManager positioned in bottom-right corner */}
+      {/* UndoManager positioned in bottom-right corner relative to this container */}
       <div className="absolute bottom-4 right-4 z-50">
         <UndoManager />
       </div>
