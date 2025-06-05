@@ -5,7 +5,7 @@ import { ApiKeyService } from './apiKeyService';
 export interface EmailStructureAnalysis {
   emailType: 'welcome' | 'promotional' | 'newsletter' | 'announcement';
   suggestedLayout: 'single-column' | 'two-column' | 'hero-content' | 'newsletter-grid';
-  contentBlocks: Array<{
+  content: Array<{
     type: 'text' | 'image' | 'button' | 'divider' | 'spacer';
     content: string;
     position: number;
@@ -34,7 +34,7 @@ export class EmailContentAnalyzer {
 {
   "emailType": "welcome|promotional|newsletter|announcement",
   "suggestedLayout": "single-column|two-column|hero-content|newsletter-grid",
-  "contentBlocks": [
+  "content": [
     {
       "type": "text|image|button|divider|spacer",
       "content": "extracted content or description",

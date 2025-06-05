@@ -406,10 +406,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       {viewMode === 'edit' && (
         <div className="px-0 py-2">
           <div className="flex items-end justify-center overflow-x-auto gap-0">
-            {/* Content Blocks */}
+            {/* Content */}
             <div className="flex-shrink-0">
               <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content Blocks</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content</span>
                 <div className="flex gap-0">
                   {blockItems.map((block) => (
                     <Button

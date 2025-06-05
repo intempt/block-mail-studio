@@ -385,7 +385,7 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({ editor, onEmailGenerat
               'Create a new email',
               'Generate template content',
               'Write email copy',
-              'Add content blocks'
+              'Add content'
             ]
           };
         }

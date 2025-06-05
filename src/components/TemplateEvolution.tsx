@@ -135,8 +135,8 @@ export const TemplateEvolution: React.FC<TemplateEvolutionProps> = ({
       },
       {
         id: '3',
-        title: 'Smart Content Blocks',
-        description: 'Reorganize content blocks based on user reading patterns',
+        title: 'Smart Content',
+        description: 'Reorganize content based on user reading patterns',
         impact: 'medium',
         confidence: 76,
         category: 'layout',

@@ -95,7 +95,7 @@ export const DropZoneIndicator: React.FC<DropZoneIndicatorProps> = ({
           <div className="text-xs opacity-70">
             {dragType === 'layout' ? 'Create column structure' : 
              dragType === 'reorder' ? 'Reposition this block' : 
-             'Add content block'}
+             'Add content'}
           </div>
         </div>
       </div>
