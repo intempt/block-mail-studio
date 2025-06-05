@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ContentBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Edit3, Database } from 'lucide-react';
+import { ContentProviderDialog } from '../dialogs/ContentProviderDialog';
 
 interface ContentBlockRendererProps {
   block: ContentBlock;
@@ -24,6 +24,14 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
 }) => {
   const [jsonInput, setJsonInput] = useState('');
   const [showEditor, setShowEditor] = useState(false);
+  const [showProviderDialog, setShowProviderDialog] = useState(false);
+
+  // Show provider dialog if block has no data
+  useEffect(() => {
+    if (!block.content.jsonData || block.content.jsonData.length === 0) {
+      setShowProviderDialog(true);
+    }
+  }, []);
 
   // Extract schema from JSON data
   const schema = useMemo(() => {
@@ -38,6 +46,21 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       sample: firstItem[key]
     }));
   }, [block.content.jsonData]);
+
+  const handleProviderSelect = (provider: string, data?: any) => {
+    if (data) {
+      // Pre-configured data from provider
+      const updatedBlock = {
+        ...block,
+        content: {
+          ...block.content,
+          ...data
+        }
+      };
+      onUpdate(updatedBlock);
+    }
+    setShowProviderDialog(false);
+  };
 
   const handleJsonUpdate = () => {
     try {
@@ -115,8 +138,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     if (!jsonData || jsonData.length === 0) {
       return (
         <div className="p-8 text-center text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-          <div className="text-lg font-medium mb-2">No Data</div>
-          <div className="text-sm">Add JSON data to see preview</div>
+          <Database className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <div className="text-lg font-medium mb-2">No Data Selected</div>
+          <div className="text-sm mb-4">Choose a data provider to get started</div>
+          <Button onClick={() => setShowProviderDialog(true)} variant="outline">
+            <Database className="w-4 h-4 mr-2" />
+            Select Data Provider
+          </Button>
         </div>
       );
     }
@@ -236,14 +264,24 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
         <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Content Block Settings</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditor(!showEditor)}
-            >
-              <Edit3 className="w-4 h-4 mr-2" />
-              {showEditor ? 'Hide' : 'Edit'} JSON
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowProviderDialog(true)}
+              >
+                <Database className="w-4 h-4 mr-2" />
+                Change Provider
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEditor(!showEditor)}
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                {showEditor ? 'Hide' : 'Edit'} JSON
+              </Button>
+            </div>
           </div>
 
           {showEditor && (
@@ -340,6 +378,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
 
       {/* Data Preview */}
       {renderDataPreview()}
+
+      {/* Provider Selection Dialog */}
+      <ContentProviderDialog
+        isOpen={showProviderDialog}
+        onClose={() => setShowProviderDialog(false)}
+        onProviderSelect={handleProviderSelect}
+      />
     </div>
   );
 };
