@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, MessageSquare, Send, Copy, CheckCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface ConversationalSMSBuilderProps {
   initialMessages: any[];
@@ -19,6 +20,7 @@ export const ConversationalSMSBuilder: React.FC<ConversationalSMSBuilderProps> =
   const [smsContent, setSmsContent] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const { success, info } = useNotification();
 
   const maxCharacters = 160;
 
@@ -29,12 +31,12 @@ export const ConversationalSMSBuilder: React.FC<ConversationalSMSBuilderProps> =
 
   const handleCopy = () => {
     navigator.clipboard.writeText(smsContent);
-    console.log("SMS content copied to clipboard");
+    success('SMS content copied to clipboard');
   };
 
   const handleComplete = () => {
     setIsComplete(true);
-    console.log("Your SMS message is ready to send");
+    success('Your SMS message is ready to send');
   };
 
   return (

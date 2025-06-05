@@ -1,5 +1,4 @@
 import { ApiKeyService } from './apiKeyService';
-import { toast } from 'sonner';
 
 export interface OpenAIEmailAnalysisRequest {
   emailHTML: string;
@@ -90,20 +89,17 @@ export class OpenAIEmailService {
       throw new Error('Invalid JSON structure');
     } catch (error) {
       console.error('JSON parsing failed:', error);
-      toast.error('Failed to parse AI response');
       throw new OpenAIServiceError('Failed to parse AI response');
     }
   }
 
   private static validateAPIResponse(data: any): void {
     if (!data || !data.choices || !Array.isArray(data.choices) || data.choices.length === 0) {
-      toast.error('Invalid API response structure');
       throw new OpenAIServiceError('Invalid API response structure');
     }
     
     const content = data.choices[0]?.message?.content;
     if (!content) {
-      toast.error('No content in API response');
       throw new OpenAIServiceError('No content in API response');
     }
   }
@@ -112,11 +108,8 @@ export class OpenAIEmailService {
     const apiKey = ApiKeyService.getOpenAIKey();
 
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
       throw new OpenAIServiceError('OpenAI API key not available or invalid');
     }
-
-    toast.loading('Analyzing with OpenAI...', { id: 'openai-analysis' });
 
     let lastError: Error | null = null;
 
@@ -155,15 +148,10 @@ export class OpenAIEmailService {
           
           if (response.status === 401) {
             errorMessage = 'Invalid OpenAI API key';
-            toast.error('Invalid OpenAI API key');
           } else if (response.status === 429) {
             errorMessage = 'OpenAI rate limit exceeded';
-            toast.error('Rate limit exceeded - please try again in a moment');
           } else if (response.status >= 500) {
             errorMessage = 'OpenAI service temporarily unavailable';
-            toast.error('OpenAI service unavailable - please try again later');
-          } else {
-            toast.error(`OpenAI API error: ${response.status}`);
           }
           
           throw new OpenAIServiceError(`${errorMessage} - ${errorText}`);
@@ -173,8 +161,6 @@ export class OpenAIEmailService {
         this.validateAPIResponse(data);
         
         const content = data.choices[0].message.content;
-        
-        toast.success('Email analysis completed', { id: 'openai-analysis' });
         
         if (expectJSON) {
           return this.extractJSONFromResponse(content);
@@ -189,18 +175,15 @@ export class OpenAIEmailService {
         if (error instanceof OpenAIServiceError && 
             (error.message.includes('Invalid OpenAI API key') || 
              error.message.includes('API error: 4'))) {
-          toast.dismiss('openai-analysis');
           throw error;
         }
         
         if (attempt < retries) {
-          toast.loading(`Retrying analysis (${attempt + 2}/${retries + 1})...`, { id: 'openai-analysis' });
           await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
         }
       }
     }
 
-    toast.error('All API attempts failed', { id: 'openai-analysis' });
     throw lastError || new OpenAIServiceError('All API attempts failed');
   }
 

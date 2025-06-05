@@ -1,6 +1,5 @@
 
 import { OpenAIEmailService, BrandVoiceAnalysis, PerformanceAnalysis } from './openAIEmailService';
-import { toast } from 'sonner';
 
 export interface CompleteAnalysisResult {
   brandVoice: BrandVoiceAnalysis | null;
@@ -97,10 +96,6 @@ export class CentralizedAIAnalysisService {
     }
 
     const executionTime = Date.now() - startTime;
-    
-    if (errors.length > 0) {
-      toast.error(`Analysis completed with ${errors.length} errors`);
-    }
 
     return {
       brandVoice,

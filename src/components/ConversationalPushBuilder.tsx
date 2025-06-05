@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Bell, Send, Copy, CheckCircle, Image } from 'lucide-react';
-import { toast } from 'sonner';
+import { useNotification } from '@/contexts/NotificationContext';
 
 interface ConversationalPushBuilderProps {
   initialMessages: any[];
@@ -26,6 +27,7 @@ export const ConversationalPushBuilder: React.FC<ConversationalPushBuilderProps>
     badge: ''
   });
   const [isComplete, setIsComplete] = useState(false);
+  const { success, info } = useNotification();
 
   const handleFieldChange = (field: string, value: string) => {
     setPushData(prev => ({ ...prev, [field]: value }));
@@ -34,12 +36,12 @@ export const ConversationalPushBuilder: React.FC<ConversationalPushBuilderProps>
   const handleCopy = () => {
     const pushJson = JSON.stringify(pushData, null, 2);
     navigator.clipboard.writeText(pushJson);
-    console.log("Push notification data copied to clipboard");
+    success('Push notification data copied to clipboard');
   };
 
   const handleComplete = () => {
     setIsComplete(true);
-    console.log("Your push notification is ready to send");
+    success('Your push notification is ready to send');
   };
 
   return (

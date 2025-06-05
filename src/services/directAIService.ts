@@ -201,7 +201,7 @@ class DirectAIServiceManager {
     return variants.slice(0, count);
   }
 
-  async generateContent(prompt: string, type: string): Promise<ServiceResult<string>> {
+  async generateContent(prompt: string, type: string = 'general'): Promise<ServiceResult<string>> {
     console.log('Generating content:', { prompt, type });
     try {
       const result = await emailAIService.generateContent(prompt, type);
