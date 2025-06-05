@@ -1,4 +1,5 @@
-import { EmailAIService } from './EmailAIService';
+
+import { TipTapProService } from './TipTapProService';
 import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
 
 export interface EmailContext {
@@ -27,11 +28,16 @@ export interface ContentOptimizationRequest {
 export class TipTapAIService {
   static async generateContent(request: ContentGenerationRequest): Promise<ServiceResult<string>> {
     try {
-      const result = await EmailAIService.generateContent(
+      const result = await TipTapProService.generateContent(
         request.prompt,
         request.tone || 'professional'
       );
-      return result;
+      
+      if (result.success) {
+        return handleServiceSuccess(result.data!, 'Content generated successfully');
+      } else {
+        return handleServiceError(new Error(result.error || 'Generation failed'), 'generateContent');
+      }
     } catch (error) {
       return handleServiceError(error, 'generateContent');
     }
@@ -39,11 +45,16 @@ export class TipTapAIService {
 
   static async optimizeContent(request: ContentOptimizationRequest): Promise<ServiceResult<string>> {
     try {
-      const result = await EmailAIService.refineEmail(
+      const result = await TipTapProService.refineEmail(
         request.content,
         `Optimize for ${request.optimizationType}`
       );
-      return result;
+      
+      if (result.success) {
+        return handleServiceSuccess(result.data!, 'Content optimized successfully');
+      } else {
+        return handleServiceError(new Error(result.error || 'Optimization failed'), 'optimizeContent');
+      }
     } catch (error) {
       return handleServiceError(error, 'optimizeContent');
     }
@@ -51,11 +62,16 @@ export class TipTapAIService {
 
   static async improveReadability(content: string): Promise<ServiceResult<string>> {
     try {
-      const result = await EmailAIService.refineEmail(
+      const result = await TipTapProService.refineEmail(
         content,
         'Improve readability and clarity while maintaining the original meaning'
       );
-      return result;
+      
+      if (result.success) {
+        return handleServiceSuccess(result.data!, 'Readability improved successfully');
+      } else {
+        return handleServiceError(new Error(result.error || 'Readability improvement failed'), 'improveReadability');
+      }
     } catch (error) {
       return handleServiceError(error, 'improveReadability');
     }
