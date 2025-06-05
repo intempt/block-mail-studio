@@ -522,7 +522,7 @@ export default function EmailEditor({
         />
       )}
 
-      <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
+      <div className="flex-1 overflow-auto bg-gray-100 min-h-0 relative">
         <div className="h-full w-full p-6">
           <div className="max-w-4xl mx-auto h-full">
             {/* Edit Mode - Show Canvas */}
@@ -557,6 +557,18 @@ export default function EmailEditor({
             )}
           </div>
         </div>
+
+        {/* Floating Undo/Redo Wrapper - Bottom Right Corner relative to this container */}
+        <div className="absolute bottom-6 right-6 z-50">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+            <UndoRedoToolbar
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={undo}
+              onRedo={redo}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Unified AI Analysis Center Footer - Always visible */}
@@ -569,18 +581,6 @@ export default function EmailEditor({
           subjectLine={subject}
           onApplyFix={handleApplyFix}
         />
-      </div>
-
-      {/* Floating Undo/Redo Wrapper - Bottom Right Corner */}
-      <div className="absolute bottom-6 right-6 z-50">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-          <UndoRedoToolbar
-            canUndo={canUndo}
-            canRedo={canRedo}
-            onUndo={undo}
-            onRedo={redo}
-          />
-        </div>
       </div>
 
       {/* Keep existing modals */}
