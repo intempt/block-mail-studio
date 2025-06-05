@@ -89,11 +89,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             title: suggestion.title,
             reason: suggestion.reason,
             category: 'tone',
+            type: 'tone',
             current: suggestion.current || '',
             suggested: suggestion.suggested || '',
             severity: suggestion.impact === 'high' ? 'high' : suggestion.impact === 'medium' ? 'medium' : 'low',
+            impact: suggestion.impact === 'high' ? 'high' : suggestion.impact === 'medium' ? 'medium' : 'low',
             confidence: suggestion.confidence || 75,
             autoFixable: false,
+            priority: index + 1,
             businessImpact: `Brand voice improvement: ${suggestion.reason}`
           });
         });
@@ -107,11 +110,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             title: `Subject Line Alternative ${index + 1}`,
             reason: 'AI-generated subject line variant to improve engagement',
             category: 'subject',
+            type: 'subject',
             current: subjectLine,
             suggested: variant,
             severity: 'medium',
+            impact: 'medium',
             confidence: 80,
             autoFixable: true,
+            priority: index + 1,
             businessImpact: 'May improve open rates with fresh messaging'
           });
         });
@@ -125,12 +131,15 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
               id: `optimization-${key}-${index}`,
               title: `${key.charAt(0).toUpperCase() + key.slice(1)} Optimization`,
               reason: `Content optimized for ${key}`,
-              category: 'content',
+              category: 'structure',
+              type: 'copy',
               current: 'Current content',
               suggested: value,
               severity: 'medium',
+              impact: 'medium',
               confidence: 70,
               autoFixable: false,
+              priority: index + 1,
               businessImpact: `Improves ${key} and overall engagement`
             });
           }
@@ -145,11 +154,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             title: `Fix ${issue.type} Accessibility Issue`,
             reason: issue.description,
             category: 'accessibility',
+            type: 'accessibility',
             current: issue.description,
             suggested: issue.fix,
             severity: issue.severity === 'high' ? 'high' : issue.severity === 'medium' ? 'medium' : 'low',
+            impact: issue.severity === 'high' ? 'high' : issue.severity === 'medium' ? 'medium' : 'low',
             confidence: 85,
             autoFixable: issue.type === 'alt-text',
+            priority: index + 1,
             businessImpact: 'Improves accessibility and compliance'
           });
         });
