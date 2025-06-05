@@ -1,16 +1,9 @@
 
 import React from 'react';
-
-interface LayoutOption {
-  id: string;
-  name: string;
-  columns: number;
-  ratio: string;
-  preview: string[];
-}
+import { RibbonLayoutOption } from '@/data/ribbonLayoutOptions';
 
 interface DynamicLayoutIconProps {
-  layout: LayoutOption;
+  layout: RibbonLayoutOption;
   className?: string;
 }
 
