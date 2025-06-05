@@ -21,7 +21,7 @@ import {
   Shield,
   Eye
 } from 'lucide-react';
-import { directAIService } from '@/services/directAIService';
+import { DirectAIService } from '@/services/directAIService';
 import { SubjectLineAnalysisResult } from '@/services/EmailAIService';
 
 interface EnhancedEmailSubjectLineProps {
@@ -54,10 +54,14 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     try {
       console.log('Email marketing subject line analysis:', value);
       
-      const result = await directAIService.analyzeSubjectLine(value, emailContent);
+      const result = await DirectAIService.analyzeSubjectLine(value, emailContent);
       
-      setAnalysis(result);
-      onAnalysisComplete?.(result);
+      if (result.success && result.data) {
+        setAnalysis(result.data);
+        onAnalysisComplete?.(result.data);
+      } else {
+        setAnalysis(null);
+      }
       
     } catch (error) {
       console.error('Error analyzing subject line:', error);
@@ -76,8 +80,12 @@ export const EnhancedEmailSubjectLine: React.FC<EnhancedEmailSubjectLineProps> =
     try {
       console.log('Email marketing variant generation:', value);
       
-      const newVariants = await directAIService.generateSubjectVariants(value, 5);
-      setVariants(newVariants);
+      const result = await DirectAIService.generateSubjectVariants(value, 5);
+      if (result.success && result.data) {
+        setVariants(result.data);
+      } else {
+        setVariants([]);
+      }
     } catch (error) {
       console.error('Error generating variants:', error);
       setVariants([]);

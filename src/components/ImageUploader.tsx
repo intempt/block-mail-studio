@@ -1,10 +1,9 @@
-
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { emailAIService } from '@/services/EmailAIService';
+import { EmailAIService } from '@/services/EmailAIService';
 
 interface UploadedImage {
   id: string;
@@ -43,7 +42,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       // Analyze image with AI
       setAnalyzing(id);
       try {
-        const analysis = await emailAIService.analyzeImage(url);
+        const analysisResult = await EmailAIService.analyzeImage(url);
+        const analysis = analysisResult.success ? 
+          (analysisResult.data?.analysis || 'Professional image suitable for email marketing') :
+          'Professional image suitable for email marketing';
+        
         uploadedImage.analysis = analysis;
         
         // Update the image in the state

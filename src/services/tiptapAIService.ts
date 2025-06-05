@@ -1,5 +1,4 @@
-
-import { emailAIService } from './EmailAIService';
+import { EmailAIService } from './EmailAIService';
 import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
 
 export interface EmailContext {
@@ -7,6 +6,7 @@ export interface EmailContext {
   recipientData?: Record<string, any>;
   campaignType?: string;
   brandGuidelines?: string;
+  blockType?: string;
 }
 
 export interface ContentGenerationRequest {
@@ -25,7 +25,7 @@ export interface ContentOptimizationRequest {
 export class TipTapAIService {
   static async generateContent(request: ContentGenerationRequest): Promise<ServiceResult<string>> {
     try {
-      const result = await emailAIService.generateContent(
+      const result = await EmailAIService.generateContent(
         request.prompt,
         request.tone || 'professional'
       );
@@ -37,7 +37,7 @@ export class TipTapAIService {
 
   static async optimizeContent(request: ContentOptimizationRequest): Promise<ServiceResult<string>> {
     try {
-      const result = await emailAIService.refineEmail(
+      const result = await EmailAIService.refineEmail(
         request.content,
         `Optimize for ${request.optimizationType}`
       );
@@ -49,7 +49,7 @@ export class TipTapAIService {
 
   static async improveReadability(content: string): Promise<ServiceResult<string>> {
     try {
-      const result = await emailAIService.refineEmail(
+      const result = await EmailAIService.refineEmail(
         content,
         'Improve readability and clarity while maintaining the original meaning'
       );
@@ -61,7 +61,7 @@ export class TipTapAIService {
 
   static async expandContent(content: string, direction: string): Promise<ServiceResult<string>> {
     try {
-      const result = await emailAIService.refineEmail(
+      const result = await EmailAIService.refineEmail(
         content,
         `Expand this content with more details about ${direction}`
       );
@@ -76,7 +76,7 @@ export class TipTapAIService {
       const variations: string[] = [];
       
       for (let i = 0; i < count; i++) {
-        const variationResult = await emailAIService.refineEmail(
+        const variationResult = await EmailAIService.refineEmail(
           content,
           `Create a variation of this content with a different approach (variation ${i + 1})`
         );

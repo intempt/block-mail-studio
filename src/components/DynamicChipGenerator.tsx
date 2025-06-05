@@ -1,5 +1,4 @@
-
-import { emailAIService } from '@/services/EmailAIService';
+import { EmailAIService } from '@/services/EmailAIService';
 
 interface ChipGenerationContext {
   channel: 'email' | 'sms' | 'push';
@@ -29,14 +28,18 @@ export class DynamicChipGenerator {
       // Use AI to generate contextual chips based on user input
       const prompt = `Based on this user request: "${userInput}" for ${channel} messaging, generate 5 relevant action chips that would help them specify their needs better. Return as comma-separated values.`;
       
-      const aiResponse = await emailAIService.generateContent(prompt, 'chips');
-      const generatedChips = aiResponse.split(',').map(chip => chip.trim()).slice(0, 5);
-      
-      // Combine AI-generated chips with predefined ones
-      const baseChips = this.getBaseChips(channel);
-      const contextualChips = [...generatedChips, ...baseChips.slice(0, 3)];
-      
-      return [...new Set(contextualChips)].slice(0, 6);
+      const aiResponse = await EmailAIService.generateContent(prompt, 'chips');
+      if (aiResponse.success && aiResponse.data) {
+        const generatedChips = aiResponse.data.split(',').map(chip => chip.trim()).slice(0, 5);
+        
+        // Combine AI-generated chips with predefined ones
+        const baseChips = this.getBaseChips(channel);
+        const contextualChips = [...generatedChips, ...baseChips.slice(0, 3)];
+        
+        return [...new Set(contextualChips)].slice(0, 6);
+      } else {
+        return this.getBaseChips(channel).slice(0, 6);
+      }
     } catch (error) {
       console.error('Error generating contextual chips:', error);
       return this.getBaseChips(channel).slice(0, 6);
@@ -48,10 +51,13 @@ export class DynamicChipGenerator {
       const recentMessages = conversationHistory.slice(-3).map(m => m.content).join(' ');
       const prompt = `Based on this conversation context: "${recentMessages}" and latest message: "${userMessage}", generate 4 helpful next-step chips. Return as comma-separated values.`;
       
-      const aiResponse = await emailAIService.generateContent(prompt, 'chips');
-      const chips = aiResponse.split(',').map(chip => chip.trim()).slice(0, 4);
-      
-      return chips.length > 0 ? chips : ['Continue', 'Refine', 'Start Over', 'Get Examples'];
+      const aiResponse = await EmailAIService.generateContent(prompt, 'chips');
+      if (aiResponse.success && aiResponse.data) {
+        const chips = aiResponse.data.split(',').map(chip => chip.trim()).slice(0, 4);
+        return chips.length > 0 ? chips : ['Continue', 'Refine', 'Start Over', 'Get Examples'];
+      } else {
+        return ['Continue', 'Refine', 'Start Over', 'Get Examples'];
+      }
     } catch (error) {
       console.error('Error generating conversation chips:', error);
       return ['Continue', 'Refine', 'Start Over', 'Get Examples'];

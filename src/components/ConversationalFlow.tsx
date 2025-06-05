@@ -8,7 +8,7 @@ import {
   ArrowLeft, Bot, User, Send, Mail, MessageSquare, Bell,
   CheckCircle, ArrowRight
 } from 'lucide-react';
-import { emailAIService } from '@/services/EmailAIService';
+import { EmailAIService } from '@/services/EmailAIService';
 import { ChannelRouter } from './ChannelRouter';
 import { ConversationalSMSBuilder } from './ConversationalSMSBuilder';
 import { ConversationalPushBuilder } from './ConversationalPushBuilder';
@@ -82,46 +82,66 @@ export const ConversationalFlow: React.FC<ConversationalFlowProps> = ({
     try {
       if (mode === 'message' && channelType === 'email') {
         // Generate email directly
-        const emailResponse = await emailAIService.generateEmail({
+        const emailResponse = await EmailAIService.generateEmail({
           prompt: inputMessage,
           tone: 'professional',
           type: 'announcement'
         });
 
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: `I've created your email! Here's what I came up with:\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nWould you like to open it in the visual editor to customize further?`,
-          timestamp: new Date(),
-          chips: ['Open in Editor', 'Refine Content', 'Change Tone', 'Start Over'],
-          emailData: emailResponse
-        };
+        if (emailResponse.success && emailResponse.data) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I've created your email! Here's what I came up with:\n\n**Subject:** ${emailResponse.data.subject}\n**Preview:** ${emailResponse.data.previewText}\n\nWould you like to open it in the visual editor to customize further?`,
+            timestamp: new Date(),
+            chips: ['Open in Editor', 'Refine Content', 'Change Tone', 'Start Over'],
+            emailData: emailResponse.data
+          };
 
-        setMessages(prev => [...prev, aiResponse]);
+          setMessages(prev => [...prev, aiResponse]);
+        } else {
+          const errorResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: 'I encountered an issue generating your email. Let me try a different approach.',
+            timestamp: new Date(),
+            chips: ['Try again', 'Manual entry', 'Choose template']
+          };
+          setMessages(prev => [...prev, errorResponse]);
+        }
       } else {
         // General conversation response
-        const response = await emailAIService.getConversationalResponse(inputMessage);
+        const response = await EmailAIService.getConversationalResponse(inputMessage);
         
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: response,
-          timestamp: new Date(),
-          chips: ['Continue', 'More details', 'Examples', 'Next step']
-        };
+        if (response.success && response.data) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: response.data,
+            timestamp: new Date(),
+            chips: ['Continue', 'More details', 'Examples', 'Next step']
+          };
 
-        setMessages(prev => [...prev, aiResponse]);
+          setMessages(prev => [...prev, aiResponse]);
+        } else {
+          const errorResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: 'I\'m having trouble processing that request. Could you try rephrasing it?',
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorResponse]);
+        }
       }
     } catch (error) {
-      console.error('Conversation error:', error);
-      const errorResponse: Message = {
+      console.error('Error in conversation:', error);
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
-        content: 'I had trouble processing that. Could you provide more details about what you need?',
-        timestamp: new Date(),
-        chips: ['Try again', 'Be more specific', 'Change approach']
+        content: 'I encountered an error. Let me help you in a different way.',
+        timestamp: new Date()
       };
-      setMessages(prev => [...prev, errorResponse]);
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }

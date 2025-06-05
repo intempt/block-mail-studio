@@ -18,7 +18,7 @@ import {
   Mail,
   Shield
 } from 'lucide-react';
-import { directAIService } from '@/services/directAIService';
+import { DirectAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
 
 interface EnhancedPerformanceAnalyzerProps {
@@ -46,10 +46,15 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
     try {
       console.log('Direct performance analysis...');
       
-      const result = await directAIService.analyzePerformance(emailHTML, subjectLine);
+      const result = await DirectAIService.analyzePerformance(emailHTML, subjectLine);
       console.log('Direct performance analysis completed:', result);
       
-      setAnalysis(result);
+      if (result.success && result.data) {
+        setAnalysis(result.data);
+      } else {
+        setAnalysis(null);
+        console.log("Analysis Failed. Unable to analyze email performance. Please try again.");
+      }
     } catch (error) {
       console.error('Error analyzing performance:', error);
       console.log("Analysis Failed. Unable to analyze email performance. Please try again.");

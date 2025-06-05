@@ -12,7 +12,7 @@ import {
   Copy,
   BarChart3
 } from 'lucide-react';
-import { directAIService } from '@/services/directAIService';
+import { DirectAIService } from '@/services/directAIService';
 
 interface CanvasSubjectLineProps {
   value: string;
@@ -36,8 +36,12 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
     setShowVariants(true);
     
     try {
-      const newVariants = await directAIService.generateSubjectVariants(value, 3);
-      setVariants(newVariants);
+      const result = await DirectAIService.generateSubjectVariants(value, 3);
+      if (result.success && result.data) {
+        setVariants(result.data);
+      } else {
+        setVariants([]);
+      }
     } catch (error) {
       console.error('Error generating variants:', error);
       setVariants([]);
