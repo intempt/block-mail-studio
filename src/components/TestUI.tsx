@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { UnifiedTestRunner } from './UnifiedTestRunner';
+import { SimplifiedTestRunner } from './SimplifiedTestRunner';
 
 export const TestUI: React.FC = () => {
-  return <UnifiedTestRunner />;
+  return <SimplifiedTestRunner />;
 };
