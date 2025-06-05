@@ -1,45 +1,100 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { 
+  Type, 
+  Image, 
+  MousePointerClick, 
+  Space, 
+  Video, 
+  Share2, 
+  Table,
+  Layout,
+  Link,
   ArrowLeft,
-  Eye,
-  Send,
-  Save,
-  Settings,
-  Smartphone,
-  Monitor,
-  Tablet,
-  Maximize,
-  BarChart3,
-  Library,
   Download,
   Upload,
+  Monitor,
+  Smartphone,
+  Save,
   Mail,
-  Globe
+  Edit3,
+  Trash2,
+  Minus,
+  Code,
+  Eye,
+  Edit
 } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { TemplateStylePanel } from './TemplateStylePanel';
+import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
+import { ButtonsCard } from './ButtonsCard';
+import { LinksCard } from './LinksCard';
+import { EmailSettingsCard } from './EmailSettingsCard';
+import { TextHeadingsCard } from './TextHeadingsCard';
+import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
+import { DynamicLayoutIcon } from './DynamicLayoutIcon';
+import { EmailImportDialog } from './dialogs/EmailImportDialog';
+import { EmailExportDialog } from './dialogs/EmailExportDialog';
+import { createDragData } from '@/utils/dragDropUtils';
+import { generateUniqueId } from '@/utils/blockUtils';
+import { EmailBlock } from '@/types/emailBlocks';
+
+interface BlockItem {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+}
+
+interface LayoutOption {
+  id: string;
+  name: string;
+  columns: number;
+  ratio: string;
+  preview: string[];
+}
+
+const blockItems: BlockItem[] = [
+  { id: 'text', name: 'Text', icon: <Type className="w-9 h-9" /> },
+  { id: 'image', name: 'Image', icon: <Image className="w-9 h-9" /> },
+  { id: 'button', name: 'Button', icon: <MousePointerClick className="w-9 h-9" /> },
+  { id: 'spacer', name: 'Spacer', icon: <Space className="w-9 h-9" /> },
+  { id: 'divider', name: 'Divider', icon: <Minus className="w-9 h-9" /> },
+  { id: 'video', name: 'Video', icon: <Video className="w-9 h-9" /> },
+  { id: 'social', name: 'Social', icon: <Share2 className="w-9 h-9" /> },
+  { id: 'html', name: 'HTML', icon: <Code className="w-9 h-9" /> },
+  { id: 'table', name: 'Table', icon: <Table className="w-9 h-9" /> }
+];
+
+const layoutOptions: LayoutOption[] = [
+  { id: '1-column', name: '1 Col', columns: 1, ratio: '100', preview: ['100%'] },
+  { id: '2-column-50-50', name: '50/50', columns: 2, ratio: '50-50', preview: ['50%', '50%'] },
+  { id: '2-column-33-67', name: '33/67', columns: 2, ratio: '33-67', preview: ['33%', '67%'] },
+  { id: '2-column-67-33', name: '67/33', columns: 2, ratio: '67-33', preview: ['67%', '33%'] },
+  { id: '2-column-25-75', name: '25/75', columns: 2, ratio: '25-75', preview: ['25%', '75%'] },
+  { id: '2-column-75-25', name: '75/25', columns: 2, ratio: '75-25', preview: ['75%', '25%'] },
+  { id: '3-column-equal', name: '33/33/33', columns: 3, ratio: '33-33-33', preview: ['33%', '33%', '33%'] },
+  { id: '3-column-25-50-25', name: '25/50/25', columns: 3, ratio: '25-50-25', preview: ['25%', '50%', '25%'] },
+  { id: '3-column-25-25-50', name: '25/25/50', columns: 3, ratio: '25-25-50', preview: ['25%', '25%', '50%'] },
+  { id: '3-column-50-25-25', name: '50/25/25', columns: 3, ratio: '50-25-25', preview: ['50%', '25%', '25%'] },
+  { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
+];
+
+type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
 
 interface OmnipresentRibbonProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
-  onSnippetAdd: (snippet: any) => void;
-  universalContent: any[];
-  onUniversalContentAdd: (content: any) => void;
+  onSnippetAdd?: (snippet: EmailSnippet) => void;
+  universalContent: UniversalContent[];
+  onUniversalContentAdd: (content: UniversalContent) => void;
   onGlobalStylesChange: (styles: any) => void;
   emailHTML: string;
   subjectLine: string;
-  editor: any;
-  snippetRefreshTrigger: number;
-  onTemplateLibraryOpen: () => void;
-  onPreviewModeChange: (mode: 'desktop' | 'mobile') => void;
-  previewMode: 'desktop' | 'mobile';
+  editor?: any;
+  snippetRefreshTrigger?: number;
+  onTemplateLibraryOpen?: () => void;
+  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
+  previewMode?: 'desktop' | 'mobile';
   onBack?: () => void;
   canvasWidth: number;
   deviceMode: 'desktop' | 'tablet' | 'mobile' | 'custom';
@@ -48,14 +103,14 @@ interface OmnipresentRibbonProps {
   onPreview: () => void;
   onSaveTemplate: (template: any) => void;
   onPublish: () => void;
-  onToggleAIAnalytics: () => void;
-  onImportBlocks: (blocks: any[], importedSubject?: string) => void;
-  blocks: any[];
-  onGmailPreview: (mode: 'desktop' | 'mobile') => void;
-  viewMode: 'edit' | 'desktop-preview' | 'mobile-preview';
-  onViewModeChange: (mode: 'edit' | 'desktop-preview' | 'mobile-preview') => void;
-  onToggleUniversalPanel?: () => void;
-  showUniversalPanel?: boolean;
+  canvasRef?: React.RefObject<any>;
+  onSubjectLineChange?: (subject: string) => void;
+  onToggleAIAnalytics?: () => void;
+  onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
+  blocks: EmailBlock[];
+  onGmailPreview?: (mode: 'desktop' | 'mobile') => void;
+  viewMode?: ViewMode;
+  onViewModeChange?: (mode: ViewMode) => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -67,10 +122,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   emailHTML,
   subjectLine,
   editor,
-  snippetRefreshTrigger,
+  snippetRefreshTrigger = 0,
   onTemplateLibraryOpen,
   onPreviewModeChange,
-  previewMode,
+  previewMode = 'desktop',
   onBack,
   canvasWidth,
   deviceMode,
@@ -79,273 +134,447 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPreview,
   onSaveTemplate,
   onPublish,
+  canvasRef,
+  onSubjectLineChange,
   onToggleAIAnalytics,
   onImportBlocks,
   blocks,
   onGmailPreview,
-  viewMode,
-  onViewModeChange,
-  onToggleUniversalPanel,
-  showUniversalPanel = false
+  viewMode = 'edit',
+  onViewModeChange
 }) => {
-  const [subject, setSubject] = useState(subjectLine);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showAI, setShowAI] = useState(false);
-  const [showImport, setShowImport] = useState(false);
-  const [importData, setImportData] = useState('');
-  const importRef = useRef<HTMLInputElement>(null);
+  const [showButtons, setShowButtons] = useState(false);
+  const [showLinks, setShowLinks] = useState(false);
+  const [showEmailSettings, setShowEmailSettings] = useState(false);
+  const [showTextHeadings, setShowTextHeadings] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('email-builder-draft');
+    if (savedDraft) {
+      try {
+        const { title } = JSON.parse(savedDraft);
+        if (title) {
+          setCampaignTitle(title);
+        }
+      } catch (error) {
+        console.error('Error loading saved draft:', error);
+      }
+    }
+  }, []);
 
-  const handleSubjectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSubject(e.target.value);
+  const createLayoutConfig = (layout: LayoutOption) => {
+    const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
+      id: generateUniqueId(),
+      blocks: [],
+      width: layout.preview[index] || `${100 / layout.columns}%`
+    }));
+
+    return {
+      columnCount: layout.columns,
+      columnRatio: layout.ratio,
+      columns: columnElements,
+      gap: '16px'
+    };
   };
 
-  const handleBlockAdd = (blockType: string, layoutConfig?: any) => {
-    onBlockAdd(blockType, layoutConfig);
+  const handleDragStart = (e: React.DragEvent, blockType: string) => {
+    console.log('OmnipresentRibbon: Starting block drag:', blockType);
+    const dragData = createDragData({ blockType });
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.effectAllowed = 'copy';
   };
 
-  const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
-    onDeviceChange(device);
+  const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
+    console.log('OmnipresentRibbon: Starting layout drag:', layout.name);
+    setDraggedLayout(layout.id);
+    
+    const layoutConfig = createLayoutConfig(layout);
+    const dragData = createDragData({
+      blockType: 'columns',
+      isLayout: true,
+      layoutData: layoutConfig
+    });
+
+    e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.effectAllowed = 'copy';
+
+    const dragPreview = document.createElement('div');
+    dragPreview.className = 'bg-white border-2 border-blue-400 rounded-lg p-3 shadow-lg';
+    dragPreview.style.transform = 'rotate(2deg)';
+    dragPreview.innerHTML = `
+      <div class="text-sm font-medium text-blue-700 mb-2">${layout.name}</div>
+      <div class="flex gap-1 h-6">
+        ${layout.preview.map(width => `<div class="bg-blue-200 rounded border" style="width: ${width}"></div>`).join('')}
+      </div>
+    `;
+    document.body.appendChild(dragPreview);
+    e.dataTransfer.setDragImage(dragPreview, 60, 30);
+    setTimeout(() => document.body.removeChild(dragPreview), 0);
   };
 
-  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const width = parseInt(e.target.value, 10);
-    if (!isNaN(width)) {
-      onWidthChange(width);
+  const handleLayoutDragEnd = () => {
+    setDraggedLayout(null);
+  };
+
+  const handleLayoutSelect = (layout: LayoutOption) => {
+    console.log('OmnipresentRibbon: Layout clicked:', layout.name);
+    const layoutConfig = createLayoutConfig(layout);
+    onBlockAdd('columns', layoutConfig);
+  };
+
+  const closeAllPanels = () => {
+    setShowButtons(false);
+    setShowLinks(false);
+    setShowEmailSettings(false);
+    setShowTextHeadings(false);
+  };
+
+  const handleExport = () => {
+    console.log('OmnipresentRibbon: Opening export dialog with blocks:', blocks.length);
+    setShowExportDialog(true);
+  };
+
+  const handleSave = () => {
+    const draftData = {
+      title: campaignTitle,
+      subject: subjectLine,
+      html: emailHTML,
+      savedAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('email-builder-draft', JSON.stringify(draftData));
+    console.log('Email saved to localStorage');
+  };
+
+  const handleDeleteCanvas = () => {
+    if (confirm('Are you sure you want to clear all content? This will also clear your saved draft.')) {
+      localStorage.removeItem('email-builder-draft');
+      console.log('Canvas cleared and draft removed');
     }
   };
 
   const handleImport = () => {
-    setShowImport(true);
+    setShowImportDialog(true);
   };
 
-  const handleImportDataChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setImportData(e.target.value);
-  };
-
-  const handleImportSubmit = () => {
-    try {
-      const parsedData = JSON.parse(importData);
-      if (Array.isArray(parsedData)) {
-        onImportBlocks(parsedData);
-      } else if (parsedData && parsedData.blocks && Array.isArray(parsedData.blocks)) {
-        onImportBlocks(parsedData.blocks, parsedData.subject);
-      } else {
-        alert('Invalid JSON format. Please provide an array of blocks or an object with a blocks array.');
-      }
-      setShowImport(false);
-    } catch (error) {
-      alert('Failed to parse JSON. Please ensure the data is valid JSON.');
+  const handleImportBlocks = (blocks: EmailBlock[], subject?: string) => {
+    if (onImportBlocks) {
+      onImportBlocks(blocks, subject);
     }
+    setShowImportDialog(false);
+  };
+
+  const handleDesktopClick = () => {
+    onViewModeChange?.('desktop-preview');
+  };
+
+  const handleMobileClick = () => {
+    onViewModeChange?.('mobile-preview');
+  };
+
+  const handleEditClick = () => {
+    onViewModeChange?.('edit');
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="px-4 py-2">
-        <div className="flex items-center justify-between">
-          {/* Left Side - Back and Add Blocks */}
+    <div className="bg-white border-b border-gray-200 relative">
+      {/* Top Header */}
+      <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
+        
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          )}
+          
           <div className="flex items-center gap-2">
-            {onBack && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                className="h-8"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
+            {isEditingTitle ? (
+              <Input
+                value={campaignTitle}
+                onChange={(e) => setCampaignTitle(e.target.value)}
+                onBlur={() => setIsEditingTitle(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') setIsEditingTitle(false);
+                  if (e.key === 'Escape') setIsEditingTitle(false);
+                }}
+                className="text-xl font-semibold border-none p-0 h-auto focus:ring-0 focus:border-none"
+                autoFocus
+              />
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-semibold text-gray-900">{campaignTitle}</h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingTitle(true)}
+                  className="text-gray-400 hover:text-gray-600 h-6 w-6 p-0"
+                >
+                  <Edit3 className="w-3 h-3" />
+                </Button>
+              </div>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleBlockAdd('text')}
-              className="h-8"
-            >
-              Add Block
-            </Button>
-          </div>
-
-          {/* Center - Subject and View Mode */}
-          <div className="flex-1 flex items-center justify-center gap-4 max-w-2xl mx-4">
-            <Input
-              type="text"
-              placeholder="Subject Line"
-              value={subject}
-              onChange={handleSubjectChange}
-              className="flex-grow text-center"
-            />
-            <Separator orientation="vertical" className="h-5" />
-            <Button
-              variant={viewMode === 'edit' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onViewModeChange('edit')}
-              className="h-8"
-            >
-              Edit
-            </Button>
-            <Button
-              variant={viewMode === 'desktop-preview' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onViewModeChange('desktop-preview')}
-              className="h-8"
-            >
-              <Monitor className="w-4 h-4 mr-2" />
-              Desktop
-            </Button>
-            <Button
-              variant={viewMode === 'mobile-preview' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onViewModeChange('mobile-preview')}
-              className="h-8"
-            >
-              <Smartphone className="w-4 h-4 mr-2" />
-              Mobile
-            </Button>
-          </div>
-
-          {/* Right Side - Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPreview}
-              className="flex items-center gap-1"
-            >
-              <Eye className="w-4 h-4" />
-              <span className="hidden sm:inline">Preview</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onGmailPreview(previewMode)}
-              className="flex items-center gap-1"
-            >
-              <Mail className="w-4 h-4" />
-              <span className="hidden sm:inline">Gmail</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onSaveTemplate}
-              className="flex items-center gap-1"
-            >
-              <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">Save</span>
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onPublish}
-              className="flex items-center gap-1"
-            >
-              <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Publish</span>
-            </Button>
-            
-            {/* Universal Panel Toggle */}
-            <Button
-              variant={showUniversalPanel ? 'default' : 'outline'}
-              size="sm"
-              onClick={onToggleUniversalPanel}
-              className="flex items-center gap-1"
-              title="Universal Updates"
-            >
-              <Globe className="w-4 h-4" />
-              <span className="hidden sm:inline">Universal</span>
-            </Button>
           </div>
         </div>
-
-        {/* Second Row - Device Mode and Settings */}
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-2">
+        
+        {/* Prominent View Mode Controls - Always Visible */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
             <Button
-              variant={deviceMode === 'desktop' ? 'default' : 'outline'}
+              variant="ghost"
               size="sm"
-              onClick={() => handleDeviceChange('desktop')}
-              className="h-7"
+              onClick={handleEditClick}
+              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
+                viewMode === 'edit' 
+                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+              title="Switch to Edit Mode"
             >
-              <Monitor className="w-3 h-3" />
+              <Edit className="w-4 h-4" />
+              <span className="text-sm">Edit</span>
             </Button>
             <Button
-              variant={deviceMode === 'tablet' ? 'default' : 'outline'}
+              variant="ghost"
               size="sm"
-              onClick={() => handleDeviceChange('tablet')}
-              className="h-7"
+              onClick={handleDesktopClick}
+              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
+                viewMode === 'desktop-preview' 
+                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+              title="Gmail Desktop Preview"
             >
-              <Tablet className="w-3 h-3" />
+              <Monitor className="w-4 h-4" />
+              <span className="text-sm">Desktop</span>
             </Button>
             <Button
-              variant={deviceMode === 'mobile' ? 'default' : 'outline'}
+              variant="ghost"
               size="sm"
-              onClick={() => handleDeviceChange('mobile')}
-              className="h-7"
+              onClick={handleMobileClick}
+              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
+                viewMode === 'mobile-preview' 
+                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
+                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+              title="Gmail Mobile Preview"
             >
-              <Smartphone className="w-3 h-3" />
+              <Smartphone className="w-4 h-4" />
+              <span className="text-sm">Mobile</span>
             </Button>
-            <div className="flex items-center gap-1">
-              <Button
-                variant={deviceMode === 'custom' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleDeviceChange('custom')}
-                className="h-7"
-              >
-                <Maximize className="w-3 h-3" />
-              </Button>
-              {deviceMode === 'custom' && (
-                <Input
-                  type="number"
-                  placeholder="Width"
-                  value={canvasWidth.toString()}
-                  onChange={handleWidthChange}
-                  className="w-16 h-7 text-xs"
-                />
-              )}
-            </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggleAIAnalytics}
-              className="flex items-center gap-1"
-            >
-              <BarChart3 className="w-3 h-3" />
-              <span className="hidden sm:inline">AI Analysis</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onTemplateLibraryOpen}
-              className="flex items-center gap-1"
-            >
-              <Library className="w-3 h-3" />
-              <span className="hidden sm:inline">Templates</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImport}
-              className="flex items-center gap-1"
-            >
-              <Upload className="w-3 h-3" />
-              <span className="hidden sm:inline">Import</span>
-            </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-1">
-                  <Settings className="w-3 h-3" />
-                  <span className="hidden sm:inline">Styles</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <TemplateStylePanel onStylesChange={onGlobalStylesChange} />
-              </PopoverContent>
-            </Popover>
-          </div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteCanvas}
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Button onClick={handleImport} variant="outline" size="sm">
+            <Upload className="w-4 h-4 mr-2" />
+            Import
+          </Button>
+          <Button onClick={handleExport} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700" size="sm">
+            <Save className="w-4 h-4 mr-2" />
+            Save
+          </Button>
         </div>
       </div>
+
+      {/* Toolbar - Only show in edit mode */}
+      {viewMode === 'edit' && (
+        <div className="px-0 py-2">
+          <div className="flex items-end justify-center overflow-x-auto gap-0">
+            {/* Content */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content</span>
+                <div className="flex gap-0">
+                  {blockItems.map((block) => (
+                    <Button
+                      key={block.id}
+                      variant="ghost"
+                      size="lg"
+                      className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-6 [&_svg]:!h-6"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, block.id)}
+                      onClick={() => onBlockAdd(block.id)}
+                      title={`Add ${block.name}`}
+                    >
+                      {React.cloneElement(block.icon as React.ReactElement, { className: "w-6 h-6" })}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Layout Options */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Layouts</span>
+                <div className="flex gap-0">
+                  {layoutOptions.map((layout) => (
+                    <Button
+                      key={layout.id}
+                      variant="ghost"
+                      size="lg"
+                      className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-6 [&_svg]:!h-6 ${
+                        draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
+                      }`}
+                      draggable
+                      onDragStart={(e) => handleLayoutDragStart(e, layout)}
+                      onDragEnd={handleLayoutDragEnd}
+                      onClick={() => handleLayoutSelect(layout)}
+                      title={`Add ${layout.name} Layout`}
+                    >
+                      <DynamicLayoutIcon layout={layout} className="w-6 h-6" />
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Tool Buttons */}
+            <div className="flex-shrink-0">
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Styles</span>
+                <div className="flex gap-0">
+                  <Button
+                    variant={showEmailSettings ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowEmailSettings(!showEmailSettings);
+                    }}
+                    title="Email Styles"
+                  >
+                    <Mail className="w-6 h-6" />
+                  </Button>
+
+                  <Button
+                    variant={showTextHeadings ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowTextHeadings(!showTextHeadings);
+                    }}
+                    title="Text & Headings"
+                  >
+                    <Type className="w-6 h-6" />
+                  </Button>
+
+                  <Button
+                    variant={showButtons ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowButtons(!showButtons);
+                    }}
+                    title="Buttons"
+                  >
+                    <MousePointerClick className="w-6 h-6" />
+                  </Button>
+
+                  <Button
+                    variant={showLinks ? 'default' : 'ghost'}
+                    size="lg"
+                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
+                    onClick={() => {
+                      closeAllPanels();
+                      setShowLinks(!showLinks);
+                    }}
+                    title="Links"
+                  >
+                    <Link className="w-6 h-6" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Mode Indicator */}
+      {viewMode !== 'edit' && (
+        <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
+          <div className="flex items-center justify-center gap-2">
+            <Eye className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700">
+              {viewMode === 'desktop-preview' ? 'Gmail Desktop Preview' : 'Gmail Mobile Preview'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Panels - Only show in edit mode */}
+      {viewMode === 'edit' && (
+        <>
+          <EmailSettingsCard
+            isOpen={showEmailSettings}
+            onToggle={() => setShowEmailSettings(!showEmailSettings)}
+            onStylesChange={onGlobalStylesChange}
+          />
+
+          <TextHeadingsCard
+            isOpen={showTextHeadings}
+            onToggle={() => setShowTextHeadings(!showTextHeadings)}
+            onStylesChange={onGlobalStylesChange}
+          />
+
+          <ButtonsCard
+            isOpen={showButtons}
+            onToggle={() => setShowButtons(!showButtons)}
+            onStylesChange={onGlobalStylesChange}
+          />
+
+          <LinksCard
+            isOpen={showLinks}
+            onToggle={() => setShowLinks(!showLinks)}
+            onStylesChange={onGlobalStylesChange}
+          />
+        </>
+      )}
+
+      <EmailImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImport={handleImportBlocks}
+      />
+
+      <EmailExportDialog
+        isOpen={showExportDialog}
+        onClose={() => setShowExportDialog(false)}
+        blocks={blocks}
+        subject={subjectLine}
+        emailHTML={emailHTML}
+        campaignTitle={campaignTitle}
+      />
     </div>
   );
 };
+
+export default OmnipresentRibbon;
