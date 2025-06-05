@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,15 +126,15 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({
     setIsGenerating(true);
     try {
       const result = await DirectAIService.generateImage(prompt);
-      const imageUrl = extractServiceData(result, '');
+      const imageData = extractServiceData(result, { imageUrl: '' });
       
-      if (imageUrl) {
+      if (imageData.imageUrl) {
         const newMessage: ChatMessage = {
           id: Date.now().toString(),
           type: 'assistant',
-          content: `<img src="${imageUrl}" alt="Generated Image" style="max-width: 100%; height: auto;" />`,
+          content: `<img src="${imageData.imageUrl}" alt="Generated Image" style="max-width: 100%; height: auto;" />`,
           timestamp: new Date(),
-          metadata: { imageUrl }
+          metadata: { imageUrl: imageData.imageUrl }
         };
         setMessages(prev => [...prev, newMessage]);
       }
@@ -194,12 +195,14 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({
     setIsGenerating(true);
     try {
       const result = await DirectAIService.analyzePerformance(content);
-      const analysis = extractServiceData(result, 'Unable to analyze performance at this time.');
+      const analysis = extractServiceData(result, { overallScore: 0, optimizationSuggestions: [] });
+      
+      const analysisText = `Performance Analysis:\nOverall Score: ${analysis.overallScore}/100\n\nSuggestions:\n${analysis.optimizationSuggestions?.join('\n') || 'No suggestions available'}`;
       
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'assistant',
-        content: analysis,
+        content: analysisText,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, newMessage]);
@@ -279,11 +282,11 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({
                     </div>
                     {message.type === 'assistant' && (
                       <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="xs" onClick={() => handleCopyToClipboard(message.content)}>
+                        <Button variant="outline" size="sm" onClick={() => handleCopyToClipboard(message.content)}>
                           <Copy className="w-3 h-3 mr-2" />
                           Copy
                         </Button>
-                        <Button variant="secondary" size="xs" onClick={() => handleInsertContentClick(message.content)}>
+                        <Button variant="secondary" size="sm" onClick={() => handleInsertContentClick(message.content)}>
                           <Plus className="w-3 h-3 mr-2" />
                           Insert
                         </Button>
@@ -328,11 +331,13 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({
           </TabsContent>
 
           <TabsContent value="templates" className="flex-1 m-0">
-            <TemplateAIGenerator onTemplateGenerated={onEmailGenerated} />
+            <TemplateAIGenerator onTemplateGenerated={(template) => {
+              onEmailGenerated?.(template.html, template.subject, template.previewText);
+            }} />
           </TabsContent>
 
           <TabsContent value="evolution" className="flex-1 m-0">
-            <TemplateEvolution />
+            <TemplateEvolution editor={null} templateId="" />
           </TabsContent>
 
           <TabsContent value="images" className="flex-1 p-4">

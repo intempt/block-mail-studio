@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,9 @@ import {
   Zap
 } from 'lucide-react';
 import { DirectAIService } from '@/services/directAIService';
+import { TemplateEvolution } from './TemplateEvolution';
+import { TemplateAIGenerator } from './TemplateAIGenerator';
+import { ImageUploader } from './ImageUploader';
 import { extractServiceData } from '@/utils/serviceResultHelper';
 
 interface ChatMessage {
@@ -156,15 +160,15 @@ export const EnhancedEmailAIChat: React.FC<EnhancedEmailAIChatProps> = ({
     setIsGenerating(true);
     try {
       const result = await DirectAIService.generateImage(prompt);
-      const imageUrl = extractServiceData(result, '');
+      const imageData = extractServiceData(result, { imageUrl: '' });
       
-      if (imageUrl) {
+      if (imageData.imageUrl) {
         const newMessage: ChatMessage = {
           id: Date.now().toString(),
           type: 'assistant',
-          content: `<img src="${imageUrl}" alt="Generated Image" style="max-width: 100%; height: auto;" />`,
+          content: `<img src="${imageData.imageUrl}" alt="Generated Image" style="max-width: 100%; height: auto;" />`,
           timestamp: new Date(),
-          metadata: { imageUrl }
+          metadata: { imageUrl: imageData.imageUrl }
         };
         setMessages(prev => [...prev, newMessage]);
       }
@@ -225,12 +229,14 @@ export const EnhancedEmailAIChat: React.FC<EnhancedEmailAIChatProps> = ({
     setIsGenerating(true);
     try {
       const result = await DirectAIService.analyzePerformance(content);
-      const analysis = extractServiceData(result, 'Unable to analyze performance at this time.');
+      const analysis = extractServiceData(result, { overallScore: 0, optimizationSuggestions: [] });
+      
+      const analysisText = `Performance Analysis:\nOverall Score: ${analysis.overallScore}/100\n\nSuggestions:\n${analysis.optimizationSuggestions?.join('\n') || 'No suggestions available'}`;
       
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'assistant',
-        content: analysis,
+        content: analysisText,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, newMessage]);
@@ -325,11 +331,13 @@ export const EnhancedEmailAIChat: React.FC<EnhancedEmailAIChatProps> = ({
           </TabsContent>
 
           <TabsContent value="templates" className="flex-1 m-0">
-            <TemplateAIGenerator onTemplateGenerated={onEmailGenerated} />
+            <TemplateAIGenerator onTemplateGenerated={(template) => {
+              onEmailGenerated?.(template.html, template.subject, template.previewText);
+            }} />
           </TabsContent>
 
           <TabsContent value="evolution" className="flex-1 m-0">
-            <TemplateEvolution />
+            <TemplateEvolution editor={null} templateId="" />
           </TabsContent>
 
           <TabsContent value="images" className="flex-1 p-4">

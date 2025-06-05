@@ -1,8 +1,46 @@
+
 import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult, PerformanceAnalysisResult } from './EmailAIService';
 import { OpenAIEmailService } from './openAIEmailService';
 import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
 
 class DirectAIServiceManager {
+  async generateEmail(prompt: string, type: string): Promise<ServiceResult<any>> {
+    console.log('Generating email:', { prompt, type });
+    try {
+      const result = await emailAIService.generateEmail({
+        prompt,
+        tone: 'professional',
+        type: type as any
+      });
+      return result;
+    } catch (error) {
+      return handleServiceError(error, 'generateEmail');
+    }
+  }
+
+  async generateImage(prompt: string): Promise<ServiceResult<any>> {
+    console.log('Generating image:', prompt);
+    try {
+      const result = await emailAIService.generateImage({
+        prompt,
+        style: 'professional'
+      });
+      return result;
+    } catch (error) {
+      return handleServiceError(error, 'generateImage');
+    }
+  }
+
+  async improveContent(content: string): Promise<ServiceResult<string>> {
+    console.log('Improving content:', content);
+    try {
+      const result = await emailAIService.refineEmail(content, 'Improve this content for better engagement');
+      return result;
+    } catch (error) {
+      return handleServiceError(error, 'improveContent');
+    }
+  }
+
   async analyzeSubjectLine(
     subjectLine: string, 
     emailContent: string = ''
