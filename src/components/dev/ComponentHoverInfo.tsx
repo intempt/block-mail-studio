@@ -47,27 +47,21 @@ export const ComponentHoverInfo: React.FC<ComponentHoverInfoProps> = ({
       {children}
       
       {isHovered && (
-        <>
-          {/* Overlay highlight */}
-          <div className="absolute inset-0 border-2 border-blue-400 bg-blue-100 bg-opacity-10 pointer-events-none z-50" />
-          
-          {/* Info tooltip */}
-          <div
-            className="fixed bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-50 pointer-events-none"
-            style={{
-              left: mousePosition.x + 10,
-              top: mousePosition.y - 30,
-              maxWidth: '200px'
-            }}
-          >
-            <div className="font-semibold text-blue-300">{componentName}</div>
-            {htmlId && (
-              <div className="text-gray-300">
-                ID: <span className="text-yellow-300">{htmlId}</span>
-              </div>
-            )}
-          </div>
-        </>
+        <div
+          className="fixed bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg z-50 pointer-events-none"
+          style={{
+            left: mousePosition.x + 10,
+            top: mousePosition.y - 30,
+            maxWidth: '200px'
+          }}
+        >
+          <div className="font-semibold text-blue-300">{componentName}</div>
+          {htmlId && (
+            <div className="text-gray-300">
+              ID: <span className="text-yellow-300">{htmlId}</span>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
