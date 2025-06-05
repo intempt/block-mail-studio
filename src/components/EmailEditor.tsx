@@ -34,9 +34,6 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
-import { useUndoRedo } from '@/hooks/useUndoRedo';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { UndoRedoToolbar } from './UndoRedoToolbar';
 
 interface Block {
   id: string;
@@ -63,12 +60,6 @@ interface EmailEditorProps {
 
 type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
 
-interface EmailEditorState {
-  content: string;
-  subject: string;
-  blocks: EmailBlock[];
-}
-
 export default function EmailEditor({ 
   content,
   subject,
@@ -79,22 +70,6 @@ export default function EmailEditor({
   console.log('EmailEditor: Component starting to render');
 
   const { notifications, removeNotification, success, error, warning } = useNotification();
-
-  // Initialize undo/redo with current state
-  const initialState: EmailEditorState = {
-    content,
-    subject,
-    blocks: []
-  };
-
-  const {
-    state: editorState,
-    canUndo,
-    canRedo,
-    undo,
-    redo,
-    pushState
-  } = useUndoRedo(initialState);
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
@@ -122,16 +97,6 @@ export default function EmailEditor({
     alignItems: 'center',
     justifyContent: 'start'
   }), []);
-
-  // Define saveStateToHistory function FIRST
-  const saveStateToHistory = useCallback(() => {
-    const currentState: EmailEditorState = {
-      content,
-      subject,
-      blocks: emailBlocks
-    };
-    pushState(currentState);
-  }, [content, subject, emailBlocks, pushState]);
 
   console.log('EmailEditor: State initialized, creating extensions');
 
@@ -431,45 +396,10 @@ export default function EmailEditor({
     setShowGmailPreview(true);
   };
 
-  // Enhanced content change handler that saves to history
-  const handleContentChangeWithHistory = useCallback((newContent: string) => {
-    onContentChange(newContent);
-    // Debounce saving to history to avoid too many history entries
-    setTimeout(() => {
-      saveStateToHistory();
-    }, 1000);
-  }, [onContentChange, saveStateToHistory]);
-
-  // Enhanced subject change handler that saves to history
-  const handleSubjectChangeWithHistory = useCallback((newSubject: string) => {
-    onSubjectChange(newSubject);
-    setTimeout(() => {
-      saveStateToHistory();
-    }, 1000);
-  }, [onSubjectChange, saveStateToHistory]);
-
-  // Enhanced blocks change handler that saves to history
-  const handleBlocksChangeWithHistory = useCallback((newBlocks: EmailBlock[]) => {
-    setEmailBlocks(newBlocks);
-    setTimeout(() => {
-      saveStateToHistory();
-    }, 500);
-  }, [saveStateToHistory]);
-
-  // Keyboard shortcuts for undo/redo
-  useKeyboardShortcuts({
-    editor,
-    canvasRef,
-    onToggleLeftPanel: () => {},
-    onToggleRightPanel: () => {},
-    onToggleFullscreen: () => {},
-    onSave: saveStateToHistory
-  });
-
   console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50 relative">
+    <div className="h-screen flex flex-col bg-gray-50">
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
@@ -497,10 +427,6 @@ export default function EmailEditor({
         onGmailPreview={handleGmailPreview}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onUndo={undo}
-        onRedo={redo}
       />
 
       {/* Contextual Notifications - Position near ribbon */}
@@ -522,7 +448,7 @@ export default function EmailEditor({
         />
       )}
 
-      <div className="flex-1 overflow-auto bg-gray-100 min-h-0 relative">
+      <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
         <div className="h-full w-full p-6">
           <div className="max-w-4xl mx-auto h-full">
             {/* Edit Mode - Show Canvas */}
@@ -530,14 +456,14 @@ export default function EmailEditor({
               <div className="h-full transition-all duration-300 ease-in-out">
                 <EmailBlockCanvas
                   ref={canvasRef}
-                  onContentChange={handleContentChangeWithHistory}
+                  onContentChange={handleContentChangeFromCanvas}
                   onBlockSelect={handleBlockSelect}
-                  onBlocksChange={handleBlocksChangeWithHistory}
+                  onBlocksChange={handleBlocksChange}
                   previewWidth={canvasWidth}
                   previewMode={previewMode}
                   compactMode={false}
                   subject={subject}
-                  onSubjectChange={handleSubjectChangeWithHistory}
+                  onSubjectChange={onSubjectChange}
                   showAIAnalytics={false}
                 />
               </div>
@@ -555,18 +481,6 @@ export default function EmailEditor({
                 />
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Floating Undo/Redo Wrapper - Bottom Right Corner relative to this container */}
-        <div className="absolute bottom-6 right-6 z-50">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
-            <UndoRedoToolbar
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onUndo={undo}
-              onRedo={redo}
-            />
           </div>
         </div>
       </div>

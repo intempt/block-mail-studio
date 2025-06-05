@@ -3,47 +3,31 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
+  Undo,
+  Redo,
   Download,
   Save,
   Eye,
-  Code
+  Code,
+  Palette
 } from 'lucide-react';
-import { UndoRedoToolbar } from './UndoRedoToolbar';
 
 interface EmailEditorToolbarProps {
   onExport?: () => void;
   onSave?: () => void;
   onPreview?: () => void;
   onViewCode?: () => void;
-  canUndo?: boolean;
-  canRedo?: boolean;
-  onUndo?: () => void;
-  onRedo?: () => void;
 }
 
 export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({ 
   onExport,
   onSave,
   onPreview,
-  onViewCode,
-  canUndo = false,
-  canRedo = false,
-  onUndo = () => {},
-  onRedo = () => {}
+  onViewCode
 }) => {
   return (
     <div className="bg-white border-b border-slate-200 px-6 py-3">
       <div className="flex items-center gap-1">
-        {/* Undo/Redo Actions */}
-        <UndoRedoToolbar
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onUndo={onUndo}
-          onRedo={onRedo}
-        />
-
-        <Separator orientation="vertical" className="mx-2 h-6" />
-
         {/* Document Actions */}
         <div className="flex items-center gap-1">
           <Button
