@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -22,6 +21,7 @@ import {
   RefreshCw,
   Sparkles
 } from 'lucide-react';
+import { AIDropdownMenu } from './AIDropdownMenu';
 
 interface UniversalTipTapEditorProps {
   content: string;
@@ -44,7 +44,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 }) => {
   const [urlValue, setUrlValue] = useState(content);
   const [hasFocus, setHasFocus] = useState(false);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
@@ -109,6 +108,13 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     },
     immediatelyRender: false,
   });
+
+  const handleContentUpdate = (newContent: string) => {
+    if (editor) {
+      editor.commands.setContent(newContent);
+      onChange(newContent);
+    }
+  };
 
   useEffect(() => {
     if (editor && !isUrlMode && content !== editor.getHTML()) {
@@ -220,38 +226,13 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
               <span className="font-medium">TipTap Pro AI</span>
             </div>
             
-            <div className="flex gap-1 ml-auto">
-              <Button
-                variant="ghost"
+            <div className="ml-auto">
+              <AIDropdownMenu
+                selectedText=""
+                fullContent={content}
+                onContentUpdate={handleContentUpdate}
                 size="sm"
-                onClick={handleAIGenerate}
-                disabled={isGeneratingAI}
-                className="h-6 px-2 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700"
-              >
-                {isGeneratingAI ? (
-                  <RefreshCw className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Wand2 className="w-3 h-3" />
-                )}
-                Generate
-              </Button>
-              
-              {content && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleAIImprove}
-                  disabled={isGeneratingAI}
-                  className="h-6 px-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700"
-                >
-                  {isGeneratingAI ? (
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-3 h-3" />
-                  )}
-                  Improve
-                </Button>
-              )}
+              />
             </div>
           </div>
         )}
