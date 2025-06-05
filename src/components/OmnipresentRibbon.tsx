@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -34,7 +35,6 @@ import {
 } from "@/components/ui/tabs"
 import { EmailBlockPalette } from './EmailBlockPalette';
 import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
-import { UndoRedoToolbar } from './UndoRedoToolbar';
 
 interface OmnipresentRibbonProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
@@ -132,16 +132,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
 
           {/* Center - Main Tools */}
           <div className="flex items-center gap-4">
-            {/* Undo/Redo Controls */}
-            <UndoRedoToolbar
-              canUndo={canUndo}
-              canRedo={canRedo}
-              onUndo={onUndo}
-              onRedo={onRedo}
-            />
-
-            <Separator orientation="vertical" className="h-6" />
-
             {/* Layouts and Blocks */}
             <Popover open={showBlockPalette} onOpenChange={setShowBlockPalette}>
               <PopoverTrigger asChild>
