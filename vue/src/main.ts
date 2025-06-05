@@ -12,6 +12,7 @@ new Vue({
 }).$mount('#app');
 
 
+
 // "@tiptap-pro/extension-ai": "^2.17.5",
 //     "@tiptap-pro/extension-details": "^2.17.5",
 //     "@tiptap-pro/extension-details-content": "^2.17.5",
@@ -46,3 +47,4 @@ new Vue({
 //     "@tiptap/starter-kit": "^2.11.5",
 //     "@tiptap/suggestion": "^2.11.5",
 //     "@tiptap/vue-2": "^2.11.5",
+

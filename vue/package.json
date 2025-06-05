@@ -20,7 +20,6 @@
     "stylelint fix": "npx stylelint \"**/*.{css,scss,html,vue}\" --fix"
   },
   "dependencies": {
-
     "@auth0/auth0-spa-js": "^2.0.0",
     "@babel/polyfill": "^7.4.4",
     "@codemirror/lang-html": "^6.4.7",
@@ -40,6 +39,7 @@
     "auth0-js": "^9.19.1",
     "autoprefixer": "^10.4.19",
     "axios": "^0.27.2",
+
     "chroma-js": "^3.1.2",
     "clsx": "^2.1.1",
     "codemirror": "^6.0.1",
@@ -51,6 +51,7 @@
     "debounce": "^1.2.1",
     "dom-to-image": "^2.6.0",
     "dom-to-image-more": "^3.1.6",
+
 
 
     "file-saver": "^2.0.5",
@@ -72,11 +73,11 @@
     "tailwindcss": "^4.0.5",
 
 
+
     "vite-plugin-compression": "^0.5.1",
     "vite-svg-loader": "^5.1.0",
     "vue": "^2.6.11",
     "vue-advanced-cropper": "^1.11.3",
-
 
     "vue-observe-visibility": "^1.0.0",
     "vue-router": "3.6.5",
