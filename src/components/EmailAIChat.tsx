@@ -201,7 +201,12 @@ export const EmailAIChat: React.FC<EmailAIChatProps> = ({
         deliverabilityScore: 0,
         mobileScore: 0,
         spamScore: 0,
-        metrics: {},
+        metrics: {
+          loadTime: { value: 0, status: 'unknown' },
+          accessibility: { value: 0, status: 'unknown' },
+          imageOptimization: { value: 0, status: 'unknown' },
+          linkCount: { value: 0, status: 'unknown' }
+        },
         accessibilityIssues: []
       });
       

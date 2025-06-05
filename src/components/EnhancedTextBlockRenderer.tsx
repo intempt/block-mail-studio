@@ -188,12 +188,8 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   if (block.type === 'link') contentType = 'link';
   if (block.type === 'video') contentType = 'video';
 
-  // Create email context for AI operations
-  const aiEmailContext: EmailContext = {
-    blockType: 'text',
-    emailHTML: emailContextProp || '',
-    targetAudience: 'general'
-  };
+  // Create email context for AI operations - convert to string format
+  const emailContextString = emailContextProp || '';
 
   return (
     <Card className={`relative mb-4 ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
@@ -222,7 +218,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
             content={block.content}
             contentType={contentType}
             onChange={handleContentChange}
-            emailContext={aiEmailContext}
+            emailContext={emailContextString}
           />
         )}
       </div>

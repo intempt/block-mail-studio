@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
@@ -107,6 +106,7 @@ export const ColumnRenderer: React.FC<ColumnRendererProps> = ({
                       {innerBlock.type === 'text' ? (
                         <EnhancedTextBlockRenderer
                           block={innerBlock as any}
+                          editor={null}
                           isSelected={false}
                           isEditing={editingBlockId === innerBlock.id}
                           onUpdate={onBlockUpdate}

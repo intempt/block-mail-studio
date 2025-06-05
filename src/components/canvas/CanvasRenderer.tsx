@@ -143,6 +143,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           />
           <EnhancedTextBlockRenderer
             block={block as any}
+            editor={null}
             isSelected={isSelected}
             isEditing={isEditing}
             onUpdate={onBlockUpdate}
