@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -26,7 +25,8 @@ import {
   Eye,
   FlaskConical
 } from 'lucide-react';
-import { directAIService } from '@/services/directAIService';
+import { DirectAIService } from '@/services/directAIService';
+import { extractServiceData } from '@/utils/serviceResultHelper';
 
 interface AIContentRequest {
   type: 'subject' | 'copy' | 'cta' | 'personalization';
@@ -99,11 +99,11 @@ export const AdvancedAIAssistant: React.FC<AdvancedAIAssistantProps> = ({
       
       // Generate content using direct AI service
       const prompt = `Generate ${contentRequest.type} content for ${contentRequest.context?.industry} industry targeting ${contentRequest.context?.audience} with ${contentRequest.context?.tone} tone for ${contentRequest.context?.goal}`;
-      const content = await directAIService.generateContent(prompt, 'general');
+      const content = await DirectAIService.generateContent(prompt, 'general');
       
       const response: AIContentResponse = {
         id: `content_${Date.now()}`,
-        content,
+        content: content.success ? content.data || '' : '',
         confidence: 0.85,
         reasoning: `Generated ${contentRequest.type} optimized for ${contentRequest.context?.goal}`,
         metrics: {
@@ -137,19 +137,20 @@ export const AdvancedAIAssistant: React.FC<AdvancedAIAssistantProps> = ({
     
     try {
       console.log('Generating A/B test variants');
-      const variants = await directAIService.generateSubjectVariants(generatedContent[0].content, 3);
+      const variants = await DirectAIService.generateSubjectVariants(generatedContent[0].content, 3);
       
-      const variantResponses: AIContentResponse[] = variants.map((variant, index) => ({
-        id: `variant_${Date.now()}_${index}`,
-        content: variant,
-        confidence: 0.8 + Math.random() * 0.15,
-        reasoning: `Variant ${index + 1} with different approach`,
-        metrics: {
-          readabilityScore: Math.floor(Math.random() * 20) + 75,
-          engagementPrediction: Math.floor(Math.random() * 20) + 70,
-          conversionPotential: Math.floor(Math.random() * 20) + 65
-        }
-      }));
+      const variantResponses: AIContentResponse[] = variants.success && variants.data ? 
+        variants.data.map((variant, index) => ({
+          id: `variant_${Date.now()}_${index}`,
+          content: variant,
+          confidence: 0.8 + Math.random() * 0.15,
+          reasoning: `Variant ${index + 1} with different approach`,
+          metrics: {
+            readabilityScore: Math.floor(Math.random() * 20) + 75,
+            engagementPrediction: Math.floor(Math.random() * 20) + 70,
+            conversionPotential: Math.floor(Math.random() * 20) + 65
+          }
+        })) : [];
       
       setAbTestVariants(variantResponses);
     } catch (error) {
@@ -175,8 +176,8 @@ export const AdvancedAIAssistant: React.FC<AdvancedAIAssistantProps> = ({
     
     try {
       console.log('Analyzing current content');
-      const analysis = await directAIService.analyzeBrandVoice(emailHTML);
-      setBrandVoiceScore(analysis.brandVoiceScore || 85);
+      const analysis = await DirectAIService.analyzeBrandVoice(emailHTML);
+      setBrandVoiceScore(analysis.success && analysis.data?.brandVoiceScore ? analysis.data.brandVoiceScore : 85);
       
       // Mock performance prediction
       setPerformancePrediction({

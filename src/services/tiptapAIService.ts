@@ -7,6 +7,8 @@ export interface EmailContext {
   campaignType?: string;
   brandGuidelines?: string;
   blockType?: string;
+  emailHTML?: string;
+  targetAudience?: string;
 }
 
 export interface ContentGenerationRequest {

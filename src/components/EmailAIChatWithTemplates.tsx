@@ -152,15 +152,19 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
                   inputMessage.toLowerCase().includes('newsletter') ? 'newsletter' : 'announcement'
           });
 
+          if (!emailResponse.success || !emailResponse.data) {
+            throw new Error(emailResponse.error || 'Failed to generate email');
+          }
+
           // Insert generated email into editor
-          if (editor && emailResponse.html) {
-            editor.commands.setContent(emailResponse.html);
+          if (editor && emailResponse.data.html) {
+            editor.commands.setContent(emailResponse.data.html);
           }
 
           const aiResponse: Message = {
             id: (Date.now() + 1).toString(),
             type: 'ai',
-            content: `✅ Email created successfully!\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nI've inserted the email into your editor. You can also load it as structured blocks for easier editing using the button below.`,
+            content: `✅ Email created successfully!\n\n**Subject:** ${emailResponse.data.subject}\n**Preview:** ${emailResponse.data.previewText}\n\nI've inserted the email into your editor. You can also load it as structured blocks for easier editing using the button below.`,
             timestamp: new Date(),
             suggestions: [
               'Load to block editor',
@@ -169,9 +173,9 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
               'Optimize for mobile'
             ],
             emailData: {
-              subject: emailResponse.subject,
-              html: emailResponse.html,
-              previewText: emailResponse.previewText
+              subject: emailResponse.data.subject,
+              html: emailResponse.data.html,
+              previewText: emailResponse.data.previewText
             },
             canLoadToEditor: true
           };
@@ -186,7 +190,7 @@ export const EmailAIChatWithTemplates: React.FC<EmailAIChatWithTemplatesProps> =
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
           type: 'ai',
-          content: response,
+          content: response.success ? response.data || 'I understand your request. How can I help you further?' : 'I had trouble processing that request. Could you please rephrase?',
           timestamp: new Date(),
           suggestions: [
             'Create email content',

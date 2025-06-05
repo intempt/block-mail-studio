@@ -1,443 +1,445 @@
-
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { 
-  Send, 
-  Bot, 
-  User, 
-  MessageCircle,
+  Brain, 
+  Sparkles, 
+  Target, 
+  BarChart3,
   Zap,
-  Upload,
-  Image as ImageIcon,
-  Paperclip,
-  Square,
+  Lightbulb,
+  TrendingUp,
+  Users,
+  MessageSquare,
+  Wand2,
   RefreshCw,
-  Sparkles,
-  Play,
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
   Eye,
-  Download,
-  AlertCircle
+  FlaskConical
 } from 'lucide-react';
-import { EmailBlockCanvasRef } from './EmailBlockCanvas';
-import { emailAIService } from '@/services/EmailAIService';
-import { ApiKeyService } from '@/services/apiKeyService';
-import { EmailContentAnalyzer } from '@/services/EmailContentAnalyzer';
-import { AIBlockGenerator } from '@/services/AIBlockGenerator';
+import { DirectAIService } from '@/services/directAIService';
+import { PerformanceAnalysisResult } from '@/services/EmailAIService';
+import { extractServiceData } from '@/utils/serviceResultHelper';
 
-interface Message {
-  id: string;
-  type: 'user' | 'ai' | 'system' | 'error';
-  content: string;
-  timestamp: Date;
-  attachments?: Array<{
-    type: 'image' | 'file';
-    url: string;
-    name: string;
-  }>;
-  actions?: Array<{
-    label: string;
-    type: 'implement' | 'preview' | 'modify';
-    payload?: any;
-  }>;
-  isStreaming?: boolean;
+interface AIContentRequest {
+  type: 'subject' | 'copy' | 'cta' | 'personalization';
+  context?: {
+    industry?: string;
+    audience?: string;
+    tone?: string;
+    goal?: string;
+  };
 }
 
-interface EnhancedAIAssistantProps {
+interface AIContentResponse {
+  id: string;
+  content: string;
+  confidence: number;
+  reasoning: string;
+  metrics: {
+    readabilityScore: number;
+    engagementPrediction: number;
+    conversionPotential: number;
+  };
+}
+
+interface AdvancedAIAssistantProps {
   editor: Editor | null;
   emailHTML: string;
-  canvasRef?: React.RefObject<EmailBlockCanvasRef>;
-  subjectLine?: string;
-  onSubjectLineChange?: (subjectLine: string) => void;
-  onLoadToEditor?: (blocks: any[], layoutConfig: any) => void;
-  currentEmailBlocks?: any[];
+  onContentUpdate?: (content: string) => void;
 }
 
-type ChatMode = 'chat' | 'agentic';
-
-export const EnhancedAIAssistant: React.FC<EnhancedAIAssistantProps> = ({ 
+export const EnhancedAIAssistant: React.FC<AdvancedAIAssistantProps> = ({ 
   editor, 
   emailHTML,
-  canvasRef,
-  subjectLine = '',
-  onSubjectLineChange,
-  onLoadToEditor,
-  currentEmailBlocks = []
+  onContentUpdate
 }) => {
-  const [mode, setMode] = useState<ChatMode>('chat');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: mode === 'chat' 
-        ? 'Welcome! I\'m your AI email assistant. I can help you plan, create, and optimize professional emails. What would you like to work on today?'
-        : 'Agentic mode activated! I\'ll directly implement changes to your current email. Tell me what you\'d like to improve.',
-      timestamp: new Date()
+  const [activeTab, setActiveTab] = useState('generate');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [generatedContent, setGeneratedContent] = useState<AIContentResponse[]>([]);
+  const [abTestVariants, setAbTestVariants] = useState<AIContentResponse[]>([]);
+  const [contentRequest, setContentRequest] = useState<Partial<AIContentRequest>>({
+    type: 'copy',
+    context: {
+      industry: 'technology',
+      audience: 'professionals',
+      tone: 'professional',
+      goal: 'conversion'
     }
-  ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  });
+  const [brandVoiceScore, setBrandVoiceScore] = useState(85);
+  const [performancePrediction, setPerformancePrediction] = useState({
+    openRate: 24.5,
+    clickRate: 3.2,
+    conversionRate: 2.1,
+    confidence: 87
+  });
 
-  const handleModeSwitch = (newMode: ChatMode) => {
-    setMode(newMode);
+  const contentTypes = [
+    { id: 'subject', name: 'Subject Line', icon: Target },
+    { id: 'copy', name: 'Email Copy', icon: MessageSquare },
+    { id: 'cta', name: 'Call to Action', icon: Zap },
+    { id: 'personalization', name: 'Personalization', icon: Users }
+  ];
+
+  const generateContent = async () => {
+    if (!contentRequest.type) return;
     
-    // Add system message about mode switch
-    const systemMessage: Message = {
-      id: Date.now().toString(),
-      type: 'system',
-      content: newMode === 'chat' 
-        ? '💬 Chat Mode: Plan and discuss your email strategy'
-        : '⚡ Agentic Mode: Direct implementation on your current email',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, systemMessage]);
-  };
-
-  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    setUploadedFiles(prev => [...prev, ...files]);
-  }, []);
-
-  const removeFile = useCallback((index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const stopGeneration = useCallback(() => {
-    setIsLoading(false);
-    setStreamingMessageId(null);
-  }, []);
-
-  const sendMessage = async () => {
-    if (!inputMessage.trim() && uploadedFiles.length === 0) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputMessage,
-      timestamp: new Date(),
-      attachments: uploadedFiles.map(file => ({
-        type: file.type.startsWith('image/') ? 'image' as const : 'file' as const,
-        url: URL.createObjectURL(file),
-        name: file.name
-      }))
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setUploadedFiles([]);
-    setIsLoading(true);
-
+    setIsProcessing(true);
+    
     try {
-      if (mode === 'agentic' && currentEmailBlocks.length > 0) {
-        // Agentic mode: Direct implementation
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: `I'll implement "${inputMessage}" on your current email...`,
-          timestamp: new Date(),
-          isStreaming: true
-        };
-        setMessages(prev => [...prev, aiResponse]);
-        setStreamingMessageId(aiResponse.id);
-
-        // Simulate streaming response
-        setTimeout(() => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === aiResponse.id 
-              ? { 
-                  ...msg, 
-                  content: `✅ **Implementation Complete**\n\nI've applied your requested changes: "${inputMessage}"\n\n**Changes Made:**\n• Updated content structure\n• Optimized for mobile\n• Enhanced visual hierarchy\n\nThe changes have been applied directly to your email.`,
-                  isStreaming: false,
-                  actions: [
-                    { label: 'Preview Changes', type: 'preview' },
-                    { label: 'Undo Changes', type: 'modify', payload: { action: 'undo' } }
-                  ]
-                }
-              : msg
-          ));
-          setIsLoading(false);
-          setStreamingMessageId(null);
-        }, 2000);
-
-      } else {
-        // Chat mode: Planning and discussion
-        const response = await emailAIService.getConversationalResponse(inputMessage);
-        
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: response,
-          timestamp: new Date(),
-          actions: [
-            { label: 'Implement This Plan', type: 'implement' },
-            { label: 'Generate Email', type: 'implement', payload: { action: 'generate' } },
-            { label: 'Switch to Agentic Mode', type: 'modify', payload: { action: 'switch-mode' } }
-          ]
-        };
-        setMessages(prev => [...prev, aiResponse]);
-      }
-    } catch (error) {
-      console.error('AI response error:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'error',
-        content: 'Sorry, I encountered an error. Please check your API configuration and try again.',
-        timestamp: new Date()
+      console.log('Generating content with direct AI service:', contentRequest);
+      
+      // Generate content using direct AI service
+      const prompt = `Generate ${contentRequest.type} content for ${contentRequest.context?.industry} industry targeting ${contentRequest.context?.audience} with ${contentRequest.context?.tone} tone for ${contentRequest.context?.goal}`;
+      const result = await DirectAIService.generateContent(prompt, 'general');
+      
+      const response: AIContentResponse = {
+        id: `content_${Date.now()}`,
+        content: extractServiceData(result, ''),
+        confidence: 0.85,
+        reasoning: `Generated ${contentRequest.type} optimized for ${contentRequest.context?.goal}`,
+        metrics: {
+          readabilityScore: Math.floor(Math.random() * 20) + 80,
+          engagementPrediction: Math.floor(Math.random() * 20) + 75,
+          conversionPotential: Math.floor(Math.random() * 20) + 70
+        }
       };
-      setMessages(prev => [...prev, errorMessage]);
+      
+      setGeneratedContent([response]);
+      
+      // Update performance prediction with mock data
+      setPerformancePrediction({
+        openRate: Math.random() * 10 + 20,
+        clickRate: Math.random() * 3 + 2,
+        conversionRate: Math.random() * 2 + 1.5,
+        confidence: Math.floor(Math.random() * 20) + 80
+      });
+      
+    } catch (error) {
+      console.error('Failed to generate content:', error);
     } finally {
-      setIsLoading(false);
+      setIsProcessing(false);
     }
   };
 
-  const handleAction = async (action: { label: string; type: string; payload?: any }) => {
-    if (action.type === 'implement') {
-      // Switch to agentic mode and implement
-      if (mode !== 'agentic') {
-        setMode('agentic');
-      }
-      // Implementation logic here
-    } else if (action.payload?.action === 'switch-mode') {
-      setMode('agentic');
+  const generateABTestVariants = async () => {
+    if (!generatedContent[0]) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      console.log('Generating A/B test variants');
+      const variants = await DirectAIService.generateSubjectVariants(generatedContent[0].content, 3);
+      
+      const variantResponses: AIContentResponse[] = variants.success && variants.data ? 
+        variants.data.map((variant, index) => ({
+          id: `variant_${Date.now()}_${index}`,
+          content: variant,
+          confidence: 0.8 + Math.random() * 0.15,
+          reasoning: `Variant ${index + 1} with different approach`,
+          metrics: {
+            readabilityScore: Math.floor(Math.random() * 20) + 75,
+            engagementPrediction: Math.floor(Math.random() * 20) + 70,
+            conversionPotential: Math.floor(Math.random() * 20) + 65
+          }
+        })) : [];
+      
+      setAbTestVariants(variantResponses);
+    } catch (error) {
+      console.error('Failed to generate A/B test variants:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const renderMessage = (message: Message) => (
-    <div key={message.id}>
-      <div className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-        {(message.type === 'ai' || message.type === 'system') && (
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-            message.type === 'ai' ? 'bg-blue-600' : 'bg-gray-500'
-          }`}>
-            {message.type === 'ai' ? (
-              <Bot className="w-4 h-4 text-white" />
-            ) : (
-              <Sparkles className="w-4 h-4 text-white" />
-            )}
-          </div>
-        )}
-        
-        {message.type === 'error' && (
-          <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <AlertCircle className="w-4 h-4 text-white" />
-          </div>
-        )}
-        
-        <div
-          className={`max-w-[80%] rounded-xl text-sm ${
-            message.type === 'user'
-              ? 'bg-blue-600 text-white px-4 py-3'
-              : message.type === 'error'
-              ? 'bg-red-50 border border-red-200 text-red-800 px-4 py-3'
-              : message.type === 'system'
-              ? 'bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2'
-              : 'bg-gray-50 border border-gray-200 text-gray-900 px-4 py-3'
-          }`}
-        >
-          <div className="whitespace-pre-wrap">
-            {message.content}
-            {message.isStreaming && (
-              <span className="inline-block w-2 h-4 bg-current animate-pulse ml-1" />
+  const applyContent = (content: string) => {
+    if (editor) {
+      const currentContent = editor.getHTML();
+      const updatedContent = currentContent + `<p>${content}</p>`;
+      editor.commands.setContent(updatedContent);
+      onContentUpdate?.(updatedContent);
+    }
+  };
+
+  const analyzeCurrentContent = async () => {
+    if (!emailHTML) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      console.log('Analyzing current content');
+      const analysis = await DirectAIService.analyzeBrandVoice(emailHTML);
+      setBrandVoiceScore(analysis.success && analysis.data?.brandVoiceScore ? analysis.data.brandVoiceScore : 85);
+    } catch (error) {
+      console.error('Failed to analyze content:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (emailHTML) {
+      analyzeCurrentContent();
+    }
+  }, [emailHTML]);
+
+  const renderContentCard = (content: AIContentResponse, isVariant: boolean = false) => (
+    <Card key={content.id} className="p-4 border">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Badge variant="secondary" className="text-xs">
+              {Math.round(content.confidence * 100)}% confidence
+            </Badge>
+            {isVariant && (
+              <Badge variant="outline" className="text-xs">
+                Variant
+              </Badge>
             )}
           </div>
           
-          {message.attachments && message.attachments.length > 0 && (
-            <div className="mt-2 flex gap-2 flex-wrap">
-              {message.attachments.map((attachment, index) => (
-                <div key={index} className="bg-white/20 rounded px-2 py-1 text-xs flex items-center gap-1">
-                  {attachment.type === 'image' ? <ImageIcon className="w-3 h-3" /> : <Paperclip className="w-3 h-3" />}
-                  {attachment.name}
-                </div>
-              ))}
-            </div>
-          )}
-          
-          <p className="text-xs opacity-70 mt-2">
-            {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <p className="text-sm font-medium text-gray-900 mb-2">
+            {content.content}
           </p>
-        </div>
-        
-        {message.type === 'user' && (
-          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-            <User className="w-4 h-4 text-gray-600" />
-          </div>
-        )}
-      </div>
-
-      {message.actions && message.actions.length > 0 && (
-        <div className="mt-3 ml-11">
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <p className="text-xs font-medium text-gray-700 mb-2">Quick Actions</p>
-            <div className="flex gap-2 flex-wrap">
-              {message.actions.map((action, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAction(action)}
-                  className="text-xs h-8"
-                  disabled={isLoading}
-                >
-                  {action.type === 'implement' && <Play className="w-3 h-3 mr-1" />}
-                  {action.type === 'preview' && <Eye className="w-3 h-3 mr-1" />}
-                  {action.type === 'modify' && <Zap className="w-3 h-3 mr-1" />}
-                  {action.label}
-                </Button>
-              ))}
+          
+          <p className="text-xs text-gray-600 italic mb-3">
+            💡 {content.reasoning}
+          </p>
+          
+          <div className="grid grid-cols-3 gap-2 mb-3">
+            <div className="text-center">
+              <div className="text-sm font-semibold text-blue-600">
+                {content.metrics.readabilityScore}
+              </div>
+              <div className="text-xs text-gray-500">Readability</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-semibold text-green-600">
+                {content.metrics.engagementPrediction}
+              </div>
+              <div className="text-xs text-gray-500">Engagement</div>
+            </div>
+            <div className="text-center">
+              <div className="text-sm font-semibold text-purple-600">
+                {content.metrics.conversionPotential}
+              </div>
+              <div className="text-xs text-gray-500">Conversion</div>
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+      
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => applyContent(content.content)}
+          className="flex-1"
+        >
+          <Zap className="w-3 h-3 mr-1" />
+          Apply
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigator.clipboard.writeText(content.content)}
+        >
+          <Copy className="w-3 h-3" />
+        </Button>
+        <Button variant="ghost" size="sm">
+          <ThumbsUp className="w-3 h-3" />
+        </Button>
+        <Button variant="ghost" size="sm">
+          <ThumbsDown className="w-3 h-3" />
+        </Button>
+      </div>
+    </Card>
   );
 
   return (
     <Card className="h-full flex flex-col">
-      {/* Header with Mode Toggle */}
-      <div className="p-4 border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <Bot className="w-4 h-4 text-white" />
-            </div>
-            <h3 className="text-base font-semibold text-gray-900">AI Assistant</h3>
-          </div>
-          
-          <Badge variant="secondary" className={`text-xs ${
-            ApiKeyService.isKeyAvailable() ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-          }`}>
-            {ApiKeyService.isKeyAvailable() ? 'Connected' : 'Setup Required'}
+      <div className="p-3 border-b border-gray-200">
+        <div className="flex items-center gap-2 mb-3">
+          <Brain className="w-4 h-4 text-purple-600" />
+          <h3 className="text-base font-semibold">Advanced AI Assistant</h3>
+          <Badge variant="secondary" className="ml-auto bg-purple-50 text-purple-700 text-xs">
+            Enhanced
           </Badge>
         </div>
 
-        {/* Mode Toggle */}
-        <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
-          <Button
-            variant={mode === 'chat' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => handleModeSwitch('chat')}
-            className={`flex-1 text-xs h-8 ${mode === 'chat' ? 'bg-white shadow-sm' : ''}`}
-          >
-            <MessageCircle className="w-3 h-3 mr-2" />
-            Chat
-          </Button>
-          <Button
-            variant={mode === 'agentic' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => handleModeSwitch('agentic')}
-            className={`flex-1 text-xs h-8 ${mode === 'agentic' ? 'bg-white shadow-sm' : ''}`}
-          >
-            <Zap className="w-3 h-3 mr-2" />
-            Agentic
-          </Button>
+        {/* Performance Overview */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="text-center">
+            <div className="text-lg font-bold text-purple-600">{brandVoiceScore}</div>
+            <div className="text-xs text-gray-600">Brand Voice</div>
+          </div>
+          <div className="text-center">
+            <div className="text-lg font-bold text-blue-600">{performancePrediction.confidence}</div>
+            <div className="text-xs text-gray-600">AI Confidence</div>
+          </div>
+        </div>
+
+        {/* Predicted Performance */}
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="text-center p-2 bg-blue-50 rounded">
+            <div className="font-semibold text-blue-600">{performancePrediction.openRate.toFixed(1)}%</div>
+            <div className="text-gray-600">Open Rate</div>
+          </div>
+          <div className="text-center p-2 bg-green-50 rounded">
+            <div className="font-semibold text-green-600">{performancePrediction.clickRate.toFixed(1)}%</div>
+            <div className="text-gray-600">Click Rate</div>
+          </div>
+          <div className="text-center p-2 bg-purple-50 rounded">
+            <div className="font-semibold text-purple-600">{performancePrediction.conversionRate.toFixed(1)}%</div>
+            <div className="text-gray-600">Conversion</div>
+          </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          {messages.map(renderMessage)}
-          
-          {isLoading && !streamingMessageId && (
-            <div className="flex gap-3 justify-start">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <Bot className="w-4 h-4 text-white" />
-              </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <TabsList className="grid w-full grid-cols-3 mx-3 mt-2">
+          <TabsTrigger value="generate" className="text-xs">Generate</TabsTrigger>
+          <TabsTrigger value="optimize" className="text-xs">Optimize</TabsTrigger>
+          <TabsTrigger value="test" className="text-xs">A/B Test</TabsTrigger>
+        </TabsList>
+
+        <ScrollArea className="flex-1">
+          <div className="p-3">
+            <TabsContent value="generate" className="mt-0 space-y-4">
+              {/* Content Type Selection */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Content Type</label>
+                <div className="grid grid-cols-2 gap-1">
+                  {contentTypes.map((type) => {
+                    const IconComponent = type.icon;
+                    return (
+                      <Button
+                        key={type.id}
+                        variant={contentRequest.type === type.id ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setContentRequest({ ...contentRequest, type: type.id as any })}
+                        className="justify-start text-xs h-8"
+                      >
+                        <IconComponent className="w-3 h-3 mr-1" />
+                        {type.name}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
-              {isLoading && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={stopGeneration}
-                  className="self-end"
-                >
-                  <Square className="w-3 h-3" />
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-      </ScrollArea>
 
-      {/* File Upload Preview */}
-      {uploadedFiles.length > 0 && (
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50">
-          <div className="flex gap-2 flex-wrap">
-            {uploadedFiles.map((file, index) => (
-              <div key={index} className="bg-white rounded px-3 py-1 text-xs flex items-center gap-2 border">
-                {file.type.startsWith('image/') ? <ImageIcon className="w-3 h-3" /> : <Paperclip className="w-3 h-3" />}
-                <span className="max-w-[100px] truncate">{file.name}</span>
-                <button onClick={() => removeFile(index)} className="text-gray-500 hover:text-red-500">
-                  ×
-                </button>
+              {/* Context Configuration */}
+              <div className="space-y-2">
+                <Input
+                  placeholder="Industry (e.g., technology, healthcare)"
+                  value={contentRequest.context?.industry || ''}
+                  onChange={(e) => setContentRequest({
+                    ...contentRequest,
+                    context: { ...contentRequest.context, industry: e.target.value }
+                  })}
+                  className="text-xs"
+                />
+                <Input
+                  placeholder="Target audience (e.g., professionals, students)"
+                  value={contentRequest.context?.audience || ''}
+                  onChange={(e) => setContentRequest({
+                    ...contentRequest,
+                    context: { ...contentRequest.context, audience: e.target.value }
+                  })}
+                  className="text-xs"
+                />
+                <Input
+                  placeholder="Goal (e.g., conversion, engagement, awareness)"
+                  value={contentRequest.context?.goal || ''}
+                  onChange={(e) => setContentRequest({
+                    ...contentRequest,
+                    context: { ...contentRequest.context, goal: e.target.value }
+                  })}
+                  className="text-xs"
+                />
               </div>
-            ))}
-          </div>
-        </div>
-      )}
 
-      {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder={mode === 'chat' ? "Ask me anything about your email..." : "Tell me what to change..."}
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              className="border-gray-300 focus:border-blue-500 text-sm resize-none"
-              disabled={isLoading}
-            />
+              <Button
+                onClick={generateContent}
+                disabled={isProcessing || !contentRequest.type}
+                className="w-full"
+              >
+                {isProcessing ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2" />
+                )}
+                Generate Content
+              </Button>
+
+              {/* Generated Content */}
+              <div className="space-y-3">
+                {generatedContent.map(content => renderContentCard(content))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="optimize" className="mt-0 space-y-4">
+              <div className="text-center py-4">
+                <Lightbulb className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
+                <h4 className="font-medium text-gray-900 mb-2">Content Optimization</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Analyze and optimize your current email content
+                </p>
+                
+                <Button
+                  onClick={analyzeCurrentContent}
+                  disabled={isProcessing || !emailHTML}
+                  className="w-full"
+                >
+                  {isProcessing ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                  )}
+                  Analyze Content
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="test" className="mt-0 space-y-4">
+              <div className="text-center py-4">
+                <FlaskConical className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                <h4 className="font-medium text-gray-900 mb-2">A/B Test Generator</h4>
+                <p className="text-sm text-gray-600 mb-4">
+                  Create multiple variants for testing
+                </p>
+                
+                <Button
+                  onClick={generateABTestVariants}
+                  disabled={isProcessing || generatedContent.length === 0}
+                  className="w-full"
+                >
+                  {isProcessing ? (
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                  )}
+                  Generate Variants
+                </Button>
+              </div>
+
+              {/* A/B Test Variants */}
+              <div className="space-y-3">
+                {abTestVariants.map(variant => renderContentCard(variant, true))}
+              </div>
+            </TabsContent>
           </div>
-          
-          <div className="flex gap-1">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/*,.pdf,.doc,.docx"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading}
-              className="w-9 h-9 p-0"
-            >
-              <Upload className="w-4 h-4" />
-            </Button>
-            
-            <Button 
-              onClick={sendMessage} 
-              disabled={(!inputMessage.trim() && uploadedFiles.length === 0) || isLoading}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 w-9 h-9 p-0"
-            >
-              {isLoading ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
+        </ScrollArea>
+      </Tabs>
     </Card>
   );
 };
