@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X, Monitor, Smartphone, RotateCcw, User, Mail } from 'lucide-react';
+import { X, Monitor, Smartphone, User, Mail } from 'lucide-react';
 import { GmailDesktopPreview } from './GmailDesktopPreview';
 import { GmailMobilePreview } from './GmailMobilePreview';
 import { EmailCompatibilityProcessor } from '@/services/emailCompatibilityProcessor';
@@ -97,12 +96,16 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   if (isProcessing) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8 max-w-md mx-4">
+        <div className="bg-white rounded-lg p-8 max-w-md mx-4 gmail-shadow-3">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
-            <h3 className="text-lg font-medium mb-2">Preparing Gmail Preview</h3>
-            <p className="text-gray-600 text-sm">Processing email for pixel-perfect Gmail rendering...</p>
-            <div className="mt-4 text-xs text-gray-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--gmail-red)' }}></div>
+            <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--gmail-text-primary)' }}>
+              Preparing Gmail Preview
+            </h3>
+            <p className="text-sm mb-4" style={{ color: 'var(--gmail-text-secondary)' }}>
+              Processing email for pixel-perfect Gmail rendering...
+            </p>
+            <div className="text-xs" style={{ color: 'var(--gmail-text-secondary)' }}>
               <div className="flex items-center justify-center gap-2 mb-2">
                 <User className="w-4 h-4" />
                 <span>From: {finalSender.name}</span>
@@ -119,15 +122,19 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-100">
+    <div className="fixed inset-0 z-50" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
       {/* Enhanced Preview Mode Selector */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2 flex items-center gap-2">
+        <div className="bg-white rounded-lg gmail-shadow-2 border p-2 flex items-center gap-2" style={{ borderColor: 'var(--gmail-gray-200)' }}>
           <Button
             variant={viewMode === 'desktop' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('desktop')}
             className="flex items-center gap-2"
+            style={{
+              backgroundColor: viewMode === 'desktop' ? 'var(--gmail-blue)' : 'transparent',
+              color: viewMode === 'desktop' ? 'white' : 'var(--gmail-text-primary)'
+            }}
           >
             <Monitor className="w-4 h-4" />
             Desktop Gmail
@@ -137,18 +144,22 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
             size="sm"
             onClick={() => setViewMode('mobile')}
             className="flex items-center gap-2"
+            style={{
+              backgroundColor: viewMode === 'mobile' ? 'var(--gmail-blue)' : 'transparent',
+              color: viewMode === 'mobile' ? 'white' : 'var(--gmail-text-primary)'
+            }}
           >
             <Smartphone className="w-4 h-4" />
             Mobile Gmail
           </Button>
-          <div className="h-6 w-px bg-gray-300 mx-2" />
-          <div className="flex items-center gap-2 text-xs text-gray-600">
+          <div className="h-6 w-px mx-2" style={{ backgroundColor: 'var(--gmail-gray-300)' }} />
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--gmail-text-secondary)' }}>
             <User className="w-3 h-3" />
             <span>{finalSender.name}</span>
             <span>→</span>
             <span>{finalRecipient.name}</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="ml-2">
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -165,7 +176,7 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
             onClose={onClose}
           />
         ) : (
-          <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+          <div className="flex items-center justify-center min-h-screen p-4" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
             <GmailMobilePreview
               emailHtml={processedHtml}
               subject={subject}

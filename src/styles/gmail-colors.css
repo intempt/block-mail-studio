@@ -1,0 +1,84 @@
+
+/* Gmail Exact Color Palette */
+:root {
+  /* Primary Gmail Colors */
+  --gmail-red: #ea4335;
+  --gmail-red-hover: #d33b2c;
+  --gmail-red-dark: #c5221f;
+  --gmail-blue: #1a73e8;
+  --gmail-blue-hover: #1557b0;
+  --gmail-blue-light: #e8f0fe;
+  
+  /* Gmail Grays */
+  --gmail-gray-50: #f8f9fa;
+  --gmail-gray-100: #f1f3f4;
+  --gmail-gray-200: #e8eaed;
+  --gmail-gray-300: #dadce0;
+  --gmail-gray-400: #bdc1c6;
+  --gmail-gray-500: #9aa0a6;
+  --gmail-gray-600: #80868b;
+  --gmail-gray-700: #5f6368;
+  --gmail-gray-800: #3c4043;
+  --gmail-gray-900: #202124;
+  
+  /* Gmail Text Colors */
+  --gmail-text-primary: #202124;
+  --gmail-text-secondary: #5f6368;
+  --gmail-text-disabled: #9aa0a6;
+  
+  /* Gmail Surface Colors */
+  --gmail-surface: #ffffff;
+  --gmail-surface-variant: #f8f9fa;
+  --gmail-surface-2: #f1f3f4;
+  
+  /* Gmail Selection Colors */
+  --gmail-selection: #fce8e6;
+  --gmail-selection-hover: #f4b7ae;
+  
+  /* Gmail Dark Mode */
+  --gmail-dark-surface: #0d1117;
+  --gmail-dark-surface-2: #161b22;
+  --gmail-dark-text: #f0f6fc;
+  --gmail-dark-text-secondary: #8b949e;
+  --gmail-dark-border: #30363d;
+}
+
+/* Gmail Typography System */
+.gmail-font-system {
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+}
+
+.gmail-font-roboto {
+  font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Gmail Shadows */
+.gmail-shadow-1 {
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+.gmail-shadow-2 {
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+}
+
+.gmail-shadow-3 {
+  box-shadow: 0 4px 8px 3px rgba(60, 64, 67, 0.15), 0 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+/* Gmail Rounded Corners */
+.gmail-rounded-sm { border-radius: 4px; }
+.gmail-rounded { border-radius: 8px; }
+.gmail-rounded-lg { border-radius: 12px; }
+.gmail-rounded-xl { border-radius: 16px; }
+.gmail-rounded-2xl { border-radius: 20px; }
+.gmail-rounded-full { border-radius: 9999px; }
+
+/* Gmail Transitions */
+.gmail-transition {
+  transition: all 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.gmail-transition-colors {
+  transition: color 150ms cubic-bezier(0.4, 0.0, 0.2, 1), 
+              background-color 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
