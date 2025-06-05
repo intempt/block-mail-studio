@@ -15,10 +15,24 @@ import {
   ColumnsBlock
 } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
-import { MJMLService } from '@/services/mjmlService';
 import { useNotification } from '@/contexts/NotificationContext';
-import { useAI } from '@/contexts/AIContext';
 import { DropZoneIndicator } from './DropZoneIndicator';
+
+// Mock MJML service for now
+const MJMLService = {
+  renderMJML: async (mjml: string) => {
+    return {
+      success: true,
+      html: `<div style="padding: 20px; font-family: system-ui;">${mjml}</div>`,
+      errors: null
+    };
+  }
+};
+
+// Mock AI Context
+const useAI = () => ({
+  generateAIAnalysis: () => Promise.resolve()
+});
 
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
@@ -32,7 +46,14 @@ interface EmailBlockCanvasProps {
   showAIAnalytics: boolean;
 }
 
-export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
+export interface EmailBlockCanvasRef {
+  addBlock: (block: EmailBlock) => void;
+  replaceAllBlocks: (blocks: EmailBlock[]) => void;
+  getCurrentHTML: () => string;
+  findAndReplaceText: (searchText: string, replaceText: string) => void;
+}
+
+export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   (props, ref) => {
     const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -46,6 +67,141 @@ export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
     const { generateAIAnalysis } = useAI();
 
     const canvasRef = useRef<HTMLDivElement>(null);
+
+    const generateEmailHTML = useCallback(async () => {
+      if (emailBlocks.length === 0) {
+        const emptyHTML = `
+<mjml>
+  <mj-head>
+    <mj-title>${props.subject || 'Email Preview'}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="system-ui, -apple-system, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-text>
+          <h2>Welcome to your email builder!</h2>
+          <p>Drag any of the 11 layouts below to get started, then drag text blocks into the columns and click to edit with the rich text editor.</p>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>`;
+        
+        try {
+          const result = await MJMLService.renderMJML(emptyHTML);
+          if (result.success && result.html) {
+            console.log('EmailBlockCanvas: Generated empty email HTML');
+            return result.html;
+          }
+        } catch (error) {
+          console.error('EmailBlockCanvas: Error generating empty HTML:', error);
+        }
+        
+        return '<div style="padding: 20px; font-family: system-ui;"><h2>Welcome to your email builder!</h2><p>Drag any of the 11 layouts below to get started, then drag text blocks into the columns and click to edit with the rich text editor.</p></div>';
+      }
+
+      let mjmlContent = `
+<mjml>
+  <mj-head>
+    <mj-title>${props.subject || 'Email Preview'}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="system-ui, -apple-system, sans-serif" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body>
+`;
+
+      for (const block of emailBlocks) {
+        if (block.type === 'text') {
+          mjmlContent += `
+    <mj-section>
+      <mj-column>
+        <mj-text>
+          ${block.content.html}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+`;
+        } else if (block.type === 'image') {
+          mjmlContent += `
+    <mj-section>
+      <mj-column>
+        <mj-image src="${block.content.src}" alt="${block.content.alt}" />
+      </mj-column>
+    </mj-section>
+`;
+        } else if (block.type === 'button') {
+          mjmlContent += `
+    <mj-section>
+      <mj-column>
+        <mj-button href="${block.content.href}">
+          ${block.content.text}
+        </mj-button>
+      </mj-column>
+    </mj-section>
+`;
+        } else if (block.type === 'columns') {
+          mjmlContent += `
+    <mj-section>
+`;
+          for (const column of block.content.columns) {
+            mjmlContent += `
+      <mj-column width="${column.width}">
+`;
+            for (const innerBlock of column.blocks) {
+              if (innerBlock.type === 'text') {
+                mjmlContent += `
+        <mj-text>
+          ${innerBlock.content.html}
+        </mj-text>
+`;
+              } else if (innerBlock.type === 'image') {
+                mjmlContent += `
+        <mj-image src="${innerBlock.content.src}" alt="${innerBlock.content.alt}" />
+`;
+              } else if (innerBlock.type === 'button') {
+                mjmlContent += `
+        <mj-button href="${innerBlock.content.href}">
+          ${innerBlock.content.text}
+        </mj-button>
+`;
+              }
+            }
+            mjmlContent += `
+      </mj-column>
+`;
+          }
+          mjmlContent += `
+    </mj-section>
+`;
+        }
+      }
+
+      mjmlContent += `
+  </mj-body>
+</mjml>
+`;
+
+      try {
+        const result = await MJMLService.renderMJML(mjmlContent);
+        if (result.success && result.html) {
+          setLastGeneratedHTML(result.html);
+          props.onContentChange(result.html);
+          return result.html;
+        } else if (result.errors) {
+          console.error('MJML rendering errors:', result.errors);
+          error('MJML rendering failed. Check console for details.');
+        }
+      } catch (e) {
+        console.error('MJML rendering error:', e);
+        error('MJML rendering failed. Check console for details.');
+      }
+
+      return '<div style="padding: 20px; font-family: sans-serif;">Error rendering email</div>';
+    }, [emailBlocks, props, error]);
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
@@ -88,7 +244,9 @@ export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
 
     const {getRootProps, getInputProps, isDragActive} = useDropzone({
       onDrop,
-      accept: 'image/*',
+      accept: {
+        'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+      },
       multiple: false
     });
 
@@ -353,148 +511,11 @@ export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
       );
     };
 
-    const generateEmailHTML = useCallback(async () => {
-      if (emailBlocks.length === 0) {
-        const emptyHTML = `
-<mjml>
-  <mj-head>
-    <mj-title>${props.subject || 'Email Preview'}</mj-title>
-    <mj-attributes>
-      <mj-all font-family="system-ui, -apple-system, sans-serif" />
-    </mj-attributes>
-  </mj-head>
-  <mj-body>
-    <mj-section>
-      <mj-column>
-        <mj-text>
-          <h2>Welcome to your email builder!</h2>
-          <p>Drag any of the 11 layouts below to get started, then drag text blocks into the columns and click to edit with the rich text editor.</p>
-        </mj-text>
-      </mj-column>
-    </mj-section>
-  </mj-body>
-</mjml>`;
-        
-        try {
-          const result = await MJMLService.renderMJML(emptyHTML);
-          if (result.success && result.html) {
-            console.log('EmailBlockCanvas: Generated empty email HTML');
-            return result.html;
-          }
-        } catch (error) {
-          console.error('EmailBlockCanvas: Error generating empty HTML:', error);
-        }
-        
-        return '<div style="padding: 20px; font-family: system-ui;"><h2>Welcome to your email builder!</h2><p>Drag any of the 11 layouts below to get started, then drag text blocks into the columns and click to edit with the rich text editor.</p></div>';
-      }
-
-      let mjmlContent = `
-<mjml>
-  <mj-head>
-    <mj-title>${props.subject || 'Email Preview'}</mj-title>
-    <mj-attributes>
-      <mj-all font-family="system-ui, -apple-system, sans-serif" />
-    </mj-attributes>
-  </mj-head>
-  <mj-body>
-`;
-
-      for (const block of emailBlocks) {
-        if (block.type === 'text') {
-          mjmlContent += `
-    <mj-section>
-      <mj-column>
-        <mj-text>
-          ${block.content.html}
-        </mj-text>
-      </mj-column>
-    </mj-section>
-`;
-        } else if (block.type === 'image') {
-          mjmlContent += `
-    <mj-section>
-      <mj-column>
-        <mj-image src="${block.content.src}" alt="${block.content.alt}" />
-      </mj-column>
-    </mj-section>
-`;
-        } else if (block.type === 'button') {
-          mjmlContent += `
-    <mj-section>
-      <mj-column>
-        <mj-button href="${block.content.href}">
-          ${block.content.text}
-        </mj-button>
-      </mj-column>
-    </mj-section>
-`;
-        } else if (block.type === 'columns') {
-          mjmlContent += `
-    <mj-section>
-`;
-          for (const column of block.content.columns) {
-            mjmlContent += `
-      <mj-column width="${column.width}">
-`;
-            for (const innerBlock of column.blocks) {
-              if (innerBlock.type === 'text') {
-                mjmlContent += `
-        <mj-text>
-          ${innerBlock.content.html}
-        </mj-text>
-`;
-              } else if (innerBlock.type === 'image') {
-                mjmlContent += `
-        <mj-image src="${innerBlock.content.src}" alt="${innerBlock.content.alt}" />
-`;
-              } else if (innerBlock.type === 'button') {
-                mjmlContent += `
-        <mj-button href="${innerBlock.content.href}">
-          ${innerBlock.content.text}
-        </mj-button>
-`;
-              }
-            }
-            mjmlContent += `
-      </mj-column>
-`;
-          }
-          mjmlContent += `
-    </mj-section>
-`;
-        }
-      }
-
-      mjmlContent += `
-  </mj-body>
-</mjml>
-`;
-
-      try {
-        const result = await MJMLService.renderMJML(mjmlContent);
-        if (result.success && result.html) {
-          setLastGeneratedHTML(result.html);
-          props.onContentChange(result.html);
-          return result.html;
-        } else if (result.errors) {
-          console.error('MJML rendering errors:', result.errors);
-          error('MJML rendering failed. Check console for details.');
-        }
-      } catch (e) {
-        console.error('MJML rendering error:', e);
-        error('MJML rendering failed. Check console for details.');
-      }
-
-      return '<div style="padding: 20px; font-family: sans-serif;">Error rendering email</div>';
-    }, [emailBlocks, props, error]);
-
-    // Add method to get current HTML content
     const getCurrentHTML = useCallback(() => {
       if (lastGeneratedHTML) {
         return lastGeneratedHTML;
       }
       
-      // If no HTML generated yet, trigger generation
       generateEmailHTML().then(html => {
         setLastGeneratedHTML(html);
         props.onContentChange?.(html);
@@ -518,7 +539,6 @@ export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
       
       findAndReplaceText: (searchText: string, replaceText: string) => {
         console.log('EmailBlockCanvas: Find and replace:', { searchText, replaceText });
-        // Implementation for text replacement in blocks
         setEmailBlocks(prev => prev.map(block => {
           if (block.type === 'text' && block.content?.html) {
             return {
