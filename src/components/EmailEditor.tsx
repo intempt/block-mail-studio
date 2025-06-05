@@ -35,6 +35,7 @@ import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { useUndoRedo } from '@/hooks/useUndoRedo';
+import { UndoRedoToolbar } from './UndoRedoToolbar';
 
 interface Block {
   id: string;
@@ -485,7 +486,7 @@ export default function EmailEditor({
   console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 relative">
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
@@ -572,6 +573,18 @@ export default function EmailEditor({
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Floating Undo/Redo Toolbar - Bottom Right */}
+      <div className="absolute bottom-6 right-6 z-50">
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-2">
+          <UndoRedoToolbar
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onUndo={undo}
+            onRedo={redo}
+          />
         </div>
       </div>
 
