@@ -34,6 +34,7 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
+import { UndoManager } from './UndoManager';
 
 interface Block {
   id: string;
@@ -399,7 +400,7 @@ export default function EmailEditor({
   console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 relative">
       <OmnipresentRibbon
         onBlockAdd={handleBlockAdd}
         onSnippetAdd={handleSnippetAdd}
@@ -495,6 +496,11 @@ export default function EmailEditor({
           subjectLine={subject}
           onApplyFix={handleApplyFix}
         />
+      </div>
+
+      {/* UndoManager positioned in bottom-right corner */}
+      <div className="absolute bottom-4 right-4 z-50">
+        <UndoManager />
       </div>
 
       {/* Keep existing modals */}
