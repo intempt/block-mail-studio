@@ -14,6 +14,12 @@ export const BlockSection: React.FC<BlockSectionProps> = ({
   onBlockAdd,
   onDragStart
 }) => {
+  console.log('=== BlockSection START ===');
+  console.log('BlockSection received blockItems:', blockItems);
+  console.log('BlockSection blockItems length:', blockItems.length);
+  console.log('BlockSection content block:', blockItems.find(item => item.id === 'content'));
+  console.log('=== BlockSection END ===');
+
   return (
     <Collapsible open={isExpanded} onOpenChange={onToggle}>
       <CollapsibleTrigger asChild>
@@ -30,15 +36,18 @@ export const BlockSection: React.FC<BlockSectionProps> = ({
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className={`grid ${compactMode ? 'grid-cols-2 gap-1' : 'grid-cols-2 gap-1'} mb-4`}>
-          {blockItems.map(block => (
-            <BlockItem
-              key={block.id}
-              block={block}
-              compactMode={compactMode}
-              onBlockAdd={onBlockAdd}
-              onDragStart={onDragStart}
-            />
-          ))}
+          {blockItems.map(block => {
+            console.log('Rendering block:', block.id, block.name);
+            return (
+              <BlockItem
+                key={block.id}
+                block={block}
+                compactMode={compactMode}
+                onBlockAdd={onBlockAdd}
+                onDragStart={onDragStart}
+              />
+            );
+          })}
         </div>
       </CollapsibleContent>
     </Collapsible>
