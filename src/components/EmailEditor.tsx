@@ -122,6 +122,16 @@ export default function EmailEditor({
     justifyContent: 'start'
   }), []);
 
+  // Define saveStateToHistory function
+  const saveStateToHistory = useCallback(() => {
+    const currentState: EmailEditorState = {
+      content,
+      subject,
+      blocks: emailBlocks
+    };
+    pushState(currentState);
+  }, [content, subject, emailBlocks, pushState]);
+
   console.log('EmailEditor: State initialized, creating extensions');
 
   const extensions = useMemo(() => {
@@ -447,22 +457,12 @@ export default function EmailEditor({
 
   // Keyboard shortcuts for undo/redo
   useKeyboardShortcuts({
-    'ctrl+z': (e) => {
-      e.preventDefault();
-      undo();
-    },
-    'cmd+z': (e) => {
-      e.preventDefault();
-      undo();
-    },
-    'ctrl+y': (e) => {
-      e.preventDefault();
-      redo();
-    },
-    'cmd+shift+z': (e) => {
-      e.preventDefault();
-      redo();
-    }
+    editor,
+    canvasRef,
+    onToggleLeftPanel: () => {},
+    onToggleRightPanel: () => {},
+    onToggleFullscreen: () => {},
+    onSave: saveStateToHistory
   });
 
   console.log('EmailEditor: About to render main component');
