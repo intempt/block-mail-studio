@@ -14,9 +14,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProBubbleMenuToolbar } from './ProBubbleMenuToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
+import { TipTapProService } from '@/services/TipTapProService';
 import { 
   ExternalLink,
-  Play
+  Play,
+  Wand2,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 
 interface UniversalTipTapEditorProps {
@@ -40,6 +44,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 }) => {
   const [urlValue, setUrlValue] = useState(content);
   const [hasFocus, setHasFocus] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
@@ -119,6 +124,46 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     onChange(value);
   };
 
+  const handleAIGenerate = async () => {
+    if (!editor || isGeneratingAI) return;
+    
+    setIsGeneratingAI(true);
+    try {
+      const prompt = `Generate ${contentType} content${emailContext?.targetAudience ? ` for ${emailContext.targetAudience}` : ''}`;
+      const result = await TipTapProService.generateContent(prompt, 'professional');
+      
+      if (result.success && result.data) {
+        editor.commands.setContent(result.data);
+        onChange(result.data);
+      }
+    } catch (error) {
+      console.error('AI generation failed:', error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const handleAIImprove = async () => {
+    if (!editor || isGeneratingAI || !content) return;
+    
+    setIsGeneratingAI(true);
+    try {
+      const result = await TipTapProService.improveText(content, {
+        style: 'professional',
+        audience: emailContext?.targetAudience || 'general'
+      });
+      
+      if (result.success && result.data) {
+        editor.commands.setContent(result.data);
+        onChange(result.data);
+      }
+    } catch (error) {
+      console.error('AI improvement failed:', error);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   if (isUrlMode) {
     return (
       <div 
@@ -167,13 +212,57 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         border rounded-lg bg-white transition-all duration-200
         ${hasFocus ? 'border-blue-400 shadow-md ring-1 ring-blue-400/20' : 'border-gray-200 hover:border-gray-300'}
       `}>
+        {/* AI Toolbar - Show when focused or has content */}
+        {(hasFocus || content) && (
+          <div className="flex items-center gap-1 px-3 py-2 border-b bg-gradient-to-r from-purple-50 to-blue-50">
+            <div className="flex items-center gap-1 text-xs text-purple-700">
+              <Sparkles className="w-3 h-3" />
+              <span className="font-medium">TipTap Pro AI</span>
+            </div>
+            
+            <div className="flex gap-1 ml-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleAIGenerate}
+                disabled={isGeneratingAI}
+                className="h-6 px-2 text-xs bg-purple-100 hover:bg-purple-200 text-purple-700"
+              >
+                {isGeneratingAI ? (
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Wand2 className="w-3 h-3" />
+                )}
+                Generate
+              </Button>
+              
+              {content && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleAIImprove}
+                  disabled={isGeneratingAI}
+                  className="h-6 px-2 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700"
+                >
+                  {isGeneratingAI ? (
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  Improve
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         <EditorContent 
           editor={editor} 
           className="prose prose-sm max-w-none p-4 focus:outline-none min-h-[80px]"
           placeholder={placeholder}
         />
 
-        {/* TipTap Pro BubbleMenu - appears automatically on text selection */}
+        {/* Enhanced TipTap Pro BubbleMenu with AI features */}
         {editor && <ProBubbleMenuToolbar editor={editor} />}
       </div>
     </div>
