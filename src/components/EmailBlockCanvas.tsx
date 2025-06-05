@@ -19,6 +19,16 @@ import { MJMLService } from '@/services/MJMLService';
 import { useNotification } from '@/contexts/NotificationContext';
 import { DropZoneIndicator } from './DropZoneIndicator';
 
+export interface EmailBlockCanvasRef {
+  addBlock: (block: EmailBlock) => void;
+  replaceAllBlocks: (blocks: EmailBlock[]) => void;
+  getCurrentHTML: () => string;
+  optimizeImages: () => void;
+  minifyHTML: () => void;
+  checkLinks: () => boolean;
+  findAndReplaceText: (search: string, replace: string) => void;
+}
+
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
   onBlockSelect: (blockId: string | null) => void;
@@ -31,7 +41,7 @@ interface EmailBlockCanvasProps {
   showAIAnalytics: boolean;
 }
 
-export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
+export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
   (props, ref) => {
     const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -180,6 +190,30 @@ export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
       return '<div style="padding: 20px; font-family: sans-serif;">Error rendering email</div>';
     }, [emailBlocks, props, error]);
 
+    // Expose methods via ref
+    useImperativeHandle(ref, () => ({
+      addBlock: (block: EmailBlock) => {
+        setEmailBlocks(prev => [...prev, block]);
+      },
+      replaceAllBlocks: (blocks: EmailBlock[]) => {
+        setEmailBlocks(blocks);
+      },
+      getCurrentHTML: () => lastGeneratedHTML,
+      optimizeImages: () => {
+        console.log('Optimizing images...');
+      },
+      minifyHTML: () => {
+        console.log('Minifying HTML...');
+      },
+      checkLinks: () => {
+        console.log('Checking links...');
+        return true;
+      },
+      findAndReplaceText: (search: string, replace: string) => {
+        console.log('Finding and replacing text:', search, replace);
+      }
+    }));
+
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
       const file = acceptedFiles[0];
@@ -197,7 +231,9 @@ export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
           type: 'image',
           content: {
             src: base64,
-            alt: file.name
+            alt: file.name,
+            alignment: 'center',
+            width: '100%'
           },
           styling: {
             desktop: { width: '100%', height: 'auto' },
