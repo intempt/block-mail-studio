@@ -17,7 +17,8 @@ import {
   Table,
   ChevronDown,
   ChevronRight,
-  Blocks
+  Blocks,
+  Database
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -50,6 +51,7 @@ const blockItems: BlockItem[] = [
   { id: 'social', name: 'Social', description: 'Social media icons and links', icon: <Share2 className="w-4 h-4" /> },
   { id: 'html', name: 'HTML', description: 'Custom HTML content', icon: <FileCode className="w-4 h-4" /> },
   { id: 'table', name: 'Table', description: 'Data tables with customizable styling', icon: <Table className="w-4 h-4" /> },
+  { id: 'content', name: 'Content', description: 'Dynamic content from JSON data arrays', icon: <Database className="w-4 h-4" /> },
 ];
 
 export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps> = ({
