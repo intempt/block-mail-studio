@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -7,11 +8,6 @@ import TextStyle from '@tiptap/extension-text-style';
 import FontFamily from '@tiptap/extension-font-family';
 import { Underline } from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
-import ListItem from '@tiptap/extension-list-item';
-import Blockquote from '@tiptap/extension-blockquote';
-import Code from '@tiptap/extension-code';
 import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { Button } from '@/components/ui/button';
@@ -62,7 +58,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       const timeout = setTimeout(() => {
         setShowToolbar(true);
         updateToolbarPosition();
-      }, 150); // Small delay to ensure selection is complete
+      }, 200); // Slightly longer delay to ensure selection is complete
       setSelectionTimeout(timeout);
     } else {
       setShowToolbar(false);
@@ -71,7 +67,29 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Configure built-in list extensions
+        bulletList: {
+          HTMLAttributes: {
+            class: 'list-disc ml-6',
+          },
+        },
+        orderedList: {
+          HTMLAttributes: {
+            class: 'list-decimal ml-6',
+          },
+        },
+        blockquote: {
+          HTMLAttributes: {
+            class: 'border-l-4 border-blue-400 pl-4 italic text-gray-700',
+          },
+        },
+        code: {
+          HTMLAttributes: {
+            class: 'bg-gray-100 px-2 py-1 rounded text-sm font-mono',
+          },
+        },
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -93,27 +111,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         multicolor: true,
       }),
       Underline,
-      BulletList.configure({
-        HTMLAttributes: {
-          class: 'list-disc ml-6',
-        },
-      }),
-      OrderedList.configure({
-        HTMLAttributes: {
-          class: 'list-decimal ml-6',
-        },
-      }),
-      ListItem,
-      Blockquote.configure({
-        HTMLAttributes: {
-          class: 'border-l-4 border-blue-400 pl-4 italic text-gray-700',
-        },
-      }),
-      Code.configure({
-        HTMLAttributes: {
-          class: 'bg-gray-100 px-2 py-1 rounded text-sm font-mono',
-        },
-      }),
     ],
     content: isUrlMode ? '' : content,
     onUpdate: ({ editor }) => {
@@ -129,7 +126,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       setHasSelection(hasValidSelection);
       
       // Only show toolbar for meaningful text selections (minimum 1 character)
-      if (hasValidSelection && selectionLength >= 1) {
+      if (hasValidSelection && selectionLength >= 1 && !isSelecting) {
         debouncedShowToolbar(true);
       } else {
         debouncedShowToolbar(false);
@@ -139,11 +136,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       if (!isUrlMode) {
         setHasFocus(true);
         // Don't automatically show toolbar on focus - wait for actual selection
-        const { from, to } = editor?.state.selection || { from: 0, to: 0 };
-        const selectionLength = to - from;
-        if (selectionLength > 0) {
-          debouncedShowToolbar(true);
-        }
       }
     },
     onBlur: ({ event }) => {
@@ -187,7 +179,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           debouncedShowToolbar(true);
         }
       }
-    }, 50);
+    }, 100);
   }, [editor, hasFocus, debouncedShowToolbar]);
 
   const updateToolbarPosition = () => {
