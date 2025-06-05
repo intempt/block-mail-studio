@@ -110,9 +110,9 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   };
 
   return (
-    <div className={`enhanced-text-block relative ${isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}>
-      {/* Clean block content without Card wrapper */}
-      <div className="min-h-[40px]">
+    <div className={`enhanced-text-block relative group ${isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}>
+      {/* Clean block content - Professional text editor */}
+      <div className="min-h-[60px]">
         {block.type === 'image' ? (
           <>
             {isUploadingImage ? (

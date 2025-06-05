@@ -7,6 +7,9 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
+import FontFamily from '@tiptap/extension-font-family';
+import Highlight from '@tiptap/extension-highlight';
+import { FontSize } from '@/extensions/FontSizeExtension';
 import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
 
@@ -47,12 +50,21 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       }),
       TextStyle,
       Color,
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
+      FontSize.configure({
+        types: ['textStyle'],
+      }),
+      Highlight.configure({
+        multicolor: true,
+      }),
       Underline,
     ],
     content: content || '<p></p>',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[24px] text-sm p-1',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[32px] text-sm p-2 rounded border border-gray-200 focus:border-blue-400 transition-colors',
       },
     },
     onUpdate: ({ editor }) => {
@@ -67,7 +79,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       console.log('TableCellEditor focused');
       setHasFocus(true);
       updateToolbarPosition();
-      setIsToolbarVisible(true);
+      setTimeout(() => setIsToolbarVisible(true), 100);
     },
     onBlur: ({ event }) => {
       console.log('TableCellEditor blurred');
@@ -75,7 +87,8 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       
       // Don't hide toolbar if clicking on toolbar
       if (relatedTarget?.closest('.full-tiptap-toolbar') || 
-          relatedTarget?.closest('[data-radix-popover-content]')) {
+          relatedTarget?.closest('[data-radix-popover-content]') ||
+          relatedTarget?.closest('[data-radix-dropdown-content]')) {
         return;
       }
       
@@ -136,7 +149,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
   if (!editor) {
     console.log('TableCellEditor: Editor not initialized yet');
     return (
-      <div className="min-h-[32px] p-2 text-gray-400 text-sm">
+      <div className="min-h-[32px] p-2 text-gray-400 text-sm border border-gray-200 rounded">
         Loading editor...
       </div>
     );

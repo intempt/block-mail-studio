@@ -19,11 +19,18 @@ import {
   Wand2,
   Zap,
   Target,
-  BookOpen
+  BookOpen,
+  List,
+  ListOrdered,
+  Quote,
+  Code,
+  Highlighter,
+  Plus,
+  Minus
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { TipTapAIService } from '@/services/tiptapAIService';
+import { tiptapAIService } from '@/services/tiptapAIService';
 import { EmailContext } from '@/services/tiptapAIService';
 import { useNotification } from '@/contexts/NotificationContext';
 
@@ -45,15 +52,37 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   emailContext = {}
 }) => {
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const { success, error, warning } = useNotification();
 
+  const fontFamilies = [
+    { name: 'Arial', value: 'Arial, sans-serif' },
+    { name: 'Helvetica', value: 'Helvetica, sans-serif' },
+    { name: 'Times New Roman', value: 'Times New Roman, serif' },
+    { name: 'Georgia', value: 'Georgia, serif' },
+    { name: 'Verdana', value: 'Verdana, sans-serif' },
+    { name: 'Courier New', value: 'Courier New, monospace' }
+  ];
+
+  const fontSizes = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px'];
+  
+  const colors = [
+    '#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF',
+    '#FF0000', '#FF6600', '#FFCC00', '#33CC00', '#0099CC', '#6633CC',
+    '#FF3366', '#FF9900', '#FFFF00', '#66FF00', '#00CCFF', '#9966FF'
+  ];
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (toolbarRef.current && !toolbarRef.current.contains(event.target as Node)) {
         setShowAIPanel(false);
+        setShowColorPicker(false);
+        setShowLinkDialog(false);
       }
     };
 
@@ -66,14 +95,13 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
     setIsGenerating(true);
     try {
-      const result = await TipTapAIService.generateContent({
+      const result = await tiptapAIService.generateContent({
         prompt: aiPrompt,
         context: emailContext,
         tone: 'professional'
       });
 
       if (result.success) {
-        const currentSelection = editor.state.selection;
         editor.chain().focus().deleteSelection().insertContent(result.data).run();
         success('AI content generated successfully');
         setAiPrompt('');
@@ -103,7 +131,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
     setIsGenerating(true);
     try {
-      const result = await TipTapAIService.optimizeContent({
+      const result = await tiptapAIService.optimizeContent({
         content: selectedText,
         optimizationType: 'engagement',
         context: emailContext
@@ -137,7 +165,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
     setIsGenerating(true);
     try {
-      const result = await TipTapAIService.improveReadability(selectedText);
+      const result = await tiptapAIService.improveReadability(selectedText);
 
       if (result.success) {
         editor.chain().focus().deleteSelection().insertContent(result.data).run();
@@ -152,51 +180,80 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     }
   }, [editor, success, error, warning]);
 
-  const handleSmartSuggestions = useCallback(async () => {
-    if (!editor) return;
-
-    const selectedText = editor.state.doc.textBetween(
-      editor.state.selection.from,
-      editor.state.selection.to
-    );
-
-    const contextText = selectedText || editor.getText();
+  const handleAddLink = () => {
+    if (!editor || !linkUrl.trim()) return;
     
-    setIsGenerating(true);
-    try {
-      const result = await TipTapAIService.generateContent({
-        prompt: `Provide 3 smart suggestions to improve this email content: "${contextText}"`,
-        context: emailContext,
-        tone: 'professional'
-      });
+    editor.chain().focus().setLink({ href: linkUrl }).run();
+    setLinkUrl('');
+    setShowLinkDialog(false);
+    success('Link added successfully');
+  };
 
-      if (result.success) {
-        success('AI suggestions generated - check the content');
-      } else {
-        error(result.error || 'Failed to generate suggestions');
-      }
-    } catch (err) {
-      error('Smart suggestions failed');
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [editor, emailContext, success, error]);
+  const handleRemoveLink = () => {
+    if (!editor) return;
+    editor.chain().focus().unsetLink().run();
+    setShowLinkDialog(false);
+  };
 
-  // Show toolbar on focus, not just selection
   if (!isVisible || !editor) return null;
 
   const toolbarStyle = {
     position: 'fixed' as const,
-    top: position.top - 60,
-    left: Math.max(10, position.left - 200),
+    top: Math.max(10, position.top - 80),
+    left: Math.max(10, Math.min(window.innerWidth - 500, position.left - 250)),
     zIndex: 1000,
-    maxWidth: '400px'
+    maxWidth: '480px'
   };
 
   return (
     <div ref={toolbarRef} style={toolbarStyle}>
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-2 flex items-center gap-1 flex-wrap">
-        {/* Basic formatting buttons */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-3 flex flex-wrap items-center gap-1">
+        {/* Font Family */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-xs">
+              <Type className="w-3 h-3 mr-1" />
+              Font
+              <ChevronDown className="w-3 h-3 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {fontFamilies.map((font) => (
+              <DropdownMenuItem
+                key={font.value}
+                onClick={() => editor.chain().focus().setFontFamily(font.value).run()}
+                className={editor.isActive('textStyle', { fontFamily: font.value }) ? 'bg-gray-100' : ''}
+              >
+                <span style={{ fontFamily: font.value }}>{font.name}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Font Size */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-xs">
+              Size
+              <ChevronDown className="w-3 h-3 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            {fontSizes.map((size) => (
+              <DropdownMenuItem
+                key={size}
+                onClick={() => editor.chain().focus().setFontSize(size).run()}
+                className={editor.isActive('textStyle', { fontSize: size }) ? 'bg-gray-100' : ''}
+              >
+                {size}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
+        {/* Basic formatting */}
         <Button
           variant="ghost"
           size="sm"
@@ -224,9 +281,42 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
           <Underline className="w-4 h-4" />
         </Button>
 
+        {/* Text Color */}
+        <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Palette className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-2">
+            <div className="grid grid-cols-6 gap-1">
+              {colors.map((color) => (
+                <button
+                  key={color}
+                  className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color }}
+                  onClick={() => {
+                    editor.chain().focus().setColor(color).run();
+                    setShowColorPicker(false);
+                  }}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          className={editor.isActive('highlight') ? 'bg-gray-100' : ''}
+        >
+          <Highlighter className="w-4 h-4" />
+        </Button>
+
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
-        {/* Alignment buttons */}
+        {/* Alignment */}
         <Button
           variant="ghost"
           size="sm"
@@ -256,7 +346,84 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
-        {/* Enhanced AI Tools */}
+        {/* Lists and formatting */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={editor.isActive('bulletList') ? 'bg-gray-100' : ''}
+        >
+          <List className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          className={editor.isActive('orderedList') ? 'bg-gray-100' : ''}
+        >
+          <ListOrdered className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className={editor.isActive('blockquote') ? 'bg-gray-100' : ''}
+        >
+          <Quote className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          className={editor.isActive('code') ? 'bg-gray-100' : ''}
+        >
+          <Code className="w-4 h-4" />
+        </Button>
+
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
+        {/* Link */}
+        <Popover open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={editor.isActive('link') ? 'bg-gray-100' : ''}
+            >
+              <Link className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3">
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Link URL</label>
+                <Input
+                  placeholder="https://example.com"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddLink()}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleAddLink} size="sm" disabled={!linkUrl.trim()}>
+                  Add Link
+                </Button>
+                {editor.isActive('link') && (
+                  <Button onClick={handleRemoveLink} variant="outline" size="sm">
+                    Remove Link
+                  </Button>
+                )}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <div className="w-px h-6 bg-gray-300 mx-1" />
+
+        {/* AI Tools */}
         <Popover open={showAIPanel} onOpenChange={setShowAIPanel}>
           <PopoverTrigger asChild>
             <Button
@@ -315,16 +482,6 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                   <BookOpen className="w-3 h-3 mr-2" />
                   Improve Readability
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSmartSuggestions}
-                  disabled={isGenerating}
-                  className="text-xs justify-start"
-                >
-                  <Zap className="w-3 h-3 mr-2" />
-                  Smart Suggestions
-                </Button>
               </div>
 
               {emailContext.blockType && (
@@ -335,15 +492,6 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
             </div>
           </PopoverContent>
         </Popover>
-
-        {/* Link button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onLinkClick}
-        >
-          <Link className="w-4 h-4" />
-        </Button>
       </div>
     </div>
   );

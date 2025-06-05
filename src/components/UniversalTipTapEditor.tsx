@@ -109,7 +109,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       if (!isUrlMode) {
         setHasFocus(true);
         updateToolbarPosition();
-        setShowToolbar(true);
+        setTimeout(() => setShowToolbar(true), 100);
       }
     },
     onBlur: ({ event }) => {
@@ -117,7 +117,8 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       
       // Don't hide toolbar if clicking on toolbar or its elements
       if (relatedTarget?.closest('.full-tiptap-toolbar') || 
-          relatedTarget?.closest('[data-radix-popover-content]')) {
+          relatedTarget?.closest('[data-radix-popover-content]') ||
+          relatedTarget?.closest('[data-radix-dropdown-content]')) {
         return;
       }
       
@@ -202,7 +203,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 
   return (
     <div 
-      className="universal-tiptap-editor relative"
+      className="universal-tiptap-editor relative group"
       style={position ? {
         position: 'absolute',
         top: position.y,
@@ -210,10 +211,14 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         zIndex: 1000
       } : {}}
     >
-      <div className="border-0 rounded-none bg-transparent">
+      {/* Professional Editor Container */}
+      <div className={`
+        border rounded-lg bg-white transition-all duration-200
+        ${hasFocus ? 'border-blue-400 shadow-md ring-1 ring-blue-400/20' : 'border-gray-200 hover:border-gray-300'}
+      `}>
         <EditorContent 
           editor={editor} 
-          className="prose prose-sm max-w-none p-3 focus:outline-none min-h-[60px]"
+          className="prose prose-sm max-w-none p-4 focus:outline-none min-h-[80px]"
           placeholder={placeholder}
         />
 
