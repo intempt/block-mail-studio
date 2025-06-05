@@ -32,6 +32,7 @@ import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 import { IntegratedGmailPreview } from './IntegratedGmailPreview';
+import { UniversalUpdatePanel } from './UniversalUpdatePanel';
 
 interface Block {
   id: string;
@@ -252,6 +253,8 @@ export default function EmailEditor({
 
   const handleGlobalStylesChange = (styles: any) => {
     console.log('Applying global styles:', styles);
+    // Global styles are now handled by the GlobalStylesService
+    // Changes will automatically propagate to all templates
   };
 
   const handlePreview = () => {
@@ -381,6 +384,12 @@ export default function EmailEditor({
     setShowGmailPreview(true);
   };
 
+  const [showUniversalPanel, setShowUniversalPanel] = useState(false);
+
+  const handleToggleUniversalPanel = () => {
+    setShowUniversalPanel(prev => !prev);
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -412,6 +421,8 @@ export default function EmailEditor({
         onGmailPreview={handleGmailPreview}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        onToggleUniversalPanel={handleToggleUniversalPanel}
+        showUniversalPanel={showUniversalPanel}
       />
 
       {/* Snippet Ribbon - Only show in edit mode */}
@@ -470,6 +481,13 @@ export default function EmailEditor({
           onApplyFix={handleApplyFix}
         />
       </div>
+
+      {/* Universal Update Panel - Show when toggled */}
+      {showUniversalPanel && (
+        <div className="fixed bottom-20 right-4 w-96 z-50">
+          <UniversalUpdatePanel />
+        </div>
+      )}
 
       {/* Keep existing modals */}
       {showPreview && (
