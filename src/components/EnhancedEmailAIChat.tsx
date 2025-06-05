@@ -229,7 +229,15 @@ export const EnhancedEmailAIChat: React.FC<EnhancedEmailAIChatProps> = ({
     setIsGenerating(true);
     try {
       const result = await DirectAIService.analyzePerformance(content);
-      const analysis = extractServiceData(result, { overallScore: 0, optimizationSuggestions: [] });
+      const analysis = extractServiceData(result, { 
+        overallScore: 0, 
+        optimizationSuggestions: [],
+        deliverabilityScore: 0,
+        mobileScore: 0,
+        spamScore: 0,
+        metrics: {},
+        accessibilityIssues: []
+      });
       
       const analysisText = `Performance Analysis:\nOverall Score: ${analysis.overallScore}/100\n\nSuggestions:\n${analysis.optimizationSuggestions?.join('\n') || 'No suggestions available'}`;
       
@@ -331,9 +339,12 @@ export const EnhancedEmailAIChat: React.FC<EnhancedEmailAIChatProps> = ({
           </TabsContent>
 
           <TabsContent value="templates" className="flex-1 m-0">
-            <TemplateAIGenerator onTemplateGenerated={(template) => {
-              onEmailGenerated?.(template.html, template.subject, template.previewText);
-            }} />
+            <TemplateAIGenerator 
+              editor={null}
+              onTemplateGenerated={(template) => {
+                onEmailGenerated?.(template.html, template.name, template.description);
+              }} 
+            />
           </TabsContent>
 
           <TabsContent value="evolution" className="flex-1 m-0">

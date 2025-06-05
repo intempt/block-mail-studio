@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,12 @@ interface EnhancedTextBlockRendererProps {
   onBlockChange?: (block: EmailBlock) => void;
   onBlockRemove?: (id: string) => void;
   onBlockDuplicate?: (block: EmailBlock) => void;
+  isSelected?: boolean;
+  isEditing?: boolean;
+  onUpdate?: (block: EmailBlock) => void;
+  onEditStart?: () => void;
+  onEditEnd?: () => void;
+  onInsertVariable?: () => void;
 }
 
 export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps> = ({
@@ -54,9 +59,15 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   emailContext: emailContextProp,
   onBlockChange,
   onBlockRemove,
-  onBlockDuplicate
+  onBlockDuplicate,
+  isSelected,
+  isEditing,
+  onUpdate,
+  onEditStart,
+  onEditEnd,
+  onInsertVariable
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditingLocal, setIsEditingLocal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
   const [showActions, setShowActions] = useState(false);
@@ -69,6 +80,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       content: html
     };
     onBlockChange?.(updatedBlock);
+    onUpdate?.(updatedBlock);
   };
 
   const handleGenerateContent = async () => {
@@ -125,6 +137,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       type: newType
     };
     onBlockChange?.(updatedBlock);
+    onUpdate?.(updatedBlock);
   };
 
   const renderBlockTypeIcon = (type: string) => {
@@ -178,12 +191,12 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   // Create email context for AI operations
   const aiEmailContext: EmailContext = {
     blockType: 'text',
-    emailHTML: emailContextProp,
+    emailHTML: emailContextProp || '',
     targetAudience: 'general'
   };
 
   return (
-    <Card className="relative mb-4">
+    <Card className={`relative mb-4 ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
       {/* Block Content */}
       <div className="p-4">
         {block.type === 'image' ? (
