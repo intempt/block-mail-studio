@@ -19,18 +19,6 @@ import { MJMLService } from '@/services/MJMLService';
 import { useNotification } from '@/contexts/NotificationContext';
 import { DropZoneIndicator } from './DropZoneIndicator';
 
-// Mock AIContext if it doesn't exist
-const useAI = () => ({
-  generateAIAnalysis: () => Promise.resolve(null)
-});
-
-export interface EmailBlockCanvasRef {
-  addBlock: (block: EmailBlock) => void;
-  replaceAllBlocks: (blocks: EmailBlock[]) => void;
-  getCurrentHTML: () => string;
-  findAndReplaceText: (searchText: string, replaceText: string) => void;
-}
-
 interface EmailBlockCanvasProps {
   onContentChange: (content: string) => void;
   onBlockSelect: (blockId: string | null) => void;
@@ -43,7 +31,7 @@ interface EmailBlockCanvasProps {
   showAIAnalytics: boolean;
 }
 
-export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlockCanvasProps>(
+export const EmailBlockCanvas = React.forwardRef<any, EmailBlockCanvasProps>(
   (props, ref) => {
     const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -54,7 +42,6 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
     const [lastGeneratedHTML, setLastGeneratedHTML] = useState<string>('');
 
     const { success, error } = useNotification();
-    const { generateAIAnalysis } = useAI();
 
     const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -81,8 +68,8 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 </mjml>`;
         
         try {
-          const result = await MJMLService.renderMJML(emptyHTML);
-          if (result.success && result.html) {
+          const result = await MJMLService.compile(emptyHTML);
+          if (result.html) {
             console.log('EmailBlockCanvas: Generated empty email HTML');
             return result.html;
           }
@@ -127,7 +114,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
           mjmlContent += `
     <mj-section>
       <mj-column>
-        <mj-button href="${block.content.link}">
+        <mj-button href="${block.content.href}">
           ${block.content.text}
         </mj-button>
       </mj-column>
@@ -154,7 +141,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 `;
               } else if (innerBlock.type === 'button') {
                 mjmlContent += `
-        <mj-button href="${innerBlock.content.link}">
+        <mj-button href="${innerBlock.content.href}">
           ${innerBlock.content.text}
         </mj-button>
 `;
@@ -176,8 +163,8 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 `;
 
       try {
-        const result = await MJMLService.renderMJML(mjmlContent);
-        if (result.success && result.html) {
+        const result = await MJMLService.compile(mjmlContent);
+        if (result.html) {
           setLastGeneratedHTML(result.html);
           props.onContentChange(result.html);
           return result.html;
@@ -210,9 +197,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
           type: 'image',
           content: {
             src: base64,
-            alt: file.name,
-            alignment: 'center',
-            width: '100%'
+            alt: file.name
           },
           styling: {
             desktop: { width: '100%', height: 'auto' },
@@ -235,9 +220,7 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
 
     const {getRootProps, getInputProps, isDragActive} = useDropzone({
       onDrop,
-      accept: {
-        'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
-      },
+      accept: { 'image/*': [] },
       multiple: false
     });
 
@@ -383,170 +366,6 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
       }
     };
 
-    const handleDeleteBlock = (blockId: string) => {
-      setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
-      setSelectedBlockId(null);
-      props.onBlockSelect(null);
-    };
-
-    const handleDuplicateBlock = (blockId: string) => {
-      const blockToDuplicate = emailBlocks.find(block => block.id === blockId);
-      if (!blockToDuplicate) return;
-
-      const duplicatedBlock = {
-        ...blockToDuplicate,
-        id: uuidv4()
-      };
-
-      setEmailBlocks(prev => [...prev, duplicatedBlock]);
-    };
-
-    const handleSaveAsSnippet = async (blockId: string) => {
-      const blockToStar = emailBlocks.find(block => block.id === blockId);
-      if (!blockToStar) return;
-
-      setEmailBlocks(prev => prev.map(block => {
-        if (block.id === blockId) {
-          return {
-            ...block,
-            isStarred: true
-          };
-        }
-        return block;
-      }));
-
-      success('Block saved as snippet');
-    };
-
-    const handleUnstarBlock = async (blockId: string) => {
-      setEmailBlocks(prev => prev.map(block => {
-        if (block.id === blockId) {
-          return {
-            ...block,
-            isStarred: false
-          };
-        }
-        return block;
-      }));
-    };
-
-    const handleTipTapChange = (blockId: string, html: string) => {
-      setEmailBlocks(prev => prev.map(block => {
-        if (block.id === blockId && block.type === 'text') {
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              html: html
-            }
-          };
-        }
-        return block;
-      }));
-    };
-
-    const handleTipTapBlur = () => {
-      setEditingBlockId(null);
-    };
-
-    const handleColumnDrop = (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
-      e.preventDefault();
-
-      const droppedBlockId = e.dataTransfer.getData('text/plain');
-      if (!droppedBlockId) return;
-
-      const droppedBlock = emailBlocks.find(block => block.id === droppedBlockId);
-      if (!droppedBlock) return;
-
-      // Remove the block from its original position
-      const updatedBlocks = emailBlocks.filter(block => block.id !== droppedBlockId);
-
-      // Find the layout block and update its column
-      const updatedLayoutBlocks = updatedBlocks.map(block => {
-        if (block.id === layoutBlockId && block.type === 'columns') {
-          const updatedColumns = block.content.columns.map((column, index) => {
-            if (index === columnIndex) {
-              return {
-                ...column,
-                blocks: [...column.blocks, droppedBlock]
-              };
-            }
-            return column;
-          });
-
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              columns: updatedColumns
-            }
-          };
-        }
-        return block;
-      });
-
-      setEmailBlocks(updatedLayoutBlocks);
-    };
-
-    const handleBlockEditStart = (blockId: string) => {
-      setEditingBlockId(blockId);
-    };
-
-    const handleBlockEditEnd = () => {
-      setEditingBlockId(null);
-    };
-
-    const handleBlockUpdate = (block: EmailBlock) => {
-      setEmailBlocks(prev =>
-        prev.map(b => b.id === block.id ? block : b)
-      );
-    };
-
-    // Add method to get current HTML content
-    const getCurrentHTML = useCallback(() => {
-      if (lastGeneratedHTML) {
-        return lastGeneratedHTML;
-      }
-      
-      // If no HTML generated yet, trigger generation
-      generateEmailHTML().then(html => {
-        setLastGeneratedHTML(html);
-        props.onContentChange?.(html);
-      });
-      
-      return lastGeneratedHTML || '';
-    }, [lastGeneratedHTML, generateEmailHTML, props]);
-
-    useImperativeHandle(ref, () => ({
-      addBlock: (block: EmailBlock) => {
-        console.log('EmailBlockCanvas: Adding block via ref:', block);
-        setEmailBlocks(prev => [...prev, block]);
-      },
-      
-      replaceAllBlocks: (blocks: EmailBlock[]) => {
-        console.log('EmailBlockCanvas: Replacing all blocks via ref:', blocks.length);
-        setEmailBlocks(blocks);
-      },
-      
-      getCurrentHTML,
-      
-      findAndReplaceText: (searchText: string, replaceText: string) => {
-        console.log('EmailBlockCanvas: Find and replace:', { searchText, replaceText });
-        setEmailBlocks(prev => prev.map(block => {
-          if (block.type === 'text' && block.content?.html) {
-            return {
-              ...block,
-              content: {
-                ...block.content,
-                html: block.content.html.replace(searchText, replaceText)
-              }
-            };
-          }
-          return block;
-        }));
-      }
-    }), [getCurrentHTML]);
-
     return (
       <div
         className="email-canvas relative bg-white rounded-lg shadow-md transition-all duration-300 overflow-hidden"
@@ -557,6 +376,9 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
         }}
         data-testid="email-canvas"
         {...getRootProps()}
+        onDragOver={handleCanvasDragOver}
+        onDragLeave={handleCanvasDragLeave}
+        onDrop={handleCanvasDrop}
         onClick={() => {
           setSelectedBlockId(null);
           props.onBlockSelect(null);
@@ -571,33 +393,119 @@ export const EmailBlockCanvas = React.forwardRef<EmailBlockCanvasRef, EmailBlock
           isDraggingOver={isDraggingOver}
           dragOverIndex={dragOverIndex}
           currentDragType={currentDragType}
-          onBlockClick={(blockId: string) => {
-            setSelectedBlockId(blockId);
-            props.onBlockSelect(blockId);
-          }}
-          onBlockDoubleClick={(blockId: string) => {
-            setEditingBlockId(blockId);
-          }}
-          onBlockDragStart={() => {}}
-          onBlockDrop={() => {}}
+          onBlockClick={handleBlockClick}
+          onBlockDoubleClick={handleBlockDoubleClick}
+          onBlockDragStart={handleBlockDragStart}
+          onBlockDrop={handleBlockDrop}
           onDeleteBlock={(blockId: string) => {
             setEmailBlocks(prev => prev.filter(block => block.id !== blockId));
+            setSelectedBlockId(null);
+            props.onBlockSelect(null);
           }}
           onDuplicateBlock={(blockId: string) => {
             const blockToDuplicate = emailBlocks.find(block => block.id === blockId);
-            if (blockToDuplicate) {
-              const duplicatedBlock = { ...blockToDuplicate, id: uuidv4() };
-              setEmailBlocks(prev => [...prev, duplicatedBlock]);
-            }
+            if (!blockToDuplicate) return;
+
+            const duplicatedBlock = {
+              ...blockToDuplicate,
+              id: uuidv4()
+            };
+
+            setEmailBlocks(prev => [...prev, duplicatedBlock]);
           }}
-          onSaveAsSnippet={() => {}}
-          onUnstarBlock={() => {}}
-          onTipTapChange={() => {}}
-          onTipTapBlur={() => {}}
-          onColumnDrop={() => {}}
-          onBlockEditStart={() => {}}
-          onBlockEditEnd={() => {}}
-          onBlockUpdate={() => {}}
+          onSaveAsSnippet={async (blockId: string) => {
+            const blockToStar = emailBlocks.find(block => block.id === blockId);
+            if (!blockToStar) return;
+
+            setEmailBlocks(prev => prev.map(block => {
+              if (block.id === blockId) {
+                return {
+                  ...block,
+                  isStarred: true
+                };
+              }
+              return block;
+            }));
+
+            success('Block saved as snippet');
+          }}
+          onUnstarBlock={async (blockId: string) => {
+            setEmailBlocks(prev => prev.map(block => {
+              if (block.id === blockId) {
+                return {
+                  ...block,
+                  isStarred: false
+                };
+              }
+              return block;
+            }));
+          }}
+          onTipTapChange={(blockId: string, html: string) => {
+            setEmailBlocks(prev => prev.map(block => {
+              if (block.id === blockId && block.type === 'text') {
+                return {
+                  ...block,
+                  content: {
+                    ...block.content,
+                    html: html
+                  }
+                };
+              }
+              return block;
+            }));
+          }}
+          onTipTapBlur={() => {
+            setEditingBlockId(null);
+          }}
+          onColumnDrop={(e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
+            e.preventDefault();
+
+            const droppedBlockId = e.dataTransfer.getData('text/plain');
+            if (!droppedBlockId) return;
+
+            const droppedBlock = emailBlocks.find(block => block.id === droppedBlockId);
+            if (!droppedBlock) return;
+
+            // Remove the block from its original position
+            const updatedBlocks = emailBlocks.filter(block => block.id !== droppedBlockId);
+
+            // Find the layout block and update its column
+            const updatedLayoutBlocks = updatedBlocks.map(block => {
+              if (block.id === layoutBlockId && block.type === 'columns') {
+                const updatedColumns = block.content.columns.map((column, index) => {
+                  if (index === columnIndex) {
+                    return {
+                      ...column,
+                      blocks: [...column.blocks, droppedBlock]
+                    };
+                  }
+                  return column;
+                });
+
+                return {
+                  ...block,
+                  content: {
+                    ...block.content,
+                    columns: updatedColumns
+                  }
+                };
+              }
+              return block;
+            });
+
+            setEmailBlocks(updatedLayoutBlocks);
+          }}
+          onBlockEditStart={(blockId: string) => {
+            setEditingBlockId(blockId);
+          }}
+          onBlockEditEnd={() => {
+            setEditingBlockId(null);
+          }}
+          onBlockUpdate={(block: EmailBlock) => {
+            setEmailBlocks(prev =>
+              prev.map(b => b.id === block.id ? block : b)
+            );
+          }}
         />
         {isDragActive && (
           <div className="absolute inset-0 bg-gray-100 opacity-50 flex items-center justify-center text-gray-500">
