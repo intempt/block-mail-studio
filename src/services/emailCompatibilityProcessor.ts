@@ -6,6 +6,11 @@ interface GmailProcessingOptions {
   darkModeSupport?: boolean;
 }
 
+interface PreviewSize {
+  width: number;
+  height: number;
+}
+
 export class EmailCompatibilityProcessor {
   static processEmailForGmail(
     emailHtml: string, 
@@ -37,5 +42,19 @@ export class EmailCompatibilityProcessor {
     `;
 
     return processedHtml;
+  }
+
+  static getGmailPreviewSize(mode: 'desktop' | 'mobile'): PreviewSize {
+    if (mode === 'desktop') {
+      return {
+        width: 640,
+        height: 480
+      };
+    } else {
+      return {
+        width: 375,
+        height: 667
+      };
+    }
   }
 }
