@@ -97,6 +97,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           onDragOver={(e) => e.preventDefault()}
           onClick={() => onBlockClick(block.id)}
           onDoubleClick={() => onBlockDoubleClick(block.id, block.type)}
+          data-testid={`email-block-${block.id}`}
+          data-block-type="columns"
         >
           <BlockControls
             blockId={block.id}
@@ -130,7 +132,12 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     // Handle text blocks with enhanced editor
     if (block.type === 'text') {
       return (
-        <div key={block.id} className="group relative">
+        <div 
+          key={block.id} 
+          className="group relative"
+          data-testid={`email-block-${block.id}`}
+          data-block-type="text"
+        >
           <BlockControls
             blockId={block.id}
             onDelete={onDeleteBlock}
@@ -166,6 +173,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         onDragOver={(e) => e.preventDefault()}
         onClick={() => onBlockClick(block.id)}
         onDoubleClick={() => onBlockDoubleClick(block.id, block.type)}
+        data-testid={`email-block-${block.id}`}
+        data-block-type={block.type}
       >
         <BlockControls
           blockId={block.id}
@@ -198,6 +207,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               dragType={currentDragType}
               position="middle"
               className="min-h-48"
+              data-testid="drop-zone-indicator"
             />
           ) : (
             <div className="text-gray-500">
@@ -215,6 +225,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               dragType={currentDragType}
               position="top"
               className="mb-4"
+              data-testid="drop-zone-indicator"
             />
           )}
 
@@ -227,6 +238,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                   dragType={currentDragType}
                   position="top"
                   className="mb-4"
+                  data-testid="drop-zone-indicator"
                 />
               )}
               
@@ -239,6 +251,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                   dragType={currentDragType}
                   position="bottom"
                   className="mt-4"
+                  data-testid="drop-zone-indicator"
                 />
               )}
             </React.Fragment>
@@ -251,6 +264,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
               dragType={currentDragType}
               position="bottom"
               className="mt-6"
+              data-testid="drop-zone-indicator"
             />
           )}
         </div>

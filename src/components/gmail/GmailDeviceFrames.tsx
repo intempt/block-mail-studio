@@ -106,11 +106,14 @@ export const GmailDeviceFrame: React.FC<DeviceFrameProps> = ({
         borderRadius: `${spec.borderRadius}px`,
         padding: `${spec.padding}px`
       }}
+      data-testid="device-frame"
+      data-device={device}
     >
       {/* Screen */}
       <div 
         className="w-full h-full bg-white overflow-hidden relative"
         style={{ borderRadius: `${spec.screenRadius}px` }}
+        data-testid="device-screen"
       >
         {/* Dynamic Island (iPhone 14 Pro) */}
         {spec.dynamicIsland && (
@@ -121,6 +124,7 @@ export const GmailDeviceFrame: React.FC<DeviceFrameProps> = ({
               height: '37px',
               borderRadius: '19px'
             }}
+            data-testid="dynamic-island"
           />
         )}
 
@@ -130,7 +134,8 @@ export const GmailDeviceFrame: React.FC<DeviceFrameProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-hidden" style={{ 
           paddingTop: showStatusBar ? '8px' : '0' 
-        }}>
+        }}
+        data-testid="frame-content">
           {children}
         </div>
       </div>
@@ -145,7 +150,10 @@ export const GmailResponsiveFrame: React.FC<{
 }> = ({ children, mode, mobileDevice = 'iphone14pro' }) => {
   if (mode === 'desktop') {
     return (
-      <div className="w-full h-full bg-white overflow-hidden gmail-elevation-2 gmail-rounded-lg">
+      <div 
+        className="w-full h-full bg-white overflow-hidden gmail-elevation-2 gmail-rounded-lg"
+        data-testid="desktop-frame"
+      >
         {children}
       </div>
     );

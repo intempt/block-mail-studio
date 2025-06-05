@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +66,8 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
 
   if (isProcessing) {
     return (
-      <div className="h-full flex items-center justify-center" style={{ backgroundColor: 'var(--gmail-gray-50)' }}>
+      <div className="h-full flex items-center justify-center" style={{ backgroundColor: 'var(--gmail-gray-50)' }}
+        data-testid="gmail-loading">
         <div className="text-center">
           <div 
             className="animate-spin gmail-rounded-full h-8 w-8 border-b-2 mx-auto mb-4"
@@ -85,7 +87,7 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
     : "h-full flex flex-col bg-white border-l" + " " + "border-gray-200";
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} data-testid="gmail-container">
       {/* Preview Content - Optimized for canvas integration */}
       <div className="flex-1 overflow-hidden" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
         <div className="h-full w-full flex items-center justify-center p-4">
@@ -96,6 +98,7 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
                 : (fullWidth ? 'scale(1.2)' : 'scale(1)'), 
               transformOrigin: 'center center'
             }}
+            data-testid="gmail-preview-container"
           >
             <GmailResponsiveFrame mode={previewMode} mobileDevice="iphone14pro">
               {previewMode === 'desktop' ? (
