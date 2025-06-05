@@ -1,8 +1,29 @@
 
-import { useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { InlineNotification } from '@/components/ui/inline-notification';
 
-export const useInlineNotifications = () => {
+interface NotificationContextType {
+  notifications: InlineNotification[];
+  addNotification: (notification: Omit<InlineNotification, 'id'>) => string;
+  removeNotification: (id: string) => void;
+  clearAll: () => void;
+  success: (message: string, options?: Partial<InlineNotification>) => string;
+  error: (message: string, options?: Partial<InlineNotification>) => string;
+  warning: (message: string, options?: Partial<InlineNotification>) => string;
+  info: (message: string, options?: Partial<InlineNotification>) => string;
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+
+export const useNotification = () => {
+  const context = useContext(NotificationContext);
+  if (!context) {
+    throw new Error('useNotification must be used within a NotificationProvider');
+  }
+  return context;
+};
+
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<InlineNotification[]>([]);
 
   const addNotification = useCallback((
@@ -16,7 +37,7 @@ export const useInlineNotifications = () => {
       ...notification
     };
 
-    setNotifications(prev => [newNotification, ...prev.slice(0, 2)]); // Limit to 3 notifications
+    setNotifications(prev => [newNotification, ...prev]);
     return id;
   }, []);
 
@@ -61,14 +82,18 @@ export const useInlineNotifications = () => {
     });
   }, [addNotification]);
 
-  return {
-    notifications,
-    addNotification,
-    removeNotification,
-    clearAll,
-    success,
-    error,
-    warning,
-    info
-  };
+  return (
+    <NotificationContext.Provider value={{
+      notifications,
+      addNotification,
+      removeNotification,
+      clearAll,
+      success,
+      error,
+      warning,
+      info
+    }}>
+      {children}
+    </NotificationContext.Provider>
+  );
 };

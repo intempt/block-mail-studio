@@ -3,6 +3,8 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Editor } from '@tiptap/react';
 import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
+import { useNotification } from '@/contexts/NotificationContext';
+import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 
 interface FloatingTipTapToolbarProps {
   editor: Editor | null;
@@ -20,6 +22,7 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   emailContext = {}
 }) => {
   const [containerElement, setContainerElement] = useState<HTMLElement | null>(null);
+  const { notifications, removeNotification } = useNotification();
 
   useEffect(() => {
     // Find the closest scrollable container or use document body
@@ -43,14 +46,30 @@ const FloatingTipTapToolbar: React.FC<FloatingTipTapToolbarProps> = ({
   }, [editor]);
 
   return (
-    <FullTipTapToolbar
-      editor={editor}
-      isVisible={isVisible}
-      position={position}
-      onLinkClick={onLinkClick}
-      containerElement={containerElement}
-      emailContext={emailContext}
-    />
+    <div>
+      {/* Contextual notifications near toolbar */}
+      {notifications.length > 0 && (
+        <div className="fixed z-50 max-w-sm" style={{ 
+          top: position.top - 100, 
+          left: position.left 
+        }}>
+          <InlineNotificationContainer
+            notifications={notifications}
+            onRemove={removeNotification}
+            maxNotifications={1}
+          />
+        </div>
+      )}
+      
+      <FullTipTapToolbar
+        editor={editor}
+        isVisible={isVisible}
+        position={position}
+        onLinkClick={onLinkClick}
+        containerElement={containerElement}
+        emailContext={emailContext}
+      />
+    </div>
   );
 };
 

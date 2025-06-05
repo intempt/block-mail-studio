@@ -32,6 +32,8 @@ import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 import { IntegratedGmailPreview } from './IntegratedGmailPreview';
+import { useNotification } from '@/contexts/NotificationContext';
+import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 
 interface Block {
   id: string;
@@ -66,6 +68,8 @@ export default function EmailEditor({
   onBack 
 }: EmailEditorProps) {
   console.log('EmailEditor: Component starting to render');
+
+  const { notifications, removeNotification, success, error, warning } = useNotification();
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
@@ -259,25 +263,36 @@ export default function EmailEditor({
   };
 
   const handlePublish = async () => {
-    const existingTemplateNames = templates.map(t => t.name);
-    const newTemplate = DirectTemplateService.savePublishedTemplate(
-      content,
-      subject,
-      existingTemplateNames
-    );
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowTemplateLibrary(false);
+    try {
+      const existingTemplateNames = templates.map(t => t.name);
+      const newTemplate = DirectTemplateService.savePublishedTemplate(
+        content,
+        subject,
+        existingTemplateNames
+      );
+      setTemplates(prev => [...prev, newTemplate]);
+      setShowTemplateLibrary(false);
+      success('Template published successfully');
+    } catch (err) {
+      error('Failed to publish template. Please try again.');
+    }
   };
 
   const handleTemplateLoad = (template: EmailTemplate) => {
     onContentChange(template.html);
     onSubjectChange(template.subject);
+    success(`Template "${template.name}" loaded successfully`);
   };
 
   const handleSaveAsTemplate = (template: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
-    const newTemplate = DirectTemplateService.saveTemplate(template);
-    setTemplates(prev => [...prev, newTemplate]);
-    setShowTemplateLibrary(false);
+    try {
+      const newTemplate = DirectTemplateService.saveTemplate(template);
+      setTemplates(prev => [...prev, newTemplate]);
+      setShowTemplateLibrary(false);
+      success('Template saved successfully');
+    } catch (err) {
+      error('Failed to save template. Please try again.');
+    }
   };
 
   const handleSnippetAdd = (snippet: EmailSnippet) => {
@@ -413,6 +428,17 @@ export default function EmailEditor({
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
       />
+
+      {/* Contextual Notifications - Position near ribbon */}
+      {notifications.length > 0 && (
+        <div className="px-6 py-2 bg-white border-b border-gray-200">
+          <InlineNotificationContainer
+            notifications={notifications}
+            onRemove={removeNotification}
+            maxNotifications={2}
+          />
+        </div>
+      )}
 
       {/* Snippet Ribbon - Only show in edit mode */}
       {viewMode === 'edit' && (
