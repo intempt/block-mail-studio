@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -122,7 +123,7 @@ export default function EmailEditor({
     justifyContent: 'start'
   }), []);
 
-  // Define saveStateToHistory function
+  // Define saveStateToHistory function FIRST
   const saveStateToHistory = useCallback(() => {
     const currentState: EmailEditorState = {
       content,
