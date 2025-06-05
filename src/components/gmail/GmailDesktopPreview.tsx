@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { 
-  ArrowLeft, Settings, RefreshCw, Print, ExternalLink,
+  ArrowLeft, Settings, RefreshCw, ExternalLink,
   ChevronDown, Clock, Tag, Paperclip
 } from 'lucide-react';
 import {
