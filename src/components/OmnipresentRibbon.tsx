@@ -24,7 +24,8 @@ import {
   Minus,
   Code,
   Eye,
-  Edit
+  Edit,
+  Database
 } from 'lucide-react';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -64,7 +65,8 @@ const blockItems: BlockItem[] = [
   { id: 'video', name: 'Video', icon: <Video className="w-9 h-9" /> },
   { id: 'social', name: 'Social', icon: <Share2 className="w-9 h-9" /> },
   { id: 'html', name: 'HTML', icon: <Code className="w-9 h-9" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-9 h-9" /> }
+  { id: 'table', name: 'Table', icon: <Table className="w-9 h-9" /> },
+  { id: 'content', name: 'Content', icon: <Database className="w-9 h-9" /> }
 ];
 
 const layoutOptions: LayoutOption[] = [
