@@ -68,12 +68,105 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [criticalSuggestions, setCriticalSuggestions] = useState<CriticalSuggestion[]>([]);
   const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState<CompleteAnalysisResult | null>(null);
+  const [allSuggestions, setAllSuggestions] = useState<CriticalSuggestion[]>([]);
   const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
   const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
   const [comprehensiveMetrics, setComprehensiveMetrics] = useState<ComprehensiveEmailMetrics | null>(null);
   const [isAnalysisCenterCollapsed, setIsAnalysisCenterCollapsed] = useState(false);
 
   const { analyze, result, isAnalyzing: isAnalyticsAnalyzing, clearCache } = useEmailAnalytics();
+
+  // Extract suggestions from comprehensive analysis and merge with critical suggestions
+  const extractAndMergeSuggestions = useCallback((critical: CriticalSuggestion[], comprehensive: CompleteAnalysisResult | null) => {
+    let merged = [...critical];
+
+    if (comprehensive) {
+      // Extract brand voice suggestions
+      if (comprehensive.brandVoice?.suggestions) {
+        comprehensive.brandVoice.suggestions.forEach((suggestion, index) => {
+          merged.push({
+            id: `brand-voice-${index}`,
+            title: suggestion.title,
+            reason: suggestion.reason,
+            category: 'tone',
+            current: suggestion.current || '',
+            suggested: suggestion.suggested || '',
+            severity: suggestion.impact === 'high' ? 'high' : suggestion.impact === 'medium' ? 'medium' : 'low',
+            confidence: suggestion.confidence || 75,
+            autoFixable: false,
+            businessImpact: `Brand voice improvement: ${suggestion.reason}`
+          });
+        });
+      }
+
+      // Extract subject line alternatives
+      if (comprehensive.subjectVariants && comprehensive.subjectVariants.length > 0) {
+        comprehensive.subjectVariants.forEach((variant, index) => {
+          merged.push({
+            id: `subject-variant-${index}`,
+            title: `Subject Line Alternative ${index + 1}`,
+            reason: 'AI-generated subject line variant to improve engagement',
+            category: 'subject',
+            current: subjectLine,
+            suggested: variant,
+            severity: 'medium',
+            confidence: 80,
+            autoFixable: true,
+            businessImpact: 'May improve open rates with fresh messaging'
+          });
+        });
+      }
+
+      // Extract content optimizations
+      if (comprehensive.optimizations) {
+        Object.entries(comprehensive.optimizations).forEach(([key, value], index) => {
+          if (value) {
+            merged.push({
+              id: `optimization-${key}-${index}`,
+              title: `${key.charAt(0).toUpperCase() + key.slice(1)} Optimization`,
+              reason: `Content optimized for ${key}`,
+              category: 'content',
+              current: 'Current content',
+              suggested: value,
+              severity: 'medium',
+              confidence: 70,
+              autoFixable: false,
+              businessImpact: `Improves ${key} and overall engagement`
+            });
+          }
+        });
+      }
+
+      // Extract accessibility issues
+      if (comprehensive.performance?.accessibilityIssues) {
+        comprehensive.performance.accessibilityIssues.forEach((issue, index) => {
+          merged.push({
+            id: `accessibility-${index}`,
+            title: `Fix ${issue.type} Accessibility Issue`,
+            reason: issue.description,
+            category: 'accessibility',
+            current: issue.description,
+            suggested: issue.fix,
+            severity: issue.severity === 'high' ? 'high' : issue.severity === 'medium' ? 'medium' : 'low',
+            confidence: 85,
+            autoFixable: issue.type === 'alt-text',
+            businessImpact: 'Improves accessibility and compliance'
+          });
+        });
+      }
+    }
+
+    // Sort by confidence (highest first)
+    merged.sort((a, b) => b.confidence - a.confidence);
+    
+    return merged;
+  }, [subjectLine]);
+
+  // Update merged suggestions when critical suggestions or comprehensive analysis changes
+  useEffect(() => {
+    const merged = extractAndMergeSuggestions(criticalSuggestions, comprehensiveAnalysis);
+    setAllSuggestions(merged);
+  }, [criticalSuggestions, comprehensiveAnalysis, extractAndMergeSuggestions]);
 
   const runCompleteAnalysis = async () => {
     if (!emailHTML.trim() || emailHTML.length < 50) {
@@ -177,7 +270,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   };
 
   const handleApplyAllAutoFixes = async () => {
-    const autoFixableSuggestions = criticalSuggestions.filter(s => 
+    const autoFixableSuggestions = allSuggestions.filter(s => 
       s.autoFixable && !appliedFixes.has(s.id)
     );
 
@@ -215,13 +308,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       case 'structure': return <Layout className="w-4 h-4" />;
       case 'personalization': return <User className="w-4 h-4" />;
       case 'tone': return <Brain className="w-4 h-4" />;
+      case 'content': return <Type className="w-4 h-4" />;
       default: return <Lightbulb className="w-4 h-4" />;
     }
   };
 
-  const hasAnalysisResults = criticalSuggestions.length > 0 || comprehensiveAnalysis;
-  const autoFixableCount = criticalSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
-  const totalSuggestionsCount = criticalSuggestions.length;
+  const hasAnalysisResults = allSuggestions.length > 0;
+  const autoFixableCount = allSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
+  const totalSuggestionsCount = allSuggestions.length;
 
   return (
     <TooltipProvider>
@@ -639,17 +733,17 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 </div>
               )}
 
-              {/* AI Suggestions & Auto-Fixes */}
-              {criticalSuggestions.length > 0 && (
+              {/* AI Suggestions & Auto-Fixes - now showing all merged suggestions */}
+              {allSuggestions.length > 0 && (
                 <Card className="p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-gray-900">AI Suggestions & Auto-Fixes</h3>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        {criticalSuggestions.filter(s => s.severity === 'critical').length} critical
+                        {allSuggestions.filter(s => s.severity === 'critical').length} critical
                       </Badge>
                       <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                        {criticalSuggestions.filter(s => s.severity === 'high').length} high
+                        {allSuggestions.filter(s => s.severity === 'high').length} high
                       </Badge>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         {autoFixableCount} auto-fixable
@@ -658,7 +752,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                   </div>
 
                   <div className="space-y-3">
-                    {criticalSuggestions.map((suggestion) => (
+                    {allSuggestions.map((suggestion) => (
                       <div
                         key={suggestion.id}
                         className={`p-4 rounded-lg border ${
@@ -753,77 +847,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                       </div>
                     ))}
                   </div>
-                </Card>
-              )}
-
-              {/* Comprehensive Analysis Results */}
-              {comprehensiveAnalysis && (
-                <Card className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Comprehensive Analysis</h3>
-                  
-                  {comprehensiveAnalysis.brandVoice?.suggestions && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Brand Voice & Tone</h4>
-                      <div className="space-y-2">
-                        {comprehensiveAnalysis.brandVoice.suggestions.map((suggestion, index) => (
-                          <div key={index} className="p-3 bg-purple-50 rounded border border-purple-200">
-                            <div className="font-medium text-purple-900">{suggestion.title}</div>
-                            <div className="text-sm text-purple-700 mt-1">{suggestion.reason}</div>
-                            {suggestion.current && suggestion.suggested && (
-                              <div className="mt-2 text-xs">
-                                <div className="text-purple-600">Current: {suggestion.current}</div>
-                                <div className="text-purple-800 font-medium">Suggested: {suggestion.suggested}</div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {comprehensiveAnalysis.subjectVariants && comprehensiveAnalysis.subjectVariants.length > 0 && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Subject Line Alternatives</h4>
-                      <div className="space-y-1">
-                        {comprehensiveAnalysis.subjectVariants.map((variant, index) => (
-                          <div key={index} className="p-2 bg-blue-50 rounded border border-blue-200 text-sm text-blue-800">
-                            {variant}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {comprehensiveAnalysis.optimizations && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Content Optimizations</h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        {Object.entries(comprehensiveAnalysis.optimizations).map(([key, value]) => (
-                          value && (
-                            <div key={key} className="p-2 bg-green-50 rounded border border-green-200">
-                              <div className="text-xs font-medium text-green-800 capitalize">{key}</div>
-                              <div className="text-xs text-green-700">{value}</div>
-                            </div>
-                          )
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {comprehensiveAnalysis.performance?.accessibilityIssues && (
-                    <div className="mb-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Accessibility Issues</h4>
-                      <div className="space-y-2">
-                        {comprehensiveAnalysis.performance.accessibilityIssues.map((issue, index) => (
-                          <div key={index} className="p-2 bg-yellow-50 rounded border border-yellow-200">
-                            <div className="text-sm font-medium text-yellow-800">{issue.type}</div>
-                            <div className="text-xs text-yellow-700">{issue.description}</div>
-                            <div className="text-xs text-yellow-600 mt-1">Fix: {issue.fix}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </Card>
               )}
             </div>
