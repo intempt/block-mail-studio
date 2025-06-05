@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -102,7 +101,7 @@ export const GlobalStylesPanel: React.FC<GlobalStylesPanelProps> = ({
               </Badge>
             )}
           </Label>
-          <Globe className="w-3 h-3 text-blue-500" title="Universal style" />
+          <Globe className="w-3 h-3 text-blue-500" />
         </div>
         
         {style.property === 'color' || style.property === 'backgroundColor' ? (
