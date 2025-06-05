@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { ContentBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -132,8 +133,20 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     onUpdate(updatedBlock);
   };
 
+  const handleItemsToShowChange = (itemsToShow: number) => {
+    const newItemsToShow = Math.max(1, Math.min(50, itemsToShow));
+    const updatedBlock = {
+      ...block,
+      content: {
+        ...block.content,
+        itemsToShow: newItemsToShow
+      }
+    };
+    onUpdate(updatedBlock);
+  };
+
   const renderDataPreview = () => {
-    const { jsonData, selectedFields, rows, columns, layout } = block.content;
+    const { jsonData, selectedFields, columns, layout, itemsToShow = block.content.rows } = block.content;
     
     if (!jsonData || jsonData.length === 0) {
       return (
@@ -149,7 +162,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       );
     }
 
-    const displayData = jsonData.slice(0, rows);
+    const displayData = jsonData.slice(0, itemsToShow);
     const displayFields = selectedFields.slice(0, columns);
 
     if (layout === 'table') {
@@ -314,13 +327,13 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
               </Select>
             </div>
             <div>
-              <Label>Rows to Display</Label>
+              <Label>Items to Show</Label>
               <Input
                 type="number"
                 min="1"
                 max="50"
-                value={block.content.rows}
-                onChange={(e) => handleRowsChange(parseInt(e.target.value) || 1)}
+                value={block.content.itemsToShow || block.content.rows || 5}
+                onChange={(e) => handleItemsToShowChange(parseInt(e.target.value) || 1)}
               />
             </div>
           </div>

@@ -262,6 +262,7 @@ export interface ContentContent {
   borderColor: string;
   alternateRowColors: boolean;
   alternateColor: string;
+  itemsToShow?: number;
 }
 
 // Specific typed block interfaces
