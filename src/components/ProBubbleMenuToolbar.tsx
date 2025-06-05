@@ -206,7 +206,7 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
         <Code className="w-4 h-4" />
       </Button>
 
-      {/* AI-Powered Pro Features - Only show when text is selected */}
+      {/* TipTap Pro AI Features - Only show when text is selected */}
       {selectedText && (
         <>
           <div className="w-px h-6 bg-purple-300 mx-1" />
