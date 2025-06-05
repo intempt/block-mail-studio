@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -452,7 +451,7 @@ export default function EmailEditor({
 
       <div className="flex-1 overflow-auto bg-gray-100 min-h-0">
         <div className="h-full w-full p-6">
-          <div className="max-w-4xl mx-auto h-full">
+          <div className="max-w-4xl mx-auto h-full relative">
             {/* Edit Mode - Show Canvas */}
             {viewMode === 'edit' && (
               <div className="h-full transition-all duration-300 ease-in-out">
@@ -483,6 +482,11 @@ export default function EmailEditor({
                 />
               </div>
             )}
+
+            {/* UndoManager positioned relative to the canvas area */}
+            <div className="absolute bottom-4 right-4 z-50">
+              <UndoManager />
+            </div>
           </div>
         </div>
       </div>
@@ -497,11 +501,6 @@ export default function EmailEditor({
           subjectLine={subject}
           onApplyFix={handleApplyFix}
         />
-      </div>
-
-      {/* UndoManager positioned in bottom-right corner relative to this container */}
-      <div className="absolute bottom-4 right-4 z-50">
-        <UndoManager />
       </div>
 
       {/* Keep existing modals */}
