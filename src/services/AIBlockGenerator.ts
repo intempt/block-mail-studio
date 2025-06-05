@@ -1,4 +1,3 @@
-
 import { EmailBlock, TextBlock, ImageBlock, ButtonBlock } from '@/types/emailBlocks';
 import { createBlock } from '@/utils/enhancedBlockFactory';
 import { EmailStructureAnalysis } from './EmailContentAnalyzer';
@@ -22,7 +21,7 @@ export class AIBlockGenerator {
     const suggestions: string[] = [];
 
     // Generate blocks based on analysis
-    analysis.contentBlocks.forEach((blockInfo, index) => {
+    analysis.content.forEach((blockInfo, index) => {
       try {
         let block: EmailBlock;
 
@@ -73,7 +72,7 @@ export class AIBlockGenerator {
         console.error('Error creating block:', error);
         // Fallback to text block
         const fallbackBlock = createBlock('text') as TextBlock;
-        fallbackBlock.content.html = blockInfo.content || '<p>Content block</p>';
+        fallbackBlock.content.html = blockInfo.content || '<p>Content</p>';
         blocks.push(fallbackBlock);
       }
     });
