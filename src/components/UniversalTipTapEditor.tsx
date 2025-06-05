@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -46,6 +45,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const [urlValue, setUrlValue] = useState(content);
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+  const [hasSelection, setHasSelection] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
@@ -103,13 +103,27 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       }
     },
     onSelectionUpdate: ({ editor }) => {
-      updateToolbarPosition();
+      const { from, to } = editor.state.selection;
+      const hasTextSelected = from !== to;
+      
+      setHasSelection(hasTextSelected);
+      
+      if (hasTextSelected && hasFocus) {
+        updateToolbarPosition();
+        setShowToolbar(true);
+      } else {
+        setShowToolbar(false);
+      }
     },
     onFocus: () => {
       if (!isUrlMode) {
         setHasFocus(true);
-        updateToolbarPosition();
-        setTimeout(() => setShowToolbar(true), 100);
+        // Don't show toolbar on focus - only show when text is selected
+        const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+        if (from !== to) {
+          updateToolbarPosition();
+          setShowToolbar(true);
+        }
       }
     },
     onBlur: ({ event }) => {
@@ -125,6 +139,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       setTimeout(() => {
         setHasFocus(false);
         setShowToolbar(false);
+        setHasSelection(false);
         onBlur?.();
       }, 200);
     },
@@ -139,18 +154,26 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       setToolbarPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX
-      });
-    } else {
-      // Fallback to editor position if no selection
-      const editorElement = editor.view.dom;
-      const rect = editorElement.getBoundingClientRect();
-      setToolbarPosition({
-        top: rect.top + window.scrollY,
+        top: rect.top + window.scrollY - 10,
         left: rect.left + rect.width / 2 + window.scrollX
       });
     }
+  };
+
+  const handleToolbarAction = () => {
+    // Hide toolbar after any formatting action
+    setShowToolbar(false);
+    setHasSelection(false);
+    
+    // Refocus editor and clear selection
+    setTimeout(() => {
+      if (editor) {
+        editor.commands.focus();
+        // Clear selection by setting cursor at end
+        const { doc } = editor.state;
+        editor.commands.setTextSelection(doc.content.size);
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -222,12 +245,13 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           placeholder={placeholder}
         />
 
-        {/* Enhanced Toolbar - Show on focus */}
+        {/* Selection-Based Toolbar - Only show when text is selected */}
         <FullTipTapToolbar
           editor={editor}
-          isVisible={showToolbar && hasFocus}
+          isVisible={showToolbar && hasSelection && hasFocus}
           position={toolbarPosition}
           emailContext={emailContext}
+          onToolbarAction={handleToolbarAction}
         />
       </div>
     </div>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -30,6 +29,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
 }) => {
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+  const [hasSelection, setHasSelection] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
 
   const editor = useEditor({
@@ -73,13 +73,27 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       onChange(html);
     },
     onSelectionUpdate: ({ editor }) => {
-      updateToolbarPosition();
+      const { from, to } = editor.state.selection;
+      const hasTextSelected = from !== to;
+      
+      setHasSelection(hasTextSelected);
+      
+      if (hasTextSelected && hasFocus) {
+        updateToolbarPosition();
+        setIsToolbarVisible(true);
+      } else {
+        setIsToolbarVisible(false);
+      }
     },
     onFocus: () => {
       console.log('TableCellEditor focused');
       setHasFocus(true);
-      updateToolbarPosition();
-      setTimeout(() => setIsToolbarVisible(true), 100);
+      // Only show toolbar if there's a selection, not just on focus
+      const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+      if (from !== to) {
+        updateToolbarPosition();
+        setIsToolbarVisible(true);
+      }
     },
     onBlur: ({ event }) => {
       console.log('TableCellEditor blurred');
@@ -95,6 +109,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       setTimeout(() => {
         setHasFocus(false);
         setIsToolbarVisible(false);
+        setHasSelection(false);
         onBlur();
       }, 200);
     },
@@ -109,18 +124,26 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       setToolbarPosition({
-        top: rect.top + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX
-      });
-    } else {
-      // Fallback to editor position
-      const editorElement = editor.view.dom;
-      const rect = editorElement.getBoundingClientRect();
-      setToolbarPosition({
-        top: rect.top + window.scrollY - 60,
+        top: rect.top + window.scrollY - 10,
         left: rect.left + rect.width / 2 + window.scrollX
       });
     }
+  };
+
+  const handleToolbarAction = () => {
+    // Hide toolbar after any formatting action
+    setIsToolbarVisible(false);
+    setHasSelection(false);
+    
+    // Refocus editor and clear selection
+    setTimeout(() => {
+      if (editor) {
+        editor.commands.focus();
+        // Clear selection by setting cursor at end
+        const { doc } = editor.state;
+        editor.commands.setTextSelection(doc.content.size);
+      }
+    }, 100);
   };
 
   useEffect(() => {
@@ -161,9 +184,10 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
     <div className="table-cell-editor relative w-full">
       <FullTipTapToolbar 
         editor={editor} 
-        isVisible={isToolbarVisible && hasFocus}
+        isVisible={isToolbarVisible && hasSelection && hasFocus}
         position={toolbarPosition}
         emailContext={emailContext}
+        onToolbarAction={handleToolbarAction}
       />
       <EditorContent 
         editor={editor} 

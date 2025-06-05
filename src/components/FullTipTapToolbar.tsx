@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -41,6 +40,7 @@ interface FullTipTapToolbarProps {
   onLinkClick?: () => void;
   containerElement?: HTMLElement | null;
   emailContext?: EmailContext;
+  onToolbarAction?: () => void;
 }
 
 const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
@@ -49,7 +49,8 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   position,
   onLinkClick,
   containerElement,
-  emailContext = {}
+  emailContext = {},
+  onToolbarAction
 }) => {
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -76,6 +77,12 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     '#FF0000', '#FF6600', '#FFCC00', '#33CC00', '#0099CC', '#6633CC',
     '#FF3366', '#FF9900', '#FFFF00', '#66FF00', '#00CCFF', '#9966FF'
   ];
+
+  // Helper function to handle formatting actions and hide toolbar
+  const handleFormattingAction = useCallback((action: () => void) => {
+    action();
+    onToolbarAction?.();
+  }, [onToolbarAction]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -106,6 +113,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         success('AI content generated successfully');
         setAiPrompt('');
         setShowAIPanel(false);
+        onToolbarAction?.(); // Hide toolbar after AI action
       } else {
         error(result.error || 'Failed to generate AI content');
       }
@@ -114,7 +122,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [aiPrompt, editor, emailContext, success, error]);
+  }, [aiPrompt, editor, emailContext, success, error, onToolbarAction]);
 
   const handleOptimizeContent = useCallback(async () => {
     if (!editor) return;
@@ -140,6 +148,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
       if (result.success) {
         editor.chain().focus().deleteSelection().insertContent(result.data).run();
         success('Content optimized successfully');
+        onToolbarAction?.(); // Hide toolbar after optimization
       } else {
         error(result.error || 'Failed to optimize content');
       }
@@ -148,7 +157,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [editor, emailContext, success, error, warning]);
+  }, [editor, emailContext, success, error, warning, onToolbarAction]);
 
   const handleImproveReadability = useCallback(async () => {
     if (!editor) return;
@@ -170,6 +179,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
       if (result.success) {
         editor.chain().focus().deleteSelection().insertContent(result.data).run();
         success('Readability improved successfully');
+        onToolbarAction?.(); // Hide toolbar after improvement
       } else {
         error(result.error || 'Failed to improve readability');
       }
@@ -178,7 +188,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [editor, success, error, warning]);
+  }, [editor, success, error, warning, onToolbarAction]);
 
   const handleAddLink = () => {
     if (!editor || !linkUrl.trim()) return;
@@ -187,12 +197,14 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     setLinkUrl('');
     setShowLinkDialog(false);
     success('Link added successfully');
+    onToolbarAction?.(); // Hide toolbar after adding link
   };
 
   const handleRemoveLink = () => {
     if (!editor) return;
     editor.chain().focus().unsetLink().run();
     setShowLinkDialog(false);
+    onToolbarAction?.(); // Hide toolbar after removing link
   };
 
   if (!isVisible || !editor) return null;
@@ -206,7 +218,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   };
 
   return (
-    <div ref={toolbarRef} style={toolbarStyle}>
+    <div ref={toolbarRef} style={toolbarStyle} className="full-tiptap-toolbar">
       <div className="bg-white border border-gray-200 rounded-lg shadow-xl p-3 flex flex-wrap items-center gap-1">
         {/* Font Family */}
         <DropdownMenu>
@@ -221,7 +233,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
             {fontFamilies.map((font) => (
               <DropdownMenuItem
                 key={font.value}
-                onClick={() => editor.chain().focus().setFontFamily(font.value).run()}
+                onClick={() => handleFormattingAction(() => editor.chain().focus().setFontFamily(font.value).run())}
                 className={editor.isActive('textStyle', { fontFamily: font.value }) ? 'bg-gray-100' : ''}
               >
                 <span style={{ fontFamily: font.value }}>{font.name}</span>
@@ -242,7 +254,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
             {fontSizes.map((size) => (
               <DropdownMenuItem
                 key={size}
-                onClick={() => editor.chain().focus().setFontSize(size).run()}
+                onClick={() => handleFormattingAction(() => editor.chain().focus().setFontSize(size).run())}
                 className={editor.isActive('textStyle', { fontSize: size }) ? 'bg-gray-100' : ''}
               >
                 {size}
@@ -253,11 +265,11 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
-        {/* Basic formatting */}
+        {/* Basic formatting with toolbar hiding */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleBold().run())}
           className={editor.isActive('bold') ? 'bg-gray-100' : ''}
         >
           <Bold className="w-4 h-4" />
@@ -266,7 +278,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleItalic().run())}
           className={editor.isActive('italic') ? 'bg-gray-100' : ''}
         >
           <Italic className="w-4 h-4" />
@@ -275,7 +287,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleUnderline().run())}
           className={editor.isActive('underline') ? 'bg-gray-100' : ''}
         >
           <Underline className="w-4 h-4" />
@@ -296,7 +308,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                   className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
                   style={{ backgroundColor: color }}
                   onClick={() => {
-                    editor.chain().focus().setColor(color).run();
+                    handleFormattingAction(() => editor.chain().focus().setColor(color).run());
                     setShowColorPicker(false);
                   }}
                 />
@@ -308,7 +320,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleHighlight().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleHighlight().run())}
           className={editor.isActive('highlight') ? 'bg-gray-100' : ''}
         >
           <Highlighter className="w-4 h-4" />
@@ -320,7 +332,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().setTextAlign('left').run())}
           className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-100' : ''}
         >
           <AlignLeft className="w-4 h-4" />
@@ -329,7 +341,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().setTextAlign('center').run())}
           className={editor.isActive({ textAlign: 'center' }) ? 'bg-gray-100' : ''}
         >
           <AlignCenter className="w-4 h-4" />
@@ -338,7 +350,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().setTextAlign('right').run())}
           className={editor.isActive({ textAlign: 'right' }) ? 'bg-gray-100' : ''}
         >
           <AlignRight className="w-4 h-4" />
@@ -350,7 +362,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleBulletList().run())}
           className={editor.isActive('bulletList') ? 'bg-gray-100' : ''}
         >
           <List className="w-4 h-4" />
@@ -359,7 +371,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleOrderedList().run())}
           className={editor.isActive('orderedList') ? 'bg-gray-100' : ''}
         >
           <ListOrdered className="w-4 h-4" />
@@ -368,7 +380,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleBlockquote().run())}
           className={editor.isActive('blockquote') ? 'bg-gray-100' : ''}
         >
           <Quote className="w-4 h-4" />
@@ -377,7 +389,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
+          onClick={() => handleFormattingAction(() => editor.chain().focus().toggleCode().run())}
           className={editor.isActive('code') ? 'bg-gray-100' : ''}
         >
           <Code className="w-4 h-4" />
