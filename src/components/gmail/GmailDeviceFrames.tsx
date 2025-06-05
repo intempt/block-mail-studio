@@ -59,52 +59,23 @@ const StatusBars = {
   )
 };
 
-const DeviceSpecs = {
-  iphone14pro: {
-    width: 393,
-    height: 852,
-    borderRadius: 47,
-    padding: 2,
-    screenRadius: 45,
-    dynamicIsland: true,
-    statusBar: 'ios'
-  },
-  pixel7: {
-    width: 412,
-    height: 915,
-    borderRadius: 32,
-    padding: 3,
-    screenRadius: 29,
-    dynamicIsland: false,
-    statusBar: 'android'
-  },
-  galaxys23: {
-    width: 384,
-    height: 854,
-    borderRadius: 28,
-    padding: 2,
-    screenRadius: 26,
-    dynamicIsland: false,
-    statusBar: 'android'
-  }
-};
-
 export const GmailDeviceFrame: React.FC<DeviceFrameProps> = ({
   children,
   device = 'iphone14pro',
   showStatusBar = true
 }) => {
-  const spec = DeviceSpecs[device];
-  const StatusBarComponent = StatusBars[spec.statusBar as keyof typeof StatusBars];
+  const StatusBarComponent = StatusBars.ios; // Simplified to use iOS style
 
   return (
     <div 
-      className="bg-black shadow-2xl relative overflow-hidden gmail-elevation-5"
+      className="bg-black shadow-2xl relative overflow-hidden gmail-elevation-5 mx-auto"
       style={{ 
-        width: `${spec.width}px`,
-        height: `${spec.height}px`,
-        borderRadius: `${spec.borderRadius}px`,
-        padding: `${spec.padding}px`
+        width: '375px',
+        height: '100%',
+        maxHeight: '812px',
+        minHeight: '600px',
+        borderRadius: '24px',
+        padding: '2px'
       }}
       data-testid="device-frame"
       data-device={device}
@@ -112,30 +83,32 @@ export const GmailDeviceFrame: React.FC<DeviceFrameProps> = ({
       {/* Screen */}
       <div 
         className="w-full h-full bg-white overflow-hidden relative"
-        style={{ borderRadius: `${spec.screenRadius}px` }}
+        style={{ borderRadius: '22px' }}
         data-testid="device-screen"
       >
         {/* Dynamic Island (iPhone 14 Pro) */}
-        {spec.dynamicIsland && (
-          <div 
-            className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black z-50"
-            style={{
-              width: '126px',
-              height: '37px',
-              borderRadius: '19px'
-            }}
-            data-testid="dynamic-island"
-          />
-        )}
+        <div 
+          className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-black z-50"
+          style={{
+            width: '126px',
+            height: '37px',
+            borderRadius: '19px'
+          }}
+          data-testid="dynamic-island"
+        />
 
         {/* Status Bar */}
         {showStatusBar && <StatusBarComponent />}
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden" style={{ 
-          paddingTop: showStatusBar ? '8px' : '0' 
-        }}
-        data-testid="frame-content">
+        <div 
+          className="flex-1 overflow-hidden" 
+          style={{ 
+            paddingTop: showStatusBar ? '8px' : '0',
+            height: 'calc(100% - 54px)' // Account for status bar
+          }}
+          data-testid="frame-content"
+        >
           {children}
         </div>
       </div>
@@ -152,6 +125,7 @@ export const GmailResponsiveFrame: React.FC<{
     return (
       <div 
         className="w-full h-full bg-white overflow-hidden gmail-elevation-2 gmail-rounded-lg"
+        style={{ minHeight: '600px' }}
         data-testid="desktop-frame"
       >
         {children}

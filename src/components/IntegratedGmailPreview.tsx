@@ -84,22 +84,14 @@ export const IntegratedGmailPreview: React.FC<IntegratedGmailPreviewProps> = ({
 
   const containerClass = fullWidth 
     ? "h-full flex flex-col bg-white" 
-    : "h-full flex flex-col bg-white border-l" + " " + "border-gray-200";
+    : "h-full flex flex-col bg-white border-l border-gray-200";
 
   return (
     <div className={containerClass} data-testid="gmail-container">
-      {/* Preview Content - Optimized for canvas integration */}
+      {/* Preview Content - No artificial scaling */}
       <div className="flex-1 overflow-hidden" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
-        <div className="h-full w-full flex items-center justify-center p-4">
-          <div 
-            style={{ 
-              transform: previewMode === 'desktop' 
-                ? (fullWidth ? 'scale(0.8)' : 'scale(0.7)') 
-                : (fullWidth ? 'scale(1.2)' : 'scale(1)'), 
-              transformOrigin: 'center center'
-            }}
-            data-testid="gmail-preview-container"
-          >
+        <div className="h-full w-full">
+          <div className="w-full h-full" data-testid="gmail-preview-container">
             <GmailResponsiveFrame mode={previewMode} mobileDevice="iphone14pro">
               {previewMode === 'desktop' ? (
                 <GmailDesktopPreview
