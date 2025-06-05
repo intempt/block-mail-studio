@@ -5,13 +5,52 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Block Mail Studio</title>
+    
+    <!-- Google Fonts for Gmail accuracy -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Switzer:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <title>Lovable</title>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600&family=Product+Sans:wght@400;500&family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+      /* Gmail Font Loading Strategy */
+      .gmail-fonts-loading {
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      
+      .gmail-fonts-loaded .gmail-google-sans {
+        font-family: 'Google Sans', 'Helvetica Neue', Arial, sans-serif;
+      }
+      
+      .gmail-fonts-loaded .gmail-product-sans {
+        font-family: 'Product Sans', 'Google Sans', 'Helvetica Neue', Arial, sans-serif;
+      }
+      
+      .gmail-fonts-loaded .gmail-roboto {
+        font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Font loading detection -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(function() {
+            document.documentElement.classList.remove('gmail-fonts-loading');
+            document.documentElement.classList.add('gmail-fonts-loaded');
+          });
+        } else {
+          // Fallback for older browsers
+          setTimeout(function() {
+            document.documentElement.classList.remove('gmail-fonts-loading');
+            document.documentElement.classList.add('gmail-fonts-loaded');
+          }, 3000);
+        }
+      });
+    </script>
   </body>
 </html>

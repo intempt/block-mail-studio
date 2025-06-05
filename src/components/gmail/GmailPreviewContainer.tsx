@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { X, Monitor, Smartphone, User, Mail } from 'lucide-react';
 import { GmailDesktopPreview } from './GmailDesktopPreview';
 import { GmailMobilePreview } from './GmailMobilePreview';
+import { GmailResponsiveFrame } from './GmailDeviceFrames';
 import { EmailCompatibilityProcessor } from '@/services/emailCompatibilityProcessor';
 
 interface SenderInfo {
@@ -96,16 +97,22 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
   if (isProcessing) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8 max-w-md mx-4 gmail-shadow-3">
+        <div className="bg-white gmail-rounded-lg p-8 max-w-md mx-4 gmail-elevation-3">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" style={{ borderColor: 'var(--gmail-red)' }}></div>
-            <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--gmail-text-primary)' }}>
+            <div 
+              className="animate-spin gmail-rounded-full h-8 w-8 border-b-2 mx-auto mb-4" 
+              style={{ borderColor: 'var(--gmail-red)' }}
+            ></div>
+            <h3 
+              className="gmail-text-title-medium mb-2 gmail-font-google-sans" 
+              style={{ color: 'var(--gmail-text-primary)' }}
+            >
               Preparing Gmail Preview
             </h3>
-            <p className="text-sm mb-4" style={{ color: 'var(--gmail-text-secondary)' }}>
+            <p className="gmail-text-body-medium mb-4" style={{ color: 'var(--gmail-text-secondary)' }}>
               Processing email for pixel-perfect Gmail rendering...
             </p>
-            <div className="text-xs" style={{ color: 'var(--gmail-text-secondary)' }}>
+            <div className="gmail-text-label-medium" style={{ color: 'var(--gmail-text-secondary)' }}>
               <div className="flex items-center justify-center gap-2 mb-2">
                 <User className="w-4 h-4" />
                 <span>From: {finalSender.name}</span>
@@ -125,12 +132,15 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
     <div className="fixed inset-0 z-50" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
       {/* Enhanced Preview Mode Selector */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <div className="bg-white rounded-lg gmail-shadow-2 border p-2 flex items-center gap-2" style={{ borderColor: 'var(--gmail-gray-200)' }}>
+        <div 
+          className="bg-white gmail-rounded-lg gmail-elevation-2 border p-2 flex items-center gap-2" 
+          style={{ borderColor: 'var(--gmail-gray-200)' }}
+        >
           <Button
             variant={viewMode === 'desktop' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('desktop')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 gmail-transition"
             style={{
               backgroundColor: viewMode === 'desktop' ? 'var(--gmail-blue)' : 'transparent',
               color: viewMode === 'desktop' ? 'white' : 'var(--gmail-text-primary)'
@@ -143,7 +153,7 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
             variant={viewMode === 'mobile' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('mobile')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 gmail-transition"
             style={{
               backgroundColor: viewMode === 'mobile' ? 'var(--gmail-blue)' : 'transparent',
               color: viewMode === 'mobile' ? 'white' : 'var(--gmail-text-primary)'
@@ -153,30 +163,30 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
             Mobile Gmail
           </Button>
           <div className="h-6 w-px mx-2" style={{ backgroundColor: 'var(--gmail-gray-300)' }} />
-          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--gmail-text-secondary)' }}>
+          <div className="flex items-center gap-2 gmail-text-label-medium" style={{ color: 'var(--gmail-text-secondary)' }}>
             <User className="w-3 h-3" />
             <span>{finalSender.name}</span>
             <span>→</span>
             <span>{finalRecipient.name}</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="ml-2">
+          <Button variant="ghost" size="sm" onClick={onClose} className="ml-2 gmail-transition">
             <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {/* Preview Content */}
-      <div className="w-full h-full">
-        {viewMode === 'desktop' ? (
-          <GmailDesktopPreview
-            emailHtml={processedHtml}
-            subject={subject}
-            sender={finalSender}
-            recipient={finalRecipient}
-            onClose={onClose}
-          />
-        ) : (
-          <div className="flex items-center justify-center min-h-screen p-4" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
+      {/* Preview Content with Enhanced Frames */}
+      <div className="w-full h-full flex items-center justify-center p-4">
+        <GmailResponsiveFrame mode={viewMode} mobileDevice="iphone14pro">
+          {viewMode === 'desktop' ? (
+            <GmailDesktopPreview
+              emailHtml={processedHtml}
+              subject={subject}
+              sender={finalSender}
+              recipient={finalRecipient}
+              onClose={onClose}
+            />
+          ) : (
             <GmailMobilePreview
               emailHtml={processedHtml}
               subject={subject}
@@ -184,8 +194,8 @@ export const GmailPreviewContainer: React.FC<GmailPreviewContainerProps> = ({
               recipient={finalRecipient}
               onClose={onClose}
             />
-          </div>
-        )}
+          )}
+        </GmailResponsiveFrame>
       </div>
     </div>
   );

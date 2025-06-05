@@ -1,15 +1,17 @@
 
-/* Gmail Exact Color Palette */
+/* Gmail Exact Color Palette - Enhanced Precision */
 :root {
-  /* Primary Gmail Colors */
+  /* Primary Gmail Colors - Exact RGB values */
   --gmail-red: #ea4335;
-  --gmail-red-hover: #d33b2c;
+  --gmail-red-hover: #d93025;
   --gmail-red-dark: #c5221f;
+  --gmail-red-light: #fce8e6;
   --gmail-blue: #1a73e8;
   --gmail-blue-hover: #1557b0;
   --gmail-blue-light: #e8f0fe;
+  --gmail-blue-dark: #1967d2;
   
-  /* Gmail Grays */
+  /* Gmail Grays - Precise Material Design */
   --gmail-gray-50: #f8f9fa;
   --gmail-gray-100: #f1f3f4;
   --gmail-gray-200: #e8eaed;
@@ -21,19 +23,30 @@
   --gmail-gray-800: #3c4043;
   --gmail-gray-900: #202124;
   
-  /* Gmail Text Colors */
+  /* Gmail Text Colors - Exact contrast ratios */
   --gmail-text-primary: #202124;
   --gmail-text-secondary: #5f6368;
+  --gmail-text-tertiary: #80868b;
   --gmail-text-disabled: #9aa0a6;
+  --gmail-text-white: #ffffff;
   
   /* Gmail Surface Colors */
   --gmail-surface: #ffffff;
   --gmail-surface-variant: #f8f9fa;
   --gmail-surface-2: #f1f3f4;
+  --gmail-surface-3: #e8eaed;
   
   /* Gmail Selection Colors */
   --gmail-selection: #fce8e6;
   --gmail-selection-hover: #f4b7ae;
+  --gmail-selection-active: #ea4335;
+  
+  /* Gmail Specific UI Colors */
+  --gmail-header-height: 56px;
+  --gmail-sidebar-width: 256px;
+  --gmail-content-max-width: 960px;
+  --gmail-search-bar-height: 40px;
+  --gmail-toolbar-height: 48px;
   
   /* Gmail Dark Mode */
   --gmail-dark-surface: #0d1117;
@@ -43,42 +56,252 @@
   --gmail-dark-border: #30363d;
 }
 
-/* Gmail Typography System */
-.gmail-font-system {
-  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+/* Gmail Typography System - Exact Google specifications */
+.gmail-font-google-sans {
+  font-family: 'Google Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'liga' 1, 'kern' 1;
+}
+
+.gmail-font-product-sans {
+  font-family: 'Product Sans', 'Google Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'liga' 1, 'kern' 1;
 }
 
 .gmail-font-roboto {
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-feature-settings: 'liga' 1, 'kern' 1;
 }
 
-/* Gmail Shadows */
-.gmail-shadow-1 {
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+/* Gmail Typography Scales */
+.gmail-text-display-large {
+  font-size: 57px;
+  line-height: 64px;
+  font-weight: 400;
+  letter-spacing: -0.25px;
 }
 
-.gmail-shadow-2 {
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+.gmail-text-display-medium {
+  font-size: 45px;
+  line-height: 52px;
+  font-weight: 400;
+  letter-spacing: 0px;
 }
 
-.gmail-shadow-3 {
-  box-shadow: 0 4px 8px 3px rgba(60, 64, 67, 0.15), 0 1px 3px rgba(60, 64, 67, 0.3);
+.gmail-text-headline-large {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 400;
+  letter-spacing: 0px;
 }
 
-/* Gmail Rounded Corners */
+.gmail-text-headline-medium {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+.gmail-text-title-large {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 400;
+  letter-spacing: 0px;
+}
+
+.gmail-text-title-medium {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  letter-spacing: 0.15px;
+}
+
+.gmail-text-body-large {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.gmail-text-body-medium {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+}
+
+.gmail-text-label-large {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+.gmail-text-label-medium {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* Gmail Elevation System - Exact Material Design 3 */
+.gmail-elevation-1 {
+  box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+.gmail-elevation-2 {
+  box-shadow: 0px 1px 2px rgba(60, 64, 67, 0.3), 0px 2px 6px 2px rgba(60, 64, 67, 0.15);
+}
+
+.gmail-elevation-3 {
+  box-shadow: 0px 4px 8px 3px rgba(60, 64, 67, 0.15), 0px 1px 3px rgba(60, 64, 67, 0.3);
+}
+
+.gmail-elevation-4 {
+  box-shadow: 0px 6px 10px 4px rgba(60, 64, 67, 0.15), 0px 2px 3px rgba(60, 64, 67, 0.3);
+}
+
+.gmail-elevation-5 {
+  box-shadow: 0px 8px 12px 6px rgba(60, 64, 67, 0.15), 0px 4px 4px rgba(60, 64, 67, 0.3);
+}
+
+/* Gmail State Layers */
+.gmail-state-hover {
+  position: relative;
+}
+
+.gmail-state-hover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gmail-text-primary);
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  pointer-events: none;
+}
+
+.gmail-state-hover:hover::before {
+  opacity: 0.08;
+}
+
+.gmail-state-focus {
+  position: relative;
+}
+
+.gmail-state-focus::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--gmail-blue);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  pointer-events: none;
+}
+
+.gmail-state-focus:focus-visible::after {
+  opacity: 1;
+}
+
+/* Gmail Rounded Corners - Exact specifications */
+.gmail-rounded-xs { border-radius: 2px; }
 .gmail-rounded-sm { border-radius: 4px; }
 .gmail-rounded { border-radius: 8px; }
 .gmail-rounded-lg { border-radius: 12px; }
 .gmail-rounded-xl { border-radius: 16px; }
 .gmail-rounded-2xl { border-radius: 20px; }
+.gmail-rounded-3xl { border-radius: 24px; }
 .gmail-rounded-full { border-radius: 9999px; }
 
-/* Gmail Transitions */
+/* Gmail Transitions - Google's easing curves */
 .gmail-transition {
   transition: all 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.gmail-transition-fast {
+  transition: all 100ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.gmail-transition-slow {
+  transition: all 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .gmail-transition-colors {
   transition: color 150ms cubic-bezier(0.4, 0.0, 0.2, 1), 
               background-color 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.gmail-transition-transform {
+  transition: transform 150ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Gmail Scrollbar Styling */
+.gmail-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gmail-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gmail-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gmail-gray-400);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.gmail-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--gmail-gray-500);
+  background-clip: content-box;
+}
+
+.gmail-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Gmail Loading States */
+@keyframes gmail-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.gmail-loading {
+  animation: gmail-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gmail-shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+.gmail-shimmer {
+  background: linear-gradient(90deg, var(--gmail-gray-100) 25%, var(--gmail-gray-200) 37%, var(--gmail-gray-100) 63%);
+  background-size: 400px 100%;
+  animation: gmail-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Gmail Focus Ring */
+.gmail-focus-ring {
+  outline: 2px solid var(--gmail-blue);
+  outline-offset: 2px;
+}
+
+/* Gmail Selection Styling */
+::selection {
+  background: var(--gmail-blue-light);
+  color: var(--gmail-text-primary);
+}
+
+::-moz-selection {
+  background: var(--gmail-blue-light);
+  color: var(--gmail-text-primary);
 }
