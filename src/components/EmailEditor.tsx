@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -156,6 +155,24 @@ export default function EmailEditor({
     console.log('EmailEditor: Received blocks update from canvas:', newBlocks.length);
     setEmailBlocks(newBlocks);
   }, []);
+
+  // New handler for state restoration from UndoManager
+  const handleStateRestore = useCallback((state: any) => {
+    console.log('EmailEditor: Restoring state -', state.description);
+    
+    // Update email blocks
+    setEmailBlocks(state.blocks);
+    
+    // Update subject
+    onSubjectChange(state.subject);
+    
+    // Update canvas with restored blocks
+    if (canvasRef.current && canvasRef.current.replaceAllBlocks) {
+      canvasRef.current.replaceAllBlocks(state.blocks);
+    }
+    
+    console.log('EmailEditor: State restored successfully');
+  }, [onSubjectChange]);
 
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
@@ -497,7 +514,11 @@ export default function EmailEditor({
 
           {/* UndoManager positioned relative to content-wrapper */}
           <div id="undo-manager-container" className="absolute bottom-4 right-4 z-50">
-            <UndoManager />
+            <UndoManager 
+              blocks={emailBlocks}
+              subject={subject}
+              onStateRestore={handleStateRestore}
+            />
           </div>
         </div>
       </div>
