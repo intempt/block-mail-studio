@@ -1,11 +1,9 @@
 
-import { TiptapProConfig } from '@tiptap/pro';
-
 export class TipTapProService {
   private static readonly APP_ID = 'ok0nxde9';
   private static readonly JWT_SECRET = 'gBvEtKvCecICFL6INuyG0ENoyhbccAIhyqP1aaYScXDBxhjpqvyZwWdwjQaPi8Uh';
 
-  public static getConfig(): TiptapProConfig {
+  public static getConfig() {
     return {
       appId: this.APP_ID,
       token: this.JWT_SECRET,
