@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -81,9 +80,6 @@ export default function EmailEditor({
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
   const [showAIAnalytics, setShowAIAnalytics] = useState(true);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-
-  // Add state to track canvas-generated HTML content
-  const [currentEmailHTML, setCurrentEmailHTML] = useState<string>(content);
 
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
@@ -270,7 +266,7 @@ export default function EmailEditor({
     try {
       const existingTemplateNames = templates.map(t => t.name);
       const newTemplate = DirectTemplateService.savePublishedTemplate(
-        currentEmailHTML,
+        content,
         subject,
         existingTemplateNames
       );
@@ -308,12 +304,9 @@ export default function EmailEditor({
     console.log('Adding universal content:', content);
   };
 
-  // Updated content change handler to track canvas-generated HTML
-  const handleContentChangeFromCanvas = useCallback((newContent: string) => {
-    console.log('EmailEditor: Received content update from canvas:', newContent.length, 'characters');
-    setCurrentEmailHTML(newContent);
+  const handleContentChangeFromCanvas = (newContent: string) => {
     onContentChange(newContent);
-  }, [onContentChange]);
+  };
 
   const handlePreviewModeChange = (mode: 'desktop' | 'mobile') => {
     setPreviewMode(mode);
@@ -323,18 +316,6 @@ export default function EmailEditor({
   };
 
   const handleViewModeChange = (mode: ViewMode) => {
-    console.log('EmailEditor: Switching to view mode:', mode);
-    
-    // When switching to preview modes, ensure we have the latest content
-    if (mode !== 'edit' && canvasRef.current) {
-      const latestContent = canvasRef.current.getCurrentHTML?.() || currentEmailHTML;
-      if (latestContent && latestContent !== currentEmailHTML) {
-        console.log('EmailEditor: Updating content for preview mode');
-        setCurrentEmailHTML(latestContent);
-        onContentChange(latestContent);
-      }
-    }
-    
     setViewMode(mode);
     if (mode === 'desktop-preview') {
       setPreviewMode('desktop');
@@ -395,8 +376,7 @@ export default function EmailEditor({
       canvasRef.current.findAndReplaceText('', fix);
     } else {
       // Fallback: append the fix to the content
-      const updatedContent = currentEmailHTML + '\n' + fix;
-      setCurrentEmailHTML(updatedContent);
+      const updatedContent = content + '\n' + fix;
       onContentChange(updatedContent);
     }
     console.log('Applied auto-fix:', fix);
@@ -416,31 +396,6 @@ export default function EmailEditor({
     setShowGmailPreview(true);
   };
 
-  // Get the content to use for previews - prioritize canvas-generated content
-  const getPreviewContent = () => {
-    // If we have canvas-generated content, use that
-    if (currentEmailHTML && currentEmailHTML.trim()) {
-      return currentEmailHTML;
-    }
-    
-    // Fall back to the content prop
-    if (content && content.trim()) {
-      return content;
-    }
-    
-    // If no content but we have blocks, try to generate from canvas
-    if (emailBlocks.length > 0 && canvasRef.current) {
-      const generatedContent = canvasRef.current.getCurrentHTML?.();
-      if (generatedContent) {
-        setCurrentEmailHTML(generatedContent);
-        return generatedContent;
-      }
-    }
-    
-    // Final fallback - empty content placeholder
-    return '<p>No content available for preview</p>';
-  };
-
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -451,7 +406,7 @@ export default function EmailEditor({
         universalContent={universalContent}
         onUniversalContentAdd={handleUniversalContentAdd}
         onGlobalStylesChange={handleGlobalStylesChange}
-        emailHTML={currentEmailHTML}
+        emailHTML={content}
         subjectLine={subject}
         editor={editor}
         snippetRefreshTrigger={snippetRefreshTrigger}
@@ -514,11 +469,11 @@ export default function EmailEditor({
               </div>
             )}
 
-            {/* Preview Modes - Show Gmail Preview with proper content */}
+            {/* Preview Modes - Show Gmail Preview */}
             {(viewMode === 'desktop-preview' || viewMode === 'mobile-preview') && (
               <div className="h-full transition-all duration-300 ease-in-out">
                 <IntegratedGmailPreview
-                  emailHtml={getPreviewContent()}
+                  emailHtml={content}
                   subject={subject}
                   previewMode={viewMode === 'desktop-preview' ? 'desktop' : 'mobile'}
                   onPreviewModeChange={handlePreviewModeChange}
@@ -536,7 +491,7 @@ export default function EmailEditor({
           selectedBlockId={selectedBlockId}
           canvasWidth={canvasWidth}
           previewMode={previewMode}
-          emailHTML={currentEmailHTML}
+          emailHTML={content}
           subjectLine={subject}
           onApplyFix={handleApplyFix}
         />
@@ -545,7 +500,7 @@ export default function EmailEditor({
       {/* Keep existing modals */}
       {showPreview && (
         <EmailPreview
-          html={getPreviewContent()}
+          html={content}
           previewMode={previewMode}
           subject={subject}
         />
