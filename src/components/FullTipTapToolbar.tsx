@@ -11,13 +11,15 @@ import {
   AlignCenter, 
   AlignRight,
   Link,
-  Image,
   Type,
   Palette,
   Sparkles,
   ChevronDown,
   ChevronUp,
-  Wand2
+  Wand2,
+  Zap,
+  Target,
+  BookOpen
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -150,19 +152,50 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     }
   }, [editor, success, error, warning]);
 
+  const handleSmartSuggestions = useCallback(async () => {
+    if (!editor) return;
+
+    const selectedText = editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to
+    );
+
+    const contextText = selectedText || editor.getText();
+    
+    setIsGenerating(true);
+    try {
+      const result = await TipTapAIService.generateContent({
+        prompt: `Provide 3 smart suggestions to improve this email content: "${contextText}"`,
+        context: emailContext,
+        tone: 'professional'
+      });
+
+      if (result.success) {
+        success('AI suggestions generated - check the content');
+      } else {
+        error(result.error || 'Failed to generate suggestions');
+      }
+    } catch (err) {
+      error('Smart suggestions failed');
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [editor, emailContext, success, error]);
+
+  // Show toolbar on focus, not just selection
   if (!isVisible || !editor) return null;
 
   const toolbarStyle = {
     position: 'fixed' as const,
-    top: position.top,
-    left: position.left,
+    top: position.top - 60,
+    left: Math.max(10, position.left - 200),
     zIndex: 1000,
-    transform: 'translateY(-100%)',
+    maxWidth: '400px'
   };
 
   return (
     <div ref={toolbarRef} style={toolbarStyle}>
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-2 flex items-center gap-1">
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-2 flex items-center gap-1 flex-wrap">
         {/* Basic formatting buttons */}
         <Button
           variant="ghost"
@@ -223,7 +256,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
 
-        {/* AI Tools */}
+        {/* Enhanced AI Tools */}
         <Popover open={showAIPanel} onOpenChange={setShowAIPanel}>
           <PopoverTrigger asChild>
             <Button
@@ -232,15 +265,15 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
               className="bg-blue-50 text-blue-600 hover:bg-blue-100"
             >
               <Sparkles className="w-4 h-4 mr-1" />
-              AI
+              AI Pro
               {showAIPanel ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-4">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Generate Content
+                  AI Content Generator
                 </label>
                 <div className="flex gap-2">
                   <Input
@@ -248,7 +281,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAIGenerate()}
-                    className="flex-1"
+                    className="flex-1 text-sm"
                   />
                   <Button
                     onClick={handleAIGenerate}
@@ -261,26 +294,44 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleOptimizeContent}
                   disabled={isGenerating}
-                  className="text-xs"
+                  className="text-xs justify-start"
                 >
-                  Optimize Selected
+                  <Target className="w-3 h-3 mr-2" />
+                  Optimize for Engagement
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleImproveReadability}
                   disabled={isGenerating}
-                  className="text-xs"
+                  className="text-xs justify-start"
                 >
-                  Improve Clarity
+                  <BookOpen className="w-3 h-3 mr-2" />
+                  Improve Readability
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSmartSuggestions}
+                  disabled={isGenerating}
+                  className="text-xs justify-start"
+                >
+                  <Zap className="w-3 h-3 mr-2" />
+                  Smart Suggestions
                 </Button>
               </div>
+
+              {emailContext.blockType && (
+                <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
+                  Context: {emailContext.blockType} • {emailContext.targetAudience || 'general'}
+                </div>
+              )}
             </div>
           </PopoverContent>
         </Popover>

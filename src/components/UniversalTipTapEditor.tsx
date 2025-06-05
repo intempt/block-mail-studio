@@ -31,7 +31,7 @@ interface UniversalTipTapEditorProps {
   onBlur?: () => void;
   placeholder?: string;
   position?: { x: number; y: number };
-  emailContext?: string;
+  emailContext?: EmailContext;
 }
 
 export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
@@ -46,7 +46,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const [urlValue, setUrlValue] = useState(content);
   const [showToolbar, setShowToolbar] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
-  const [hasTextSelection, setHasTextSelection] = useState(false);
+  const [hasFocus, setHasFocus] = useState(false);
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
@@ -103,28 +103,13 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       }
     },
     onSelectionUpdate: ({ editor }) => {
-      const hasSelection = !editor.state.selection.empty;
-      setHasTextSelection(hasSelection);
-      
-      if (hasSelection) {
-        updateToolbarPosition();
-        setShowToolbar(true);
-      } else {
-        // Short delay before hiding to allow for formatting operations
-        setTimeout(() => {
-          if (!editor.state.selection || editor.state.selection.empty) {
-            setShowToolbar(false);
-          }
-        }, 150);
-      }
+      updateToolbarPosition();
     },
     onFocus: () => {
       if (!isUrlMode) {
+        setHasFocus(true);
         updateToolbarPosition();
-        // Only show toolbar if there's a selection
-        if (!editor?.state.selection.empty) {
-          setShowToolbar(true);
-        }
+        setShowToolbar(true);
       }
     },
     onBlur: ({ event }) => {
@@ -137,6 +122,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       }
       
       setTimeout(() => {
+        setHasFocus(false);
         setShowToolbar(false);
         onBlur?.();
       }, 200);
@@ -148,15 +134,22 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     if (!editor) return;
 
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-
-    const range = selection.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-
-    setToolbarPosition({
-      top: rect.top + window.scrollY,
-      left: rect.left + rect.width / 2 + window.scrollX
-    });
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setToolbarPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX
+      });
+    } else {
+      // Fallback to editor position if no selection
+      const editorElement = editor.view.dom;
+      const rect = editorElement.getBoundingClientRect();
+      setToolbarPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX
+      });
+    }
   };
 
   useEffect(() => {
@@ -171,13 +164,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const handleUrlChange = (value: string) => {
     setUrlValue(value);
     onChange(value);
-  };
-
-  // Create email context for AI operations
-  const aiEmailContext: EmailContext = {
-    blockType: contentType,
-    emailHTML: emailContext,
-    targetAudience: 'general'
   };
 
   if (isUrlMode) {
@@ -224,19 +210,19 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         zIndex: 1000
       } : {}}
     >
-      <div className="border rounded-lg overflow-hidden bg-white shadow-lg">
+      <div className="border-0 rounded-none bg-transparent">
         <EditorContent 
           editor={editor} 
           className="prose prose-sm max-w-none p-3 focus:outline-none min-h-[60px]"
           placeholder={placeholder}
         />
 
-        {/* Enhanced Toolbar - Only show when text is selected */}
+        {/* Enhanced Toolbar - Show on focus */}
         <FullTipTapToolbar
           editor={editor}
-          isVisible={showToolbar && hasTextSelection}
+          isVisible={showToolbar && hasFocus}
           position={toolbarPosition}
-          emailContext={aiEmailContext}
+          emailContext={emailContext}
         />
       </div>
     </div>

@@ -7,7 +7,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Underline from '@tiptap/extension-underline';
-import { FloatingTipTapToolbar } from './FloatingTipTapToolbar';
+import { FullTipTapToolbar } from './FullTipTapToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
 
 interface TableCellEditorProps {
@@ -27,6 +27,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
 }) => {
   const [isToolbarVisible, setIsToolbarVisible] = useState(false);
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
+  const [hasFocus, setHasFocus] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -60,29 +61,57 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       onChange(html);
     },
     onSelectionUpdate: ({ editor }) => {
-      const { from, to } = editor.state.selection;
-      if (from !== to) {
-        setIsToolbarVisible(true);
-        // Position toolbar above the selection
-        setToolbarPosition({ top: -60, left: 0 });
-      } else {
-        setIsToolbarVisible(false);
-      }
-    },
-    onBlur: () => {
-      console.log('TableCellEditor blurred');
-      setIsToolbarVisible(false);
-      onBlur();
+      updateToolbarPosition();
     },
     onFocus: () => {
       console.log('TableCellEditor focused');
+      setHasFocus(true);
+      updateToolbarPosition();
+      setIsToolbarVisible(true);
+    },
+    onBlur: ({ event }) => {
+      console.log('TableCellEditor blurred');
+      const relatedTarget = event.relatedTarget as HTMLElement;
+      
+      // Don't hide toolbar if clicking on toolbar
+      if (relatedTarget?.closest('.full-tiptap-toolbar') || 
+          relatedTarget?.closest('[data-radix-popover-content]')) {
+        return;
+      }
+      
+      setTimeout(() => {
+        setHasFocus(false);
+        setIsToolbarVisible(false);
+        onBlur();
+      }, 200);
     },
     immediatelyRender: false,
   });
 
+  const updateToolbarPosition = () => {
+    if (!editor) return;
+
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setToolbarPosition({
+        top: rect.top + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX
+      });
+    } else {
+      // Fallback to editor position
+      const editorElement = editor.view.dom;
+      const rect = editorElement.getBoundingClientRect();
+      setToolbarPosition({
+        top: rect.top + window.scrollY - 60,
+        left: rect.left + rect.width / 2 + window.scrollX
+      });
+    }
+  };
+
   useEffect(() => {
     if (editor && autoFocus) {
-      // Delay focus to ensure proper initialization
       setTimeout(() => {
         editor.commands.focus();
       }, 100);
@@ -96,7 +125,6 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
     }
   }, [content, editor]);
 
-  // Add cleanup on unmount
   useEffect(() => {
     return () => {
       if (editor) {
@@ -118,9 +146,9 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
 
   return (
     <div className="table-cell-editor relative w-full">
-      <FloatingTipTapToolbar 
+      <FullTipTapToolbar 
         editor={editor} 
-        isVisible={isToolbarVisible}
+        isVisible={isToolbarVisible && hasFocus}
         position={toolbarPosition}
         emailContext={emailContext}
       />
