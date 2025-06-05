@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
+import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { 
   Brain, 
   Sparkles, 
@@ -24,6 +25,7 @@ import {
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { OpenAIEmailService } from '@/services/openAIEmailService';
 import { ApiKeyService } from '@/services/apiKeyService';
+import { useInlineNotifications } from '@/hooks/useInlineNotifications';
 
 interface ContentSuggestion {
   id: string;
@@ -63,6 +65,8 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'api-key' | 'network' | 'server' | 'unknown'>('unknown');
 
+  const { notifications, removeNotification, success, error, warning, info } = useInlineNotifications();
+
   const analyzingMessages = [
     "Analyzing content tone and voice...",
     "Evaluating engagement potential...",
@@ -78,8 +82,8 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
     }
   }, [emailHTML]);
 
-  const getErrorDetails = (error: any) => {
-    const errorMessage = error?.message || error?.toString() || 'Unknown error';
+  const getErrorDetails = (analysisError: any) => {
+    const errorMessage = analysisError?.message || analysisError?.toString() || 'Unknown error';
     
     if (errorMessage.includes('API key') || errorMessage.includes('401')) {
       return {
@@ -150,11 +154,19 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
       }));
 
       setSuggestions(newSuggestions);
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      const errorDetails = getErrorDetails(error);
+      success('Brand voice analysis complete!');
+    } catch (analysisError) {
+      console.error('Analysis failed:', analysisError);
+      const errorDetails = getErrorDetails(analysisError);
       setAnalysisError(errorDetails.message);
       setErrorType(errorDetails.type);
+      
+      error(`Analysis failed: ${errorDetails.message}`, {
+        action: {
+          label: 'Retry',
+          onClick: analyzeContent
+        }
+      });
       
       // Clear scores on error
       setBrandVoiceScore(0);
@@ -173,18 +185,22 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
     if (suggestion.type === 'subject' && onSubjectLineChange) {
       // Apply subject line suggestion
       onSubjectLineChange(suggestion.suggested);
+      success('Subject line updated!');
     } else if (canvasRef?.current) {
       // Apply content suggestions through canvas
       switch (suggestion.type) {
         case 'copy':
           canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
+          success('Content updated!');
           break;
         case 'cta':
           canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
+          success('Call-to-action updated!');
           break;
         case 'tone':
           // For tone adjustments, we could modify text style or content
           console.log('Applying tone adjustment:', suggestion.suggested);
+          info('Tone suggestion noted - manual review recommended');
           break;
       }
     }
@@ -244,6 +260,17 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
             AI Powered
           </Badge>
         </div>
+
+        {/* Inline Notifications */}
+        {notifications.length > 0 && (
+          <div className="mb-3">
+            <InlineNotificationContainer
+              notifications={notifications}
+              onRemove={removeNotification}
+              maxNotifications={1}
+            />
+          </div>
+        )}
 
         {analysisError ? (
           <div className={`flex items-start gap-2 p-3 border rounded-lg ${getErrorColor()}`}>

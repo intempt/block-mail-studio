@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { 
   BarChart3, 
   CheckCircle, 
@@ -45,7 +45,7 @@ import { useEmailAnalytics } from '@/analytics/react/useEmailAnalytics';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 import { CentralizedAIAnalysisService, CompleteAnalysisResult } from '@/services/CentralizedAIAnalysisService';
 import { ApiKeyService } from '@/services/apiKeyService';
-import { toast } from 'sonner';
+import { useInlineNotifications } from '@/hooks/useInlineNotifications';
 import { ComprehensiveMetricsService, ComprehensiveEmailMetrics } from '@/services/comprehensiveMetricsService';
 
 interface CanvasStatusProps {
@@ -75,8 +75,8 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [isAnalysisCenterCollapsed, setIsAnalysisCenterCollapsed] = useState(false);
 
   const { analyze, result, isAnalyzing: isAnalyticsAnalyzing, clearCache } = useEmailAnalytics();
+  const { notifications, removeNotification, success, error, warning, info } = useInlineNotifications();
 
-  // Extract suggestions from comprehensive analysis and merge with critical suggestions
   const extractAndMergeSuggestions = useCallback((critical: CriticalSuggestion[], comprehensive: CompleteAnalysisResult | null) => {
     let merged = [...critical];
 
@@ -174,7 +174,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     return merged;
   }, [subjectLine]);
 
-  // Update merged suggestions when critical suggestions or comprehensive analysis changes
   useEffect(() => {
     const merged = extractAndMergeSuggestions(criticalSuggestions, comprehensiveAnalysis);
     setAllSuggestions(merged);
@@ -182,7 +181,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   const runCompleteAnalysis = async () => {
     if (!emailHTML.trim() || emailHTML.length < 50) {
-      toast.error('Add more content before analyzing');
+      error('Add more content before analyzing');
       return;
     }
 
@@ -190,11 +189,9 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     setAnalysisTimestamp(Date.now());
     
     try {
-      // Calculate comprehensive metrics using the new service
       const metrics = ComprehensiveMetricsService.calculateMetrics(emailHTML, subjectLine);
       setComprehensiveMetrics(metrics);
 
-      // Clear previous results and cache
       setCriticalSuggestions([]);
       setComprehensiveAnalysis(null);
       setAppliedFixes(new Set());
@@ -210,19 +207,17 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         setComprehensiveAnalysis(comprehensive);
       }
 
-      toast.success('Analysis complete! Review suggestions below.');
+      success('Analysis complete! Review suggestions below.');
       
-      // Auto-expand analysis center after successful analysis
       setIsAnalysisCenterCollapsed(false);
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      toast.error('Analysis failed. Check your API configuration.');
+    } catch (analysisError) {
+      console.error('Analysis failed:', analysisError);
+      error('Analysis failed. Check your API configuration.');
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // Auto-calculate metrics when content changes
   useEffect(() => {
     if (emailHTML.trim()) {
       const metrics = ComprehensiveMetricsService.calculateMetrics(emailHTML, subjectLine);
@@ -232,7 +227,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
   const handleApplyFix = async (suggestion: CriticalSuggestion) => {
     if (appliedFixes.has(suggestion.id)) {
-      toast.warning('Fix already applied');
+      warning('Fix already applied');
       return;
     }
 
@@ -243,13 +238,13 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       if (suggestion.category === 'subject' && suggestion.suggested) {
         onApplyFix(suggestion.suggested, 'subject');
         fixType = 'subject';
-        toast.success('Subject line updated!');
+        success('Subject line updated!');
       } else if (suggestion.current && suggestion.suggested) {
         updatedContent = emailHTML.replace(suggestion.current, suggestion.suggested);
         
         if (updatedContent !== emailHTML) {
           onApplyFix(updatedContent, 'content');
-          toast.success('Content updated!');
+          success('Content updated!');
         } else {
           const lines = emailHTML.split('\n');
           const updatedLines = lines.map(line => {
@@ -262,22 +257,22 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
           
           if (updatedContent !== emailHTML) {
             onApplyFix(updatedContent, 'content');
-            toast.success('Content updated!');
+            success('Content updated!');
           } else {
-            toast.warning('Could not automatically apply this fix');
+            warning('Could not automatically apply this fix');
             return;
           }
         }
       } else {
-        toast.warning('This fix cannot be applied automatically');
+        warning('This fix cannot be applied automatically');
         return;
       }
 
       setAppliedFixes(prev => new Set([...prev, suggestion.id]));
       
-    } catch (error) {
-      console.error('Error applying fix:', error);
-      toast.error('Failed to apply fix');
+    } catch (fixError) {
+      console.error('Error applying fix:', fixError);
+      error('Failed to apply fix');
     }
   };
 
@@ -287,7 +282,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     );
 
     if (autoFixableSuggestions.length === 0) {
-      toast.info('No auto-fixable suggestions available');
+      info('No auto-fixable suggestions available');
       return;
     }
 
@@ -296,7 +291,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    toast.success(`Applied ${autoFixableSuggestions.length} auto-fixes!`);
+    success(`Applied ${autoFixableSuggestions.length} auto-fixes!`);
   };
 
   const getSeverityIcon = (severity: string) => {
@@ -332,6 +327,17 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col">
+        {/* Inline Notifications at the top */}
+        {notifications.length > 0 && (
+          <div className="p-3 border-b border-gray-200">
+            <InlineNotificationContainer
+              notifications={notifications}
+              onRemove={removeNotification}
+              maxNotifications={2}
+            />
+          </div>
+        )}
+
         {/* Always Visible Metrics Strip */}
         {comprehensiveMetrics && (
           <Card className="p-3 border-b border-gray-200">
