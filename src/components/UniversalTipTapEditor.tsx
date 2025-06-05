@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -13,12 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ProBubbleMenuToolbar } from './ProBubbleMenuToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
-import { TipTapProService } from '@/services/TipTapProService';
 import { 
   ExternalLink,
   Play,
-  Wand2,
-  RefreshCw,
   Sparkles
 } from 'lucide-react';
 import { AIDropdownMenu } from './AIDropdownMenu';
@@ -128,46 +126,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const handleUrlChange = (value: string) => {
     setUrlValue(value);
     onChange(value);
-  };
-
-  const handleAIGenerate = async () => {
-    if (!editor || isGeneratingAI) return;
-    
-    setIsGeneratingAI(true);
-    try {
-      const prompt = `Generate ${contentType} content${emailContext?.targetAudience ? ` for ${emailContext.targetAudience}` : ''}`;
-      const result = await TipTapProService.generateContent(prompt, 'professional');
-      
-      if (result.success && result.data) {
-        editor.commands.setContent(result.data);
-        onChange(result.data);
-      }
-    } catch (error) {
-      console.error('AI generation failed:', error);
-    } finally {
-      setIsGeneratingAI(false);
-    }
-  };
-
-  const handleAIImprove = async () => {
-    if (!editor || isGeneratingAI || !content) return;
-    
-    setIsGeneratingAI(true);
-    try {
-      const result = await TipTapProService.improveText(content, {
-        style: 'professional',
-        audience: emailContext?.targetAudience || 'general'
-      });
-      
-      if (result.success && result.data) {
-        editor.commands.setContent(result.data);
-        onChange(result.data);
-      }
-    } catch (error) {
-      console.error('AI improvement failed:', error);
-    } finally {
-      setIsGeneratingAI(false);
-    }
   };
 
   if (isUrlMode) {
