@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,6 @@ import {
   Link,
   Video,
   ListOrdered,
-  ListUnordered,
   Quote,
   SeparatorHorizontal,
   Heading1,
@@ -30,9 +30,14 @@ import {
 } from 'lucide-react';
 import { EmailContext } from '@/services/tiptapAIService';
 import { tiptapAIService } from '@/services/tiptapAIService';
-import { EmailBlock } from './TemplateManager';
 import { UniversalTipTapEditor } from './UniversalTipTapEditor';
 import { SimpleImageUploader } from './SimpleImageUploader';
+
+interface EmailBlock {
+  id: string;
+  type: string;
+  content: string;
+}
 
 interface EnhancedTextBlockRendererProps {
   block: EmailBlock;
@@ -46,7 +51,7 @@ interface EnhancedTextBlockRendererProps {
 export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps> = ({
   block,
   editor,
-  emailContext,
+  emailContext: emailContextProp,
   onBlockChange,
   onBlockRemove,
   onBlockDuplicate
@@ -136,7 +141,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
       case 'link': return <Link className="w-4 h-4" />;
       case 'video': return <Video className="w-4 h-4" />;
       case 'list-ordered': return <ListOrdered className="w-4 h-4" />;
-      case 'list-unordered': return <ListUnordered className="w-4 h-4" />;
+      case 'list-unordered': return <ListOrdered className="w-4 h-4" />;
       case 'quote': return <Quote className="w-4 h-4" />;
       case 'divider': return <SeparatorHorizontal className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
@@ -164,16 +169,16 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     }
   };
 
-  let contentType = 'text';
+  let contentType: 'text' | 'button' | 'image' | 'link' | 'video' | 'html' | 'url' = 'text';
   if (block.type === 'button') contentType = 'button';
   if (block.type === 'image') contentType = 'image';
   if (block.type === 'link') contentType = 'link';
   if (block.type === 'video') contentType = 'video';
 
   // Create email context for AI operations
-  const emailContext: EmailContext = {
+  const aiEmailContext: EmailContext = {
     blockType: 'text',
-    emailHTML: emailContext,
+    emailHTML: emailContextProp,
     targetAudience: 'general'
   };
 
@@ -204,7 +209,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
             content={block.content}
             contentType={contentType}
             onChange={handleContentChange}
-            emailContext={emailContext}
+            emailContext={aiEmailContext}
           />
         )}
       </div>
