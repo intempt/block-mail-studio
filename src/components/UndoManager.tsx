@@ -1,8 +1,8 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Undo, Redo } from 'lucide-react';
 import { EmailBlock } from '@/types/emailBlocks';
-import { DevWrapper } from './dev/DevWrapper';
 
 interface EmailEditorState {
   id: string;
@@ -147,44 +147,36 @@ export const UndoManager: React.FC<UndoManagerProps> = ({
   const canRedo = currentStateIndex < stateHistory.length - 1;
 
   return (
-    <DevWrapper componentName="UndoManager" htmlId="undo-manager-container">
-      <div className="flex gap-2">
-        <DevWrapper componentName="UndoButton" htmlId="undo-button">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleUndo}
-            disabled={!canUndo}
-            className="h-8 w-8 p-0"
-            title={`Undo (${stateHistory.length > 0 ? stateHistory[Math.max(0, currentStateIndex - 1)]?.description || 'Previous change' : 'No previous state'})`}
-          >
-            <Undo className="w-4 h-4" />
-          </Button>
-        </DevWrapper>
-        
-        <DevWrapper componentName="RedoButton" htmlId="redo-button">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRedo}
-            disabled={!canRedo}
-            className="h-8 w-8 p-0"
-            title={`Redo (${currentStateIndex < stateHistory.length - 1 ? stateHistory[currentStateIndex + 1]?.description || 'Next change' : 'No next state'})`}
-          >
-            <Redo className="w-4 h-4" />
-          </Button>
-        </DevWrapper>
-        
-        <DevWrapper componentName="StateIndicator" htmlId="state-indicator">
-          <div className="flex items-center text-xs text-gray-500 ml-2">
-            {stateHistory.length > 0 && (
-              <span>
-                {currentStateIndex + 1} / {stateHistory.length}
-              </span>
-            )}
-          </div>
-        </DevWrapper>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleUndo}
+        disabled={!canUndo}
+        className="h-8 w-8 p-0"
+        title={`Undo (${stateHistory.length > 0 ? stateHistory[Math.max(0, currentStateIndex - 1)]?.description || 'Previous change' : 'No previous state'})`}
+      >
+        <Undo className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleRedo}
+        disabled={!canRedo}
+        className="h-8 w-8 p-0"
+        title={`Redo (${currentStateIndex < stateHistory.length - 1 ? stateHistory[currentStateIndex + 1]?.description || 'Next change' : 'No next state'})`}
+      >
+        <Redo className="w-4 h-4" />
+      </Button>
+      
+      {/* State indicator */}
+      <div className="flex items-center text-xs text-gray-500 ml-2">
+        {stateHistory.length > 0 && (
+          <span>
+            {currentStateIndex + 1} / {stateHistory.length}
+          </span>
+        )}
       </div>
-    </DevWrapper>
+    </div>
   );
 };

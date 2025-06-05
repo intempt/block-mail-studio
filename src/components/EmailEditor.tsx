@@ -35,7 +35,6 @@ import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { UndoManager } from './UndoManager';
-import { DevWrapper } from './dev/DevWrapper';
 
 interface Block {
   id: string;
@@ -419,163 +418,143 @@ export default function EmailEditor({
   console.log('EmailEditor: About to render main component');
 
   return (
-    <DevWrapper componentName="EmailEditor" htmlId="email-editor-container">
-      <div id="email-editor-container" className="h-screen flex flex-col bg-gray-50 relative" data-lov-id="src/components/EmailEditor.tsx">
-        <DevWrapper componentName="OmnipresentRibbon" htmlId="omnipresent-ribbon-wrapper">
-          <div id="omnipresent-ribbon-wrapper">
-            <OmnipresentRibbon
-              onBlockAdd={handleBlockAdd}
-              onSnippetAdd={handleSnippetAdd}
-              universalContent={universalContent}
-              onUniversalContentAdd={handleUniversalContentAdd}
-              onGlobalStylesChange={handleGlobalStylesChange}
-              emailHTML={content}
-              subjectLine={subject}
-              editor={editor}
-              snippetRefreshTrigger={snippetRefreshTrigger}
-              onTemplateLibraryOpen={handleTemplateLibraryOpen}
-              onPreviewModeChange={handlePreviewModeChange}
-              previewMode={previewMode}
-              onBack={onBack}
-              canvasWidth={canvasWidth}
-              deviceMode={deviceMode}
-              onDeviceChange={handleDeviceChange}
-              onWidthChange={handleWidthChange}
-              onPreview={handlePreview}
-              onSaveTemplate={handleSaveAsTemplate}
-              onPublish={handlePublish}
-              onToggleAIAnalytics={handleToggleAIAnalytics}
-              onImportBlocks={handleImportBlocks}
-              blocks={emailBlocks}
-              onGmailPreview={handleGmailPreview}
-              viewMode={viewMode}
-              onViewModeChange={handleViewModeChange}
+    <div id="email-editor-container" className="h-screen flex flex-col bg-gray-50 relative" data-lov-id="src/components/EmailEditor.tsx">
+      <div id="omnipresent-ribbon-wrapper">
+        <OmnipresentRibbon
+          onBlockAdd={handleBlockAdd}
+          onSnippetAdd={handleSnippetAdd}
+          universalContent={universalContent}
+          onUniversalContentAdd={handleUniversalContentAdd}
+          onGlobalStylesChange={handleGlobalStylesChange}
+          emailHTML={content}
+          subjectLine={subject}
+          editor={editor}
+          snippetRefreshTrigger={snippetRefreshTrigger}
+          onTemplateLibraryOpen={handleTemplateLibraryOpen}
+          onPreviewModeChange={handlePreviewModeChange}
+          previewMode={previewMode}
+          onBack={onBack}
+          canvasWidth={canvasWidth}
+          deviceMode={deviceMode}
+          onDeviceChange={handleDeviceChange}
+          onWidthChange={handleWidthChange}
+          onPreview={handlePreview}
+          onSaveTemplate={handleSaveAsTemplate}
+          onPublish={handlePublish}
+          onToggleAIAnalytics={handleToggleAIAnalytics}
+          onImportBlocks={handleImportBlocks}
+          blocks={emailBlocks}
+          onGmailPreview={handleGmailPreview}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+        />
+      </div>
+
+      {/* Contextual Notifications - Position near ribbon */}
+      {notifications.length > 0 && (
+        <div id="notifications-container" className="px-6 py-2 bg-white border-b border-gray-200">
+          <div id="notifications-wrapper">
+            <InlineNotificationContainer
+              notifications={notifications}
+              onRemove={removeNotification}
+              maxNotifications={2}
             />
           </div>
-        </DevWrapper>
+        </div>
+      )}
 
-        {/* Contextual Notifications - Position near ribbon */}
-        {notifications.length > 0 && (
-          <DevWrapper componentName="NotificationsContainer" htmlId="notifications-container">
-            <div id="notifications-container" className="px-6 py-2 bg-white border-b border-gray-200">
-              <div id="notifications-wrapper">
-                <InlineNotificationContainer
-                  notifications={notifications}
-                  onRemove={removeNotification}
-                  maxNotifications={2}
-                />
+      {/* Snippet Ribbon - Only show in edit mode */}
+      {viewMode === 'edit' && (
+        <div id="snippet-ribbon-wrapper">
+          <SnippetRibbon
+            onSnippetSelect={handleSnippetSelect}
+            refreshTrigger={snippetRefreshTrigger}
+          />
+        </div>
+      )}
+
+      <div id="main-content-area" className="flex-1 overflow-auto bg-gray-100 min-h-0">
+        <div id="content-wrapper" className="h-full w-full p-6 relative">
+          <div id="canvas-container" className="max-w-4xl mx-auto h-full">
+            {/* Edit Mode - Show Canvas */}
+            {viewMode === 'edit' && (
+              <div id="edit-mode-container" className="h-full transition-all duration-300 ease-in-out">
+                <div id="email-block-canvas-wrapper">
+                  <EmailBlockCanvas
+                    ref={canvasRef}
+                    onContentChange={handleContentChangeFromCanvas}
+                    onBlockSelect={handleBlockSelect}
+                    onBlocksChange={handleBlocksChange}
+                    previewWidth={canvasWidth}
+                    previewMode={previewMode}
+                    compactMode={false}
+                    subject={subject}
+                    onSubjectChange={onSubjectChange}
+                    showAIAnalytics={false}
+                  />
+                </div>
               </div>
-            </div>
-          </DevWrapper>
-        )}
+            )}
 
-        {/* Snippet Ribbon - Only show in edit mode */}
-        {viewMode === 'edit' && (
-          <DevWrapper componentName="SnippetRibbon" htmlId="snippet-ribbon-wrapper">
-            <div id="snippet-ribbon-wrapper">
-              <SnippetRibbon
-                onSnippetSelect={handleSnippetSelect}
-                refreshTrigger={snippetRefreshTrigger}
-              />
-            </div>
-          </DevWrapper>
-        )}
-
-        <DevWrapper componentName="MainContentArea" htmlId="main-content-area">
-          <div id="main-content-area" className="flex-1 overflow-auto bg-gray-100 min-h-0">
-            <div id="content-wrapper" className="h-full w-full p-6 relative">
-              <div id="canvas-container" className="max-w-4xl mx-auto h-full">
-                {/* Edit Mode - Show Canvas */}
-                {viewMode === 'edit' && (
-                  <DevWrapper componentName="EditModeContainer" htmlId="edit-mode-container">
-                    <div id="edit-mode-container" className="h-full transition-all duration-300 ease-in-out">
-                      <div id="email-block-canvas-wrapper">
-                        <EmailBlockCanvas
-                          ref={canvasRef}
-                          onContentChange={handleContentChangeFromCanvas}
-                          onBlockSelect={handleBlockSelect}
-                          onBlocksChange={handleBlocksChange}
-                          previewWidth={canvasWidth}
-                          previewMode={previewMode}
-                          compactMode={false}
-                          subject={subject}
-                          onSubjectChange={onSubjectChange}
-                          showAIAnalytics={false}
-                        />
-                      </div>
-                    </div>
-                  </DevWrapper>
-                )}
-
-                {/* Preview Modes - Show Gmail Preview */}
-                {(viewMode === 'desktop-preview' || viewMode === 'mobile-preview') && (
-                  <DevWrapper componentName="PreviewModeContainer" htmlId="preview-mode-container">
-                    <div id="preview-mode-container" className="h-full transition-all duration-300 ease-in-out">
-                      <div id="integrated-gmail-preview-wrapper">
-                        <IntegratedGmailPreview
-                          emailHtml={content}
-                          subject={subject}
-                          previewMode={viewMode === 'desktop-preview' ? 'desktop' : 'mobile'}
-                          onPreviewModeChange={handlePreviewModeChange}
-                          fullWidth={true}
-                        />
-                      </div>
-                    </div>
-                  </DevWrapper>
-                )}
+            {/* Preview Modes - Show Gmail Preview */}
+            {(viewMode === 'desktop-preview' || viewMode === 'mobile-preview') && (
+              <div id="preview-mode-container" className="h-full transition-all duration-300 ease-in-out">
+                <div id="integrated-gmail-preview-wrapper">
+                  <IntegratedGmailPreview
+                    emailHtml={content}
+                    subject={subject}
+                    previewMode={viewMode === 'desktop-preview' ? 'desktop' : 'mobile'}
+                    onPreviewModeChange={handlePreviewModeChange}
+                    fullWidth={true}
+                  />
+                </div>
               </div>
-
-              {/* UndoManager positioned relative to content-wrapper */}
-              <div id="undo-manager-container" className="absolute bottom-4 right-4 z-50">
-                <UndoManager 
-                  blocks={emailBlocks}
-                  subject={subject}
-                  onStateRestore={handleStateRestore}
-                />
-              </div>
-            </div>
+            )}
           </div>
-        </DevWrapper>
 
-        {/* Unified AI Analysis Center Footer - Always visible */}
-        <DevWrapper componentName="CanvasStatusFooter" htmlId="canvas-status-footer">
-          <div id="canvas-status-footer" className="bg-white border-t border-gray-200 shadow-lg">
-            <div id="canvas-status-wrapper">
-              <CanvasStatus 
-                selectedBlockId={selectedBlockId}
-                canvasWidth={canvasWidth}
-                previewMode={previewMode}
-                emailHTML={content}
-                subjectLine={subject}
-                onApplyFix={handleApplyFix}
-              />
-            </div>
+          {/* UndoManager positioned relative to content-wrapper */}
+          <div id="undo-manager-container" className="absolute bottom-4 right-4 z-50">
+            <UndoManager 
+              blocks={emailBlocks}
+              subject={subject}
+              onStateRestore={handleStateRestore}
+            />
           </div>
-        </DevWrapper>
-
-        {/* Keep existing modals */}
-        {showPreview && (
-          <DevWrapper componentName="EmailPreviewModal" htmlId="email-preview-modal">
-            <div id="email-preview-modal">
-              <EmailPreview
-                html={content}
-                previewMode={previewMode}
-                subject={subject}
-              />
-            </div>
-          </DevWrapper>
-        )}
-
-        {showTemplateLibrary && (
-          <DevWrapper componentName="EmailTemplateLibraryModal" htmlId="email-template-library-modal">
-            <div id="email-template-library-modal">
-              <EmailTemplateLibrary
-                editor={editor}
-              />
-            </div>
-          </DevWrapper>
-        )}
+        </div>
       </div>
-    </DevWrapper>
+
+      {/* Unified AI Analysis Center Footer - Always visible */}
+      <div id="canvas-status-footer" className="bg-white border-t border-gray-200 shadow-lg">
+        <div id="canvas-status-wrapper">
+          <CanvasStatus 
+            selectedBlockId={selectedBlockId}
+            canvasWidth={canvasWidth}
+            previewMode={previewMode}
+            emailHTML={content}
+            subjectLine={subject}
+            onApplyFix={handleApplyFix}
+          />
+        </div>
+      </div>
+
+      {/* Keep existing modals */}
+      {showPreview && (
+        <div id="email-preview-modal">
+          <EmailPreview
+            html={content}
+            previewMode={previewMode}
+            subject={subject}
+          />
+        </div>
+      )}
+
+      {showTemplateLibrary && (
+        <div id="email-template-library-modal">
+          <EmailTemplateLibrary
+            editor={editor}
+          />
+        </div>
+      )}
+    </div>
   );
 }
