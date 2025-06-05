@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -47,8 +47,27 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const [toolbarPosition, setToolbarPosition] = useState({ top: 0, left: 0 });
   const [hasSelection, setHasSelection] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
+  const [selectionTimeout, setSelectionTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const isUrlMode = contentType === 'url' || contentType === 'video';
+
+  // Debounced function to show toolbar after selection
+  const debouncedShowToolbar = useCallback((hasValidSelection: boolean) => {
+    if (selectionTimeout) {
+      clearTimeout(selectionTimeout);
+    }
+
+    if (hasValidSelection && hasFocus && !isSelecting) {
+      const timeout = setTimeout(() => {
+        setShowToolbar(true);
+        updateToolbarPosition();
+      }, 150); // Small delay to ensure selection is complete
+      setSelectionTimeout(timeout);
+    } else {
+      setShowToolbar(false);
+    }
+  }, [hasFocus, isSelecting, selectionTimeout]);
 
   const editor = useEditor({
     extensions: [
@@ -104,25 +123,26 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     },
     onSelectionUpdate: ({ editor }) => {
       const { from, to } = editor.state.selection;
-      const hasTextSelected = from !== to;
+      const selectionLength = to - from;
+      const hasValidSelection = selectionLength > 0;
       
-      setHasSelection(hasTextSelected);
+      setHasSelection(hasValidSelection);
       
-      if (hasTextSelected && hasFocus) {
-        updateToolbarPosition();
-        setShowToolbar(true);
+      // Only show toolbar for meaningful text selections (minimum 1 character)
+      if (hasValidSelection && selectionLength >= 1) {
+        debouncedShowToolbar(true);
       } else {
-        setShowToolbar(false);
+        debouncedShowToolbar(false);
       }
     },
     onFocus: () => {
       if (!isUrlMode) {
         setHasFocus(true);
-        // Don't show toolbar on focus - only show when text is selected
+        // Don't automatically show toolbar on focus - wait for actual selection
         const { from, to } = editor?.state.selection || { from: 0, to: 0 };
-        if (from !== to) {
-          updateToolbarPosition();
-          setShowToolbar(true);
+        const selectionLength = to - from;
+        if (selectionLength > 0) {
+          debouncedShowToolbar(true);
         }
       }
     },
@@ -140,11 +160,35 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         setHasFocus(false);
         setShowToolbar(false);
         setHasSelection(false);
+        setIsSelecting(false);
+        if (selectionTimeout) {
+          clearTimeout(selectionTimeout);
+        }
         onBlur?.();
       }, 200);
     },
     immediatelyRender: false,
   });
+
+  // Handle mouse events to detect selection gestures
+  const handleMouseDown = useCallback(() => {
+    setIsSelecting(true);
+    setShowToolbar(false); // Hide toolbar during selection
+  }, []);
+
+  const handleMouseUp = useCallback(() => {
+    // Small delay to allow selection to complete
+    setTimeout(() => {
+      setIsSelecting(false);
+      if (editor && hasFocus) {
+        const { from, to } = editor.state.selection;
+        const selectionLength = to - from;
+        if (selectionLength > 0) {
+          debouncedShowToolbar(true);
+        }
+      }
+    }, 50);
+  }, [editor, hasFocus, debouncedShowToolbar]);
 
   const updateToolbarPosition = () => {
     if (!editor) return;
@@ -165,6 +209,11 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     setShowToolbar(false);
     setHasSelection(false);
     
+    // Clear any pending timeouts
+    if (selectionTimeout) {
+      clearTimeout(selectionTimeout);
+    }
+    
     // Refocus editor and clear selection
     setTimeout(() => {
       if (editor) {
@@ -175,6 +224,15 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       }
     }, 100);
   };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (selectionTimeout) {
+        clearTimeout(selectionTimeout);
+      }
+    };
+  }, [selectionTimeout]);
 
   useEffect(() => {
     if (editor && !isUrlMode && content !== editor.getHTML()) {
@@ -243,12 +301,14 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
           editor={editor} 
           className="prose prose-sm max-w-none p-4 focus:outline-none min-h-[80px]"
           placeholder={placeholder}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
         />
 
-        {/* Selection-Based Toolbar - Only show when text is selected */}
+        {/* Selection-Based Toolbar - Only show when text is actually selected */}
         <FullTipTapToolbar
           editor={editor}
-          isVisible={showToolbar && hasSelection && hasFocus}
+          isVisible={showToolbar && hasSelection && hasFocus && !isSelecting}
           position={toolbarPosition}
           emailContext={emailContext}
           onToolbarAction={handleToolbarAction}
