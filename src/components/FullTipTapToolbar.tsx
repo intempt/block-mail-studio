@@ -28,7 +28,7 @@ import {
   Minus,
   X
 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuPortal } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { tiptapAIService } from '@/services/tiptapAIService';
 import { EmailContext } from '@/services/tiptapAIService';
@@ -56,6 +56,8 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
   const [showAIPanel, setShowAIPanel] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [fontFamilyDropdownOpen, setFontFamilyDropdownOpen] = useState(false);
+  const [fontSizeDropdownOpen, setFontSizeDropdownOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -93,8 +95,41 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
 
   // Close toolbar manually
   const handleCloseToolbar = useCallback(() => {
+    // Close all dropdowns first
+    setFontFamilyDropdownOpen(false);
+    setFontSizeDropdownOpen(false);
+    setShowColorPicker(false);
+    setShowLinkDialog(false);
+    setShowAIPanel(false);
     onToolbarAction?.();
   }, [onToolbarAction]);
+
+  // Handle font family selection
+  const handleFontFamilySelect = useCallback((fontValue: string) => {
+    if (editor) {
+      editor.chain().focus().setFontFamily(fontValue).run();
+    }
+    setFontFamilyDropdownOpen(false);
+    // Keep toolbar open for multiple formatting
+  }, [editor]);
+
+  // Handle font size selection
+  const handleFontSizeSelect = useCallback((size: string) => {
+    if (editor) {
+      editor.chain().focus().setFontSize(size).run();
+    }
+    setFontSizeDropdownOpen(false);
+    // Keep toolbar open for multiple formatting
+  }, [editor]);
+
+  // Handle color selection
+  const handleColorSelect = useCallback((color: string) => {
+    if (editor) {
+      editor.chain().focus().setColor(color).run();
+    }
+    setShowColorPicker(false);
+    // Keep toolbar open for multiple formatting
+  }, [editor]);
 
   // Handle escape key to close toolbar
   useEffect(() => {
@@ -113,18 +148,40 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
     };
   }, [isVisible, handleCloseToolbar]);
 
+  // Enhanced click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (toolbarRef.current && !toolbarRef.current.contains(event.target as Node)) {
-        setShowAIPanel(false);
-        setShowColorPicker(false);
-        setShowLinkDialog(false);
+      const target = event.target as Node;
+      
+      // Don't close if clicking on toolbar itself
+      if (toolbarRef.current && toolbarRef.current.contains(target)) {
+        return;
       }
+      
+      // Don't close if clicking on dropdown content
+      if (target instanceof Element) {
+        const isDropdownContent = target.closest('[data-radix-dropdown-content]') ||
+                                 target.closest('[data-radix-popover-content]') ||
+                                 target.closest('.full-tiptap-toolbar');
+        if (isDropdownContent) {
+          return;
+        }
+      }
+      
+      // Close all popovers but not the main toolbar
+      setShowAIPanel(false);
+      setShowColorPicker(false);
+      setShowLinkDialog(false);
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isVisible) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isVisible]);
 
   const handleAIGenerate = useCallback(async () => {
     if (!aiPrompt.trim() || !editor) return;
@@ -259,47 +316,87 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
           <X className="w-3 h-3" />
         </Button>
 
-        {/* Font Family - Dropdown action (keeps toolbar open) */}
-        <DropdownMenu>
+        {/* Font Family - Enhanced Dropdown */}
+        <DropdownMenu open={fontFamilyDropdownOpen} onOpenChange={setFontFamilyDropdownOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-xs bg-white hover:bg-gray-50">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs bg-white hover:bg-gray-50 border border-gray-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFontFamilyDropdownOpen(!fontFamilyDropdownOpen);
+              }}
+            >
               <Type className="w-3 h-3 mr-1" />
               Font
               <ChevronDown className="w-3 h-3 ml-1" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white border shadow-lg z-[1001]">
-            {fontFamilies.map((font) => (
-              <DropdownMenuItem
-                key={font.value}
-                onClick={() => handleDropdownAction(() => editor.chain().focus().setFontFamily(font.value).run())}
-                className={`hover:bg-gray-100 ${editor.isActive('textStyle', { fontFamily: font.value }) ? 'bg-gray-100' : ''}`}
-              >
-                <span style={{ fontFamily: font.value }}>{font.name}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
+          <DropdownMenuPortal>
+            <DropdownMenuContent 
+              className="bg-white border shadow-lg z-[1100] pointer-events-auto"
+              style={{ zIndex: 1100 }}
+              side="bottom"
+              align="start"
+            >
+              {fontFamilies.map((font) => (
+                <DropdownMenuItem
+                  key={font.value}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFontFamilySelect(font.value);
+                  }}
+                  className={`hover:bg-gray-100 cursor-pointer text-gray-900 ${
+                    editor.isActive('textStyle', { fontFamily: font.value }) ? 'bg-gray-100' : ''
+                  }`}
+                >
+                  <span style={{ fontFamily: font.value }}>{font.name}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
         </DropdownMenu>
 
-        {/* Font Size - Dropdown action (keeps toolbar open) */}
-        <DropdownMenu>
+        {/* Font Size - Enhanced Dropdown */}
+        <DropdownMenu open={fontSizeDropdownOpen} onOpenChange={setFontSizeDropdownOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-xs bg-white hover:bg-gray-50">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-xs bg-white hover:bg-gray-50 border border-gray-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                setFontSizeDropdownOpen(!fontSizeDropdownOpen);
+              }}
+            >
               Size
               <ChevronDown className="w-3 h-3 ml-1" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-white border shadow-lg z-[1001]">
-            {fontSizes.map((size) => (
-              <DropdownMenuItem
-                key={size}
-                onClick={() => handleDropdownAction(() => editor.chain().focus().setFontSize(size).run())}
-                className={`hover:bg-gray-100 ${editor.isActive('textStyle', { fontSize: size }) ? 'bg-gray-100' : ''}`}
-              >
-                {size}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
+          <DropdownMenuPortal>
+            <DropdownMenuContent 
+              className="bg-white border shadow-lg z-[1100] pointer-events-auto"
+              style={{ zIndex: 1100 }}
+              side="bottom"
+              align="start"
+            >
+              {fontSizes.map((size) => (
+                <DropdownMenuItem
+                  key={size}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFontSizeSelect(size);
+                  }}
+                  className={`hover:bg-gray-100 cursor-pointer text-gray-900 ${
+                    editor.isActive('textStyle', { fontSize: size }) ? 'bg-gray-100' : ''
+                  }`}
+                >
+                  {size}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
         </DropdownMenu>
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
@@ -332,23 +429,36 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
           <Underline className="w-4 h-4" />
         </Button>
 
-        {/* Text Color - Dropdown action (keeps toolbar open) */}
+        {/* Text Color - Enhanced Popover */}
         <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="bg-white hover:bg-gray-50">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="bg-white hover:bg-gray-50 border border-gray-200"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowColorPicker(!showColorPicker);
+              }}
+            >
               <Palette className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-48 p-2 bg-white border shadow-lg z-[1001]">
+          <PopoverContent 
+            className="w-48 p-2 bg-white border shadow-lg z-[1100] pointer-events-auto"
+            style={{ zIndex: 1100 }}
+            side="bottom"
+            align="start"
+          >
             <div className="grid grid-cols-6 gap-1">
               {colors.map((color) => (
                 <button
                   key={color}
-                  className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform cursor-pointer"
                   style={{ backgroundColor: color }}
-                  onClick={() => {
-                    handleDropdownAction(() => editor.chain().focus().setColor(color).run());
-                    setShowColorPicker(false);
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleColorSelect(color);
                   }}
                 />
               ))}
@@ -442,20 +552,26 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className={`bg-white hover:bg-gray-50 ${editor.isActive('link') ? 'bg-gray-100' : ''}`}
+              className={`bg-white hover:bg-gray-50 border border-gray-200 ${editor.isActive('link') ? 'bg-gray-100' : ''}`}
             >
               <Link className="w-4 h-4" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-3 bg-white border shadow-lg z-[1001]">
+          <PopoverContent 
+            className="w-80 p-3 bg-white border shadow-lg z-[1100] pointer-events-auto"
+            style={{ zIndex: 1100 }}
+            side="bottom"
+            align="start"
+          >
             <div className="space-y-3">
               <div>
-                <label className="text-sm font-medium mb-1 block">Link URL</label>
+                <label className="text-sm font-medium mb-1 block text-gray-900">Link URL</label>
                 <Input
                   placeholder="https://example.com"
                   value={linkUrl}
                   onChange={(e) => setLinkUrl(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAddLink()}
+                  className="text-gray-900"
                 />
               </div>
               <div className="flex gap-2">
@@ -480,14 +596,19 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="bg-blue-50 text-blue-600 hover:bg-blue-100"
+              className="bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200"
             >
               <Sparkles className="w-4 h-4 mr-1" />
               AI Pro
               {showAIPanel ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4 bg-white border shadow-lg z-[1001]">
+          <PopoverContent 
+            className="w-80 p-4 bg-white border shadow-lg z-[1100] pointer-events-auto"
+            style={{ zIndex: 1100 }}
+            side="bottom"
+            align="start"
+          >
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -499,7 +620,7 @@ const FullTipTapToolbar: React.FC<FullTipTapToolbarProps> = ({
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAIGenerate()}
-                    className="flex-1 text-sm"
+                    className="flex-1 text-sm text-gray-900"
                   />
                   <Button
                     onClick={handleAIGenerate}
