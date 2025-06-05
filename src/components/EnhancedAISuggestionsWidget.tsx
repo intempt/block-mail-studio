@@ -1,6 +1,5 @@
 import React from 'react';
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
-import { CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 
 interface EnhancedAISuggestionsWidgetProps {
   isOpen: boolean;
