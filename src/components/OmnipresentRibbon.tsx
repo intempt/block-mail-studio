@@ -1,101 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Type, 
-  Image, 
-  MousePointerClick, 
-  Space, 
-  Video, 
-  Share2, 
-  Table,
-  Layout,
-  Link,
+import { Separator } from '@/components/ui/separator';
+import {
   ArrowLeft,
-  Download,
-  Upload,
-  Monitor,
-  Smartphone,
-  Save,
-  Mail,
-  Edit3,
-  Trash2,
-  Minus,
-  Code,
   Eye,
-  Edit
+  Code,
+  Palette,
+  Save,
+  Download,
+  Send
 } from 'lucide-react';
-import { UniversalContent } from '@/types/emailBlocks';
-import { EmailSnippet } from '@/types/snippets';
-import { ButtonsCard } from './ButtonsCard';
-import { LinksCard } from './LinksCard';
-import { EmailSettingsCard } from './EmailSettingsCard';
-import { TextHeadingsCard } from './TextHeadingsCard';
-import { EnhancedAISuggestionsWidget } from './EnhancedAISuggestionsWidget';
-import { DynamicLayoutIcon } from './DynamicLayoutIcon';
-import { EmailImportDialog } from './dialogs/EmailImportDialog';
-import { EmailExportDialog } from './dialogs/EmailExportDialog';
-import { createDragData } from '@/utils/dragDropUtils';
-import { generateUniqueId } from '@/utils/blockUtils';
-import { EmailBlock } from '@/types/emailBlocks';
-import { useNotification } from '@/contexts/NotificationContext';
-
-interface BlockItem {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-}
-
-interface LayoutOption {
-  id: string;
-  name: string;
-  columns: number;
-  ratio: string;
-  preview: string[];
-}
-
-const blockItems: BlockItem[] = [
-  { id: 'text', name: 'Text', icon: <Type className="w-9 h-9" /> },
-  { id: 'image', name: 'Image', icon: <Image className="w-9 h-9" /> },
-  { id: 'button', name: 'Button', icon: <MousePointerClick className="w-9 h-9" /> },
-  { id: 'spacer', name: 'Spacer', icon: <Space className="w-9 h-9" /> },
-  { id: 'divider', name: 'Divider', icon: <Minus className="w-9 h-9" /> },
-  { id: 'video', name: 'Video', icon: <Video className="w-9 h-9" /> },
-  { id: 'social', name: 'Social', icon: <Share2 className="w-9 h-9" /> },
-  { id: 'html', name: 'HTML', icon: <Code className="w-9 h-9" /> },
-  { id: 'table', name: 'Table', icon: <Table className="w-9 h-9" /> }
-];
-
-const layoutOptions: LayoutOption[] = [
-  { id: '1-column', name: '1 Col', columns: 1, ratio: '100', preview: ['100%'] },
-  { id: '2-column-50-50', name: '50/50', columns: 2, ratio: '50-50', preview: ['50%', '50%'] },
-  { id: '2-column-33-67', name: '33/67', columns: 2, ratio: '33-67', preview: ['33%', '67%'] },
-  { id: '2-column-67-33', name: '67/33', columns: 2, ratio: '67-33', preview: ['67%', '33%'] },
-  { id: '2-column-25-75', name: '25/75', columns: 2, ratio: '25-75', preview: ['25%', '75%'] },
-  { id: '2-column-75-25', name: '75/25', columns: 2, ratio: '75-25', preview: ['75%', '25%'] },
-  { id: '3-column-equal', name: '33/33/33', columns: 3, ratio: '33-33-33', preview: ['33%', '33%', '33%'] },
-  { id: '3-column-25-50-25', name: '25/50/25', columns: 3, ratio: '25-50-25', preview: ['25%', '50%', '25%'] },
-  { id: '3-column-25-25-50', name: '25/25/50', columns: 3, ratio: '25-25-50', preview: ['25%', '25%', '50%'] },
-  { id: '3-column-50-25-25', name: '50/25/25', columns: 3, ratio: '50-25-25', preview: ['50%', '25%', '25%'] },
-  { id: '4-column-equal', name: '25/25/25/25', columns: 4, ratio: '25-25-25-25', preview: ['25%', '25%', '25%', '25%'] }
-];
-
-type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Slider } from "@/components/ui/slider"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
+import { EmailBlockPalette } from './EmailBlockPalette';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
+import { UndoRedoToolbar } from './UndoRedoToolbar';
 
 interface OmnipresentRibbonProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
-  onSnippetAdd?: (snippet: EmailSnippet) => void;
-  universalContent: UniversalContent[];
-  onUniversalContentAdd: (content: UniversalContent) => void;
+  onSnippetAdd: (snippet: any) => void;
+  universalContent: any[];
+  onUniversalContentAdd: (content: any) => void;
   onGlobalStylesChange: (styles: any) => void;
   emailHTML: string;
   subjectLine: string;
-  editor?: any;
-  snippetRefreshTrigger?: number;
-  onTemplateLibraryOpen?: () => void;
-  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
-  previewMode?: 'desktop' | 'mobile';
+  editor: any;
+  snippetRefreshTrigger: number;
+  onTemplateLibraryOpen: () => void;
+  onPreviewModeChange: (mode: 'desktop' | 'mobile') => void;
+  previewMode: 'desktop' | 'mobile';
   onBack?: () => void;
   canvasWidth: number;
   deviceMode: 'desktop' | 'tablet' | 'mobile' | 'custom';
@@ -104,14 +57,16 @@ interface OmnipresentRibbonProps {
   onPreview: () => void;
   onSaveTemplate: (template: any) => void;
   onPublish: () => void;
-  canvasRef?: React.RefObject<any>;
-  onSubjectLineChange?: (subject: string) => void;
-  onToggleAIAnalytics?: () => void;
-  onImportBlocks?: (blocks: EmailBlock[], subject?: string) => void;
-  blocks: EmailBlock[];
-  onGmailPreview?: (mode: 'desktop' | 'mobile') => void;
-  viewMode?: ViewMode;
-  onViewModeChange?: (mode: ViewMode) => void;
+  onToggleAIAnalytics: () => void;
+  onImportBlocks: (blocks: any[], importedSubject?: string) => void;
+  blocks: any[];
+  onGmailPreview: (mode: 'desktop' | 'mobile') => void;
+  viewMode: 'edit' | 'desktop-preview' | 'mobile-preview';
+  onViewModeChange: (mode: 'edit' | 'desktop-preview' | 'mobile-preview') => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
@@ -123,10 +78,10 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   emailHTML,
   subjectLine,
   editor,
-  snippetRefreshTrigger = 0,
+  snippetRefreshTrigger,
   onTemplateLibraryOpen,
   onPreviewModeChange,
-  previewMode = 'desktop',
+  previewMode,
   onBack,
   canvasWidth,
   deviceMode,
@@ -135,457 +90,152 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   onPreview,
   onSaveTemplate,
   onPublish,
-  canvasRef,
-  onSubjectLineChange,
   onToggleAIAnalytics,
   onImportBlocks,
   blocks,
   onGmailPreview,
-  viewMode = 'edit',
-  onViewModeChange
+  viewMode,
+  onViewModeChange,
+  canUndo = false,
+  canRedo = false,
+  onUndo = () => {},
+  onRedo = () => {}
 }) => {
-  const { success, error, warning } = useNotification();
-  const [showButtons, setShowButtons] = useState(false);
-  const [showLinks, setShowLinks] = useState(false);
-  const [showEmailSettings, setShowEmailSettings] = useState(false);
-  const [showTextHeadings, setShowTextHeadings] = useState(false);
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [campaignTitle, setCampaignTitle] = useState('New Email Campaign');
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [draggedLayout, setDraggedLayout] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const savedDraft = localStorage.getItem('email-builder-draft');
-    if (savedDraft) {
-      try {
-        const { title } = JSON.parse(savedDraft);
-        if (title) {
-          setCampaignTitle(title);
-        }
-      } catch (error) {
-        console.error('Error loading saved draft:', error);
-      }
-    }
-  }, []);
+  const [showBlockPalette, setShowBlockPalette] = useState(false);
 
-  const createLayoutConfig = (layout: LayoutOption) => {
-    const columnElements = Array.from({ length: layout.columns }, (_, index) => ({
-      id: generateUniqueId(),
-      blocks: [],
-      width: layout.preview[index] || `${100 / layout.columns}%`
-    }));
-
-    return {
-      columnCount: layout.columns,
-      columnRatio: layout.ratio,
-      columns: columnElements,
-      gap: '16px'
-    };
+  const handleDeviceChangeClick = (device: 'desktop' | 'tablet' | 'mobile') => {
+    onDeviceChange(device);
   };
 
-  const handleDragStart = (e: React.DragEvent, blockType: string) => {
-    console.log('OmnipresentRibbon: Starting block drag:', blockType);
-    const dragData = createDragData({ blockType });
-    e.dataTransfer.setData('application/json', dragData);
-    e.dataTransfer.effectAllowed = 'copy';
+  const handleWidthChangeCommit = (width: number[]) => {
+    onWidthChange(width[0]);
   };
 
-  const handleLayoutDragStart = (e: React.DragEvent, layout: LayoutOption) => {
-    console.log('OmnipresentRibbon: Starting layout drag:', layout.name);
-    setDraggedLayout(layout.id);
-    
-    const layoutConfig = createLayoutConfig(layout);
-    const dragData = createDragData({
-      blockType: 'columns',
-      isLayout: true,
-      layoutData: layoutConfig
-    });
-
-    e.dataTransfer.setData('application/json', dragData);
-    e.dataTransfer.effectAllowed = 'copy';
-
-    const dragPreview = document.createElement('div');
-    dragPreview.className = 'bg-white border-2 border-blue-400 rounded-lg p-3 shadow-lg';
-    dragPreview.style.transform = 'rotate(2deg)';
-    dragPreview.innerHTML = `
-      <div class="text-sm font-medium text-blue-700 mb-2">${layout.name}</div>
-      <div class="flex gap-1 h-6">
-        ${layout.preview.map(width => `<div class="bg-blue-200 rounded border" style="width: ${width}"></div>`).join('')}
-      </div>
-    `;
-    document.body.appendChild(dragPreview);
-    e.dataTransfer.setDragImage(dragPreview, 60, 30);
-    setTimeout(() => document.body.removeChild(dragPreview), 0);
-  };
-
-  const handleLayoutDragEnd = () => {
-    setDraggedLayout(null);
-  };
-
-  const handleLayoutSelect = (layout: LayoutOption) => {
-    console.log('OmnipresentRibbon: Layout clicked:', layout.name);
-    const layoutConfig = createLayoutConfig(layout);
-    onBlockAdd('columns', layoutConfig);
-  };
-
-  const closeAllPanels = () => {
-    setShowButtons(false);
-    setShowLinks(false);
-    setShowEmailSettings(false);
-    setShowTextHeadings(false);
-  };
-
-  const handleExport = () => {
-    console.log('OmnipresentRibbon: Opening export dialog with blocks:', blocks.length);
-    setShowExportDialog(true);
-  };
-
-  const handleSave = () => {
-    try {
-      const draftData = {
-        title: campaignTitle,
-        subject: subjectLine,
-        html: emailHTML,
-        savedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('email-builder-draft', JSON.stringify(draftData));
-      success('Email draft saved successfully');
-    } catch (err) {
-      error('Failed to save email draft');
-    }
-  };
-
-  const handleDeleteCanvas = () => {
-    if (confirm('Are you sure you want to clear all content? This will also clear your saved draft.')) {
-      try {
-        localStorage.removeItem('email-builder-draft');
-        success('Canvas cleared successfully');
-      } catch (err) {
-        error('Failed to clear canvas');
-      }
-    }
-  };
-
-  const handleImport = () => {
-    setShowImportDialog(true);
-  };
-
-  const handleImportBlocks = (blocks: EmailBlock[], subject?: string) => {
-    if (onImportBlocks) {
-      onImportBlocks(blocks, subject);
-      success(`Successfully imported ${blocks.length} blocks`);
-    }
-    setShowImportDialog(false);
-  };
-
-  const handleDesktopClick = () => {
-    onViewModeChange?.('desktop-preview');
-  };
-
-  const handleMobileClick = () => {
-    onViewModeChange?.('mobile-preview');
-  };
-
-  const handleEditClick = () => {
-    onViewModeChange?.('edit');
+  const handleViewModeChange = (mode: 'edit' | 'desktop-preview' | 'mobile-preview') => {
+    onViewModeChange(mode);
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 relative">
-      {/* Top Header */}
-      <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
-        
-        <div className="flex items-center gap-4">
-          {onBack && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          )}
-          
-          <div className="flex items-center gap-2">
-            {isEditingTitle ? (
-              <Input
-                value={campaignTitle}
-                onChange={(e) => setCampaignTitle(e.target.value)}
-                onBlur={() => setIsEditingTitle(false)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') setIsEditingTitle(false);
-                  if (e.key === 'Escape') setIsEditingTitle(false);
-                }}
-                className="text-xl font-semibold border-none p-0 h-auto focus:ring-0 focus:border-none"
-                autoFocus
-              />
-            ) : (
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">{campaignTitle}</h1>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsEditingTitle(true)}
-                  className="text-gray-400 hover:text-gray-600 h-6 w-6 p-0"
-                >
-                  <Edit3 className="w-3 h-3" />
+    <div className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="px-6 py-3">
+        <div className="flex items-center justify-between">
+          {/* Left Side - Back Button and Title */}
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <Button variant="ghost" size="sm" onClick={onBack}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
+              </Button>
+            )}
+            <h1 className="text-lg font-semibold">Email Editor</h1>
+          </div>
+
+          {/* Center - Main Tools */}
+          <div className="flex items-center gap-4">
+            {/* Undo/Redo Controls */}
+            <UndoRedoToolbar
+              canUndo={canUndo}
+              canRedo={canRedo}
+              onUndo={onUndo}
+              onRedo={onRedo}
+            />
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* Layouts and Blocks */}
+            <Popover open={showBlockPalette} onOpenChange={setShowBlockPalette}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Palette className="w-4 h-4 mr-2" />
+                  Layouts & Blocks
                 </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[500px]" align="start">
+                <EnhancedEmailBlockPalette
+                  onBlockAdd={onBlockAdd}
+                  universalContent={universalContent}
+                  onUniversalContentAdd={onUniversalContentAdd}
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Button variant="outline" size="sm" onClick={onTemplateLibraryOpen}>
+              <Save className="w-4 h-4 mr-2" />
+              My Templates
+            </Button>
+
+            <Separator orientation="vertical" className="h-6" />
+
+            {/* View Mode Toggles */}
+            <Tabs defaultValue={viewMode} className="w-[300px]" onValueChange={handleViewModeChange}>
+              <TabsList>
+                <TabsTrigger value="edit">Edit</TabsTrigger>
+                <TabsTrigger value="desktop-preview">Desktop</TabsTrigger>
+                <TabsTrigger value="mobile-preview">Mobile</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Right Side - Preview and Send */}
+          <div className="flex items-center gap-4">
+            {/* Canvas Width Adjustment */}
+            {deviceMode === 'custom' && (
+              <div className="flex items-center gap-2">
+                <Label htmlFor="canvas-width" className="text-sm text-muted-foreground">
+                  Width:
+                </Label>
+                <Slider
+                  defaultValue={[canvasWidth]}
+                  max={1200}
+                  min={320}
+                  step={10}
+                  onValueCommit={handleWidthChangeCommit}
+                  className="w-[100px]"
+                  aria-label="Canvas Width"
+                />
               </div>
             )}
-          </div>
-        </div>
-        
-        {/* Prominent View Mode Controls - Always Visible */}
-        <div className="flex items-center gap-6">
-          <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleEditClick}
-              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                viewMode === 'edit' 
-                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-              }`}
-              title="Switch to Edit Mode"
-            >
-              <Edit className="w-4 h-4" />
-              <span className="text-sm">Edit</span>
+
+            {/* Device Mode Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {deviceMode === 'desktop' && 'Desktop'}
+                  {deviceMode === 'tablet' && 'Tablet'}
+                  {deviceMode === 'mobile' && 'Mobile'}
+                  {deviceMode === 'custom' && 'Custom'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Device Mode</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleDeviceChangeClick('desktop')}>
+                  Desktop
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDeviceChangeClick('tablet')}>
+                  Tablet
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDeviceChangeClick('mobile')}>
+                  Mobile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDeviceChange('custom')}>
+                  Custom
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button size="sm" onClick={onPreview}>
+              <Eye className="w-4 h-4 mr-2" />
+              Preview
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDesktopClick}
-              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                viewMode === 'desktop-preview' 
-                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-              }`}
-              title="Gmail Desktop Preview"
-            >
-              <Monitor className="w-4 h-4" />
-              <span className="text-sm">Desktop</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMobileClick}
-              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                viewMode === 'mobile-preview' 
-                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-              }`}
-              title="Gmail Mobile Preview"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span className="text-sm">Mobile</span>
+
+            <Button size="sm" onClick={onPublish}>
+              <Send className="w-4 h-4 mr-2" />
+              Publish
             </Button>
           </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDeleteCanvas}
-            className="flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </Button>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button onClick={handleImport} variant="outline" size="sm">
-            <Upload className="w-4 h-4 mr-2" />
-            Import
-          </Button>
-          <Button onClick={handleExport} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button>
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700" size="sm">
-            <Save className="w-4 h-4 mr-2" />
-            Save
-          </Button>
         </div>
       </div>
-
-      {/* Toolbar - Only show in edit mode */}
-      {viewMode === 'edit' && (
-        <div className="px-0 py-2">
-          <div className="flex items-end justify-center overflow-x-auto gap-0">
-            {/* Content */}
-            <div className="flex-shrink-0">
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Content</span>
-                <div className="flex gap-0">
-                  {blockItems.map((block) => (
-                    <Button
-                      key={block.id}
-                      variant="ghost"
-                      size="lg"
-                      className="p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-6 [&_svg]:!h-6"
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, block.id)}
-                      onClick={() => onBlockAdd(block.id)}
-                      title={`Add ${block.name}`}
-                    >
-                      {React.cloneElement(block.icon as React.ReactElement, { className: "w-6 h-6" })}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Layout Options */}
-            <div className="flex-shrink-0">
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Layouts</span>
-                <div className="flex gap-0">
-                  {layoutOptions.map((layout) => (
-                    <Button
-                      key={layout.id}
-                      variant="ghost"
-                      size="lg"
-                      className={`p-2 rounded-lg cursor-grab active:cursor-grabbing hover:bg-blue-50 hover:text-blue-600 transition-all duration-200 [&_svg]:!w-6 [&_svg]:!h-6 ${
-                        draggedLayout === layout.id ? 'bg-blue-100 scale-105' : ''
-                      }`}
-                      draggable
-                      onDragStart={(e) => handleLayoutDragStart(e, layout)}
-                      onDragEnd={handleLayoutDragEnd}
-                      onClick={() => handleLayoutSelect(layout)}
-                      title={`Add ${layout.name} Layout`}
-                    >
-                      <DynamicLayoutIcon layout={layout} className="w-6 h-6" />
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Tool Buttons */}
-            <div className="flex-shrink-0">
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Styles</span>
-                <div className="flex gap-0">
-                  <Button
-                    variant={showEmailSettings ? 'default' : 'ghost'}
-                    size="lg"
-                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
-                    onClick={() => {
-                      closeAllPanels();
-                      setShowEmailSettings(!showEmailSettings);
-                    }}
-                    title="Email Styles"
-                  >
-                    <Mail className="w-6 h-6" />
-                  </Button>
-
-                  <Button
-                    variant={showTextHeadings ? 'default' : 'ghost'}
-                    size="lg"
-                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
-                    onClick={() => {
-                      closeAllPanels();
-                      setShowTextHeadings(!showTextHeadings);
-                    }}
-                    title="Text & Headings"
-                  >
-                    <Type className="w-6 h-6" />
-                  </Button>
-
-                  <Button
-                    variant={showButtons ? 'default' : 'ghost'}
-                    size="lg"
-                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
-                    onClick={() => {
-                      closeAllPanels();
-                      setShowButtons(!showButtons);
-                    }}
-                    title="Buttons"
-                  >
-                    <MousePointerClick className="w-6 h-6" />
-                  </Button>
-
-                  <Button
-                    variant={showLinks ? 'default' : 'ghost'}
-                    size="lg"
-                    className="p-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 [&_svg]:!w-6 [&_svg]:!h-6"
-                    onClick={() => {
-                      closeAllPanels();
-                      setShowLinks(!showLinks);
-                    }}
-                    title="Links"
-                  >
-                    <Link className="w-6 h-6" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Mode Indicator */}
-      {viewMode !== 'edit' && (
-        <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
-          <div className="flex items-center justify-center gap-2">
-            <Eye className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-700">
-              {viewMode === 'desktop-preview' ? 'Gmail Desktop Preview' : 'Gmail Mobile Preview'}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Settings Panels - Only show in edit mode */}
-      {viewMode === 'edit' && (
-        <>
-          <EmailSettingsCard
-            isOpen={showEmailSettings}
-            onToggle={() => setShowEmailSettings(!showEmailSettings)}
-            onStylesChange={onGlobalStylesChange}
-          />
-
-          <TextHeadingsCard
-            isOpen={showTextHeadings}
-            onToggle={() => setShowTextHeadings(!showTextHeadings)}
-            onStylesChange={onGlobalStylesChange}
-          />
-
-          <ButtonsCard
-            isOpen={showButtons}
-            onToggle={() => setShowButtons(!showButtons)}
-            onStylesChange={onGlobalStylesChange}
-          />
-
-          <LinksCard
-            isOpen={showLinks}
-            onToggle={() => setShowLinks(!showLinks)}
-            onStylesChange={onGlobalStylesChange}
-          />
-        </>
-      )}
-
-      <EmailImportDialog
-        isOpen={showImportDialog}
-        onClose={() => setShowImportDialog(false)}
-        onImport={handleImportBlocks}
-      />
-
-      <EmailExportDialog
-        isOpen={showExportDialog}
-        onClose={() => setShowExportDialog(false)}
-        blocks={blocks}
-        subject={subjectLine}
-        emailHTML={emailHTML}
-        campaignTitle={campaignTitle}
-      />
     </div>
   );
 };
-
-export default OmnipresentRibbon;

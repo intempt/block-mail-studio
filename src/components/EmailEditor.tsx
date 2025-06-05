@@ -34,6 +34,8 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
+import { useUndoRedo } from '@/hooks/useUndoRedo';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface Block {
   id: string;
@@ -60,6 +62,12 @@ interface EmailEditorProps {
 
 type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
 
+interface EmailEditorState {
+  content: string;
+  subject: string;
+  blocks: EmailBlock[];
+}
+
 export default function EmailEditor({ 
   content,
   subject,
@@ -70,6 +78,22 @@ export default function EmailEditor({
   console.log('EmailEditor: Component starting to render');
 
   const { notifications, removeNotification, success, error, warning } = useNotification();
+
+  // Initialize undo/redo with current state
+  const initialState: EmailEditorState = {
+    content,
+    subject,
+    blocks: []
+  };
+
+  const {
+    state: editorState,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    pushState
+  } = useUndoRedo(initialState);
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
@@ -396,6 +420,51 @@ export default function EmailEditor({
     setShowGmailPreview(true);
   };
 
+  // Enhanced content change handler that saves to history
+  const handleContentChangeWithHistory = useCallback((newContent: string) => {
+    onContentChange(newContent);
+    // Debounce saving to history to avoid too many history entries
+    setTimeout(() => {
+      saveStateToHistory();
+    }, 1000);
+  }, [onContentChange, saveStateToHistory]);
+
+  // Enhanced subject change handler that saves to history
+  const handleSubjectChangeWithHistory = useCallback((newSubject: string) => {
+    onSubjectChange(newSubject);
+    setTimeout(() => {
+      saveStateToHistory();
+    }, 1000);
+  }, [onSubjectChange, saveStateToHistory]);
+
+  // Enhanced blocks change handler that saves to history
+  const handleBlocksChangeWithHistory = useCallback((newBlocks: EmailBlock[]) => {
+    setEmailBlocks(newBlocks);
+    setTimeout(() => {
+      saveStateToHistory();
+    }, 500);
+  }, [saveStateToHistory]);
+
+  // Keyboard shortcuts for undo/redo
+  useKeyboardShortcuts({
+    'ctrl+z': (e) => {
+      e.preventDefault();
+      undo();
+    },
+    'cmd+z': (e) => {
+      e.preventDefault();
+      undo();
+    },
+    'ctrl+y': (e) => {
+      e.preventDefault();
+      redo();
+    },
+    'cmd+shift+z': (e) => {
+      e.preventDefault();
+      redo();
+    }
+  });
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -427,6 +496,10 @@ export default function EmailEditor({
         onGmailPreview={handleGmailPreview}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={undo}
+        onRedo={redo}
       />
 
       {/* Contextual Notifications - Position near ribbon */}
@@ -456,14 +529,14 @@ export default function EmailEditor({
               <div className="h-full transition-all duration-300 ease-in-out">
                 <EmailBlockCanvas
                   ref={canvasRef}
-                  onContentChange={handleContentChangeFromCanvas}
+                  onContentChange={handleContentChangeWithHistory}
                   onBlockSelect={handleBlockSelect}
-                  onBlocksChange={handleBlocksChange}
+                  onBlocksChange={handleBlocksChangeWithHistory}
                   previewWidth={canvasWidth}
                   previewMode={previewMode}
                   compactMode={false}
                   subject={subject}
-                  onSubjectChange={onSubjectChange}
+                  onSubjectChange={handleSubjectChangeWithHistory}
                   showAIAnalytics={false}
                 />
               </div>
