@@ -19,7 +19,8 @@ import {
 import { EmailTemplate } from './TemplateManager';
 import { emailAIService } from '@/services/EmailAIService';
 import { ChatContextService } from '@/services/chatContextService';
-import { toast } from 'sonner';
+import { useNotification } from '@/contexts/NotificationContext';
+import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 
 interface Message {
   id: string;
@@ -52,9 +53,9 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { notifications, removeNotification, success, error } = useNotification();
 
   useEffect(() => {
-    // Initialize conversation with user's task
     const initialMessage: Message = {
       id: '1',
       type: 'user',
@@ -77,14 +78,12 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
 
     setMessages([initialMessage, welcomeMessage]);
     
-    // Update context service
     ChatContextService.updateContext({
       mode: 'agentic',
       userGoals: [initialPrompt],
       emailType: mode === 'mail' ? 'email-creation' : 'general'
     });
 
-    // Auto-process initial prompt if it's detailed enough
     if (initialPrompt.length > 20) {
       processInitialPrompt(initialPrompt);
     }
@@ -94,44 +93,54 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
     setIsLoading(true);
     try {
       if (mode === 'mail' && (prompt.toLowerCase().includes('create') || prompt.toLowerCase().includes('email'))) {
-        const emailResponse = await emailAIService.generateEmail({
+        const emailResult = await emailAIService.generateEmail({
           prompt,
           tone: 'professional',
           type: 'announcement'
         });
 
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: `I've created a draft email based on your request!\n\n**Subject:** ${emailResponse.subject}\n**Preview:** ${emailResponse.previewText}\n\nWould you like me to refine anything or shall we move to the editor?`,
-          timestamp: new Date(),
-          suggestions: [
-            'Move to editor',
-            'Make it more casual',
-            'Add urgency',
-            'Change the tone'
-          ],
-          emailData: emailResponse
-        };
-        setMessages(prev => [...prev, aiResponse]);
+        if (emailResult.success) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: `I've created a draft email based on your request!\n\n**Subject:** ${emailResult.data.subject}\n**Preview:** ${emailResult.data.previewText}\n\nWould you like me to refine anything or shall we move to the editor?`,
+            timestamp: new Date(),
+            suggestions: [
+              'Move to editor',
+              'Make it more casual',
+              'Add urgency',
+              'Change the tone'
+            ],
+            emailData: emailResult.data
+          };
+          setMessages(prev => [...prev, aiResponse]);
+          success('Email draft created successfully');
+        } else {
+          error(emailResult.error || 'Failed to generate email');
+        }
       } else {
-        const response = await emailAIService.getConversationalResponse(prompt);
-        const aiResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: response,
-          timestamp: new Date(),
-          suggestions: [
-            'Tell me more',
-            'Show examples',
-            'Start creating',
-            'Choose template'
-          ]
-        };
-        setMessages(prev => [...prev, aiResponse]);
+        const responseResult = await emailAIService.getConversationalResponse(prompt);
+        
+        if (responseResult.success) {
+          const aiResponse: Message = {
+            id: (Date.now() + 1).toString(),
+            type: 'ai',
+            content: responseResult.data,
+            timestamp: new Date(),
+            suggestions: [
+              'Tell me more',
+              'Show examples',
+              'Start creating',
+              'Choose template'
+            ]
+          };
+          setMessages(prev => [...prev, aiResponse]);
+        } else {
+          error(responseResult.error || 'Failed to get AI response');
+        }
       }
-    } catch (error) {
-      console.error('Error processing initial prompt:', error);
+    } catch (err) {
+      console.error('Error processing initial prompt:', err);
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'error',
@@ -139,6 +148,7 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
+      error('AI service connection issue');
     } finally {
       setIsLoading(false);
     }
@@ -161,7 +171,6 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
 
     try {
       if (inputMessage.toLowerCase().includes('move to editor') || inputMessage.toLowerCase().includes('open editor')) {
-        // Find the most recent email data
         const lastEmailMessage = messages.slice().reverse().find(m => m.emailData);
         if (lastEmailMessage?.emailData) {
           onComplete(lastEmailMessage.emailData.html, lastEmailMessage.emailData.subject);
@@ -169,28 +178,32 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
         }
       }
 
-      const response = await emailAIService.getConversationalResponse(
+      const responseResult = await emailAIService.getConversationalResponse(
         inputMessage,
         ChatContextService.getRecentContext(3).split('\n')
       );
 
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: response,
-        timestamp: new Date(),
-        suggestions: [
-          'Create email',
-          'Show templates',
-          'Refine request',
-          'Move to editor'
-        ]
-      };
+      if (responseResult.success) {
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          type: 'ai',
+          content: responseResult.data,
+          timestamp: new Date(),
+          suggestions: [
+            'Create email',
+            'Show templates',
+            'Refine request',
+            'Move to editor'
+          ]
+        };
 
-      setMessages(prev => [...prev, aiResponse]);
-      ChatContextService.addToHistory('ai', response);
-    } catch (error) {
-      console.error('AI response error:', error);
+        setMessages(prev => [...prev, aiResponse]);
+        ChatContextService.addToHistory('ai', responseResult.data);
+      } else {
+        error(responseResult.error || 'Failed to get AI response');
+      }
+    } catch (err) {
+      console.error('AI response error:', err);
       const errorResponse: Message = {
         id: (Date.now() + 1).toString(),
         type: 'error',
@@ -198,6 +211,7 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorResponse]);
+      error('Failed to process request');
     } finally {
       setIsLoading(false);
     }
@@ -250,6 +264,17 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
             Skip to Editor
           </Button>
         </div>
+        
+        {/* Contextual Notifications */}
+        {notifications.length > 0 && (
+          <div className="max-w-4xl mx-auto mt-4">
+            <InlineNotificationContainer
+              notifications={notifications}
+              onRemove={removeNotification}
+              maxNotifications={2}
+            />
+          </div>
+        )}
       </div>
 
       {/* Chat Area */}

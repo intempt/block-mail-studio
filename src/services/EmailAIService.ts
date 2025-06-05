@@ -1,7 +1,6 @@
-
 import { OpenAIEmailService, EmailGenerationRequest as OpenAIEmailGenerationRequest, ConversationalRequest } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
-import { toast } from 'sonner';
+import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
 
 export interface EmailGenerationRequest {
   prompt: string;
@@ -65,10 +64,12 @@ export interface PerformanceAnalysisResult {
 }
 
 export class EmailAIService {
-  static async generateEmail(request: EmailGenerationRequest): Promise<any> {
+  static async generateEmail(request: EmailGenerationRequest): Promise<ServiceResult<any>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'generateEmail'
+      );
     }
 
     try {
@@ -79,27 +80,31 @@ export class EmailAIService {
       };
 
       const result = await OpenAIEmailService.generateEmailContent(emailRequest);
-      return result;
+      return handleServiceSuccess(result, 'Email generated successfully');
     } catch (error) {
-      console.error('Email generation failed:', error);
-      toast.error('Failed to generate email');
-      throw error;
+      return handleServiceError(error, 'generateEmail');
     }
   }
 
-  static async generateImage(request: ImageGenerationRequest): Promise<any> {
-    // Image generation placeholder - not implemented with OpenAI DALL-E yet
-    return {
-      imageUrl: `https://via.placeholder.com/600x300/4F46E5/FFFFFF?text=${encodeURIComponent(request.prompt)}`,
-      prompt: request.prompt,
-      style: request.style
-    };
+  static async generateImage(request: ImageGenerationRequest): Promise<ServiceResult<any>> {
+    try {
+      const result = {
+        imageUrl: `https://via.placeholder.com/600x300/4F46E5/FFFFFF?text=${encodeURIComponent(request.prompt)}`,
+        prompt: request.prompt,
+        style: request.style
+      };
+      return handleServiceSuccess(result, 'Image generated successfully');
+    } catch (error) {
+      return handleServiceError(error, 'generateImage');
+    }
   }
 
-  static async refineEmail(currentHTML: string, refinementPrompt: string): Promise<string> {
+  static async refineEmail(currentHTML: string, refinementPrompt: string): Promise<ServiceResult<string>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'refineEmail'
+      );
     }
 
     try {
@@ -108,18 +113,18 @@ export class EmailAIService {
                               refinementPrompt.toLowerCase().includes('clear') ? 'clarity' : 'conversion';
 
       const result = await OpenAIEmailService.optimizeCopy(currentHTML, optimizationType);
-      return result;
+      return handleServiceSuccess(result, 'Email refined successfully');
     } catch (error) {
-      console.error('Email refinement failed:', error);
-      toast.error('Failed to refine email');
-      throw error;
+      return handleServiceError(error, 'refineEmail');
     }
   }
 
-  static async generateContent(userInput: string, contentType: string): Promise<string> {
+  static async generateContent(userInput: string, contentType: string): Promise<ServiceResult<string>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'generateContent'
+      );
     }
 
     try {
@@ -130,18 +135,18 @@ export class EmailAIService {
       };
 
       const result = await OpenAIEmailService.conversationalResponse(conversationalRequest);
-      return result;
+      return handleServiceSuccess(result, 'Content generated successfully');
     } catch (error) {
-      console.error('Content generation failed:', error);
-      toast.error('Failed to generate content');
-      throw error;
+      return handleServiceError(error, 'generateContent');
     }
   }
 
-  static async getConversationalResponse(userMessage: string, context?: string[]): Promise<string> {
+  static async getConversationalResponse(userMessage: string, context?: string[]): Promise<ServiceResult<string>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'getConversationalResponse'
+      );
     }
 
     try {
@@ -152,44 +157,41 @@ export class EmailAIService {
       };
 
       const result = await OpenAIEmailService.conversationalResponse(request);
-      return result;
+      return handleServiceSuccess(result, 'AI response generated successfully');
     } catch (error) {
-      console.error('Conversational response failed:', error);
-      toast.error('Failed to get AI response');
-      throw error;
+      return handleServiceError(error, 'getConversationalResponse');
     }
   }
 
-  static async analyzeBrandVoice(emailHTML: string, subjectLine: string): Promise<BrandVoiceAnalysisResult> {
+  static async analyzeBrandVoice(emailHTML: string, subjectLine: string): Promise<ServiceResult<BrandVoiceAnalysisResult>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'analyzeBrandVoice'
+      );
     }
 
     try {
       const result = await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
-      return result;
+      return handleServiceSuccess(result, 'Brand voice analysis completed');
     } catch (error) {
-      console.error('Brand voice analysis failed:', error);
-      toast.error('Failed to analyze brand voice');
-      throw error;
+      return handleServiceError(error, 'analyzeBrandVoice');
     }
   }
 
-  static async analyzeSubjectLine(subjectLine: string, emailContent: string): Promise<SubjectLineAnalysisResult> {
+  static async analyzeSubjectLine(subjectLine: string, emailContent: string): Promise<ServiceResult<SubjectLineAnalysisResult>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'analyzeSubjectLine'
+      );
     }
 
     try {
-      // Use production-grade subject line analysis with real email marketing algorithms
       const suggestions = await OpenAIEmailService.generateSubjectLines(emailContent, 3);
-      
-      // Calculate production-grade score using email marketing best practices
       const score = this.calculateProductionSubjectLineScore(subjectLine);
       
-      return {
+      const result = {
         score,
         suggestions,
         predictions: {
@@ -197,10 +199,10 @@ export class EmailAIService {
           deliverabilityScore: this.calculateProductionDeliverabilityScore(subjectLine)
         }
       };
+      
+      return handleServiceSuccess(result, 'Subject line analysis completed');
     } catch (error) {
-      console.error('Subject line analysis failed:', error);
-      toast.error('Failed to analyze subject line');
-      throw error;
+      return handleServiceError(error, 'analyzeSubjectLine');
     }
   }
 
@@ -263,27 +265,32 @@ export class EmailAIService {
     return Math.max(60, Math.min(100, score));
   }
 
-  static async analyzeEmailPerformance(emailHTML: string, subjectLine: string): Promise<PerformanceAnalysisResult> {
+  static async analyzeEmailPerformance(emailHTML: string, subjectLine: string): Promise<ServiceResult<PerformanceAnalysisResult>> {
     if (!ApiKeyService.validateKey()) {
-      toast.error('OpenAI API key not configured properly');
-      throw new Error('OpenAI API key not available. Please configure your API key to use AI features.');
+      return handleServiceError(
+        new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
+        'analyzeEmailPerformance'
+      );
     }
 
     try {
       const result = await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
-      return result;
+      return handleServiceSuccess(result, 'Email performance analysis completed');
     } catch (error) {
-      console.error('Email performance analysis failed:', error);
-      toast.error('Failed to analyze email performance');
-      throw error;
+      return handleServiceError(error, 'analyzeEmailPerformance');
     }
   }
 
-  static async analyzeImage(imageUrl: string): Promise<any> {
-    return {
-      analysis: 'Image analysis feature coming soon',
-      suggestions: ['Optimize image size', 'Add descriptive alt text', 'Ensure mobile compatibility']
-    };
+  static async analyzeImage(imageUrl: string): Promise<ServiceResult<any>> {
+    try {
+      const result = {
+        analysis: 'Image analysis feature coming soon',
+        suggestions: ['Optimize image size', 'Add descriptive alt text', 'Ensure mobile compatibility']
+      };
+      return handleServiceSuccess(result, 'Image analysis completed');
+    } catch (error) {
+      return handleServiceError(error, 'analyzeImage');
+    }
   }
 }
 

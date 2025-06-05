@@ -1,29 +1,28 @@
-
 import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult, PerformanceAnalysisResult } from './EmailAIService';
 import { OpenAIEmailService } from './openAIEmailService';
+import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
 
 class DirectAIServiceManager {
   async analyzeSubjectLine(
     subjectLine: string, 
     emailContent: string = ''
-  ): Promise<SubjectLineAnalysisResult> {
+  ): Promise<ServiceResult<SubjectLineAnalysisResult>> {
     console.log('Direct subject line analysis for:', subjectLine);
     
     try {
-      // Use enhanced subject line analysis
       const suggestions = await OpenAIEmailService.generateSubjectLines(emailContent || subjectLine, 5);
-      
-      // Calculate email marketing score based on best practices
       const score = this.calculateSubjectLineScore(subjectLine);
       
-      return {
+      const result = {
         score,
-        suggestions: suggestions.slice(0, 3), // Return top 3 suggestions
+        suggestions: suggestions.slice(0, 3),
         predictions: {
           openRate: this.predictOpenRate(subjectLine),
           deliverabilityScore: this.calculateDeliverabilityScore(subjectLine)
         }
       };
+      
+      return handleServiceSuccess(result, 'Subject line analysis completed');
     } catch (error) {
       console.error('Subject line analysis failed:', error);
       return emailAIService.analyzeSubjectLine(subjectLine, emailContent);
@@ -92,40 +91,49 @@ class DirectAIServiceManager {
   async analyzeBrandVoice(
     emailHTML: string, 
     subjectLine: string = ''
-  ): Promise<BrandVoiceAnalysisResult> {
+  ): Promise<ServiceResult<BrandVoiceAnalysisResult>> {
     console.log('Direct brand voice analysis with email marketing expertise');
-    return OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
+    try {
+      const result = await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
+      return handleServiceSuccess(result, 'Brand voice analysis completed');
+    } catch (error) {
+      return handleServiceError(error, 'analyzeBrandVoice');
+    }
   }
 
   async analyzePerformance(
     emailHTML: string, 
     subjectLine: string = ''
-  ): Promise<PerformanceAnalysisResult> {
+  ): Promise<ServiceResult<PerformanceAnalysisResult>> {
     console.log('Direct performance analysis with email standards');
-    return OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
+    try {
+      const result = await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
+      return handleServiceSuccess(result, 'Performance analysis completed');
+    } catch (error) {
+      return handleServiceError(error, 'analyzePerformance');
+    }
   }
 
-  async generateSubjectVariants(subjectLine: string, count: number = 3): Promise<string[]> {
+  async generateSubjectVariants(subjectLine: string, count: number = 3): Promise<ServiceResult<string[]>> {
     console.log('Generating email marketing optimized subject variants for:', subjectLine);
     
     try {
-      // Use enhanced subject line generation with email marketing best practices
       const variants = await OpenAIEmailService.generateSubjectLines(
         `Original subject: ${subjectLine}. Generate variations optimized for email marketing.`,
-        count + 2 // Generate extra to filter best ones
+        count + 2
       );
       
-      // Filter and score variants, return best ones
       const scoredVariants = variants.map(variant => ({
         text: variant,
         score: this.calculateSubjectLineScore(variant)
       })).sort((a, b) => b.score - a.score);
       
-      return scoredVariants.slice(0, count).map(v => v.text);
+      const result = scoredVariants.slice(0, count).map(v => v.text);
+      return handleServiceSuccess(result, 'Subject variants generated successfully');
     } catch (error) {
       console.error('Subject variant generation failed:', error);
-      // Fallback to simple variations
-      return this.generateFallbackVariants(subjectLine, count);
+      const fallbackResult = this.generateFallbackVariants(subjectLine, count);
+      return handleServiceSuccess(fallbackResult, 'Subject variants generated (fallback mode)');
     }
   }
 
@@ -155,10 +163,15 @@ class DirectAIServiceManager {
     return variants.slice(0, count);
   }
 
-  async generateContent(prompt: string, type: string): Promise<string> {
-    console.log('Direct content generation with email marketing focus:', type);
-    return emailAIService.generateContent(prompt, 'email-marketing');
+  async generateContent(prompt: string, type: string): Promise<ServiceResult<string>> {
+    console.log('Generating content:', { prompt, type });
+    try {
+      const result = await emailAIService.generateContent(prompt, type);
+      return result;
+    } catch (error) {
+      return handleServiceError(error, 'generateContent');
+    }
   }
 }
 
-export const directAIService = new DirectAIServiceManager();
+export const DirectAIService = new DirectAIServiceManager();
