@@ -8,6 +8,8 @@ interface KeyboardShortcutsProps {
   onToggleRightPanel: () => void;
   onToggleFullscreen: () => void;
   onSave: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
@@ -16,7 +18,9 @@ export const useKeyboardShortcuts = ({
   onToggleLeftPanel,
   onToggleRightPanel,
   onToggleFullscreen,
-  onSave
+  onSave,
+  onUndo,
+  onRedo
 }: KeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -26,9 +30,11 @@ export const useKeyboardShortcuts = ({
         event.target instanceof HTMLTextAreaElement ||
         (event.target as any)?.isContentEditable
       ) {
-        // For inputs, only allow save and panel toggles
+        // For inputs, only allow save, panel toggles, and undo/redo
         if (!(
           (event.ctrlKey && event.key === 's') ||
+          (event.ctrlKey && event.key === 'z') ||
+          (event.ctrlKey && event.key === 'y') ||
           (event.ctrlKey && event.key === '[') ||
           (event.ctrlKey && event.key === ']') ||
           event.key === 'F11'
@@ -41,6 +47,24 @@ export const useKeyboardShortcuts = ({
       if (event.ctrlKey && event.key === 's') {
         event.preventDefault();
         onSave();
+        return;
+      }
+
+      // Undo functionality
+      if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        if (onUndo) {
+          onUndo();
+        }
+        return;
+      }
+
+      // Redo functionality (Ctrl+Y or Ctrl+Shift+Z)
+      if ((event.ctrlKey && event.key === 'y') || (event.ctrlKey && event.shiftKey && event.key === 'z')) {
+        event.preventDefault();
+        if (onRedo) {
+          onRedo();
+        }
         return;
       }
 
@@ -105,6 +129,8 @@ export const useKeyboardShortcuts = ({
     onToggleLeftPanel,
     onToggleRightPanel,
     onToggleFullscreen,
-    onSave
+    onSave,
+    onUndo,
+    onRedo
   ]);
 };

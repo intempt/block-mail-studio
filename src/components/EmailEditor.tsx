@@ -35,6 +35,7 @@ import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { UndoManager } from './UndoManager';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface Block {
   id: string;
@@ -92,6 +93,7 @@ export default function EmailEditor({
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
 
   const canvasRef = useRef<any>(null);
+  const undoManagerRef = useRef<any>(null);
 
   const layoutConfig = useMemo<LayoutConfig>(() => ({
     direction: 'column',
@@ -173,6 +175,34 @@ export default function EmailEditor({
     
     console.log('EmailEditor: State restored successfully');
   }, [onSubjectChange]);
+
+  // Undo/Redo handlers for keyboard shortcuts
+  const handleUndo = useCallback(() => {
+    if (undoManagerRef.current && undoManagerRef.current.handleUndo) {
+      undoManagerRef.current.handleUndo();
+    }
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    if (undoManagerRef.current && undoManagerRef.current.handleRedo) {
+      undoManagerRef.current.handleRedo();
+    }
+  }, []);
+
+  // Setup keyboard shortcuts
+  useKeyboardShortcuts({
+    editor,
+    canvasRef,
+    onToggleLeftPanel: () => {}, // Placeholder
+    onToggleRightPanel: () => {}, // Placeholder
+    onToggleFullscreen: () => {}, // Placeholder
+    onSave: () => {
+      // Trigger save functionality
+      console.log('Save triggered via keyboard shortcut');
+    },
+    onUndo: handleUndo,
+    onRedo: handleRedo
+  });
 
   const handleDeviceChange = (device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
@@ -515,6 +545,7 @@ export default function EmailEditor({
           {/* UndoManager positioned relative to content-wrapper */}
           <div id="undo-manager-container" className="absolute bottom-4 right-4 z-50">
             <UndoManager 
+              ref={undoManagerRef}
               blocks={emailBlocks}
               subject={subject}
               onStateRestore={handleStateRestore}

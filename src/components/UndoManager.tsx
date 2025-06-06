@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Undo, Redo } from 'lucide-react';
 import { EmailBlock } from '@/types/emailBlocks';
@@ -20,13 +19,18 @@ interface UndoManagerProps {
   onStateRestore?: (state: EmailEditorState) => void;
 }
 
-export const UndoManager: React.FC<UndoManagerProps> = ({
+export interface UndoManagerRef {
+  handleUndo: () => void;
+  handleRedo: () => void;
+}
+
+export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
   onUndo,
   onRedo,
   blocks = [],
   subject = '',
   onStateRestore
-}) => {
+}, ref) => {
   const [stateHistory, setStateHistory] = useState<EmailEditorState[]>([]);
   const [currentStateIndex, setCurrentStateIndex] = useState(-1);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -143,6 +147,12 @@ export const UndoManager: React.FC<UndoManagerProps> = ({
     onRedo?.();
   }, [currentStateIndex, stateHistory, onStateRestore, onRedo]);
 
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    handleUndo,
+    handleRedo
+  }), [handleUndo, handleRedo]);
+
   const canUndo = currentStateIndex > 0;
   const canRedo = currentStateIndex < stateHistory.length - 1;
 
@@ -179,4 +189,6 @@ export const UndoManager: React.FC<UndoManagerProps> = ({
       </div>
     </div>
   );
-};
+});
+
+UndoManager.displayName = 'UndoManager';
