@@ -22,7 +22,7 @@ import {
 import { AIDropdownMenu } from './AIDropdownMenu';
 
 interface UniversalTipTapEditorProps {
-  content: string;
+  content: string | { html: string; textStyle?: string };
   contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video';
   onChange: (html: string) => void;
   onBlur?: () => void;
@@ -40,9 +40,21 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   position,
   emailContext
 }) => {
-  const [urlValue, setUrlValue] = useState(content);
+  const [urlValue, setUrlValue] = useState('');
   const [hasFocus, setHasFocus] = useState(false);
 
+  // Extract HTML content from potentially complex content object
+  const getHtmlContent = (content: string | { html: string; textStyle?: string }): string => {
+    if (typeof content === 'string') {
+      return content;
+    }
+    if (content && typeof content === 'object' && 'html' in content) {
+      return content.html;
+    }
+    return '';
+  };
+
+  const htmlContent = getHtmlContent(content);
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
   const editor = useEditor({
@@ -91,7 +103,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       }),
       Underline,
     ],
-    content: isUrlMode ? '' : content,
+    content: isUrlMode ? '' : htmlContent,
     onUpdate: ({ editor }) => {
       if (!isUrlMode) {
         onChange(editor.getHTML());
@@ -115,11 +127,15 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   };
 
   useEffect(() => {
-    if (editor && !isUrlMode && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor && !isUrlMode) {
+      const currentHtml = getHtmlContent(content);
+      if (currentHtml !== editor.getHTML()) {
+        editor.commands.setContent(currentHtml);
+      }
     }
     if (isUrlMode) {
-      setUrlValue(content);
+      const currentContent = typeof content === 'string' ? content : content?.html || '';
+      setUrlValue(currentContent);
     }
   }, [content, editor, isUrlMode]);
 
@@ -177,7 +193,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         ${hasFocus ? 'border-blue-400 shadow-md ring-1 ring-blue-400/20' : 'border-gray-200 hover:border-gray-300'}
       `}>
         {/* TipTap Pro AI Toolbar - Show when focused or has content */}
-        {(hasFocus || content) && (
+        {(hasFocus || htmlContent) && (
           <div className="flex items-center gap-1 px-3 py-2 border-b bg-gradient-to-r from-purple-50 to-blue-50">
             <div className="flex items-center gap-1 text-xs text-purple-700">
               <Sparkles className="w-3 h-3" />
@@ -187,7 +203,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
             <div className="ml-auto">
               <AIDropdownMenu
                 selectedText=""
-                fullContent={content}
+                fullContent={htmlContent}
                 onContentUpdate={handleContentUpdate}
                 size="sm"
               />
