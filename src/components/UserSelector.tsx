@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Select,
   SelectContent,
@@ -10,33 +10,121 @@ import {
 import { Button } from '@/components/ui/button';
 import { users, User } from '../../dummy/users';
 
+interface FilterCriteria {
+  attribute: string;
+  operator: string;
+  value: string | string[];
+  attributeLabel: string;
+  attributeValueType: string;
+}
+
 interface UserSelectorProps {
   onUserChange?: (user: User) => void;
+  filter?: FilterCriteria | null;
   className?: string;
 }
 
 export const UserSelector: React.FC<UserSelectorProps> = ({ 
   onUserChange,
+  filter,
   className 
 }) => {
   const [selectedUserId, setSelectedUserId] = useState<string>(users[0].profile);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
   const [displayedUsers, setDisplayedUsers] = useState<User[]>(users.slice(0, 50));
   const [showLoadMore, setShowLoadMore] = useState(true);
 
+  // Apply filter whenever filter changes
+  useEffect(() => {
+    if (!filter) {
+      setFilteredUsers(users);
+      setDisplayedUsers(users.slice(0, 50));
+      setShowLoadMore(users.length > 50);
+      return;
+    }
+
+    const filtered = users.filter(user => {
+      // Get the attribute value from the user object
+      const attributeValue = getAttributeValue(user, filter.attribute);
+      
+      if (attributeValue === undefined || attributeValue === null) {
+        return filter.operator === 'has_no_value';
+      }
+
+      switch (filter.operator) {
+        case 'is':
+          return String(attributeValue).toLowerCase() === String(filter.value).toLowerCase();
+        case 'is_not':
+          return String(attributeValue).toLowerCase() !== String(filter.value).toLowerCase();
+        case 'has_any_value':
+          return attributeValue !== undefined && attributeValue !== null && String(attributeValue).trim() !== '';
+        case 'has_no_value':
+          return attributeValue === undefined || attributeValue === null || String(attributeValue).trim() === '';
+        case 'contain':
+          if (Array.isArray(filter.value)) {
+            return filter.value.some(val => 
+              String(attributeValue).toLowerCase().includes(String(val).toLowerCase())
+            );
+          }
+          return String(attributeValue).toLowerCase().includes(String(filter.value).toLowerCase());
+        case 'does_not_contains':
+          return !String(attributeValue).toLowerCase().includes(String(filter.value).toLowerCase());
+        case 'is_greater_than':
+          return Number(attributeValue) > Number(filter.value);
+        case 'is_less_than':
+          return Number(attributeValue) < Number(filter.value);
+        case 'is_less_than_or_equal':
+          return Number(attributeValue) <= Number(filter.value);
+        case 'is_greater_than_or_equal':
+          return Number(attributeValue) >= Number(filter.value);
+        default:
+          return true;
+      }
+    });
+
+    setFilteredUsers(filtered);
+    setDisplayedUsers(filtered.slice(0, 50));
+    setShowLoadMore(filtered.length > 50);
+
+    // If current selected user is not in filtered list, select first filtered user
+    if (filtered.length > 0 && !filtered.find(u => u.profile === selectedUserId)) {
+      setSelectedUserId(filtered[0].profile);
+      if (onUserChange) {
+        onUserChange(filtered[0]);
+      }
+    }
+  }, [filter, selectedUserId, onUserChange]);
+
+  const getAttributeValue = (user: User, attributeName: string): any => {
+    // Handle common user properties
+    const commonAttributes: Record<string, keyof User> = {
+      'identifier': 'identifier',
+      'lastSeen': 'lastSeen',
+      'profile': 'profile'
+    };
+
+    if (commonAttributes[attributeName]) {
+      return user[commonAttributes[attributeName]];
+    }
+
+    // For other attributes, you might need to extend User type or handle custom attributes
+    // For now, return undefined for unknown attributes
+    return undefined;
+  };
+
   const selectedUser = displayedUsers.find(u => u.profile === selectedUserId) || 
-                      users.find(u => u.profile === selectedUserId);
+                      filteredUsers.find(u => u.profile === selectedUserId);
 
   const handleUserChange = (userId: string) => {
     setSelectedUserId(userId);
-    const user = displayedUsers.find(u => u.profile === userId) || 
-                 users.find(u => u.profile === userId);
+    const user = filteredUsers.find(u => u.profile === userId);
     if (user && onUserChange) {
       onUserChange(user);
     }
   };
 
   const handleLoadMore = () => {
-    setDisplayedUsers(users);
+    setDisplayedUsers(filteredUsers);
     setShowLoadMore(false);
   };
 
@@ -70,8 +158,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
               onClick={handleLoadMore}
               className="w-full text-xs"
             >
-              Load More ({users.length - displayedUsers.length} remaining)
+              Load More ({filteredUsers.length - displayedUsers.length} remaining)
             </Button>
+          </div>
+        )}
+        {filteredUsers.length === 0 && (
+          <div className="p-2 text-center text-xs text-gray-500">
+            No users match the current filter
           </div>
         )}
       </SelectContent>

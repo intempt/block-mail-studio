@@ -1,9 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Eye } from 'lucide-react';
 import { UserSelector } from './UserSelector';
 import { UserFilter } from './UserFilter';
 import { User } from '../../dummy/users';
+
+interface FilterCriteria {
+  attribute: string;
+  operator: string;
+  value: string | string[];
+  attributeLabel: string;
+  attributeValueType: string;
+}
 
 interface GmailPreviewHeaderProps {
   onUserChange?: (user: User) => void;
@@ -12,6 +20,12 @@ interface GmailPreviewHeaderProps {
 export const GmailPreviewHeader: React.FC<GmailPreviewHeaderProps> = ({ 
   onUserChange 
 }) => {
+  const [currentFilter, setCurrentFilter] = useState<FilterCriteria | null>(null);
+
+  const handleFilterChange = (filter: FilterCriteria | null) => {
+    setCurrentFilter(filter);
+  };
+
   return (
     <div className="px-6 py-2 bg-blue-50 border-b border-blue-200">
       <div className="flex items-center justify-between">
@@ -26,9 +40,10 @@ export const GmailPreviewHeader: React.FC<GmailPreviewHeaderProps> = ({
           <span className="text-xs text-blue-600">Recipient:</span>
           <UserSelector 
             onUserChange={onUserChange}
+            filter={currentFilter}
             className="w-48 h-7 text-xs bg-white border-blue-200"
           />
-          <UserFilter />
+          <UserFilter onFilterChange={handleFilterChange} />
         </div>
       </div>
     </div>

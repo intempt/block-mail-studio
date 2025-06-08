@@ -11,11 +11,20 @@ import { AttributeSelector } from './AttributeSelector';
 import { OperatorSelector } from './OperatorSelector';
 import { ValueInput } from './ValueInput';
 
-interface UserFilterProps {
-  className?: string;
+interface FilterCriteria {
+  attribute: string;
+  operator: string;
+  value: string | string[];
+  attributeLabel: string;
+  attributeValueType: string;
 }
 
-export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
+interface UserFilterProps {
+  className?: string;
+  onFilterChange?: (filter: FilterCriteria | null) => void;
+}
+
+export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState<string>('');
   const [selectedOperator, setSelectedOperator] = useState<string>('');
@@ -50,6 +59,21 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
 
   const handleValueChange = (value: string | string[]) => {
     setFilterValue(value);
+    
+    // Emit filter change when all required fields are complete
+    const shouldShowValueInput = selectedOperator && !['has_any_value', 'has_no_value'].includes(selectedOperator);
+    const hasCompleteFilter = selectedAttribute && selectedOperator && 
+      (!shouldShowValueInput || (value && (Array.isArray(value) ? value.length > 0 : value.toString().trim())));
+    
+    if (hasCompleteFilter && onFilterChange) {
+      onFilterChange({
+        attribute: selectedAttribute,
+        operator: selectedOperator,
+        value: value,
+        attributeLabel: selectedAttributeLabel,
+        attributeValueType: attributeValueType
+      });
+    }
   };
 
   const handleClearFilter = () => {
@@ -58,6 +82,11 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
     setFilterValue('');
     setSelectedAttributeLabel('');
     setAttributeValueType('STR');
+    
+    // Emit null filter to clear
+    if (onFilterChange) {
+      onFilterChange(null);
+    }
   };
 
   // Check if we should show the value input
