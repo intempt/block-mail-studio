@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -45,14 +46,6 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </div>
-        <div className="flex items-center">
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            <Printer className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-        </div>
       </div>
 
       {/* Email Header */}
@@ -62,6 +55,12 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             {subject}
           </h1>
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="text-gray-600">
+              <Printer className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-600">
+              <ExternalLink className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="sm" className="text-gray-400">
               <Star className="w-4 h-4" />
             </Button>
@@ -106,3 +105,4 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
     </div>
   );
 };
+
