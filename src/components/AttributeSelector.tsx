@@ -138,80 +138,84 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-96 p-0" align="start" side="left">
-        <div className="flex h-80">
-          {/* Left side - Attribute types */}
-          <div className="w-48 border-r">
-            <div className="p-3 border-b">
-              <Command>
-                <CommandInput 
-                  placeholder="Search" 
-                  value={searchValue}
-                  onValueChange={setSearchValue}
-                  className="h-8"
-                />
-              </Command>
-            </div>
-            <div className="p-2">
-              <div className="space-y-1">
-                {attributeTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setSelectedAttributeType(type.value)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
-                      selectedAttributeType === type.value
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <span className="text-base">{type.icon}</span>
-                    <span>{type.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+        <div className="flex flex-col h-80">
+          {/* Search input at the top */}
+          <div className="p-3 border-b">
+            <Command>
+              <CommandInput 
+                placeholder="Search attributes" 
+                value={searchValue}
+                onValueChange={setSearchValue}
+                className="h-8"
+              />
+            </Command>
           </div>
           
-          {/* Right side - Filtered attributes */}
-          <div className="flex-1">
-            <div className="p-3 border-b">
-              <h5 className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                {attributeTypes.find(t => t.value === selectedAttributeType)?.label}
-              </h5>
-            </div>
-            <Command className="border-0">
-              <CommandList className="max-h-64">
-                <CommandEmpty>No attributes found.</CommandEmpty>
-                {filteredAttributes.map((attribute: any) => {
-                  if (!attribute?.name) return null;
-                  
-                  const valueType = String(attribute.valueType || 'STR');
-                  const displayName = String(attribute.displayName || attribute.name);
-                  const description = String(attribute.description || '');
-                  
-                  return (
-                    <CommandItem
-                      key={attribute.name}
-                      value={attribute.name}
-                      onSelect={(value) => {
-                        onAttributeSelect(value);
-                        setIsOpen(false);
-                      }}
-                      className="flex items-center gap-2 px-3 py-2 text-sm"
+          <div className="flex flex-1">
+            {/* Left side - Attribute types */}
+            <div className="w-48 border-r">
+              <div className="p-2">
+                <div className="space-y-1">
+                  {attributeTypes.map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => setSelectedAttributeType(type.value)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
+                        selectedAttributeType === type.value
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'hover:bg-gray-50'
+                      }`}
                     >
-                      <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
-                        {valueType.slice(0, 3).toUpperCase()}
-                      </span>
-                      <div className="flex-1">
-                        <div className="font-medium">{displayName}</div>
-                        {description && (
-                          <div className="text-xs text-gray-500">{description}</div>
-                        )}
-                      </div>
-                    </CommandItem>
-                  );
-                })}
-              </CommandList>
-            </Command>
+                      <span className="text-base">{type.icon}</span>
+                      <span>{type.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Right side - Filtered attributes */}
+            <div className="flex-1">
+              <div className="p-3 border-b">
+                <h5 className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  {attributeTypes.find(t => t.value === selectedAttributeType)?.label}
+                </h5>
+              </div>
+              <Command className="border-0">
+                <CommandList className="max-h-64">
+                  <CommandEmpty>No attributes found.</CommandEmpty>
+                  {filteredAttributes.map((attribute: any) => {
+                    if (!attribute?.name) return null;
+                    
+                    const valueType = String(attribute.valueType || 'STR');
+                    const displayName = String(attribute.displayName || attribute.name);
+                    const description = String(attribute.description || '');
+                    
+                    return (
+                      <CommandItem
+                        key={attribute.name}
+                        value={attribute.name}
+                        onSelect={(value) => {
+                          onAttributeSelect(value);
+                          setIsOpen(false);
+                        }}
+                        className="flex items-center gap-2 px-3 py-2 text-sm"
+                      >
+                        <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                          {valueType.slice(0, 3).toUpperCase()}
+                        </span>
+                        <div className="flex-1">
+                          <div className="font-medium">{displayName}</div>
+                          {description && (
+                            <div className="text-xs text-gray-500">{description}</div>
+                          )}
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandList>
+              </Command>
+            </div>
           </div>
         </div>
       </PopoverContent>
