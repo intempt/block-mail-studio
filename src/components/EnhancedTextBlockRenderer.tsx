@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ import { AIDropdownMenu } from './AIDropdownMenu';
 interface EmailBlock {
   id: string;
   type: string;
-  content: string;
+  content: string | { html: string; textStyle?: string };
 }
 
 interface EnhancedTextBlockRendererProps {
@@ -59,7 +60,10 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   const handleContentChange = (html: string) => {
     const updatedBlock: EmailBlock = {
       ...block,
-      content: html
+      content: typeof block.content === 'string' ? html : { 
+        html, 
+        textStyle: (block.content as any)?.textStyle || 'normal' 
+      }
     };
     onBlockChange?.(updatedBlock);
     onUpdate?.(updatedBlock);
@@ -80,6 +84,17 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     setIsUploadingImage(false);
   };
 
+  // Extract content for the editor
+  const getContentForEditor = () => {
+    if (typeof block.content === 'string') {
+      return block.content;
+    }
+    if (block.content && typeof block.content === 'object' && 'html' in block.content) {
+      return block.content.html;
+    }
+    return '<p>Click to edit...</p>';
+  };
+
   let contentType: 'text' | 'button' | 'image' | 'link' | 'video' | 'html' | 'url' = 'text';
   if (block.type === 'button') contentType = 'button';
   if (block.type === 'image') contentType = 'image';
@@ -94,11 +109,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   };
 
   return (
-    <div className={`enhanced-text-block relative group ${isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}>
-      {/* Clean block content - Professional text editor with TipTap Pro */}
-      <div className="min-h-[60px]">
+    <div className={`enhanced-text-block relative group border rounded-lg transition-all duration-200 ${isSelected ? 'ring-2 ring-blue-500 ring-opacity-50 border-blue-300' : 'border-gray-200 hover:border-gray-300'}`}>
+      {/* Main content area */}
+      <div className="min-h-[60px] relative">
         {block.type === 'image' ? (
-          <>
+          <div className="p-4">
             {isUploadingImage ? (
               <div className="text-center py-6">
                 <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
@@ -112,32 +127,52 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
               />
             )}
             {imageUploadUrl && (
-              <img src={imageUploadUrl} alt="Uploaded" className="w-full h-auto" />
+              <img src={imageUploadUrl} alt="Uploaded" className="w-full h-auto mt-4" />
             )}
-          </>
+          </div>
         ) : (
-          <UniversalTipTapEditor
-            content={block.content}
-            contentType={contentType}
-            onChange={handleContentChange}
-            emailContext={emailContext}
-            onBlur={onEditEnd}
-            placeholder="Click to edit..."
-            blockId={block.id}
-          />
+          <div className="relative">
+            <UniversalTipTapEditor
+              content={getContentForEditor()}
+              contentType={contentType}
+              onChange={handleContentChange}
+              emailContext={emailContext}
+              onBlur={onEditEnd}
+              placeholder="Click to edit..."
+              blockId={block.id}
+            />
+          </div>
         )}
       </div>
 
-      {/* Simplified AI controls when selected */}
+      {/* AI controls - Always visible when block is selected */}
       {isSelected && (
-        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1 border border-gray-200">
             <AIDropdownMenu
               selectedText=""
-              fullContent={block.content}
+              fullContent={getContentForEditor()}
               onContentUpdate={handleContentChange}
               size="sm"
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-gray-600 hover:text-blue-600"
+              title="AI Assistant"
+            >
+              <Sparkles className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Editing indicator */}
+      {isEditing && (
+        <div className="absolute -top-2 -left-2 z-10">
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+            <Type className="w-3 h-3 inline mr-1" />
+            Editing
           </div>
         </div>
       )}
