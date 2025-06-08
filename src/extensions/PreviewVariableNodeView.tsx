@@ -10,6 +10,7 @@ export const PreviewVariableNodeView: React.FC<NodeViewProps> = ({ node }) => {
       className="preview-variable-node-view"
       contentEditable={false}
       draggable={false}
+      style={{ display: 'inline-flex', verticalAlign: 'middle' }}
     >
       <PreviewVariableTag
         text={node.attrs.text}
