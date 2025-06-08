@@ -73,7 +73,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
   const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
   const [comprehensiveMetrics, setComprehensiveMetrics] = useState<ComprehensiveEmailMetrics | null>(null);
-  const [isAnalysisCenterCollapsed, setIsAnalysisCenterCollapsed] = useState(false);
+  const [isAnalysisCenterCollapsed, setIsAnalysisCenterCollapsed] = useState(true);
 
   const { analyze, result, isAnalyzing: isAnalyticsAnalyzing, clearCache } = useEmailAnalytics();
   const { notifications, removeNotification, success, error, warning, info } = useInlineNotifications();
@@ -205,7 +205,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
 
       success('Analysis complete! Review suggestions below.');
       
-      setIsAnalysisCenterCollapsed(false);
+      // Don't auto-expand the analysis center - let user choose to expand
     } catch (analysisError) {
       console.error('Analysis failed:', analysisError);
       error('Analysis failed. Check your API configuration.');
