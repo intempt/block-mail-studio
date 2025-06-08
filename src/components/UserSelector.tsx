@@ -8,7 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Mail } from 'lucide-react';
 import { users, User } from '../../dummy/users';
 
 interface UserSelectorProps {
@@ -46,7 +45,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
       <SelectTrigger className={className}>
         <SelectValue>
           <div className="flex items-center gap-2">
-            <Mail className="w-3 h-3 text-gray-500" />
+            <img src="/gmail-icon.png" alt="Gmail" className="w-3 h-3" />
             <span>{selectedUser?.identifier}</span>
           </div>
         </SelectValue>
