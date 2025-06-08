@@ -10,7 +10,9 @@ import {
   Smartphone,
   Save,
   Edit3,
-  Trash2
+  Trash2,
+  Eye,
+  Edit
 } from 'lucide-react';
 
 type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
@@ -53,6 +55,19 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
   const handleMobileClick = () => {
     onPreviewModeChange?.('mobile');
   };
+
+  const handlePreviewToggle = () => {
+    if (viewMode === 'edit') {
+      // Switch to preview mode based on current preview mode
+      const newViewMode = previewMode === 'desktop' ? 'desktop-preview' : 'mobile-preview';
+      onViewModeChange?.(newViewMode);
+    } else {
+      // Switch back to edit mode
+      onViewModeChange?.('edit');
+    }
+  };
+
+  const isInPreviewMode = viewMode === 'desktop-preview' || viewMode === 'mobile-preview';
 
   return (
     <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
@@ -100,6 +115,29 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
       
       {/* View Mode Controls - Desktop/Mobile Toggle with Active State */}
       <div className="flex items-center gap-6">
+        {/* Preview Mode Toggle Button */}
+        <Button
+          onClick={handlePreviewToggle}
+          className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
+            isInPreviewMode
+              ? 'bg-green-600 hover:bg-green-700 text-white' 
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+          }`}
+          title={isInPreviewMode ? 'Exit Preview Mode' : 'Enter Preview Mode'}
+        >
+          {isInPreviewMode ? (
+            <>
+              <Edit className="w-4 h-4" />
+              <span className="text-sm">Edit</span>
+            </>
+          ) : (
+            <>
+              <Eye className="w-4 h-4" />
+              <span className="text-sm">Preview</span>
+            </>
+          )}
+        </Button>
+
         <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
           <Button
             variant="ghost"
