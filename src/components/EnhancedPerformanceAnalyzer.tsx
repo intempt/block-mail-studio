@@ -86,7 +86,7 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
         )}
       </Card>
 
-      {/* Email Provider Compatibility */}
+      {/* Email Provider Compatibility - Using NEW CompatibilityBoard */}
       {emailHTML.trim() && (
         <CompatibilityBoard
           emailHTML={emailHTML}
