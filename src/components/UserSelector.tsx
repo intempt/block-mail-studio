@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { users, User } from '../../dummy/users';
+import { getUserDetails, UserDetails } from '../../dummy/userDetails';
 
 interface FilterCriteria {
   attribute: string;
@@ -19,7 +20,7 @@ interface FilterCriteria {
 }
 
 interface UserSelectorProps {
-  onUserChange?: (user: User | null) => void;
+  onUserChange?: (user: User | null, userDetails?: UserDetails | null) => void;
   filter?: FilterCriteria | null;
   className?: string;
 }
@@ -90,7 +91,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     if (selectedUserId && !filtered.find(u => u.profile === selectedUserId)) {
       setSelectedUserId('');
       if (onUserChange) {
-        onUserChange(null);
+        onUserChange(null, null);
       }
     }
   }, [filter, selectedUserId, onUserChange]);
@@ -119,7 +120,8 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     setSelectedUserId(userId);
     const user = filteredUsers.find(u => u.profile === userId);
     if (user && onUserChange) {
-      onUserChange(user);
+      const userDetails = getUserDetails(user.profile, user.identifier);
+      onUserChange(user, userDetails);
     }
   };
 

@@ -5,6 +5,7 @@
 declare module '*/dummy/userAttributes' {
   // Extend the existing type unions to include missing types
   interface UserAttribute {
+    id?: string; // Add id field to align with attrId
     name: string;
     displayName?: string;
     description?: string;
@@ -30,6 +31,24 @@ declare module '*/dummy/userAttributes' {
   }
 
   export const userAttributes: UserAttribute[];
+}
+
+// User details interface
+export interface UserDetails {
+  firstSeen: string;
+  lastSeen: string;
+  identifiers: string[];
+  totalEvents: number;
+  sources: string[];
+  segments: Record<string, boolean>;
+  segmentQueryIds: number[];
+  attributes: UserAttribute[];
+}
+
+interface UserAttribute {
+  attrId: string;
+  title: string;
+  value: any;
 }
 
 // Global type augmentation for missing attribute types
