@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ import { AIDropdownMenu } from './AIDropdownMenu';
 interface EmailBlock {
   id: string;
   type: string;
-  content: string;
+  content: any;
 }
 
 interface EnhancedTextBlockRendererProps {
@@ -59,7 +60,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
   const handleContentChange = (html: string) => {
     const updatedBlock: EmailBlock = {
       ...block,
-      content: html
+      content: typeof block.content === 'object' ? { ...block.content, html } : html
     };
     onBlockChange?.(updatedBlock);
     onUpdate?.(updatedBlock);
@@ -93,6 +94,11 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
     targetAudience: 'general'
   };
 
+  // Prepare content with blockId for the editor
+  const editorContent = typeof block.content === 'object' 
+    ? { ...block.content, blockId: block.id }
+    : block.content;
+
   return (
     <div className={`enhanced-text-block relative group ${isSelected ? 'ring-2 ring-blue-500 ring-opacity-50' : ''}`}>
       {/* Clean block content - Professional text editor with TipTap Pro */}
@@ -117,7 +123,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           </>
         ) : (
           <UniversalTipTapEditor
-            content={block.content}
+            content={editorContent}
             contentType={contentType}
             onChange={handleContentChange}
             emailContext={emailContext}
@@ -133,7 +139,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
           <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-1 border border-gray-200">
             <AIDropdownMenu
               selectedText=""
-              fullContent={block.content}
+              fullContent={typeof block.content === 'object' ? block.content.html || '' : block.content || ''}
               onContentUpdate={handleContentChange}
               size="sm"
             />

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -9,6 +10,7 @@ import { Underline } from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import { Placeholder } from '@tiptap/extension-placeholder';
+import { Variable } from '@/extensions/VariableExtension';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,8 +23,14 @@ import {
 } from 'lucide-react';
 import { AIDropdownMenu } from './AIDropdownMenu';
 
+interface TextContent {
+  html: string;
+  textStyle?: string;
+  placeholder?: string;
+}
+
 interface UniversalTipTapEditorProps {
-  content: string | { html: string; textStyle?: string };
+  content: string | TextContent;
   contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video';
   onChange: (html: string) => void;
   onBlur?: () => void;
@@ -44,7 +52,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   const [hasFocus, setHasFocus] = useState(false);
 
   // Extract HTML content from potentially complex content object
-  const getHtmlContent = (content: string | { html: string; textStyle?: string }): string => {
+  const getHtmlContent = (content: string | TextContent): string => {
     if (typeof content === 'string') {
       return content;
     }
@@ -112,6 +120,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         multicolor: true,
       }),
       Underline,
+      Variable,
       Placeholder.configure({
         placeholder: placeholderText,
       }),
@@ -138,6 +147,24 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       onChange(newContent);
     }
   };
+
+  // Set up global variable insertion handler
+  useEffect(() => {
+    if (editor) {
+      const blockId = (content as any)?.blockId || 'unknown';
+      (window as any)[`insertVariable_${blockId}`] = (variable: { text: string; value: string }) => {
+        console.log('UniversalTipTapEditor: Inserting variable into editor', variable);
+        editor.commands.insertVariable({
+          text: variable.text,
+          value: variable.value
+        });
+      };
+
+      return () => {
+        delete (window as any)[`insertVariable_${blockId}`];
+      };
+    }
+  }, [editor, content]);
 
   useEffect(() => {
     if (editor && !isUrlMode) {
