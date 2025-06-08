@@ -60,7 +60,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               <span className="font-medium text-gray-900">{senderName}</span>
               <span className="text-sm text-gray-500">&lt;{senderEmail}&gt;</span>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500" style={{ textAlign: 'start' }}>
               to me
             </div>
           </div>
