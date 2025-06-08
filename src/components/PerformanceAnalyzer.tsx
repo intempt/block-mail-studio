@@ -23,6 +23,7 @@ import { Editor } from '@tiptap/react';
 import { EmailBlockCanvasRef } from './EmailBlockCanvas';
 import { OpenAIEmailService, PerformanceAnalysis } from '@/services/openAIEmailService';
 import { ApiKeyService } from '@/services/apiKeyService';
+import { EmailProviderCompatibilityCard } from './EmailProviderCompatibilityCard';
 
 interface PerformanceAnalyzerProps {
   editor: Editor | null;
