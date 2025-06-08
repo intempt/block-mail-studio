@@ -34,7 +34,7 @@ export const GmailPreviewHeader: React.FC<GmailPreviewHeaderProps> = ({
             className="h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
           >
             <Filter className="w-3 h-3 mr-1" />
-            Filter
+            Filter by
           </Button>
         </div>
       </div>
