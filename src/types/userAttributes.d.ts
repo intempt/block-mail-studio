@@ -11,8 +11,8 @@ declare module '*/dummy/userAttributes' {
     type?: string; // Allow any string for type to match dummy data
     category?: string; // Allow any string for category to match dummy data
     attributeType?: string; // Allow any string for attributeType to match dummy data
-    valueType?: string; // Add valueType property
-    lastUpdated?: string; // Add lastUpdated property
+    valueType?: string; // Add valueType property that UserFilter.tsx expects
+    lastUpdated?: string; // Add lastUpdated property that exists in dummy data
     schema?: UserAttributeSchema;
   }
 
@@ -22,8 +22,8 @@ declare module '*/dummy/userAttributes' {
 
   interface UserAttributeSchemaField {
     name: string;
-    type: string | string[];
-    default?: any; // Make default optional
+    type: string | string[]; // Allow both string and string array
+    default?: any; // Make default optional since it's missing in many places
   }
 
   export const userAttributes: UserAttribute[];
@@ -31,8 +31,8 @@ declare module '*/dummy/userAttributes' {
 
 // Global type augmentation for missing attribute types
 declare global {
-  type AttributeType = string; // Allow any string
-  type AttributeCategory = string; // Allow any string
+  type AttributeType = string; // Allow any string to match all values in dummy data
+  type AttributeCategory = string; // Allow any string to match all values in dummy data
 }
 
 export {};
