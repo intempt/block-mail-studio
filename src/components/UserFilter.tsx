@@ -14,7 +14,9 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { userAttributes } from '../../dummy/userAttributes';
+
+// Import as any to bypass type issues with dummy data
+const userAttributesData = require('../../dummy/userAttributes').userAttributes;
 
 interface UserFilterProps {
   className?: string;
@@ -35,27 +37,55 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
   ];
 
   const getFilteredAttributes = () => {
-    // Type assertion to work around the dummy data TypeScript issues
-    const allAttributes = userAttributes as any[];
+    // Safely handle the dummy data with proper type checks
+    let allAttributes: any[] = [];
     
-    let typeAttributes;
+    try {
+      // Ensure we have an array to work with
+      allAttributes = Array.isArray(userAttributesData) ? userAttributesData : [];
+    } catch (error) {
+      console.log('Error loading user attributes:', error);
+      return [];
+    }
+    
+    let typeAttributes: any[];
     if (selectedAttributeType === 'all') {
       typeAttributes = allAttributes;
     } else {
-      typeAttributes = allAttributes.filter((attr: any) => attr.type === selectedAttributeType);
+      typeAttributes = allAttributes.filter((attr: any) => {
+        // Handle different type formats in the dummy data
+        return attr?.type === selectedAttributeType || 
+               attr?.category === selectedAttributeType ||
+               attr?.attributeType === selectedAttributeType;
+      });
     }
     
     if (!searchValue) return typeAttributes;
-    return typeAttributes.filter((attr: any) => 
-      attr.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      (attr.displayName && attr.displayName.toLowerCase().includes(searchValue.toLowerCase()))
-    );
+    
+    return typeAttributes.filter((attr: any) => {
+      if (!attr) return false;
+      const name = attr.name || '';
+      const displayName = attr.displayName || attr.label || '';
+      const description = attr.description || '';
+      
+      const searchLower = searchValue.toLowerCase();
+      return name.toLowerCase().includes(searchLower) ||
+             displayName.toLowerCase().includes(searchLower) ||
+             description.toLowerCase().includes(searchLower);
+    });
   };
 
   const getSelectedAttributeLabel = () => {
     if (!selectedAttribute) return 'Select attribute';
-    const attribute = (userAttributes as any[]).find((attr: any) => attr.name === selectedAttribute);
-    return attribute ? (attribute.displayName || attribute.name) : selectedAttribute;
+    
+    try {
+      const allAttributes = Array.isArray(userAttributesData) ? userAttributesData : [];
+      const attribute = allAttributes.find((attr: any) => attr?.name === selectedAttribute);
+      return attribute ? (attribute.displayName || attribute.label || attribute.name) : selectedAttribute;
+    } catch (error) {
+      console.log('Error finding attribute:', error);
+      return selectedAttribute;
+    }
   };
 
   return (
@@ -132,25 +162,36 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                     <Command className="border-0">
                       <CommandList className="max-h-64">
                         <CommandEmpty>No attributes found.</CommandEmpty>
-                        {getFilteredAttributes().map((attribute: any) => (
-                          <CommandItem
-                            key={attribute.name}
-                            value={attribute.name}
-                            onSelect={(value) => {
-                              setSelectedAttribute(value);
-                              setIsAttributeOpen(false);
-                            }}
-                            className="flex items-center gap-2 px-3 py-2 text-sm"
-                          >
-                            <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
-                              {(attribute.valueType || 'STR').slice(0, 3).toUpperCase()}
-                            </span>
-                            <div className="flex-1">
-                              <div className="font-medium">{attribute.displayName || attribute.name}</div>
-                              <div className="text-xs text-gray-500">{attribute.description}</div>
-                            </div>
-                          </CommandItem>
-                        ))}
+                        {getFilteredAttributes().map((attribute: any) => {
+                          if (!attribute?.name) return null;
+                          
+                          // Safely get the value type with fallback
+                          const valueType = attribute.valueType || attribute.dataType || 'STR';
+                          const displayName = attribute.displayName || attribute.label || attribute.name;
+                          const description = attribute.description || '';
+                          
+                          return (
+                            <CommandItem
+                              key={attribute.name}
+                              value={attribute.name}
+                              onSelect={(value) => {
+                                setSelectedAttribute(value);
+                                setIsAttributeOpen(false);
+                              }}
+                              className="flex items-center gap-2 px-3 py-2 text-sm"
+                            >
+                              <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                                {String(valueType).slice(0, 3).toUpperCase()}
+                              </span>
+                              <div className="flex-1">
+                                <div className="font-medium">{displayName}</div>
+                                {description && (
+                                  <div className="text-xs text-gray-500">{description}</div>
+                                )}
+                              </div>
+                            </CommandItem>
+                          );
+                        })}
                       </CommandList>
                     </Command>
                   </div>
