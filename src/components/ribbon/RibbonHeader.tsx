@@ -10,8 +10,7 @@ import {
   Smartphone,
   Save,
   Edit3,
-  Trash2,
-  Edit
+  Trash2
 } from 'lucide-react';
 
 type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
@@ -43,9 +42,8 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
   onExport,
   onSave
 }) => {
-  const handleEditClick = () => onViewModeChange?.('edit');
-  const handleDesktopClick = () => onViewModeChange?.('desktop-preview');
-  const handleMobileClick = () => onViewModeChange?.('mobile-preview');
+  const handleDesktopClick = () => onViewModeChange?.('edit'); // Stay in edit mode, just change canvas view
+  const handleMobileClick = () => onViewModeChange?.('edit'); // Stay in edit mode, just change canvas view
 
   return (
     <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
@@ -91,33 +89,15 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
         </div>
       </div>
       
-      {/* Prominent View Mode Controls - Always Visible */}
+      {/* View Mode Controls - Desktop/Mobile Toggle Only */}
       <div className="flex items-center gap-6">
         <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleEditClick}
-            className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-              viewMode === 'edit' 
-                ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-            }`}
-            title="Switch to Edit Mode"
-          >
-            <Edit className="w-4 h-4" />
-            <span className="text-sm">Edit</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
             onClick={handleDesktopClick}
-            className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-              viewMode === 'desktop-preview' 
-                ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-            }`}
-            title="Gmail Desktop Preview"
+            className="flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+            title="Desktop View"
           >
             <Monitor className="w-4 h-4" />
             <span className="text-sm">Desktop</span>
@@ -126,12 +106,8 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             variant="ghost"
             size="sm"
             onClick={handleMobileClick}
-            className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-              viewMode === 'mobile-preview' 
-                ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-            }`}
-            title="Gmail Mobile Preview"
+            className="flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+            title="Mobile View"
           >
             <Smartphone className="w-4 h-4" />
             <span className="text-sm">Mobile</span>
