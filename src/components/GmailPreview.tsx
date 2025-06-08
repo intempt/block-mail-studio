@@ -4,11 +4,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
-  Archive, 
-  Trash2, 
-  MoreHorizontal, 
   Star, 
-  ArrowLeft,
   Printer,
   ExternalLink
 } from 'lucide-react';
@@ -30,24 +26,6 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
 }) => {
   return (
     <div className="h-full bg-white flex flex-col">
-      {/* Gmail Top Bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            <Archive className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            <Trash2 className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="text-gray-600">
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
       {/* Email Header */}
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-start justify-between mb-3">
