@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { users, User } from '../dummy/users';
+import { users, User } from '../../dummy/users';
 
 interface UserSelectorProps {
   onUserChange?: (user: User) => void;

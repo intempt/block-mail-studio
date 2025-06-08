@@ -2,7 +2,7 @@
 import React from 'react';
 import { Eye } from 'lucide-react';
 import { UserSelector } from './UserSelector';
-import { User } from '../dummy/users';
+import { User } from '../../dummy/users';
 
 interface GmailPreviewHeaderProps {
   onUserChange?: (user: User) => void;
