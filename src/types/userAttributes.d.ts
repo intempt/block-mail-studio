@@ -9,8 +9,8 @@ declare module '*/dummy/userAttributes' {
     displayName?: string;
     description?: string;
     type?: string;
-    category?: string;
-    attributeType?: string;
+    category?: string | 'user' | 'event' | 'system' | 'account' | 'scoring' | 'predicted';
+    attributeType?: string | 'event' | 'custom' | 'extracted' | 'computed' | 'scoring' | 'predicted';
     valueType?: string;
     lastUpdated?: string;
     schema?: UserAttributeSchema;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,8 +41,8 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChang
       const module = await import('../../dummy/userAttributes');
       const userAttribute = module.userAttributes.find((attr: any) => attr?.name === attribute);
       if (userAttribute) {
-        setAttributeValueType(userAttribute.valueType || userAttribute.type || 'STR');
-        setSelectedAttributeLabel(userAttribute.displayName || userAttribute.name || attribute);
+        setAttributeValueType((userAttribute as any).valueType || (userAttribute as any).type || 'STR');
+        setSelectedAttributeLabel((userAttribute as any).displayName || userAttribute.name || attribute);
       }
     } catch (error) {
       console.warn('Error loading attribute details:', error);

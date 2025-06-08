@@ -1,5 +1,16 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
+import TextStyle from '@tiptap/extension-text-style';
+import FontFamily from '@tiptap/extension-font-family';
+import { Underline } from '@tiptap/extension-underline';
+import { Color } from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import { FontSize } from '@/extensions/FontSizeExtension';
+import { PreviewVariable } from '@/extensions/PreviewVariableExtension';
 import { GmailPreview } from '../GmailPreview';
 
 interface PreviewViewProps {
@@ -15,6 +26,62 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
 }) => {
   const isDesktop = viewMode === 'desktop-preview';
   
+  // Create extensions for preview mode (without editing capabilities)
+  const previewExtensions = useMemo(() => [
+    StarterKit.configure({
+      bulletList: {
+        HTMLAttributes: {
+          class: 'list-disc ml-6',
+        },
+      },
+      orderedList: {
+        HTMLAttributes: {
+          class: 'list-decimal ml-6',
+        },
+      },
+      blockquote: {
+        HTMLAttributes: {
+          class: 'border-l-4 border-blue-400 pl-4 italic text-gray-700',
+        },
+      },
+      code: {
+        HTMLAttributes: {
+          class: 'bg-gray-100 px-2 py-1 rounded text-sm font-mono',
+        },
+      },
+    }),
+    Link.configure({
+      openOnClick: false,
+      HTMLAttributes: {
+        class: 'text-blue-600 underline',
+      },
+    }),
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+    TextStyle,
+    Color,
+    FontFamily.configure({
+      types: ['textStyle'],
+    }),
+    FontSize.configure({
+      types: ['textStyle'],
+    }),
+    Highlight.configure({
+      multicolor: true,
+    }),
+    Underline,
+    PreviewVariable, // Use preview-specific variable extension
+  ], []);
+
+  // Create a read-only editor for preview
+  const previewEditor = useEditor({
+    extensions: previewExtensions,
+    content: emailHtml,
+    editable: false,
+    immediatelyRender: false,
+  });
+
   if (isDesktop) {
     // Use Gmail interface for desktop preview
     return (
@@ -36,7 +103,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     );
   }
 
-  // Mobile preview - simple view
+  // Mobile preview with preview editor
   return (
     <div className="relative h-full bg-background">
       <div className="h-full w-full flex flex-col items-center justify-center p-4">
@@ -58,14 +125,21 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
             <p className="text-sm text-gray-600 mt-1">Your Campaign &lt;noreply@yourcompany.com&gt;</p>
           </div>
           
-          <div 
-            className="email-content text-sm"
-            dangerouslySetInnerHTML={{ __html: emailHtml }}
-            style={{
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              lineHeight: '1.5'
-            }}
-          />
+          {previewEditor ? (
+            <EditorContent 
+              editor={previewEditor}
+              className="prose prose-sm max-w-none"
+            />
+          ) : (
+            <div 
+              className="email-content text-sm"
+              dangerouslySetInnerHTML={{ __html: emailHtml }}
+              style={{
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                lineHeight: '1.5'
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
