@@ -1,6 +1,6 @@
 
 @import url('./styles/design-tokens.css');
-@import url('./components/animations.css');
+@import url('./styles/gmail-preview.css');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

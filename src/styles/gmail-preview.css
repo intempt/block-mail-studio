@@ -1,0 +1,83 @@
+
+/* Gmail Preview Styles */
+.gmail-email-content {
+  /* Reset styles to match Gmail's rendering */
+  font-family: Arial, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  color: #222 !important;
+}
+
+.gmail-email-content * {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.gmail-email-content table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.gmail-email-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+
+.gmail-email-content p {
+  margin: 0 0 1em 0 !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.gmail-email-content h1,
+.gmail-email-content h2,
+.gmail-email-content h3,
+.gmail-email-content h4,
+.gmail-email-content h5,
+.gmail-email-content h6 {
+  font-weight: bold !important;
+  margin: 0 0 0.5em 0 !important;
+  color: #222 !important;
+}
+
+.gmail-email-content h1 { font-size: 24px !important; }
+.gmail-email-content h2 { font-size: 20px !important; }
+.gmail-email-content h3 { font-size: 18px !important; }
+.gmail-email-content h4 { font-size: 16px !important; }
+
+.gmail-email-content a {
+  color: #1a73e8 !important;
+  text-decoration: none !important;
+}
+
+.gmail-email-content a:hover {
+  text-decoration: underline !important;
+}
+
+/* Button styles in Gmail */
+.gmail-email-content button,
+.gmail-email-content .button,
+.gmail-email-content [role="button"] {
+  display: inline-block !important;
+  padding: 8px 16px !important;
+  background-color: #1a73e8 !important;
+  color: white !important;
+  text-decoration: none !important;
+  border-radius: 4px !important;
+  border: none !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+}
+
+/* Ensure proper spacing */
+.gmail-email-content div,
+.gmail-email-content section {
+  margin-bottom: 1em !important;
+}
+
+.gmail-email-content div:last-child,
+.gmail-email-content section:last-child,
+.gmail-email-content p:last-child {
+  margin-bottom: 0 !important;
+}
