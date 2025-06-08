@@ -123,6 +123,7 @@ export const EnhancedTextBlockRenderer: React.FC<EnhancedTextBlockRendererProps>
             emailContext={emailContext}
             onBlur={onEditEnd}
             placeholder="Click to edit..."
+            blockId={block.id}
           />
         )}
       </div>

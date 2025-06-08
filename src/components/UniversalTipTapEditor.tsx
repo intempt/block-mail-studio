@@ -1,209 +1,114 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import TextStyle from '@tiptap/extension-text-style';
-import FontFamily from '@tiptap/extension-font-family';
 import { Underline } from '@tiptap/extension-underline';
+import { Link } from '@tiptap/extension-link';
+import { Image } from '@tiptap/extension-image';
+import { Placeholder } from '@tiptap/extension-placeholder';
 import { Color } from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import { FontSize } from '@/extensions/FontSizeExtension';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ProBubbleMenuToolbar } from './ProBubbleMenuToolbar';
+import TextStyle from '@tiptap/extension-text-style';
+import TextAlign from '@tiptap/extension-text-align';
+import { Variable } from '@/extensions/VariableExtension';
 import { EmailContext } from '@/services/tiptapAIService';
-import { 
-  ExternalLink,
-  Play,
-  Sparkles
-} from 'lucide-react';
-import { AIDropdownMenu } from './AIDropdownMenu';
+import { EditorToolbar } from './EditorToolbar';
+import { VariableSelector } from './canvas/VariableSelector';
 
 interface UniversalTipTapEditorProps {
   content: string;
-  contentType: 'text' | 'button' | 'image' | 'link' | 'html' | 'url' | 'video';
+  contentType: 'text' | 'button' | 'image' | 'link' | 'video' | 'html' | 'url';
   onChange: (html: string) => void;
+  emailContext?: EmailContext;
   onBlur?: () => void;
   placeholder?: string;
-  position?: { x: number; y: number };
-  emailContext?: EmailContext;
+  blockId?: string;
 }
 
 export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   content,
   contentType,
   onChange,
+  emailContext,
   onBlur,
-  placeholder,
-  position,
-  emailContext
+  placeholder = "Click to edit...",
+  blockId
 }) => {
-  const [urlValue, setUrlValue] = useState(content);
-  const [hasFocus, setHasFocus] = useState(false);
-
-  const isUrlMode = contentType === 'url' || contentType === 'video';
+  const extensions = useMemo(() => [
+    StarterKit.configure({
+      history: false,
+    }),
+    Underline,
+    Link,
+    Image,
+    Variable,
+    Placeholder.configure({
+      placeholder,
+    }),
+    TextStyle,
+    Color,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+  ], [placeholder]);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        bulletList: {
-          HTMLAttributes: {
-            class: 'list-disc ml-6',
-          },
-        },
-        orderedList: {
-          HTMLAttributes: {
-            class: 'list-decimal ml-6',
-          },
-        },
-        blockquote: {
-          HTMLAttributes: {
-            class: 'border-l-4 border-blue-400 pl-4 italic text-gray-700',
-          },
-        },
-        code: {
-          HTMLAttributes: {
-            class: 'bg-gray-100 px-2 py-1 rounded text-sm font-mono',
-          },
-        },
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: 'text-blue-600 underline',
-        },
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      TextStyle,
-      Color,
-      FontFamily.configure({
-        types: ['textStyle'],
-      }),
-      FontSize.configure({
-        types: ['textStyle'],
-      }),
-      Highlight.configure({
-        multicolor: true,
-      }),
-      Underline,
-    ],
-    content: isUrlMode ? '' : content,
+    extensions,
+    content,
     onUpdate: ({ editor }) => {
-      if (!isUrlMode) {
-        onChange(editor.getHTML());
-      }
-    },
-    onFocus: () => {
-      setHasFocus(true);
+      const html = editor.getHTML();
+      onChange(html);
     },
     onBlur: () => {
-      setHasFocus(false);
       onBlur?.();
     },
     immediatelyRender: false,
   });
 
-  const handleContentUpdate = (newContent: string) => {
-    if (editor) {
-      editor.commands.setContent(newContent);
-      onChange(newContent);
-    }
-  };
-
   useEffect(() => {
-    if (editor && !isUrlMode && content !== editor.getHTML()) {
+    if (editor && editor.getHTML() !== content) {
       editor.commands.setContent(content);
     }
-    if (isUrlMode) {
-      setUrlValue(content);
+  }, [editor, content]);
+
+  const handleVariableSelect = useCallback((variable: { text: string; value: string }) => {
+    if (editor) {
+      editor.chain().focus().insertVariable(variable).run();
     }
-  }, [content, editor, isUrlMode]);
+  }, [editor]);
 
-  const handleUrlChange = (value: string) => {
-    setUrlValue(value);
-    onChange(value);
-  };
+  // Register global variable handler for this block
+  useEffect(() => {
+    if (blockId && editor) {
+      (window as any)[`insertVariable_${blockId}`] = handleVariableSelect;
+      
+      return () => {
+        delete (window as any)[`insertVariable_${blockId}`];
+      };
+    }
+  }, [blockId, handleVariableSelect, editor]);
 
-  if (isUrlMode) {
-    return (
-      <div 
-        className="universal-tiptap-editor"
-        style={position ? {
-          position: 'absolute',
-          top: position.y,
-          left: position.x,
-          zIndex: 1000
-        } : {}}
-      >
-        <div className="border rounded-lg overflow-hidden bg-white shadow-lg">
-          <div className="flex gap-1 p-2 border-b bg-gray-50">
-            <ExternalLink className="w-4 h-4 text-gray-500" />
-            {contentType === 'video' && <Play className="w-4 h-4 text-gray-500" />}
-            <span className="text-sm text-gray-600">
-              {contentType === 'video' ? 'Video URL' : 'URL'}
-            </span>
-          </div>
-          
-          <div className="p-3">
-            <Input
-              value={urlValue}
-              onChange={(e) => handleUrlChange(e.target.value)}
-              placeholder={placeholder || (contentType === 'video' ? 'Enter video URL...' : 'Enter URL...')}
-              className="w-full"
-              autoFocus
-            />
-          </div>
-        </div>
-      </div>
-    );
+  if (!editor) {
+    return <div className="animate-pulse bg-gray-100 h-20 rounded"></div>;
   }
 
   return (
-    <div 
-      className="universal-tiptap-editor relative group"
-      style={position ? {
-        position: 'absolute',
-        top: position.y,
-        left: position.x,
-        zIndex: 1000
-      } : {}}
-    >
-      <div className={`
-        border rounded-lg bg-white transition-all duration-200
-        ${hasFocus ? 'border-blue-400 shadow-md ring-1 ring-blue-400/20' : 'border-gray-200 hover:border-gray-300'}
-      `}>
-        {/* TipTap Pro AI Toolbar - Show when focused or has content */}
-        {(hasFocus || content) && (
-          <div className="flex items-center gap-1 px-3 py-2 border-b bg-gradient-to-r from-purple-50 to-blue-50">
-            <div className="flex items-center gap-1 text-xs text-purple-700">
-              <Sparkles className="w-3 h-3" />
-              <span className="font-medium">TipTap Pro AI</span>
-            </div>
-            
-            <div className="ml-auto">
-              <AIDropdownMenu
-                selectedText=""
-                fullContent={content}
-                onContentUpdate={handleContentUpdate}
-                size="sm"
-              />
-            </div>
-          </div>
-        )}
-
-        <EditorContent 
-          editor={editor} 
-          className="prose prose-sm max-w-none p-4 focus:outline-none min-h-[80px]"
-          placeholder={placeholder}
-        />
-
-        {/* Enhanced TipTap Pro BubbleMenu with AI features */}
-        {editor && <ProBubbleMenuToolbar editor={editor} />}
+    <div className="universal-tiptap-editor relative group">
+      <EditorContent 
+        editor={editor} 
+        className="prose max-w-none focus:outline-none min-h-[40px] p-3 border border-gray-200 rounded-lg hover:border-gray-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400"
+      />
+      
+      {/* Variable selector positioned near the editor */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <VariableSelector onSelectVariable={handleVariableSelect} />
       </div>
+      
+      {/* Toolbar when editor has focus */}
+      {editor.isFocused && (
+        <div className="mt-2">
+          <EditorToolbar editor={editor} />
+        </div>
+      )}
     </div>
   );
 };

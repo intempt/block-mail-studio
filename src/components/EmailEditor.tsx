@@ -14,6 +14,7 @@ import { Placeholder } from '@tiptap/extension-placeholder';
 import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
+import { Variable } from '@/extensions/VariableExtension';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
@@ -112,6 +113,7 @@ export default function EmailEditor({
       Underline,
       Link,
       Image,
+      Variable,
       Placeholder.configure({
         placeholder: 'Write something here...'
       }),
