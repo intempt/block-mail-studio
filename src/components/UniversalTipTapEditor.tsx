@@ -11,7 +11,6 @@ import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import { Variable } from '@/extensions/VariableExtension';
 import { EmailContext } from '@/services/tiptapAIService';
-import { EditorToolbar } from './EditorToolbar';
 import { VariableSelector } from './canvas/VariableSelector';
 
 interface UniversalTipTapEditorProps {
@@ -102,13 +101,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <VariableSelector onSelectVariable={handleVariableSelect} />
       </div>
-      
-      {/* Toolbar when editor has focus */}
-      {editor.isFocused && (
-        <div className="mt-2">
-          <EditorToolbar editor={editor} />
-        </div>
-      )}
     </div>
   );
 };
