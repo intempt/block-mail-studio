@@ -270,6 +270,14 @@ export const PerformanceAnalyzer: React.FC<PerformanceAnalyzerProps> = ({
 
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
+          {/* Email Provider Compatibility - New Feature */}
+          {emailHTML.trim() && (
+            <EmailProviderCompatibilityCard
+              emailHTML={emailHTML}
+              subjectLine={subjectLine}
+            />
+          )}
+
           {/* Performance Metrics */}
           {performanceResult && (
             <Card className="p-4">

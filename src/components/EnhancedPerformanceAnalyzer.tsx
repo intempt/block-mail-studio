@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DirectAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
+import { EmailProviderCompatibilityCard } from './EmailProviderCompatibilityCard';
 
 interface EnhancedPerformanceAnalyzerProps {
   emailHTML: string;
@@ -175,6 +175,14 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
           </div>
         )}
       </Card>
+
+      {/* Email Provider Compatibility - New Feature */}
+      {emailHTML.trim() && (
+        <EmailProviderCompatibilityCard
+          emailHTML={emailHTML}
+          subjectLine={subjectLine}
+        />
+      )}
 
       {/* Detailed Metrics */}
       {analysis && (
