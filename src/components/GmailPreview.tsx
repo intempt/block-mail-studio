@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -63,20 +64,20 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               to me
               <span 
                 className="inline-block" 
-                style={{ height: '23px', margin: 0 }}
+                style={{ height: '23px' }}
                 dangerouslySetInnerHTML={{ __html: '&#128899;' }} 
               />
             </div>
           </div>
           <div className="flex items-center gap-1 text-sm text-gray-500" style={{ alignSelf: 'flex-start' }}>
             <span>{timestamp}</span>
-            <Button variant="ghost" size="sm" className="text-gray-400">
+            <Button variant="ghost" size="sm" className="text-gray-400 w-9">
               <Star className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400">
+            <Button variant="ghost" size="sm" className="text-gray-400 w-9">
               <Reply className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400">
+            <Button variant="ghost" size="sm" className="text-gray-400 w-9">
               <EllipsisVertical className="w-4 h-4" />
             </Button>
           </div>
@@ -101,3 +102,4 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
     </div>
   );
 };
+
