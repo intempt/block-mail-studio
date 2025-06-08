@@ -13,7 +13,7 @@ import { Variable } from '@/extensions/VariableExtension';
 import { EmailContext } from '@/services/tiptapAIService';
 
 interface UniversalTipTapEditorProps {
-  content: string | { html: string; textStyle?: string };
+  content: string;
   contentType: 'text' | 'button' | 'image' | 'link' | 'video' | 'html' | 'url';
   onChange: (html: string) => void;
   emailContext?: EmailContext;
@@ -31,17 +31,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   placeholder = "Click to edit...",
   blockId
 }) => {
-  // Extract HTML content from the content prop
-  const htmlContent = useMemo(() => {
-    if (typeof content === 'string') {
-      return content;
-    }
-    if (content && typeof content === 'object' && 'html' in content) {
-      return content.html;
-    }
-    return '';
-  }, [content]);
-
   const extensions = useMemo(() => [
     StarterKit.configure({
       history: false,
@@ -62,7 +51,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
 
   const editor = useEditor({
     extensions,
-    content: htmlContent,
+    content,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       onChange(html);
@@ -74,10 +63,10 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
   });
 
   useEffect(() => {
-    if (editor && editor.getHTML() !== htmlContent) {
-      editor.commands.setContent(htmlContent);
+    if (editor && editor.getHTML() !== content) {
+      editor.commands.setContent(content);
     }
-  }, [editor, htmlContent]);
+  }, [editor, content]);
 
   const handleVariableSelect = useCallback((variable: { text: string; value: string }) => {
     if (editor) {
