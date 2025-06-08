@@ -64,8 +64,9 @@ export const PreviewVariable = Node.create<PreviewVariableOptions>({
   },
 
   renderHTML({ HTMLAttributes, node }) {
-    const value = node.attrs.value || '';
-    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes), value];
+    // In preview mode, show the variable text (display name) instead of the raw value
+    const text = node.attrs.text || '';
+    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes), text];
   },
 
   addNodeView() {

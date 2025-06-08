@@ -313,6 +313,7 @@ export default function EmailEditor({
         {viewMode === 'edit' && (
           <SnippetRibbon
             refreshTrigger={snippetRefreshTrigger}
+            onSnippetSelect={handleSnippetAdd}
           />
         )}
 
@@ -356,7 +357,8 @@ export default function EmailEditor({
 
       {showTemplateLibrary && (
         <EmailTemplateLibrary
-          onClose={() => setShowTemplateLibrary(false)}
+          open={showTemplateLibrary}
+          onOpenChange={setShowTemplateLibrary}
           onSelectTemplate={(template) => {
             if (template.blocks && canvasRef.current) {
               canvasRef.current.replaceAllBlocks(template.blocks);
@@ -372,7 +374,11 @@ export default function EmailEditor({
       )}
 
       {/* Undo Manager */}
-      <UndoManager blocks={emailBlocks} />
+      <UndoManager 
+        blocks={emailBlocks} 
+        onUndo={() => {}}
+        onRedo={() => {}}
+      />
     </div>
   );
 }
