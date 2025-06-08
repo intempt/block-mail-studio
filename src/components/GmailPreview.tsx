@@ -7,7 +7,8 @@ import {
   ExternalLink,
   Star,
   Reply,
-  EllipsisVertical
+  EllipsisVertical,
+  Triangle
 } from 'lucide-react';
 
 interface GmailPreviewProps {
@@ -59,8 +60,9 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               <span className="text-sm text-gray-500">&lt;{senderEmail}&gt;</span>
               <a href="#" className="text-sm text-blue-600 hover:underline">Unsubscribe</a>
             </div>
-            <div className="text-sm text-gray-500" style={{ textAlign: 'start' }}>
+            <div className="text-sm text-gray-500 flex items-center gap-1" style={{ textAlign: 'start' }}>
               to me
+              <Triangle className="w-3 h-3 text-gray-400" />
             </div>
           </div>
           <div className="flex items-center gap-1 text-sm text-gray-500">
