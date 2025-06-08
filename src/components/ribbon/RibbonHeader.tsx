@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,14 +88,18 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
         </div>
       </div>
       
-      {/* View Mode Controls - Desktop/Mobile Toggle Only */}
+      {/* View Mode Controls - Desktop/Mobile Toggle with Active State */}
       <div className="flex items-center gap-6">
         <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleDesktopClick}
-            className="flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+            className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
+              true // Desktop is always active since we stay in edit mode
+                ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
+                : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+            }`}
             title="Desktop View"
           >
             <Monitor className="w-4 h-4" />
