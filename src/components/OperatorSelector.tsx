@@ -28,57 +28,19 @@ export const OperatorSelector: React.FC<OperatorSelectorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const getOperatorsForType = (valueType: string) => {
-    const type = valueType.toUpperCase();
-    
-    const baseOperators = [
-      { value: 'equals', label: 'equals', description: 'Exactly matches the value' },
-      { value: 'not_equals', label: 'does not equal', description: 'Does not match the value' },
-    ];
+  const operators = [
+    { value: 'is', label: 'is', description: 'Exactly matches the value' },
+    { value: 'is_not', label: 'is not', description: 'Does not match the value' },
+    { value: 'has_any_value', label: 'has any value', description: 'Has any value' },
+    { value: 'has_no_value', label: 'has no value', description: 'Has no value' },
+    { value: 'contain', label: 'contain', description: 'Contains the text' },
+    { value: 'does_not_contains', label: 'does not contains', description: 'Does not contain the text' },
+    { value: 'is_greater_than', label: 'is greater than', description: 'Is greater than the value' },
+    { value: 'is_less_than', label: 'is less than', description: 'Is less than the value' },
+    { value: 'is_less_than_or_equal', label: 'is less than or equal', description: 'Is less than or equal to the value' },
+    { value: 'is_greater_than_or_equal', label: 'is greater than or equal', description: 'Is greater than or equal to the value' },
+  ];
 
-    const stringOperators = [
-      { value: 'contains', label: 'contains', description: 'Contains the text' },
-      { value: 'not_contains', label: 'does not contain', description: 'Does not contain the text' },
-      { value: 'starts_with', label: 'starts with', description: 'Starts with the text' },
-      { value: 'ends_with', label: 'ends with', description: 'Ends with the text' },
-      { value: 'is_empty', label: 'is empty', description: 'Has no value' },
-      { value: 'is_not_empty', label: 'is not empty', description: 'Has any value' },
-    ];
-
-    const numberOperators = [
-      { value: 'greater_than', label: 'greater than', description: 'Is greater than the value' },
-      { value: 'less_than', label: 'less than', description: 'Is less than the value' },
-      { value: 'greater_equal', label: 'greater than or equal', description: 'Is greater than or equal to the value' },
-      { value: 'less_equal', label: 'less than or equal', description: 'Is less than or equal to the value' },
-    ];
-
-    const dateOperators = [
-      { value: 'before', label: 'before', description: 'Is before the date' },
-      { value: 'after', label: 'after', description: 'Is after the date' },
-      { value: 'between', label: 'between', description: 'Is between two dates' },
-      { value: 'in_last', label: 'in the last', description: 'Within the last time period' },
-      { value: 'in_next', label: 'in the next', description: 'Within the next time period' },
-    ];
-
-    const booleanOperators = [
-      { value: 'is_true', label: 'is true', description: 'Is true' },
-      { value: 'is_false', label: 'is false', description: 'Is false' },
-    ];
-
-    if (type.includes('STR') || type.includes('TEXT')) {
-      return [...baseOperators, ...stringOperators];
-    } else if (type.includes('NUM') || type.includes('INT') || type.includes('FLOAT')) {
-      return [...baseOperators, ...numberOperators];
-    } else if (type.includes('DATE') || type.includes('TIME')) {
-      return [...baseOperators, ...dateOperators];
-    } else if (type.includes('BOOL')) {
-      return [...baseOperators, ...booleanOperators];
-    }
-
-    return baseOperators;
-  };
-
-  const operators = getOperatorsForType(attributeValueType);
   const selectedOperatorLabel = operators.find(op => op.value === selectedOperator)?.label || 'Select operator';
 
   return (
