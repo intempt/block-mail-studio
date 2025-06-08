@@ -19,7 +19,7 @@ interface FilterCriteria {
 }
 
 interface UserSelectorProps {
-  onUserChange?: (user: User) => void;
+  onUserChange?: (user: User | null) => void;
   filter?: FilterCriteria | null;
   className?: string;
 }
@@ -29,7 +29,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   filter,
   className 
 }) => {
-  const [selectedUserId, setSelectedUserId] = useState<string>(users[0].profile);
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>(users);
   const [displayedUsers, setDisplayedUsers] = useState<User[]>(users.slice(0, 50));
   const [showLoadMore, setShowLoadMore] = useState(true);
@@ -86,11 +86,11 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     setDisplayedUsers(filtered.slice(0, 50));
     setShowLoadMore(filtered.length > 50);
 
-    // If current selected user is not in filtered list, select first filtered user
-    if (filtered.length > 0 && !filtered.find(u => u.profile === selectedUserId)) {
-      setSelectedUserId(filtered[0].profile);
+    // Clear selection if current selected user is not in filtered list
+    if (selectedUserId && !filtered.find(u => u.profile === selectedUserId)) {
+      setSelectedUserId('');
       if (onUserChange) {
-        onUserChange(filtered[0]);
+        onUserChange(null);
       }
     }
   }, [filter, selectedUserId, onUserChange]);
@@ -131,11 +131,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   return (
     <Select value={selectedUserId} onValueChange={handleUserChange}>
       <SelectTrigger className={className}>
-        <SelectValue>
-          <div className="flex items-center gap-2">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-3 h-3" />
-            <span className="truncate">{selectedUser?.identifier}</span>
-          </div>
+        <SelectValue placeholder="Select">
+          {selectedUser && (
+            <div className="flex items-center gap-2">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-3 h-3" />
+              <span className="truncate">{selectedUser.identifier}</span>
+            </div>
+          )}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
