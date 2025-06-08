@@ -76,10 +76,10 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               <Star className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto w-10">
-              <Reply className="w-4 h-4" />
+              <Smile className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto w-10">
-              <Smile className="w-4 h-4" />
+              <Reply className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto w-10">
               <EllipsisVertical className="w-4 h-4" />
