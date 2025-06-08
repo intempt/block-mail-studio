@@ -53,9 +53,12 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
       <SelectContent>
         {displayedUsers.map((user) => (
           <SelectItem key={user.profile} value={user.profile} className="text-xs">
-            <div className="flex flex-col">
-              <span className="font-medium">{user.identifier}</span>
-              <span className="text-gray-500 text-xs">Last seen: {user.lastSeen}</span>
+            <div className="flex items-center gap-2">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-3 h-3" />
+              <div className="flex flex-col">
+                <span className="font-medium">{user.identifier}</span>
+                <span className="text-gray-500 text-xs">Last seen: {user.lastSeen}</span>
+              </div>
             </div>
           </SelectItem>
         ))}
