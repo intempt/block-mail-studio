@@ -21,22 +21,25 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
   const [selectedOperator, setSelectedOperator] = useState<string>('');
   const [attributeValueType, setAttributeValueType] = useState<string>('STR');
   const [filterValue, setFilterValue] = useState<string | string[]>('');
+  const [selectedAttributeLabel, setSelectedAttributeLabel] = useState<string>('');
 
   const handleAttributeSelect = async (attribute: string) => {
     setSelectedAttribute(attribute);
     setSelectedOperator(''); // Reset operator when attribute changes
     setFilterValue(''); // Reset value when attribute changes
     
-    // Get the attribute's value type for operator filtering
+    // Get the attribute's value type and display name for operator filtering
     try {
       const module = await import('../../dummy/userAttributes');
       const userAttribute = module.userAttributes.find((attr: any) => attr?.name === attribute);
       if (userAttribute) {
         setAttributeValueType(userAttribute.valueType || 'STR');
+        setSelectedAttributeLabel(userAttribute.displayName || userAttribute.name || attribute);
       }
     } catch (error) {
       console.warn('Error loading attribute details:', error);
       setAttributeValueType('STR');
+      setSelectedAttributeLabel(attribute);
     }
   };
 
@@ -52,16 +55,59 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
   // Check if we should show the value input
   const shouldShowValueInput = selectedOperator && !['has_any_value', 'has_no_value'].includes(selectedOperator);
 
+  // Construct human-readable filter text
+  const getFilterText = () => {
+    if (!selectedAttribute || !selectedOperator) {
+      return 'Filter by';
+    }
+
+    const operatorLabels: Record<string, string> = {
+      'is': 'is',
+      'is_not': 'is not',
+      'has_any_value': 'has any value',
+      'has_no_value': 'has no value',
+      'contain': 'contains',
+      'does_not_contains': 'does not contain',
+      'is_greater_than': 'is greater than',
+      'is_less_than': 'is less than',
+      'is_less_than_or_equal': 'is less than or equal to',
+      'is_greater_than_or_equal': 'is greater than or equal to',
+    };
+
+    const operatorText = operatorLabels[selectedOperator] || selectedOperator;
+    let valueText = '';
+
+    if (shouldShowValueInput && filterValue) {
+      if (Array.isArray(filterValue)) {
+        if (filterValue.length === 1) {
+          valueText = ` "${filterValue[0]}"`;
+        } else if (filterValue.length > 1) {
+          valueText = ` ${filterValue.length} values`;
+        }
+      } else if (filterValue.toString().trim()) {
+        valueText = ` "${filterValue}"`;
+      }
+    }
+
+    return `${selectedAttributeLabel} ${operatorText}${valueText}`;
+  };
+
+  const filterText = getFilterText();
+  const hasCompleteFilter = selectedAttribute && selectedOperator && 
+    (!shouldShowValueInput || (filterValue && (Array.isArray(filterValue) ? filterValue.length > 0 : filterValue.toString().trim())));
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          className={`h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50 ${className || ''}`}
+          className={`h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50 ${
+            hasCompleteFilter ? 'bg-blue-50 border-blue-300' : ''
+          } ${className || ''}`}
         >
           <Filter className="w-3 h-3 mr-1" />
-          Filter by
+          {filterText}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-4" align="start" side="left">
