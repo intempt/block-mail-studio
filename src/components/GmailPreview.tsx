@@ -61,17 +61,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             </div>
             <div className="text-sm text-gray-500 flex items-center gap-1" style={{ textAlign: 'start' }}>
               to me
-              <div 
-                className="ml-1"
-                style={{
-                  width: 0,
-                  height: 0,
-                  borderLeft: '4px solid transparent',
-                  borderRight: '4px solid transparent',
-                  borderTop: '6px solid #666',
-                  filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.2))'
-                }}
-              />
+              <span className="ml-1" dangerouslySetInnerHTML={{ __html: '&#128899;' }} />
             </div>
           </div>
           <div className="flex items-center gap-1 text-sm text-gray-500">
