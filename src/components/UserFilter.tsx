@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/popover';
 import { AttributeSelector } from './AttributeSelector';
 import { OperatorSelector } from './OperatorSelector';
+import { ValueInput } from './ValueInput';
 
 interface UserFilterProps {
   className?: string;
@@ -19,10 +20,12 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
   const [selectedAttribute, setSelectedAttribute] = useState<string>('');
   const [selectedOperator, setSelectedOperator] = useState<string>('');
   const [attributeValueType, setAttributeValueType] = useState<string>('STR');
+  const [filterValue, setFilterValue] = useState<string | string[]>('');
 
   const handleAttributeSelect = async (attribute: string) => {
     setSelectedAttribute(attribute);
     setSelectedOperator(''); // Reset operator when attribute changes
+    setFilterValue(''); // Reset value when attribute changes
     
     // Get the attribute's value type for operator filtering
     try {
@@ -39,7 +42,15 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
 
   const handleOperatorSelect = (operator: string) => {
     setSelectedOperator(operator);
+    setFilterValue(''); // Reset value when operator changes
   };
+
+  const handleValueChange = (value: string | string[]) => {
+    setFilterValue(value);
+  };
+
+  // Check if we should show the value input
+  const shouldShowValueInput = selectedOperator && !['has_any_value', 'has_no_value'].includes(selectedOperator);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -70,6 +81,16 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                 selectedOperator={selectedOperator}
                 onOperatorSelect={handleOperatorSelect}
                 attributeValueType={attributeValueType}
+              />
+            </div>
+          )}
+          {shouldShowValueInput && (
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">Value</label>
+              <ValueInput
+                operator={selectedOperator}
+                value={filterValue}
+                onValueChange={handleValueChange}
               />
             </div>
           )}

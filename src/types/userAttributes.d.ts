@@ -22,7 +22,7 @@ declare module '*/dummy/userAttributes' {
 
   interface UserAttributeSchemaField {
     name: string;
-    type: string | string[]; // Allow both string and string array
+    type: string | string[] | { type?: string }; // Allow flexible type structure
     default?: any; // Make default optional since it's missing in many places
   }
 
