@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -98,7 +97,8 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               fontFamily: 'Arial, sans-serif',
               fontSize: '14px',
               lineHeight: '1.4',
-              color: '#222'
+              color: '#222',
+              pointerEvents: 'none'
             }}
           />
         </div>
@@ -106,4 +106,3 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
     </div>
   );
 };
-
