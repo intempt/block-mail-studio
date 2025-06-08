@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
-import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
-import { CanvasRenderer } from './canvas/CanvasRenderer';
-import { useDragDropHandler } from './canvas/DragDropHandler';
-import { CanvasStatus } from './canvas/CanvasStatus';
+import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { EmailBlock } from '@/types/emailBlocks';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
-import { CanvasSubjectLine } from './CanvasSubjectLine';
-import { IntegratedGmailPreview } from './IntegratedGmailPreview';
+import { EditView } from './canvas/EditView';
+import { PreviewView } from './canvas/PreviewView';
+import { useEmailHTMLGenerator } from '@/hooks/useEmailHTMLGenerator';
 
 interface VariableOption {
   text: string;
@@ -52,11 +50,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
-  const [currentEmailHTML, setCurrentEmailHTML] = useState('');
+
+  const { currentEmailHTML } = useEmailHTMLGenerator(blocks, onContentChange);
 
   // Emit blocks changes whenever blocks state changes
   useEffect(() => {
@@ -324,322 +320,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setBlocks(initialBlocks);
   }, []);
 
-  const renderBlockToHTML = useCallback((block: EmailBlock): string => {
-    switch (block.type) {
-      case 'text':
-        return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
-      case 'button':
-        return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.link || '#'}" style="background: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">${block.content.text || 'Button'}</a></div>`;
-      case 'image':
-        return `<div style="text-align: center; margin: 20px 0;"><img src="${block.content.src || ''}" alt="${block.content.alt || ''}" style="max-width: 100%; height: auto;" /></div>`;
-      case 'html':
-        return `<div style="margin: 20px 0;">${block.content.html || ''}</div>`;
-      case 'table':
-        return renderTableToHTML(block);
-      case 'social':
-        return renderSocialToHTML(block);
-      case 'video':
-        return `<div style="text-align: center; margin: 20px 0;"><a href="${block.content.videoUrl || '#'}"><img src="${block.content.thumbnail || ''}" alt="Video thumbnail" style="max-width: 100%; height: auto;" /></a></div>`;
-      case 'spacer':
-        return `<div style="height: ${block.content.height || '20px'};"></div>`;
-      case 'divider':
-        return `<hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />`;
-      case 'columns':
-        return renderColumnsToHTML(block as ColumnsBlock);
-      default:
-        return '';
-    }
-  }, []);
-
-  const renderTableToHTML = useCallback((block: any): string => {
-    const getBorderStyle = () => {
-      const { borderStyle, borderColor, borderWidth } = block.content;
-      return `${borderWidth} ${borderStyle} ${borderColor}`;
-    };
-
-    const cellsHTML = block.content.cells.map((row: any[], rowIndex: number) => {
-      const isHeader = block.content.headerRow && rowIndex === 0;
-      const Tag = isHeader ? 'th' : 'td';
-      
-      const rowHTML = row.map((cell: any) => 
-        `<${Tag} style="border: ${getBorderStyle()}; padding: 8px; ${isHeader ? 'font-weight: bold; background-color: #f5f5f5;' : ''}">${cell.content}</${Tag}>`
-      ).join('');
-      
-      return `<tr>${rowHTML}</tr>`;
-    }).join('');
-
-    return `
-      <div style="margin: 20px 0;">
-        <table style="width: 100%; border-collapse: collapse; border: ${getBorderStyle()};">
-          <tbody>
-            ${cellsHTML}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }, []);
-
-  const renderSocialToHTML = useCallback((block: any): string => {
-    const platformsHTML = block.content.platforms.map((platform: any) => 
-      `<a href="${platform.url}" style="display: inline-block; margin: 0 8px;"><img src="${platform.icon}" alt="${platform.name}" style="width: ${block.content.iconSize}; height: ${block.content.iconSize};" /></a>`
-    ).join('');
-
-    return `
-      <div style="text-align: center; margin: 20px 0;">
-        <div style="display: ${block.content.layout === 'vertical' ? 'block' : 'inline-block'};">
-          ${platformsHTML}
-        </div>
-      </div>
-    `;
-  }, []);
-
-  const renderColumnsToHTML = useCallback((block: ColumnsBlock): string => {
-    const getColumnWidths = (ratio: string) => {
-      const ratioMap: Record<string, string[]> = {
-        '100': ['100%'],
-        '50-50': ['50%', '50%'],
-        '33-67': ['33%', '67%'],
-        '67-33': ['67%', '33%'],
-        '25-75': ['25%', '75%'],
-        '75-25': ['75%', '25%'],
-        '33-33-33': ['33.33%', '33.33%', '33.33%'],
-        '25-50-25': ['25%', '50%', '25%'],
-        '25-25-50': ['25%', '25%', '50%'],
-        '50-25-25': ['50%', '25%', '25%'],
-        '25-25-25-25': ['25%', '25%', '25%', '25%']
-      };
-      return ratioMap[ratio] || ['100%'];
-    };
-
-    const columnWidths = getColumnWidths(block.content.columnRatio);
-    
-    const columnsHTML = block.content.columns.map((column, index) => {
-      const columnBlocks = column.blocks.map(renderBlockToHTML).join('');
-      return `
-        <td style="width: ${columnWidths[index]}; vertical-align: top; padding: 0 8px;">
-          ${columnBlocks}
-        </td>
-      `;
-    }).join('');
-
-    return `
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0;">
-        <tr>
-          ${columnsHTML}
-        </tr>
-      </table>
-    `;
-  }, [renderBlockToHTML]);
-
-  useEffect(() => {
-    const generateHTML = () => {
-      if (blocks.length === 0) {
-        const emptyHTML = '';
-        onContentChange(emptyHTML);
-        setCurrentEmailHTML(emptyHTML);
-        return;
-      }
-
-      const blockElements = blocks.map(renderBlockToHTML).join('');
-
-      const fullHTML = `
-        <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
-          ${blockElements}
-        </div>
-      `;
-
-      onContentChange(fullHTML);
-      setCurrentEmailHTML(fullHTML);
-    };
-
-    generateHTML();
-  }, [blocks, onContentChange, renderBlockToHTML]);
-
-  const handleBlockClick = useCallback((blockId: string) => {
-    setSelectedBlockId(blockId);
-    onBlockSelect(blockId);
-  }, [onBlockSelect]);
-
-  const handleBlockDoubleClick = useCallback((blockId: string, blockType: string) => {
-    setEditingBlockId(blockId);
-  }, []);
-
-  const handleBlockDelete = useCallback((blockId: string) => {
-    setBlocks(prev => prev.filter(block => block.id !== blockId));
-    if (selectedBlockId === blockId) {
-      setSelectedBlockId(null);
-      onBlockSelect(null);
-    }
-  }, [selectedBlockId, onBlockSelect]);
-
-  const handleBlockDuplicate = useCallback((blockId: string) => {
-    const blockToDuplicate = blocks.find(block => block.id === blockId);
-    if (blockToDuplicate) {
-      const duplicatedBlock: EmailBlock = {
-        ...blockToDuplicate,
-        id: `${blockToDuplicate.id}_copy_${Date.now()}`,
-        isStarred: false // New duplicated blocks are not starred
-      };
-      const blockIndex = blocks.findIndex(block => block.id === blockId);
-      const newBlocks = [...blocks];
-      newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
-      setBlocks(newBlocks);
-    }
-  }, [blocks]);
-
-  const handleSaveAsSnippet = useCallback(async (blockId: string) => {
-    const block = blocks.find(b => b.id === blockId);
-    if (!block) return;
-
-    try {
-      const snippet: Omit<EmailSnippet, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'> = {
-        name: `${block.type} snippet`,
-        description: `Saved ${block.type} block`,
-        blockData: block,
-        blockType: block.type,
-        category: 'custom',
-        tags: [block.type],
-        isFavorite: false
-      };
-
-      // Create the snippet
-      DirectSnippetService.createSnippet(block, snippet.name, snippet.description);
-      
-      // Update the block's starred state
-      setBlocks(prev => prev.map(b => 
-        b.id === blockId ? { ...b, isStarred: true } : b
-      ));
-      
-      // Trigger snippet refresh
-      setSnippetRefreshTrigger(prev => prev + 1);
-      onSnippetRefresh?.();
-      
-      console.log('Block starred and snippet created:', blockId);
-    } catch (error) {
-      console.error('Error saving snippet:', error);
-    }
-  }, [blocks, onSnippetRefresh]);
-
-  const handleUnstarBlock = useCallback((blockId: string) => {
-    // Find snippets related to this block and remove them
-    const allSnippets = DirectSnippetService.getCustomSnippets();
-    const relatedSnippet = allSnippets.find(snippet => 
-      snippet.blockData?.id === blockId || 
-      snippet.name.includes(blockId) ||
-      snippet.blockData?.type === blocks.find(b => b.id === blockId)?.type
-    );
-    
-    if (relatedSnippet) {
-      DirectSnippetService.deleteSnippet(relatedSnippet.id);
-    }
-    
-    // Update the block's starred state
-    setBlocks(prev => prev.map(b => 
-      b.id === blockId ? { ...b, isStarred: false } : b
-    ));
-    
-    // Trigger snippet refresh
-    setSnippetRefreshTrigger(prev => prev + 1);
-    onSnippetRefresh?.();
-    
-    console.log('Block unstarred and snippet removed:', blockId);
-  }, [blocks, onSnippetRefresh]);
-
-  const handleTipTapChange = useCallback((blockId: string, html: string) => {
-    setBlocks(prev => prev.map(block => {
-      if (block.id === blockId && block.type === 'text') {
-        return {
-          ...block,
-          content: {
-            ...block.content,
-            html: html
-          }
-        };
-      }
-      return block;
-    }));
-  }, []);
-
-  const handleTipTapBlur = useCallback(() => {
-    setEditingBlockId(null);
-  }, []);
-
-  const handleBlockEditStart = useCallback((blockId: string) => {
-    setEditingBlockId(blockId);
-    setSelectedBlockId(blockId);
-    onBlockSelect(blockId);
-  }, [onBlockSelect]);
-
-  const handleBlockEditEnd = useCallback(() => {
-    setEditingBlockId(null);
-  }, []);
-
-  const handleBlockUpdate = useCallback((updatedBlock: EmailBlock) => {
-    setBlocks(prev => prev.map(block => 
-      block.id === updatedBlock.id ? updatedBlock : block
-    ));
-  }, []);
-
-  // Updated handleAddVariable to work with the enhanced text editor
-  const handleAddVariable = useCallback((blockId: string, variable: VariableOption) => {
-    console.log('Adding variable to block:', blockId, variable);
-    
-    // The EnhancedTextBlockRenderer will handle the insertion through its ref
-    // For non-text blocks, we'll fall back to the original method
-    setBlocks(prev => prev.map(block => {
-      if (block.id === blockId && block.type !== 'text') {
-        if (block.type === 'button') {
-          // Add variable to button text
-          const currentText = block.content.text || '';
-          const newText = currentText + ` ${variable.value}`;
-          
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              text: newText
-            }
-          };
-        }
-      } else if (block.type === 'columns') {
-        // Handle columns recursively
-        const updatedColumns = block.content.columns.map(column => ({
-          ...column,
-          blocks: column.blocks.map(columnBlock => {
-            if (columnBlock.id === blockId) {
-              if (columnBlock.type === 'text') {
-                // Text blocks in columns are handled by the editor
-                return columnBlock;
-              } else if (columnBlock.type === 'button') {
-                const currentText = columnBlock.content.text || '';
-                const newText = currentText + ` ${variable.value}`;
-                
-                return {
-                  ...columnBlock,
-                  content: {
-                    ...columnBlock.content,
-                    text: newText
-                  }
-                };
-              }
-            }
-            return columnBlock;
-          })
-        }));
-        
-        return {
-          ...block,
-          content: {
-            ...block.content,
-            columns: updatedColumns
-          }
-        };
-      }
-      
-      return block;
-    }));
-  }, []);
-
   const getDefaultContent = useCallback((blockType: string) => {
     switch (blockType) {
       case 'text':
@@ -743,150 +423,38 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     };
   }, []);
 
-  const dragDropHandler = useDragDropHandler({
-    blocks,
-    setBlocks,
-    getDefaultContent,
-    getDefaultStyles,
-    dragOverIndex,
-    setDragOverIndex,
-    isDraggingOver,
-    setIsDraggingOver,
-    setCurrentDragType
-  });
-
-  // If we're in preview mode, show the Gmail preview instead
+  // Render preview mode
   if (viewMode === 'desktop-preview' || viewMode === 'mobile-preview') {
-    const gmailPreviewMode = viewMode === 'desktop-preview' ? 'desktop' : 'mobile';
-    
     return (
-      <div className="relative h-full">
-        <IntegratedGmailPreview
-          emailHtml={currentEmailHTML}
-          subject={subject}
-          previewMode={gmailPreviewMode}
-          fullWidth={true}
-        />
-      </div>
+      <PreviewView
+        emailHtml={currentEmailHTML}
+        subject={subject}
+        viewMode={viewMode}
+      />
     );
   }
 
-  const canvasWidth = useMemo(() => {
-    if (compactMode) return previewMode === 'mobile' ? 320 : 480;
-    return previewMode === 'mobile' ? 375 : previewWidth;
-  }, [compactMode, previewMode, previewWidth]);
-
-  const canvasStyle = useMemo(() => {
-    const baseStyle = {
-      width: `${canvasWidth}px`,
-      minHeight: '600px',
-      margin: '0 auto',
-      backgroundColor: 'white',
-      border: '1px solid #e5e7eb',
-      borderRadius: '12px',
-      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      position: 'relative' as const,
-      // Add faster transition for width changes
-      transition: 'width 0.15s ease-in-out, max-width 0.15s ease-in-out'
-    };
-
-    // Enhanced visual feedback when dragging
-    if (isDraggingOver && currentDragType) {
-      const colorMap = {
-        block: '#3b82f6',
-        layout: '#8b5cf6', 
-        reorder: '#f59e0b'
-      };
-      
-      const color = colorMap[currentDragType];
-      
-      return {
-        ...baseStyle,
-        backgroundColor: `${color}08`,
-        border: `3px dashed ${color}`,
-        boxShadow: `inset 0 0 40px ${color}25, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
-        transform: 'scale(1.01)',
-        transition: 'all 0.15s ease-in-out'
-      };
-    }
-
-    return baseStyle;
-  }, [canvasWidth, isDraggingOver, currentDragType]);
-
-  // Add handler for applying fixes from AI Analysis
-  const handleApplyFix = useCallback((fixedContent: string, fixType?: 'subject' | 'content') => {
-    if (fixType === 'subject') {
-      onSubjectChange(fixedContent);
-    } else {
-      // Update the email content
-      onContentChange(fixedContent);
-      
-      // Parse the fixed content back into blocks to keep the canvas in sync
-      // For now, we'll let the content change propagate naturally
-      console.log('Applied AI fix to email content');
-    }
-  }, [onContentChange, onSubjectChange]);
-
+  // Render edit mode
   return (
-    <div className="relative">
-      <div
-        style={canvasStyle}
-        className="email-canvas"
-        data-testid="email-canvas"
-        onDrop={dragDropHandler.handleCanvasDrop}
-        onDragOver={dragDropHandler.handleCanvasDragOver}
-        onDragEnter={dragDropHandler.handleCanvasDragEnter}
-        onDragLeave={dragDropHandler.handleCanvasDragLeave}
-      >
-        {/* Subject Line Section */}
-        <div className="border-b border-gray-100 bg-white">
-          <CanvasSubjectLine
-            value={subject}
-            onChange={onSubjectChange}
-            emailContent={currentEmailHTML}
-          />
-        </div>
-
-        {/* Email Content */}
-        <div className="p-6">
-          <CanvasRenderer
-            blocks={blocks}
-            selectedBlockId={selectedBlockId}
-            editingBlockId={editingBlockId}
-            isDraggingOver={isDraggingOver}
-            dragOverIndex={dragOverIndex}
-            currentDragType={currentDragType}
-            onBlockClick={handleBlockClick}
-            onBlockDoubleClick={handleBlockDoubleClick}
-            onBlockDragStart={dragDropHandler.handleBlockDragStart}
-            onBlockDrop={dragDropHandler.handleBlockDrop}
-            onDeleteBlock={handleBlockDelete}
-            onDuplicateBlock={handleBlockDuplicate}
-            onSaveAsSnippet={handleSaveAsSnippet}
-            onUnstarBlock={handleUnstarBlock}
-            onTipTapChange={handleTipTapChange}
-            onTipTapBlur={handleTipTapBlur}
-            onColumnDrop={dragDropHandler.handleColumnDrop}
-            onBlockEditStart={handleBlockEditStart}
-            onBlockEditEnd={handleBlockEditEnd}
-            onBlockUpdate={handleBlockUpdate}
-            onAddVariable={handleAddVariable}
-          />
-        </div>
-      </div>
-
-      {/* Only render CanvasStatus when showAIAnalytics is true */}
-      {showAIAnalytics && (
-        <CanvasStatus 
-          selectedBlockId={selectedBlockId}
-          canvasWidth={canvasWidth}
-          previewMode={previewMode}
-          emailHTML={currentEmailHTML}
-          subjectLine={subject}
-          onApplyFix={handleApplyFix}
-        />
-      )}
-    </div>
+    <EditView
+      blocks={blocks}
+      setBlocks={setBlocks}
+      selectedBlockId={selectedBlockId}
+      setSelectedBlockId={setSelectedBlockId}
+      editingBlockId={editingBlockId}
+      setEditingBlockId={setEditingBlockId}
+      onBlockSelect={onBlockSelect}
+      previewWidth={previewWidth}
+      previewMode={previewMode}
+      compactMode={compactMode}
+      subject={subject}
+      onSubjectChange={onSubjectChange}
+      showAIAnalytics={showAIAnalytics}
+      onSnippetRefresh={onSnippetRefresh}
+      currentEmailHTML={currentEmailHTML}
+      getDefaultContent={getDefaultContent}
+      getDefaultStyles={getDefaultStyles}
+    />
   );
 });
 
