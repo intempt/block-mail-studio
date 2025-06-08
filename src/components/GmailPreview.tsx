@@ -28,7 +28,10 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
       {/* Email Header */}
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-start justify-between mb-3">
-          <h1 className="text-xl font-normal text-gray-900 flex-1 mr-4">
+          <h1 
+            className="text-xl font-normal text-gray-900 flex-1 mr-4"
+            style={{ textAlign: 'start', marginLeft: '50px' }}
+          >
             {subject}
           </h1>
           <div className="flex items-center gap-2">
