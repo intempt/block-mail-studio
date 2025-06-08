@@ -35,8 +35,25 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
 
   const loadUserAttributes = async () => {
     try {
+      // Use dynamic import with proper error handling for type mismatches
       const module = await import('../../dummy/userAttributes');
-      return Array.isArray(module.userAttributes) ? module.userAttributes : [];
+      
+      // Handle the case where userAttributes might not exist or be malformed
+      if (!module || !module.userAttributes) {
+        console.warn('No user attributes found in module');
+        return [];
+      }
+
+      // Use any type to bypass TypeScript checking for the dummy data
+      const rawAttributes = module.userAttributes as any[];
+      
+      // Filter out any null/undefined entries and validate structure
+      return rawAttributes.filter((attr: any) => {
+        return attr && 
+               typeof attr === 'object' && 
+               attr.name && 
+               typeof attr.name === 'string';
+      });
     } catch (error) {
       console.warn('Failed to load user attributes:', error);
       return [];
@@ -53,8 +70,15 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
       } else {
         typeAttributes = allAttributes.filter((attr: any) => {
           if (!attr) return false;
-          // Handle different type formats in the dummy data with type assertion
-          const attrType = (attr as any).type || (attr as any).category || (attr as any).attributeType;
+          
+          // Handle different type formats in the dummy data with flexible matching
+          const attrType = attr.type || attr.category || attr.attributeType;
+          
+          // Map problematic types to our expected types
+          if (selectedAttributeType === 'account' && attrType === 'account') return true;
+          if (selectedAttributeType === 'user' && attrType === 'user') return true;
+          if (selectedAttributeType === 'segment' && (attrType === 'segment' || attrType === 'scoring' || attrType === 'computed')) return true;
+          
           return attrType === selectedAttributeType;
         });
       }
@@ -63,9 +87,10 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
       
       return typeAttributes.filter((attr: any) => {
         if (!attr) return false;
-        const name = (attr as any).name || '';
-        const displayName = (attr as any).displayName || '';
-        const description = (attr as any).description || '';
+        
+        const name = String(attr.name || '');
+        const displayName = String(attr.displayName || '');
+        const description = String(attr.description || '');
         
         const searchLower = searchValue.toLowerCase();
         return name.toLowerCase().includes(searchLower) ||
@@ -83,8 +108,8 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
     
     try {
       const allAttributes = await loadUserAttributes();
-      const attribute = allAttributes.find((attr: any) => (attr as any)?.name === selectedAttribute);
-      return attribute ? ((attribute as any).displayName || (attribute as any).name) : selectedAttribute;
+      const attribute = allAttributes.find((attr: any) => attr?.name === selectedAttribute);
+      return attribute ? (attribute.displayName || attribute.name) : selectedAttribute;
     } catch (error) {
       console.warn('Error finding attribute:', error);
       return selectedAttribute;
@@ -177,17 +202,17 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                       <CommandList className="max-h-64">
                         <CommandEmpty>No attributes found.</CommandEmpty>
                         {filteredAttributes.map((attribute: any) => {
-                          if (!(attribute as any)?.name) return null;
+                          if (!attribute?.name) return null;
                           
-                          // Safely get the value type with fallback and type assertion
-                          const valueType = (attribute as any).valueType || 'STR';
-                          const displayName = (attribute as any).displayName || (attribute as any).name;
-                          const description = (attribute as any).description || '';
+                          // Safely get the value type with fallback
+                          const valueType = String(attribute.valueType || 'STR');
+                          const displayName = String(attribute.displayName || attribute.name);
+                          const description = String(attribute.description || '');
                           
                           return (
                             <CommandItem
-                              key={(attribute as any).name}
-                              value={(attribute as any).name}
+                              key={attribute.name}
+                              value={attribute.name}
                               onSelect={(value) => {
                                 setSelectedAttribute(value);
                                 setIsAttributeOpen(false);
@@ -195,7 +220,7 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                               className="flex items-center gap-2 px-3 py-2 text-sm"
                             >
                               <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
-                                {String(valueType).slice(0, 3).toUpperCase()}
+                                {valueType.slice(0, 3).toUpperCase()}
                               </span>
                               <div className="flex-1">
                                 <div className="font-medium">{displayName}</div>
