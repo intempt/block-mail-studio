@@ -1,0 +1,220 @@
+
+import React, { useState, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+
+interface AttributeSelectorProps {
+  selectedAttribute: string;
+  onAttributeSelect: (attribute: string) => void;
+  className?: string;
+}
+
+export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
+  selectedAttribute,
+  onAttributeSelect,
+  className
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedAttributeType, setSelectedAttributeType] = useState<string>('all');
+  const [searchValue, setSearchValue] = useState('');
+  const [filteredAttributes, setFilteredAttributes] = useState<any[]>([]);
+  const [selectedLabel, setSelectedLabel] = useState('Select attribute');
+
+  const attributeTypes = [
+    { value: 'all', label: 'All attributes', icon: '🔍' },
+    { value: 'user', label: 'User attributes', icon: '👤' },
+    { value: 'account', label: 'Account attributes', icon: '🏢' },
+    { value: 'segment', label: 'Calculated attributes', icon: '📊' },
+  ];
+
+  const loadUserAttributes = async () => {
+    try {
+      const module = await import('../../dummy/userAttributes');
+      
+      if (!module || !module.userAttributes) {
+        console.warn('No user attributes found in module');
+        return [];
+      }
+
+      const rawAttributes = module.userAttributes as any[];
+      
+      return rawAttributes.filter((attr: any) => {
+        return attr && 
+               typeof attr === 'object' && 
+               attr.name && 
+               typeof attr.name === 'string';
+      });
+    } catch (error) {
+      console.warn('Failed to load user attributes:', error);
+      return [];
+    }
+  };
+
+  const getFilteredAttributes = async () => {
+    try {
+      const allAttributes = await loadUserAttributes();
+      
+      let typeAttributes: any[];
+      if (selectedAttributeType === 'all') {
+        typeAttributes = allAttributes;
+      } else {
+        typeAttributes = allAttributes.filter((attr: any) => {
+          if (!attr) return false;
+          
+          const attrType = attr.type || attr.category || attr.attributeType;
+          
+          if (selectedAttributeType === 'account' && attrType === 'account') return true;
+          if (selectedAttributeType === 'user' && attrType === 'user') return true;
+          if (selectedAttributeType === 'segment' && (attrType === 'segment' || attrType === 'scoring' || attrType === 'computed')) return true;
+          
+          return attrType === selectedAttributeType;
+        });
+      }
+      
+      if (!searchValue) return typeAttributes;
+      
+      return typeAttributes.filter((attr: any) => {
+        if (!attr) return false;
+        
+        const name = String(attr.name || '');
+        const displayName = String(attr.displayName || '');
+        const description = String(attr.description || '');
+        
+        const searchLower = searchValue.toLowerCase();
+        return name.toLowerCase().includes(searchLower) ||
+               displayName.toLowerCase().includes(searchLower) ||
+               description.toLowerCase().includes(searchLower);
+      });
+    } catch (error) {
+      console.warn('Error filtering attributes:', error);
+      return [];
+    }
+  };
+
+  const getSelectedAttributeLabel = async () => {
+    if (!selectedAttribute) return 'Select attribute';
+    
+    try {
+      const allAttributes = await loadUserAttributes();
+      const attribute = allAttributes.find((attr: any) => attr?.name === selectedAttribute);
+      return attribute ? (attribute.displayName || attribute.name) : selectedAttribute;
+    } catch (error) {
+      console.warn('Error finding attribute:', error);
+      return selectedAttribute;
+    }
+  };
+
+  useEffect(() => {
+    getFilteredAttributes().then(setFilteredAttributes);
+  }, [selectedAttributeType, searchValue]);
+
+  useEffect(() => {
+    getSelectedAttributeLabel().then(setSelectedLabel);
+  }, [selectedAttribute]);
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={isOpen}
+          className={`w-full h-8 justify-between text-xs ${className || ''}`}
+        >
+          {selectedLabel}
+          <ChevronDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-96 p-0" align="start" side="left">
+        <div className="flex h-80">
+          {/* Left side - Attribute types */}
+          <div className="w-48 border-r">
+            <div className="p-3 border-b">
+              <Command>
+                <CommandInput 
+                  placeholder="Search" 
+                  value={searchValue}
+                  onValueChange={setSearchValue}
+                  className="h-8"
+                />
+              </Command>
+            </div>
+            <div className="p-2">
+              <div className="space-y-1">
+                {attributeTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setSelectedAttributeType(type.value)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
+                      selectedAttributeType === type.value
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-base">{type.icon}</span>
+                    <span>{type.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          {/* Right side - Filtered attributes */}
+          <div className="flex-1">
+            <div className="p-3 border-b">
+              <h5 className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                {attributeTypes.find(t => t.value === selectedAttributeType)?.label}
+              </h5>
+            </div>
+            <Command className="border-0">
+              <CommandList className="max-h-64">
+                <CommandEmpty>No attributes found.</CommandEmpty>
+                {filteredAttributes.map((attribute: any) => {
+                  if (!attribute?.name) return null;
+                  
+                  const valueType = String(attribute.valueType || 'STR');
+                  const displayName = String(attribute.displayName || attribute.name);
+                  const description = String(attribute.description || '');
+                  
+                  return (
+                    <CommandItem
+                      key={attribute.name}
+                      value={attribute.name}
+                      onSelect={(value) => {
+                        onAttributeSelect(value);
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-sm"
+                    >
+                      <span className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded">
+                        {valueType.slice(0, 3).toUpperCase()}
+                      </span>
+                      <div className="flex-1">
+                        <div className="font-medium">{displayName}</div>
+                        {description && (
+                          <div className="text-xs text-gray-500">{description}</div>
+                        )}
+                      </div>
+                    </CommandItem>
+                  );
+                })}
+              </CommandList>
+            </Command>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
