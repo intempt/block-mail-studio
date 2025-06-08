@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { IntegratedGmailPreview } from '../IntegratedGmailPreview';
+import { GmailDesktopPreview } from '../gmail/GmailDesktopPreview';
+import { GmailMobilePreview } from '../gmail/GmailMobilePreview';
+import { GmailResponsiveFrame } from '../gmail/GmailDeviceFrames';
 
 interface SenderInfo {
   name: string;
@@ -27,28 +29,41 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
 }) => {
   // Default sender and recipient data for preview
   const defaultSender: SenderInfo = {
-    name: 'Glovo Prime',
-    email: 'prime@glovo.com',
-    initials: 'GP'
+    name: 'Marketing Team',
+    email: 'marketing@company.com',
+    initials: 'MT'
   };
 
   const defaultRecipient: RecipientInfo = {
-    name: 'You',
-    email: 'user@example.com'
+    name: 'John Doe',
+    email: 'john.doe@example.com'
   };
 
   const gmailPreviewMode = viewMode === 'desktop-preview' ? 'desktop' : 'mobile';
 
   return (
-    <div className="relative h-full">
-      <IntegratedGmailPreview
-        emailHtml={emailHtml}
-        subject={subject}
-        previewMode={gmailPreviewMode}
-        sender={defaultSender}
-        recipient={defaultRecipient}
-        fullWidth={true}
-      />
+    <div className="relative h-full" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
+      <div className="h-full w-full flex items-center justify-center p-4">
+        <GmailResponsiveFrame mode={gmailPreviewMode} mobileDevice="iphone14pro">
+          {viewMode === 'desktop-preview' ? (
+            <GmailDesktopPreview
+              emailHtml={emailHtml}
+              subject={subject}
+              sender={defaultSender}
+              recipient={defaultRecipient}
+              onClose={() => {}} // No close action needed in preview mode
+            />
+          ) : (
+            <GmailMobilePreview
+              emailHtml={emailHtml}
+              subject={subject}
+              sender={defaultSender}
+              recipient={defaultRecipient}
+              onClose={() => {}} // No close action needed in preview mode
+            />
+          )}
+        </GmailResponsiveFrame>
+      </div>
     </div>
   );
 };
