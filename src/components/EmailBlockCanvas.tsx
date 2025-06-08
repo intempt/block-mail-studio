@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -8,6 +6,7 @@ import { CanvasStatus } from './canvas/CanvasStatus';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
 import { CanvasSubjectLine } from './CanvasSubjectLine';
+import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 
 interface VariableOption {
   text: string;
@@ -25,6 +24,7 @@ interface EmailBlockCanvasProps {
   onSubjectChange?: (subject: string) => void;
   showAIAnalytics?: boolean;
   onSnippetRefresh?: () => void;
+  viewMode?: 'edit' | 'desktop-preview' | 'mobile-preview';
 }
 
 export interface EmailBlockCanvasRef {
@@ -46,7 +46,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   subject = '',
   onSubjectChange = () => {},
   showAIAnalytics = false,
-  onSnippetRefresh
+  onSnippetRefresh,
+  viewMode = 'edit'
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -754,6 +755,22 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
     setCurrentDragType
   });
 
+  // If we're in preview mode, show the Gmail preview instead
+  if (viewMode === 'desktop-preview' || viewMode === 'mobile-preview') {
+    const gmailPreviewMode = viewMode === 'desktop-preview' ? 'desktop' : 'mobile';
+    
+    return (
+      <div className="relative h-full">
+        <IntegratedGmailPreview
+          emailHtml={currentEmailHTML}
+          subject={subject}
+          previewMode={gmailPreviewMode}
+          fullWidth={true}
+        />
+      </div>
+    );
+  }
+
   const canvasWidth = useMemo(() => {
     if (compactMode) return previewMode === 'mobile' ? 320 : 480;
     return previewMode === 'mobile' ? 375 : previewWidth;
@@ -874,4 +891,3 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 });
 
 EmailBlockCanvas.displayName = 'EmailBlockCanvas';
-
