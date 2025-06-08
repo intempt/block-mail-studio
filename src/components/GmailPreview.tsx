@@ -61,7 +61,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             </div>
             <div className="text-sm text-gray-500 flex items-center gap-1" style={{ textAlign: 'start' }}>
               to me
-              <span className="text-black text-xs">▼</span>
+              <span className="text-black" style={{ fontSize: '10px' }}>▼</span>
             </div>
           </div>
           <div className="flex items-center gap-1 text-sm text-gray-500">
