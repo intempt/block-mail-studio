@@ -33,7 +33,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
           >
             {subject}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-0">
             <Button variant="ghost" size="sm" className="text-gray-600">
               <Printer className="w-4 h-4" />
             </Button>
