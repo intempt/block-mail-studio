@@ -3,7 +3,6 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
-  Star, 
   Printer,
   ExternalLink
 } from 'lucide-react';
@@ -41,10 +40,6 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             <Button variant="ghost" size="sm" className="text-gray-600">
               <ExternalLink className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400">
-              <Star className="w-4 h-4" />
-            </Button>
-            <span className="text-sm text-gray-500">{timestamp}</span>
           </div>
         </div>
 
