@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { GmailDesktopPreview } from '../gmail/GmailDesktopPreview';
-import { GmailMobilePreview } from '../gmail/GmailMobilePreview';
+import { IntegratedGmailPreview } from '../IntegratedGmailPreview';
 
 interface SenderInfo {
   name: string;
@@ -38,25 +37,18 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     email: 'user@example.com'
   };
 
+  const gmailPreviewMode = viewMode === 'desktop-preview' ? 'desktop' : 'mobile';
+
   return (
     <div className="relative h-full">
-      {viewMode === 'desktop-preview' ? (
-        <GmailDesktopPreview
-          emailHtml={emailHtml}
-          subject={subject}
-          sender={defaultSender}
-          recipient={defaultRecipient}
-          onClose={() => {}} // No close action needed in preview mode
-        />
-      ) : (
-        <GmailMobilePreview
-          emailHtml={emailHtml}
-          subject={subject}
-          sender={defaultSender}
-          recipient={defaultRecipient}
-          onClose={() => {}} // No close action needed in preview mode
-        />
-      )}
+      <IntegratedGmailPreview
+        emailHtml={emailHtml}
+        subject={subject}
+        previewMode={gmailPreviewMode}
+        sender={defaultSender}
+        recipient={defaultRecipient}
+        fullWidth={true}
+      />
     </div>
   );
 };
