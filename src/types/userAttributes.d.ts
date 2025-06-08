@@ -8,8 +8,8 @@ declare module '*/dummy/userAttributes' {
     name: string;
     displayName?: string;
     description?: string;
-    type?: string;
-    category?: string;
+    type?: 'user' | 'system' | 'event' | 'account' | 'scoring' | 'predicted';
+    category?: 'custom' | 'extracted' | 'computed' | 'event';
     attributeType?: string;
     valueType?: string;
     lastUpdated?: string;

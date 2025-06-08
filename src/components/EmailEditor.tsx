@@ -18,8 +18,6 @@ import { InlineNotificationContainer } from '@/components/ui/inline-notification
 import { useEmailEditorState } from '@/hooks/useEmailEditorState';
 import { useEmailEditorHandlers } from '@/hooks/useEmailEditorHandlers';
 
-type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
-
 interface EmailEditorProps {
   content: string;
   subject: string;
@@ -37,7 +35,7 @@ export default function EmailEditor({
 }: EmailEditorProps) {
   console.log('EmailEditor: Component starting to render');
 
-  const { notifications, removeNotification, success, error, warning } = useNotification();
+  const { notifications, removeNotification, success } = useNotification();
   const canvasRef = useRef<any>(null);
 
   // Use custom hooks for state and handlers
@@ -49,7 +47,6 @@ export default function EmailEditor({
     showTemplateLibrary,
     setShowTemplateLibrary,
     templates,
-    setTemplates,
     universalContent,
     snippetRefreshTrigger,
     setSnippetRefreshTrigger,
@@ -60,11 +57,9 @@ export default function EmailEditor({
     canvasWidth,
     setCanvasWidth,
     deviceMode,
-    setDeviceMode,
     previewMode,
     setPreviewMode,
     viewMode,
-    setViewMode,
     emailContent,
     setEmailContent
   } = useEmailEditorState(content, subject);
@@ -84,11 +79,11 @@ export default function EmailEditor({
     onContentChange,
     onSubjectChange,
     setEmailContent,
-    setTemplates,
-    setDeviceMode,
+    setTemplates: () => {},
+    setDeviceMode: () => {},
     setCanvasWidth,
     setPreviewMode,
-    setViewMode,
+    setViewMode: () => {},
     setShowPreview,
     canvasWidth
   });
