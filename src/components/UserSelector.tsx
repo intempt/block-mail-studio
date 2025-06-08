@@ -23,6 +23,9 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   const [displayedUsers, setDisplayedUsers] = useState<User[]>(users.slice(0, 50));
   const [showLoadMore, setShowLoadMore] = useState(true);
 
+  const selectedUser = displayedUsers.find(u => u.profile === selectedUserId) || 
+                      users.find(u => u.profile === selectedUserId);
+
   const handleUserChange = (userId: string) => {
     setSelectedUserId(userId);
     const user = displayedUsers.find(u => u.profile === userId) || 
@@ -40,7 +43,9 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   return (
     <Select value={selectedUserId} onValueChange={handleUserChange}>
       <SelectTrigger className={className}>
-        <SelectValue />
+        <SelectValue>
+          {selectedUser?.identifier}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {displayedUsers.map((user) => (
