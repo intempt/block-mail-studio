@@ -23,28 +23,38 @@ interface UserFilterProps {
 export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAttributeOpen, setIsAttributeOpen] = useState(false);
-  const [selectedAttributeType, setSelectedAttributeType] = useState<string>('user');
+  const [selectedAttributeType, setSelectedAttributeType] = useState<string>('all');
   const [selectedAttribute, setSelectedAttribute] = useState<string>('');
   const [searchValue, setSearchValue] = useState('');
 
   const attributeTypes = [
+    { value: 'all', label: 'All attributes', icon: '🔍' },
     { value: 'user', label: 'User attributes', icon: '👤' },
     { value: 'account', label: 'Account attributes', icon: '🏢' },
     { value: 'segment', label: 'Calculated attributes', icon: '📊' },
   ];
 
   const getFilteredAttributes = () => {
-    const typeAttributes = userAttributes.filter(attr => attr.type === selectedAttributeType);
+    // Type assertion to work around the dummy data TypeScript issues
+    const allAttributes = userAttributes as any[];
+    
+    let typeAttributes;
+    if (selectedAttributeType === 'all') {
+      typeAttributes = allAttributes;
+    } else {
+      typeAttributes = allAttributes.filter((attr: any) => attr.type === selectedAttributeType);
+    }
+    
     if (!searchValue) return typeAttributes;
-    return typeAttributes.filter(attr => 
+    return typeAttributes.filter((attr: any) => 
       attr.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      attr.displayName?.toLowerCase().includes(searchValue.toLowerCase())
+      (attr.displayName && attr.displayName.toLowerCase().includes(searchValue.toLowerCase()))
     );
   };
 
   const getSelectedAttributeLabel = () => {
     if (!selectedAttribute) return 'Select attribute';
-    const attribute = userAttributes.find(attr => attr.name === selectedAttribute);
+    const attribute = (userAttributes as any[]).find((attr: any) => attr.name === selectedAttribute);
     return attribute ? (attribute.displayName || attribute.name) : selectedAttribute;
   };
 
@@ -60,7 +70,7 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
           Filter by
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-4" align="end" side="bottom">
+      <PopoverContent className="w-64 p-4" align="start" side="bottom">
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-gray-700">Filter Options</h4>
           <div className="space-y-2">
@@ -122,7 +132,7 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                     <Command className="border-0">
                       <CommandList className="max-h-64">
                         <CommandEmpty>No attributes found.</CommandEmpty>
-                        {getFilteredAttributes().map((attribute) => (
+                        {getFilteredAttributes().map((attribute: any) => (
                           <CommandItem
                             key={attribute.name}
                             value={attribute.name}
