@@ -20,10 +20,6 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     return (
       <div className="relative h-full bg-gray-100">
         <div className="h-full w-full flex flex-col">
-          <div className="bg-white border-b border-gray-200 px-4 py-3">
-            <h2 className="text-lg font-semibold text-gray-900">Desktop Preview - Gmail Interface</h2>
-          </div>
-          
           <div className="flex-1 bg-gray-100 p-4">
             <div className="h-full bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <GmailPreview
