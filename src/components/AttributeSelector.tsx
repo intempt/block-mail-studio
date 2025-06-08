@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Search, User, Building, BarChart3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -33,10 +33,10 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
   const [selectedLabel, setSelectedLabel] = useState('Select attribute');
 
   const attributeTypes = [
-    { value: 'all', label: 'All attributes', icon: '🔍' },
-    { value: 'user', label: 'User attributes', icon: '👤' },
-    { value: 'account', label: 'Account attributes', icon: '🏢' },
-    { value: 'segment', label: 'Calculated attributes', icon: '📊' },
+    { value: 'all', label: 'All attributes', icon: List },
+    { value: 'user', label: 'User attributes', icon: User },
+    { value: 'account', label: 'Account attributes', icon: Building },
+    { value: 'segment', label: 'Calculated attributes', icon: BarChart3 },
   ];
 
   const loadUserAttributes = async () => {
@@ -141,14 +141,16 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
         <div className="flex flex-col h-80">
           {/* Search input at the top */}
           <div className="p-3 border-b">
-            <Command>
-              <CommandInput 
-                placeholder="Search attributes" 
+            <div className="relative">
+              <Search className="absolute left-2 top-2 h-4 w-4 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search attributes"
                 value={searchValue}
-                onValueChange={setSearchValue}
-                className="h-8"
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="w-full h-8 pl-8 pr-3 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            </Command>
+            </div>
           </div>
           
           <div className="flex flex-1">
@@ -156,20 +158,23 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
             <div className="w-48 border-r">
               <div className="p-2">
                 <div className="space-y-1">
-                  {attributeTypes.map((type) => (
-                    <button
-                      key={type.value}
-                      onClick={() => setSelectedAttributeType(type.value)}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
-                        selectedAttributeType === type.value
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className="text-base">{type.icon}</span>
-                      <span>{type.label}</span>
-                    </button>
-                  ))}
+                  {attributeTypes.map((type) => {
+                    const IconComponent = type.icon;
+                    return (
+                      <button
+                        key={type.value}
+                        onClick={() => setSelectedAttributeType(type.value)}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
+                          selectedAttributeType === type.value
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        <span>{type.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
