@@ -58,37 +58,15 @@ export const PreviewVariable = Node.create<PreviewVariableOptions>({
   parseHTML() {
     return [
       {
-        tag: 'span[data-type="preview-variable"]',
+        tag: 'span[data-type="variable"]',
       },
     ];
   },
 
   renderHTML({ HTMLAttributes, node }) {
-    // In preview mode, render as a styled span with custom attributes for CSS styling
+    // In preview mode, show the variable text (display name) instead of the raw value
     const text = node.attrs.text || '';
-    return [
-      'span', 
-      mergeAttributes(
-        { 
-          'data-type': 'preview-variable',
-          'data-variable-text': text,
-          'data-variable-value': node.attrs.value || '',
-          class: 'preview-variable-tag inline-flex items-center gap-1 bg-purple-100 text-purple-800 border border-purple-200 px-2 py-1 rounded-md mx-1'
-        }, 
-        this.options.HTMLAttributes, 
-        HTMLAttributes
-      ), 
-      [
-        'span',
-        { class: 'variable-icon' },
-        '🔤'
-      ],
-      [
-        'span',
-        { class: 'variable-text font-medium text-caption' },
-        text
-      ]
-    ];
+    return ['span', mergeAttributes({ 'data-type': 'variable' }, this.options.HTMLAttributes, HTMLAttributes), text];
   },
 
   addNodeView() {

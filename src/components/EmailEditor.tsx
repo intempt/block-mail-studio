@@ -1,6 +1,12 @@
 
-import React, { useRef, useEffect } from 'react';
-import { useEditor } from '@tiptap/react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo
+} from 'react';
+import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Link } from '@tiptap/extension-link';
 import { Image } from '@tiptap/extension-image';
@@ -9,14 +15,41 @@ import { Placeholder } from '@tiptap/extension-placeholder';
 import { Color } from '@tiptap/extension-color';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
+import { Button } from '@/components/ui/button';
+import {
+  ArrowLeft,
+  Eye,
+  Send
+} from 'lucide-react';
+import { EmailPreview } from './EmailPreview';
+import { EmailBlockCanvas } from './EmailBlockCanvas';
 import { OmnipresentRibbon } from './OmnipresentRibbon';
-import { EmailEditorLayout } from './EmailEditorLayout';
-import { EmailEditorModals } from './EmailEditorModals';
-import { UndoManager } from './UndoManager';
+import { SnippetRibbon } from './SnippetRibbon';
+import { EmailTemplateLibrary } from './EmailTemplateLibrary';
+import { CanvasStatus } from './canvas/CanvasStatus';
+import { EmailTemplate } from './TemplateManager';
+import { DirectTemplateService } from '@/services/directTemplateService';
+import { UniversalContent } from '@/types/emailBlocks';
+import { EmailSnippet } from '@/types/snippets';
+import { EmailBlock } from '@/types/emailBlocks';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
-import { useEmailEditorState } from '@/hooks/useEmailEditorState';
-import { useEmailEditorHandlers } from '@/hooks/useEmailEditorHandlers';
+import { UndoManager } from './UndoManager';
+
+interface Block {
+  id: string;
+  type: string;
+  content: string;
+  styles: Record<string, string>;
+}
+
+interface LayoutConfig {
+  direction: 'row' | 'column';
+  alignItems: 'start' | 'center' | 'end';
+  justifyContent: 'start' | 'center' | 'space-between';
+}
+
+type LeftPanelTab = 'blocks' | 'design' | 'performance';
 
 interface EmailEditorProps {
   content: string;
@@ -25,6 +58,8 @@ interface EmailEditorProps {
   onSubjectChange: (subject: string) => void;
   onBack?: () => void;
 }
+
+type ViewMode = 'edit' | 'desktop-preview' | 'mobile-preview';
 
 export default function EmailEditor({ 
   content,
@@ -35,84 +70,51 @@ export default function EmailEditor({
 }: EmailEditorProps) {
   console.log('EmailEditor: Component starting to render');
 
-  const { notifications, removeNotification, success } = useNotification();
+  const { notifications, removeNotification, success, error, warning } = useNotification();
+
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [universalContent] = useState<UniversalContent[]>([]);
+  const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
+  const [showAIAnalytics, setShowAIAnalytics] = useState(true);
+  const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+
+  const [canvasWidth, setCanvasWidth] = useState(600);
+  const [deviceMode, setDeviceMode] = useState<'desktop' | 'tablet' | 'mobile' | 'custom'>('desktop');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
+  const [viewMode, setViewMode] = useState<ViewMode>('edit');
+
+  // Track the actual email content for preview synchronization
+  const [emailContent, setEmailContent] = useState(content);
+
   const canvasRef = useRef<any>(null);
 
-  // Use custom hooks for state and handlers
-  const {
-    emailBlocks,
-    setEmailBlocks,
-    showPreview,
-    setShowPreview,
-    showTemplateLibrary,
-    setShowTemplateLibrary,
-    templates,
-    universalContent,
-    snippetRefreshTrigger,
-    setSnippetRefreshTrigger,
-    showAIAnalytics,
-    setShowAIAnalytics,
-    selectedBlockId,
-    setSelectedBlockId,
-    canvasWidth,
-    setCanvasWidth,
-    deviceMode,
-    previewMode,
-    setPreviewMode,
-    viewMode,
-    emailContent,
-    setEmailContent
-  } = useEmailEditorState(content, subject);
+  console.log('EmailEditor: State initialized, creating extensions');
 
-  const {
-    handleBlockAdd,
-    handleSnippetAdd,
-    handleContentChange,
-    handleDeviceChange,
-    handleViewModeChange,
-    handleImportBlocks,
-    handleSaveTemplate,
-    handlePublish,
-    handlePreview
-  } = useEmailEditorHandlers({
-    canvasRef,
-    onContentChange,
-    onSubjectChange,
-    setEmailContent,
-    setTemplates: () => {},
-    setDeviceMode: () => {},
-    setCanvasWidth,
-    setPreviewMode,
-    setViewMode: () => {},
-    setShowPreview,
-    canvasWidth
-  });
+  const extensions = useMemo(() => [
+    StarterKit,
+    Link.configure({
+      openOnClick: false,
+    }),
+    Image,
+    Underline,
+    Color,
+    TextStyle,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
+    Placeholder.configure({
+      placeholder: 'Start writing your email content...',
+    }),
+  ], []);
 
-  // Handle blocks change from canvas
-  const handleBlocksChange = (blocks: any[]) => {
-    console.log('EmailEditor: Received blocks update from canvas:', blocks.length);
-    setEmailBlocks(blocks);
-  };
-
-  console.log('EmailEditor: Creating TipTap editor');
+  console.log('EmailEditor: About to create TipTap editor');
 
   const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Link.configure({
-        openOnClick: false,
-      }),
-      Image,
-      Underline,
-      Color,
-      TextStyle,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-      Placeholder.configure({
-        placeholder: 'Start writing your email content...',
-      }),
-    ],
+    extensions,
     content: emailContent,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
@@ -133,7 +135,137 @@ export default function EmailEditor({
         editor.commands.setContent(content);
       }
     }
-  }, [content, emailContent, editor, setEmailContent]);
+  }, [content, emailContent, editor]);
+
+  // Handle blocks change from canvas
+  const handleBlocksChange = useCallback((blocks: EmailBlock[]) => {
+    console.log('EmailEditor: Received blocks update from canvas:', blocks.length);
+    setEmailBlocks(blocks);
+  }, []);
+
+  // Handle content change from canvas (this ensures preview gets the latest content)
+  const handleContentChange = useCallback((newContent: string) => {
+    console.log('EmailEditor: Content updated from canvas');
+    setEmailContent(newContent);
+    onContentChange(newContent);
+  }, [onContentChange]);
+
+  // Load templates on mount
+  useEffect(() => {
+    try {
+      const loadedTemplates = DirectTemplateService.getAllTemplates();
+      setTemplates(loadedTemplates);
+    } catch (error) {
+      console.warn('Error loading templates:', error);
+      setTemplates([]);
+    }
+  }, []);
+
+  // Event handlers
+  const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
+    if (canvasRef.current) {
+      const newBlock: EmailBlock = {
+        id: `${blockType}_${Date.now()}`,
+        type: blockType as any,
+        content: getDefaultContent(blockType),
+        styling: getDefaultStyles(blockType),
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        },
+        isStarred: false
+      };
+
+      if (layoutConfig) {
+        newBlock.content = { ...newBlock.content, ...layoutConfig };
+      }
+
+      canvasRef.current.addBlock(newBlock);
+      success(`${blockType} block added successfully`);
+    }
+  }, [success]);
+
+  const getDefaultContent = (blockType: string) => {
+    switch (blockType) {
+      case 'text':
+        return { html: '<p>Start typing your content here...</p>', textStyle: 'normal' };
+      case 'button':
+        return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
+      case 'image':
+        return { src: '', alt: '', alignment: 'center', width: '100%', isDynamic: false };
+      default:
+        return {};
+    }
+  };
+
+  const getDefaultStyles = (blockType: string) => {
+    return {
+      desktop: { width: '100%', height: 'auto' },
+      tablet: { width: '100%', height: 'auto' },
+      mobile: { width: '100%', height: 'auto' }
+    };
+  };
+
+  const handleSnippetAdd = useCallback((snippet: EmailSnippet) => {
+    if (snippet.blockData && canvasRef.current) {
+      canvasRef.current.addBlock(snippet.blockData);
+      success(`Snippet "${snippet.name}" added successfully`);
+    }
+  }, [success]);
+
+  const handleDeviceChange = useCallback((device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
+    setDeviceMode(device);
+    
+    const widthMap = {
+      desktop: 600,
+      tablet: 768,
+      mobile: 375,
+      custom: canvasWidth
+    };
+    
+    if (device !== 'custom') {
+      setCanvasWidth(widthMap[device]);
+    }
+  }, [canvasWidth]);
+
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    if (mode !== 'edit') {
+      setPreviewMode(mode === 'desktop-preview' ? 'desktop' : 'mobile');
+    }
+  }, []);
+
+  const handleImportBlocks = useCallback((blocks: EmailBlock[], subject?: string) => {
+    if (canvasRef.current) {
+      canvasRef.current.replaceAllBlocks(blocks);
+      success(`Successfully imported ${blocks.length} blocks`);
+      
+      if (subject) {
+        onSubjectChange(subject);
+      }
+    }
+  }, [onSubjectChange, success]);
+
+  const handleSaveTemplate = useCallback((template: any) => {
+    try {
+      DirectTemplateService.saveTemplate(template);
+      const updatedTemplates = DirectTemplateService.getAllTemplates();
+      setTemplates(updatedTemplates);
+      success('Template saved successfully');
+    } catch (err) {
+      error('Failed to save template');
+    }
+  }, [success, error]);
+
+  const handlePublish = useCallback(() => {
+    success('Email published successfully');
+  }, [success]);
+
+  const handlePreview = useCallback(() => {
+    setShowPreview(true);
+  }, []);
 
   console.log('EmailEditor: About to render main component');
 
@@ -176,36 +308,70 @@ export default function EmailEditor({
       />
 
       {/* Main Content Area */}
-      <EmailEditorLayout
-        viewMode={viewMode}
-        canvasRef={canvasRef}
-        handleContentChange={handleContentChange}
-        setSelectedBlockId={setSelectedBlockId}
-        handleBlocksChange={handleBlocksChange}
-        canvasWidth={canvasWidth}
-        previewMode={previewMode}
-        subject={subject}
-        onSubjectChange={onSubjectChange}
-        showAIAnalytics={showAIAnalytics}
-        snippetRefreshTrigger={snippetRefreshTrigger}
-        setSnippetRefreshTrigger={setSnippetRefreshTrigger}
-        handleSnippetAdd={handleSnippetAdd}
-      />
+      <div className="flex-1 flex overflow-hidden">
+        {/* Snippet Ribbon - Only show in edit mode */}
+        {viewMode === 'edit' && (
+          <SnippetRibbon
+            refreshTrigger={snippetRefreshTrigger}
+            onSnippetSelect={handleSnippetAdd}
+          />
+        )}
+
+        {/* Canvas Area */}
+        <div className="flex-1 overflow-auto bg-gray-50 p-6">
+          <EmailBlockCanvas
+            ref={canvasRef}
+            onContentChange={handleContentChange}
+            onBlockSelect={setSelectedBlockId}
+            onBlocksChange={handleBlocksChange}
+            previewWidth={canvasWidth}
+            previewMode={previewMode}
+            compactMode={false}
+            subject={subject}
+            onSubjectChange={onSubjectChange}
+            showAIAnalytics={showAIAnalytics}
+            onSnippetRefresh={() => setSnippetRefreshTrigger(prev => prev + 1)}
+            viewMode={viewMode}
+          />
+        </div>
+      </div>
 
       {/* Modals */}
-      <EmailEditorModals
-        showPreview={showPreview}
-        setShowPreview={setShowPreview}
-        emailContent={emailContent}
-        previewMode={previewMode}
-        subject={subject}
-        showTemplateLibrary={showTemplateLibrary}
-        setShowTemplateLibrary={setShowTemplateLibrary}
-        templates={templates}
-        canvasRef={canvasRef}
-        onSubjectChange={onSubjectChange}
-        success={success}
-      />
+      {showPreview && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Email Preview</h2>
+              <Button variant="ghost" onClick={() => setShowPreview(false)}>
+                ×
+              </Button>
+            </div>
+            <EmailPreview 
+              html={emailContent}
+              previewMode={previewMode}
+              subject={subject}
+            />
+          </div>
+        </div>
+      )}
+
+      {showTemplateLibrary && (
+        <EmailTemplateLibrary
+          open={showTemplateLibrary}
+          onOpenChange={setShowTemplateLibrary}
+          onSelectTemplate={(template) => {
+            if (template.blocks && canvasRef.current) {
+              canvasRef.current.replaceAllBlocks(template.blocks);
+              if (template.subject) {
+                onSubjectChange(template.subject);
+              }
+              success(`Template "${template.name}" loaded successfully`);
+            }
+            setShowTemplateLibrary(false);
+          }}
+          templates={templates}
+        />
+      )}
 
       {/* Undo Manager */}
       <UndoManager 

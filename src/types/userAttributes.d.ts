@@ -8,8 +8,8 @@ declare module '*/dummy/userAttributes' {
     name: string;
     displayName?: string;
     description?: string;
-    type?: string; // More flexible to accommodate all types in dummy data
-    category?: string; // More flexible to accommodate all categories in dummy data
+    type?: string;
+    category?: string;
     attributeType?: string;
     valueType?: string;
     lastUpdated?: string;
