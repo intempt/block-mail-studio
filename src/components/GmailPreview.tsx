@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,8 @@ import {
   ExternalLink,
   Star,
   Reply,
-  EllipsisVertical
+  EllipsisVertical,
+  Smile
 } from 'lucide-react';
 
 interface GmailPreviewProps {
@@ -77,6 +79,9 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               <Reply className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto w-10">
+              <Smile className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto w-10">
               <EllipsisVertical className="w-4 h-4" />
             </Button>
           </div>
@@ -101,3 +106,4 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
     </div>
   );
 };
+
