@@ -27,7 +27,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
   timestamp = "10:02 AM (6 hours ago)"
 }) => {
   return (
-    <div className="h-full bg-white flex flex-col">
+    <div className="h-full bg-white flex flex-col" style={{ pointerEvents: 'none' }}>
       {/* Email Header */}
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-start justify-between mb-3">
