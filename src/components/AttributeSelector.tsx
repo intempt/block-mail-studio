@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Search, User, Building, BarChart3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -180,11 +181,6 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
             
             {/* Right side - Filtered attributes */}
             <div className="flex-1">
-              <div className="p-3 border-b">
-                <h5 className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                  {attributeTypes.find(t => t.value === selectedAttributeType)?.label}
-                </h5>
-              </div>
               <Command className="border-0">
                 <CommandList className="max-h-64">
                   <CommandEmpty>No attributes found.</CommandEmpty>
