@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -29,37 +28,39 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
       {/* Email Header */}
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-start justify-between mb-3">
-          <h1 className="text-xl font-normal text-gray-900 flex-1 mr-4">
-            {subject}
-          </h1>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-gray-600">
-              <Printer className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-gray-600">
-              <ExternalLink className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-gray-400">
-              <Star className="w-4 h-4" />
-            </Button>
-            <span className="text-sm text-gray-500">{timestamp}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src="" />
-            <AvatarFallback className="bg-blue-500 text-white text-sm">
-              {senderName.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">{senderName}</span>
-              <span className="text-sm text-gray-500">&lt;{senderEmail}&gt;</span>
+          <div className="flex items-center gap-3 flex-1">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src="" />
+              <AvatarFallback className="bg-blue-500 text-white text-sm">
+                {senderName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-900">{senderName}</span>
+                <span className="text-sm text-gray-500">&lt;{senderEmail}&gt;</span>
+              </div>
+              <div className="text-sm text-gray-500">
+                to me
+              </div>
             </div>
-            <div className="text-sm text-gray-500">
-              to me
+          </div>
+          
+          <div className="flex flex-col items-end gap-2">
+            <h1 className="text-xl font-normal text-gray-900 text-right">
+              {subject}
+            </h1>
+            <div className="flex items-center gap-0">
+              <Button variant="ghost" size="sm" className="text-gray-600">
+                <Printer className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-600">
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-400">
+                <Star className="w-4 h-4" />
+              </Button>
+              <span className="text-sm text-gray-500 ml-2">{timestamp}</span>
             </div>
           </div>
         </div>
@@ -83,4 +84,3 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
     </div>
   );
 };
-
