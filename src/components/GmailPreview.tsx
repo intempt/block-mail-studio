@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
   Archive, 
   Trash2, 
-  Reply, 
   MoreHorizontal, 
   Star, 
   ArrowLeft,
@@ -101,19 +101,6 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               color: '#222'
             }}
           />
-        </div>
-      </div>
-
-      {/* Reply Section */}
-      <div className="border-t border-gray-200 px-6 py-4 bg-gray-50">
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <Reply className="w-4 h-4" />
-            Reply
-          </Button>
-          <Button variant="ghost" size="sm">
-            Forward
-          </Button>
         </div>
       </div>
     </div>
