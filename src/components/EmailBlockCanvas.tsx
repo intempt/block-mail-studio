@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -768,8 +769,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       borderRadius: '12px',
       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       position: 'relative' as const,
-      // Add smooth transition for width changes
-      transition: 'width 0.3s ease-in-out, max-width 0.3s ease-in-out'
+      // Add faster transition for width changes
+      transition: 'width 0.15s ease-in-out, max-width 0.15s ease-in-out'
     };
 
     // Enhanced visual feedback when dragging
@@ -788,7 +789,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         border: `3px dashed ${color}`,
         boxShadow: `inset 0 0 40px ${color}25, 0 10px 25px -5px rgba(0, 0, 0, 0.1)`,
         transform: 'scale(1.01)',
-        transition: 'all 0.3s ease-in-out'
+        transition: 'all 0.15s ease-in-out'
       };
     }
 
@@ -873,3 +874,4 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 });
 
 EmailBlockCanvas.displayName = 'EmailBlockCanvas';
+
