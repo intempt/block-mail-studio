@@ -11,6 +11,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
 import { Variable } from '@/extensions/VariableExtension';
 import { EmailContext } from '@/services/tiptapAIService';
+import { VariableSelector } from './canvas/VariableSelector';
 
 interface UniversalTipTapEditorProps {
   content: string;
@@ -95,6 +96,11 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         editor={editor} 
         className="prose max-w-none focus:outline-none min-h-[40px] p-3 border border-gray-200 rounded-lg hover:border-gray-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400"
       />
+      
+      {/* Variable selector positioned near the editor */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <VariableSelector onSelectVariable={handleVariableSelect} />
+      </div>
     </div>
   );
 };
