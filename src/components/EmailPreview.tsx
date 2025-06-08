@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Monitor, Smartphone, Mail } from 'lucide-react';
-import { GmailPreviewContainer } from './gmail/GmailPreviewContainer';
+import { Monitor, Smartphone } from 'lucide-react';
 
 interface SenderInfo {
   name: string;
@@ -31,86 +30,56 @@ export const EmailPreview: React.FC<EmailPreviewProps> = ({
   sender,
   recipient
 }) => {
-  const [showGmailPreview, setShowGmailPreview] = useState(false);
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
 
   const previewWidth = previewMode === 'desktop' ? 700 : 375;
 
-  const handleGmailPreview = () => {
-    setShowGmailPreview(true);
-  };
-
   return (
-    <>
-      <div className="h-full flex flex-col bg-brand-secondary">
-        {/* Enhanced Preview Controls */}
-        <div className="flex items-center justify-between u-p-4 bg-brand-bg border-b border-brand">
-          <div className="flex items-center u-gap-2 text-caption text-brand-fg">
-            <div className="flex items-center u-gap-1">
-              {previewMode === 'desktop' ? (
-                <Monitor className="w-4 h-4" />
-              ) : (
-                <Smartphone className="w-4 h-4" />
-              )}
-              <span>
-                {previewMode === 'desktop' ? 'Desktop Email' : 'Mobile Email'} ({previewWidth}px)
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex items-center u-gap-2">
-            <Button
-              onClick={handleGmailPreview}
-              size="sm"
-              className="bg-red-500 hover:bg-red-600 text-brand-bg"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Gmail Preview
-            </Button>
-          </div>
-        </div>
-
-        {/* Clean Preview Area */}
-        <div className="flex-1 overflow-auto u-p-8 flex items-start justify-center">
-          <div 
-            className="bg-brand-bg border border-brand shadow-sm rounded-lg overflow-hidden transition-all duration-300"
-            style={{ width: previewWidth, maxWidth: '100%' }}
-          >
-            <div 
-              className="email-content overflow-auto"
-              dangerouslySetInnerHTML={{ __html: html }}
-              style={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                lineHeight: '1.6'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Enhanced Preview Info */}
-        <div className="bg-brand-bg border-t border-brand u-p-3">
-          <div className="flex items-center justify-between">
-            <div className="text-caption text-brand-fg">
-              Preview at {previewMode} width ({previewWidth}px)
-            </div>
-            <div className="text-caption text-muted-foreground">
-              Click "Gmail Preview" for realistic email client rendering
-            </div>
+    <div className="h-full flex flex-col bg-brand-secondary">
+      {/* Enhanced Preview Controls */}
+      <div className="flex items-center justify-between u-p-4 bg-brand-bg border-b border-brand">
+        <div className="flex items-center u-gap-2 text-caption text-brand-fg">
+          <div className="flex items-center u-gap-1">
+            {previewMode === 'desktop' ? (
+              <Monitor className="w-4 h-4" />
+            ) : (
+              <Smartphone className="w-4 h-4" />
+            )}
+            <span>
+              {previewMode === 'desktop' ? 'Desktop Email' : 'Mobile Email'} ({previewWidth}px)
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Gmail Preview Modal */}
-      {showGmailPreview && (
-        <GmailPreviewContainer
-          emailHtml={html}
-          subject={subject}
-          sender={sender}
-          recipient={recipient}
-          initialMode={previewMode}
-          onClose={() => setShowGmailPreview(false)}
-        />
-      )}
-    </>
+      {/* Clean Preview Area */}
+      <div className="flex-1 overflow-auto u-p-8 flex items-start justify-center">
+        <div 
+          className="bg-brand-bg border border-brand shadow-sm rounded-lg overflow-hidden transition-all duration-300"
+          style={{ width: previewWidth, maxWidth: '100%' }}
+        >
+          <div 
+            className="email-content overflow-auto"
+            dangerouslySetInnerHTML={{ __html: html }}
+            style={{
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+              lineHeight: '1.6'
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Enhanced Preview Info */}
+      <div className="bg-brand-bg border-t border-brand u-p-3">
+        <div className="flex items-center justify-between">
+          <div className="text-caption text-brand-fg">
+            Preview at {previewMode} width ({previewWidth}px)
+          </div>
+          <div className="text-caption text-muted-foreground">
+            Clean email preview without external interface
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

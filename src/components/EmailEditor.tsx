@@ -31,7 +31,6 @@ import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
-import { IntegratedGmailPreview } from './IntegratedGmailPreview';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { UndoManager } from './UndoManager';
@@ -521,21 +520,28 @@ export default function EmailEditor({
                     subject={subject}
                     onSubjectChange={onSubjectChange}
                     showAIAnalytics={false}
+                    viewMode="edit"
                   />
                 </div>
               </div>
             )}
 
-            {/* Preview Modes - Show Gmail Preview */}
+            {/* Preview Modes - Show EmailBlockCanvas in preview mode */}
             {(viewMode === 'desktop-preview' || viewMode === 'mobile-preview') && (
               <div id="preview-mode-container" className="h-full transition-all duration-300 ease-in-out">
-                <div id="integrated-gmail-preview-wrapper">
-                  <IntegratedGmailPreview
-                    emailHtml={content}
+                <div id="preview-canvas-wrapper">
+                  <EmailBlockCanvas
+                    ref={canvasRef}
+                    onContentChange={handleContentChangeFromCanvas}
+                    onBlockSelect={handleBlockSelect}
+                    onBlocksChange={handleBlocksChange}
+                    previewWidth={canvasWidth}
+                    previewMode={previewMode}
+                    compactMode={false}
                     subject={subject}
-                    previewMode={viewMode === 'desktop-preview' ? 'desktop' : 'mobile'}
-                    onPreviewModeChange={handlePreviewModeChange}
-                    fullWidth={true}
+                    onSubjectChange={onSubjectChange}
+                    showAIAnalytics={false}
+                    viewMode={viewMode}
                   />
                 </div>
               </div>
