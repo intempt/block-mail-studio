@@ -6,7 +6,8 @@ import {
   Printer,
   ExternalLink,
   Star,
-  Reply
+  Reply,
+  EllipsisVertical
 } from 'lucide-react';
 
 interface GmailPreviewProps {
@@ -69,6 +70,9 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             </Button>
             <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto">
               <Reply className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto">
+              <EllipsisVertical className="w-4 h-4" />
             </Button>
           </div>
         </div>
