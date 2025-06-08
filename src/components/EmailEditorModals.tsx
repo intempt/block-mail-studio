@@ -55,20 +55,30 @@ export const EmailEditorModals: React.FC<EmailEditorModalsProps> = ({
 
       {/* Template Library Modal */}
       {showTemplateLibrary && (
-        <EmailTemplateLibrary
-          onClose={() => setShowTemplateLibrary(false)}
-          onSelectTemplate={(template) => {
-            if (template.blocks && canvasRef.current) {
-              canvasRef.current.replaceAllBlocks(template.blocks);
-              if (template.subject) {
-                onSubjectChange(template.subject);
-              }
-              success(`Template "${template.name}" loaded successfully`);
-            }
-            setShowTemplateLibrary(false);
-          }}
-          templates={templates}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold">Template Library</h2>
+              <Button variant="ghost" onClick={() => setShowTemplateLibrary(false)}>
+                ×
+              </Button>
+            </div>
+            <EmailTemplateLibrary
+              isOpen={showTemplateLibrary}
+              onSelectTemplate={(template) => {
+                if (template.blocks && canvasRef.current) {
+                  canvasRef.current.replaceAllBlocks(template.blocks);
+                  if (template.subject) {
+                    onSubjectChange(template.subject);
+                  }
+                  success(`Template "${template.name}" loaded successfully`);
+                }
+                setShowTemplateLibrary(false);
+              }}
+              templates={templates}
+            />
+          </div>
+        </div>
       )}
     </>
   );
