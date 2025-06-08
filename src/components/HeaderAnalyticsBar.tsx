@@ -71,7 +71,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
   onRefreshAnalysis,
   onApplySuggestion
 }) => {
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false); // Explicitly set to false to ensure closed by default
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
 
   const getScoreColor = (score: number | null) => {
     if (score === null) return 'text-gray-600';
@@ -269,7 +269,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
         </div>
       </div>
 
-      {/* Expanded Suggestions Panel */}
+      {/* Expanded Suggestions Panel - Only show when explicitly expanded */}
       {suggestionsExpanded && suggestions.length > 0 && (
         <div className="border-t border-gray-100 bg-gray-50">
           <div className="px-6 py-4">
