@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             <MoreHorizontal className="w-4 h-4" />
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center">
           <Button variant="ghost" size="sm" className="text-gray-600">
             <Printer className="w-4 h-4" />
           </Button>
