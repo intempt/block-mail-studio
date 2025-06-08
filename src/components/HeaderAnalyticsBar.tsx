@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -72,7 +71,7 @@ export const HeaderAnalyticsBar: React.FC<HeaderAnalyticsBarProps> = ({
   onRefreshAnalysis,
   onApplySuggestion
 }) => {
-  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false);
+  const [suggestionsExpanded, setSuggestionsExpanded] = useState(false); // Explicitly set to false to ensure closed by default
 
   const getScoreColor = (score: number | null) => {
     if (score === null) return 'text-gray-600';
