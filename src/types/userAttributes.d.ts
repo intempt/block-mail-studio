@@ -10,9 +10,9 @@ declare module '*/dummy/userAttributes' {
     description?: string;
     type?: string; // Allow any string for type to match dummy data
     category?: string; // Allow any string for category to match dummy data
-    attributeType?: string;
-    valueType?: string;
-    lastUpdated?: string;
+    attributeType?: string; // Allow any string for attributeType to match dummy data
+    valueType?: string; // Add valueType property
+    lastUpdated?: string; // Add lastUpdated property
     schema?: UserAttributeSchema;
   }
 
