@@ -47,6 +47,7 @@ import { CentralizedAIAnalysisService, CompleteAnalysisResult } from '@/services
 import { ApiKeyService } from '@/services/apiKeyService';
 import { useInlineNotifications } from '@/hooks/useInlineNotifications';
 import { ComprehensiveMetricsService, ComprehensiveEmailMetrics } from '@/services/comprehensiveMetricsService';
+import { EmailProviderCompatibilityCard } from '@/components/EmailProviderCompatibilityCard';
 
 interface CanvasStatusProps {
   selectedBlockId: string | null;
@@ -81,7 +82,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     let merged = [...critical];
 
     if (comprehensive) {
-      // Extract brand voice suggestions
       if (comprehensive.brandVoice?.suggestions) {
         comprehensive.brandVoice.suggestions.forEach((suggestion, index) => {
           merged.push({
@@ -102,7 +102,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         });
       }
 
-      // Extract subject line alternatives
       if (comprehensive.subjectVariants && comprehensive.subjectVariants.length > 0) {
         comprehensive.subjectVariants.forEach((variant, index) => {
           merged.push({
@@ -123,7 +122,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         });
       }
 
-      // Extract content optimizations
       if (comprehensive.optimizations) {
         Object.entries(comprehensive.optimizations).forEach(([key, value], index) => {
           if (value) {
@@ -146,7 +144,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         });
       }
 
-      // Extract accessibility issues
       if (comprehensive.performance?.accessibilityIssues) {
         comprehensive.performance.accessibilityIssues.forEach((issue, index) => {
           merged.push({
@@ -168,7 +165,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       }
     }
 
-    // Sort by confidence (highest first)
     merged.sort((a, b) => b.confidence - a.confidence);
     
     return merged;
@@ -726,6 +722,14 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         {!isAnalysisCenterCollapsed && (
           <ScrollArea className="flex-1">
             <div className="p-4 space-y-4">
+              {/* Email Provider Compatibility */}
+              {emailHTML.trim() && (
+                <EmailProviderCompatibilityCard
+                  emailHTML={emailHTML}
+                  subjectLine={subjectLine}
+                />
+              )}
+
               {/* Show message when no analysis has been run */}
               {!hasAnalysisResults && !isAnalyzing && (
                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
@@ -751,7 +755,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
                 </div>
               )}
 
-              {/* AI Suggestions & Auto-Fixes - now showing all merged suggestions */}
+              {/* AI Suggestions & Auto-Fixes */}
               {allSuggestions.length > 0 && (
                 <Card className="p-4">
                   <div className="flex items-center justify-between mb-4">

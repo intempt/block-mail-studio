@@ -1,25 +1,22 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   BarChart3, 
-  CheckCircle, 
   AlertTriangle, 
   Zap, 
-  Clock,
   TrendingUp,
   RefreshCw,
   Monitor,
-  Smartphone,
   Mail,
   Shield
 } from 'lucide-react';
 import { DirectAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
-import { EmailProviderCompatibilityCard } from './EmailProviderCompatibilityCard';
+import { EmailProviderCompatibilityCard } from '@/components/EmailProviderCompatibilityCard';
 
 interface EnhancedPerformanceAnalyzerProps {
   emailHTML: string;
@@ -71,7 +68,7 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
       if (emailHTML.trim()) {
         runAnalysis();
       }
-    }, 2000); // Slightly longer debounce since no caching
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [emailHTML, subjectLine, autoAnalyze, runAnalysis]);
@@ -176,7 +173,7 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
         )}
       </Card>
 
-      {/* Email Provider Compatibility - New Feature */}
+      {/* Email Provider Compatibility */}
       {emailHTML.trim() && (
         <EmailProviderCompatibilityCard
           emailHTML={emailHTML}
