@@ -42,7 +42,7 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
           Filter by
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-4" align="start">
+      <PopoverContent className="w-64 p-4" align="start" side="bottom">
         <div className="space-y-3">
           <h4 className="text-sm font-medium text-gray-700">Filter Options</h4>
           <div className="space-y-2">
