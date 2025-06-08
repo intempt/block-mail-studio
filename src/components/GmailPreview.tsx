@@ -4,7 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { 
   Printer,
-  ExternalLink
+  ExternalLink,
+  Star,
+  Reply
 } from 'lucide-react';
 
 interface GmailPreviewProps {
@@ -18,9 +20,9 @@ interface GmailPreviewProps {
 export const GmailPreview: React.FC<GmailPreviewProps> = ({
   emailHtml,
   subject,
-  senderName = "Email Builder",
-  senderEmail = "builder@example.com",
-  timestamp = "10:20 (5 hours ago)"
+  senderName = "Anthropic Team",
+  senderEmail = "team@email.anthropic.com",
+  timestamp = "10:02 AM (6 hours ago)"
 }) => {
   return (
     <div className="h-full bg-white flex flex-col">
@@ -54,10 +56,20 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-medium text-gray-900">{senderName}</span>
               <span className="text-sm text-gray-500">&lt;{senderEmail}&gt;</span>
+              <a href="#" className="text-sm text-blue-600 hover:underline">Unsubscribe</a>
             </div>
             <div className="text-sm text-gray-500" style={{ textAlign: 'start' }}>
               to me
             </div>
+          </div>
+          <div className="flex items-center gap-1 text-sm text-gray-500">
+            <span>{timestamp}</span>
+            <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto">
+              <Star className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto">
+              <Reply className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
