@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Search, User, Building, BarChart3, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -137,7 +136,7 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
           <ChevronDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="start" side="left">
+      <PopoverContent className="w-[500px] p-0" align="start" side="left">
         <div className="flex flex-col h-80">
           {/* Search input at the top */}
           <div className="p-3 border-b">
@@ -154,8 +153,8 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
           </div>
           
           <div className="flex flex-1">
-            {/* Left side - Attribute types */}
-            <div className="w-48 border-r">
+            {/* Left side - Attribute types (made wider) */}
+            <div className="w-64 border-r">
               <div className="p-2">
                 <div className="space-y-1">
                   {attributeTypes.map((type) => {
@@ -164,7 +163,7 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
                       <button
                         key={type.value}
                         onClick={() => setSelectedAttributeType(type.value)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors whitespace-nowrap ${
                           selectedAttributeType === type.value
                             ? 'bg-blue-50 text-blue-700'
                             : 'hover:bg-gray-50'
