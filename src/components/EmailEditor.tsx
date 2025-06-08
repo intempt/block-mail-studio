@@ -35,7 +35,6 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { UndoManager } from './UndoManager';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface Block {
   id: string;
@@ -153,26 +152,21 @@ export default function EmailEditor({
 
   // Load templates on mount
   useEffect(() => {
-    const loadedTemplates = DirectTemplateService.getTemplates();
-    setTemplates(loadedTemplates);
+    try {
+      const loadedTemplates = DirectTemplateService.getAllTemplates();
+      setTemplates(loadedTemplates);
+    } catch (error) {
+      console.warn('Error loading templates:', error);
+      setTemplates([]);
+    }
   }, []);
-
-  // Initialize keyboard shortcuts
-  useKeyboardShortcuts({
-    onUndo: () => {
-      // Handle undo if UndoManager is available
-    },
-    onRedo: () => {
-      // Handle redo if UndoManager is available
-    },
-  });
 
   // Event handlers
   const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
     if (canvasRef.current) {
       const newBlock: EmailBlock = {
         id: `${blockType}_${Date.now()}`,
-        type: blockType,
+        type: blockType as any,
         content: getDefaultContent(blockType),
         styling: getDefaultStyles(blockType),
         position: { x: 0, y: 0 },
@@ -191,7 +185,7 @@ export default function EmailEditor({
       canvasRef.current.addBlock(newBlock);
       success(`${blockType} block added successfully`);
     }
-  }, []);
+  }, [success]);
 
   const getDefaultContent = (blockType: string) => {
     switch (blockType) {
@@ -257,7 +251,7 @@ export default function EmailEditor({
   const handleSaveTemplate = useCallback((template: any) => {
     try {
       DirectTemplateService.saveTemplate(template);
-      const updatedTemplates = DirectTemplateService.getTemplates();
+      const updatedTemplates = DirectTemplateService.getAllTemplates();
       setTemplates(updatedTemplates);
       success('Template saved successfully');
     } catch (err) {
@@ -318,7 +312,6 @@ export default function EmailEditor({
         {/* Snippet Ribbon - Only show in edit mode */}
         {viewMode === 'edit' && (
           <SnippetRibbon
-            onSnippetAdd={handleSnippetAdd}
             refreshTrigger={snippetRefreshTrigger}
           />
         )}
@@ -363,7 +356,6 @@ export default function EmailEditor({
 
       {showTemplateLibrary && (
         <EmailTemplateLibrary
-          isOpen={showTemplateLibrary}
           onClose={() => setShowTemplateLibrary(false)}
           onSelectTemplate={(template) => {
             if (template.blocks && canvasRef.current) {
@@ -380,11 +372,7 @@ export default function EmailEditor({
       )}
 
       {/* Undo Manager */}
-      <UndoManager blocks={emailBlocks} onRestore={(blocks) => {
-        if (canvasRef.current) {
-          canvasRef.current.replaceAllBlocks(blocks);
-        }
-      }} />
+      <UndoManager blocks={emailBlocks} />
     </div>
   );
 }
