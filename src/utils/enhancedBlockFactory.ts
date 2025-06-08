@@ -1,4 +1,3 @@
-
 import { EmailBlock, Styling, DisplayOptions } from '@/types/emailBlocks';
 
 const createDefaultStyling = (): Styling => ({
@@ -60,8 +59,6 @@ export const generateUniqueId = (): string => {
 };
 
 export const createBlock = (type: string, sectionId?: string): EmailBlock => {
-  console.log('createBlock called with type:', type);
-  
   const baseBlock = {
     id: generateUniqueId(),
     styling: createDefaultStyling(),
@@ -210,8 +207,7 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
       };
 
     case 'content':
-      console.log('Creating content block');
-      const contentBlock = {
+      return {
         ...baseBlock,
         type: 'content',
         content: {
@@ -239,11 +235,8 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
           alternateColor: '#f9f9f9'
         },
       };
-      console.log('Content block created:', contentBlock);
-      return contentBlock;
 
     default:
-      console.error('Unknown block type:', type);
       throw new Error(`Unknown block type: ${type}`);
   }
 };
