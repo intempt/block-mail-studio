@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './canvas/CanvasRenderer';
@@ -766,7 +767,9 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       border: '1px solid #e5e7eb',
       borderRadius: '12px',
       boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-      position: 'relative' as const
+      position: 'relative' as const,
+      // Add smooth transition for width changes
+      transition: 'width 0.3s ease-in-out, max-width 0.3s ease-in-out'
     };
 
     // Enhanced visual feedback when dragging
