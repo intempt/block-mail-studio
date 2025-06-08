@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { AttributeSelector } from './AttributeSelector';
+import { OperatorSelector } from './OperatorSelector';
 
 interface UserFilterProps {
   className?: string;
@@ -16,9 +17,28 @@ interface UserFilterProps {
 export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState<string>('');
+  const [selectedOperator, setSelectedOperator] = useState<string>('');
+  const [attributeValueType, setAttributeValueType] = useState<string>('STR');
 
-  const handleAttributeSelect = (attribute: string) => {
+  const handleAttributeSelect = async (attribute: string) => {
     setSelectedAttribute(attribute);
+    setSelectedOperator(''); // Reset operator when attribute changes
+    
+    // Get the attribute's value type for operator filtering
+    try {
+      const module = await import('../../dummy/userAttributes');
+      const userAttribute = module.userAttributes.find((attr: any) => attr?.name === attribute);
+      if (userAttribute) {
+        setAttributeValueType(userAttribute.valueType || 'STR');
+      }
+    } catch (error) {
+      console.warn('Error loading attribute details:', error);
+      setAttributeValueType('STR');
+    }
+  };
+
+  const handleOperatorSelect = (operator: string) => {
+    setSelectedOperator(operator);
   };
 
   return (
@@ -43,6 +63,16 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
               onAttributeSelect={handleAttributeSelect}
             />
           </div>
+          {selectedAttribute && (
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">Operator</label>
+              <OperatorSelector
+                selectedOperator={selectedOperator}
+                onOperatorSelect={handleOperatorSelect}
+                attributeValueType={attributeValueType}
+              />
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>
