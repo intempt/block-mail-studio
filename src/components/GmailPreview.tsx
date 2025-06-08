@@ -67,7 +67,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
               />
             </div>
           </div>
-          <div className="flex items-center gap-1 text-sm text-gray-500">
+          <div className="flex items-center gap-1 text-sm text-gray-500" style={{ alignSelf: 'flex-start' }}>
             <span>{timestamp}</span>
             <Button variant="ghost" size="sm" className="text-gray-400 p-1 h-auto">
               <Star className="w-4 h-4" />
