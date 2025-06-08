@@ -46,7 +46,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
         <SelectValue>
           <div className="flex items-center gap-2">
             <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-3 h-3" />
-            <span>{selectedUser?.identifier}</span>
+            <span className="truncate">{selectedUser?.identifier}</span>
           </div>
         </SelectValue>
       </SelectTrigger>
@@ -56,7 +56,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             <div className="flex items-center gap-2">
               <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-3 h-3" />
               <div className="flex flex-col">
-                <span className="font-medium">{user.identifier}</span>
+                <span className="font-medium truncate">{user.identifier}</span>
                 <span className="text-gray-500 text-xs">Last seen: {user.lastSeen}</span>
               </div>
             </div>
