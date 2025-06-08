@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Eye, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Eye } from 'lucide-react';
 import { UserSelector } from './UserSelector';
+import { UserFilter } from './UserFilter';
 import { User } from '../../dummy/users';
 
 interface GmailPreviewHeaderProps {
@@ -28,14 +28,7 @@ export const GmailPreviewHeader: React.FC<GmailPreviewHeaderProps> = ({
             onUserChange={onUserChange}
             className="w-48 h-7 text-xs bg-white border-blue-200"
           />
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50"
-          >
-            <Filter className="w-3 h-3 mr-1" />
-            Filter by
-          </Button>
+          <UserFilter />
         </div>
       </div>
     </div>
