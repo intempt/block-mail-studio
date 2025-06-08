@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import {
   MoreHorizontal, 
   Star, 
   ArrowLeft,
-  Print,
+  Pin,
   ExternalLink
 } from 'lucide-react';
 
@@ -48,7 +47,7 @@ export const GmailPreview: React.FC<GmailPreviewProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="sm" className="text-gray-600">
-            <Print className="w-4 h-4" />
+            <Pin className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="sm" className="text-gray-600">
             <ExternalLink className="w-4 h-4" />
