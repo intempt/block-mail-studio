@@ -64,7 +64,6 @@ export const EmailEditorModals: React.FC<EmailEditorModalsProps> = ({
               </Button>
             </div>
             <EmailTemplateLibrary
-              isOpen={showTemplateLibrary}
               onSelectTemplate={(template) => {
                 if (template.blocks && canvasRef.current) {
                   canvasRef.current.replaceAllBlocks(template.blocks);
