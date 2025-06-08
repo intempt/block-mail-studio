@@ -3,31 +3,30 @@
 // This resolves build errors from dummy/userAttributes.ts
 
 declare module '*/dummy/userAttributes' {
-  // Extend the existing type unions to include missing types
   interface UserAttribute {
-    id?: string; // Add id field to align with attrId
+    id?: string;
     name: string;
     displayName?: string;
     description?: string;
-    type?: any; // Allow any string for type to match dummy data
-    category?: any; // Allow any string for category to match dummy data
-    attributeType?: any; // Allow any string for attributeType to match dummy data
-    valueType?: string; // Add valueType property that UserFilter.tsx expects
-    lastUpdated?: string; // Add lastUpdated property that exists in dummy data
+    type?: string;
+    category?: string;
+    attributeType?: string;
+    valueType?: string;
+    lastUpdated?: string;
     schema?: UserAttributeSchema;
-    [key: string]: any; // Allow any additional properties
+    [key: string]: any;
   }
 
   interface UserAttributeSchema {
     fields?: UserAttributeSchemaField[];
-    [key: string]: any; // Allow any additional properties
+    [key: string]: any;
   }
 
   interface UserAttributeSchemaField {
     name: string;
-    type?: any; // Allow flexible type structure and make optional
-    default?: any; // Make default optional since it's missing in many places
-    [key: string]: any; // Allow any additional properties
+    type?: any;
+    default?: any;
+    [key: string]: any;
   }
 
   export const userAttributes: UserAttribute[];
@@ -53,8 +52,8 @@ interface UserAttribute {
 
 // Global type augmentation for missing attribute types
 declare global {
-  type AttributeType = any; // Allow any string to match all values in dummy data
-  type AttributeCategory = any; // Allow any string to match all values in dummy data
+  type AttributeType = string;
+  type AttributeCategory = string;
 }
 
 export {};

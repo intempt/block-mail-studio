@@ -42,7 +42,7 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChang
       const module = await import('../../dummy/userAttributes');
       const userAttribute = module.userAttributes.find((attr: any) => attr?.name === attribute);
       if (userAttribute) {
-        setAttributeValueType(userAttribute.valueType || 'STR');
+        setAttributeValueType(userAttribute.valueType || userAttribute.type || 'STR');
         setSelectedAttributeLabel(userAttribute.displayName || userAttribute.name || attribute);
       }
     } catch (error) {

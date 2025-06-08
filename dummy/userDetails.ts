@@ -1,5 +1,19 @@
 
-import { UserDetails } from '../src/types/userAttributes';
+// User details interface
+export interface UserDetails {
+  firstSeen: string;
+  lastSeen: string;
+  identifiers: string[];
+  totalEvents: number;
+  sources: string[];
+  segments: Record<string, boolean>;
+  segmentQueryIds: number[];
+  attributes: Array<{
+    attrId: string;
+    title: string;
+    value: any;
+  }>;
+}
 
 export const userDetails: Record<string, UserDetails> = {
   "6077552297008432096": {
