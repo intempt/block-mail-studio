@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Filter } from 'lucide-react';
+import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -52,13 +52,21 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
     setFilterValue(value);
   };
 
+  const handleClearFilter = () => {
+    setSelectedAttribute('');
+    setSelectedOperator('');
+    setFilterValue('');
+    setSelectedAttributeLabel('');
+    setAttributeValueType('STR');
+  };
+
   // Check if we should show the value input
   const shouldShowValueInput = selectedOperator && !['has_any_value', 'has_no_value'].includes(selectedOperator);
 
   // Construct human-readable filter text
   const getFilterText = () => {
     if (!selectedAttribute || !selectedOperator) {
-      return 'Filter by';
+      return '';
     }
 
     const operatorLabels: Record<string, string> = {
@@ -97,51 +105,65 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
     (!shouldShowValueInput || (filterValue && (Array.isArray(filterValue) ? filterValue.length > 0 : filterValue.toString().trim())));
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={`h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50 ${
-            hasCompleteFilter ? 'bg-blue-50 border-blue-300' : ''
-          } ${className || ''}`}
-        >
-          <Filter className="w-3 h-3 mr-1" />
-          {filterText}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-4" align="start" side="left">
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700">Filter Options</h4>
-          <div className="space-y-2">
-            <label className="text-xs text-gray-600">Attribute</label>
-            <AttributeSelector
-              selectedAttribute={selectedAttribute}
-              onAttributeSelect={handleAttributeSelect}
-            />
+    <div className={`flex items-center gap-1 ${className || ''}`}>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-7 text-xs border-blue-200 text-blue-600 hover:bg-blue-50 ${
+              hasCompleteFilter ? 'bg-blue-50 border-blue-300' : ''
+            }`}
+          >
+            <Filter className="w-3 h-3 mr-1" />
+            Filter by{filterText ? `: ${filterText}` : ''}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-4" align="start" side="left">
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium text-gray-700">Filter Options</h4>
+            <div className="space-y-2">
+              <label className="text-xs text-gray-600">Attribute</label>
+              <AttributeSelector
+                selectedAttribute={selectedAttribute}
+                onAttributeSelect={handleAttributeSelect}
+              />
+            </div>
+            {selectedAttribute && (
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Operator</label>
+                <OperatorSelector
+                  selectedOperator={selectedOperator}
+                  onOperatorSelect={handleOperatorSelect}
+                  attributeValueType={attributeValueType}
+                />
+              </div>
+            )}
+            {shouldShowValueInput && (
+              <div className="space-y-2">
+                <label className="text-xs text-gray-600">Value</label>
+                <ValueInput
+                  operator={selectedOperator}
+                  value={filterValue}
+                  onValueChange={handleValueChange}
+                />
+              </div>
+            )}
           </div>
-          {selectedAttribute && (
-            <div className="space-y-2">
-              <label className="text-xs text-gray-600">Operator</label>
-              <OperatorSelector
-                selectedOperator={selectedOperator}
-                onOperatorSelect={handleOperatorSelect}
-                attributeValueType={attributeValueType}
-              />
-            </div>
-          )}
-          {shouldShowValueInput && (
-            <div className="space-y-2">
-              <label className="text-xs text-gray-600">Value</label>
-              <ValueInput
-                operator={selectedOperator}
-                value={filterValue}
-                onValueChange={handleValueChange}
-              />
-            </div>
-          )}
-        </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+      
+      {hasCompleteFilter && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClearFilter}
+          className="h-7 w-7 p-0 text-gray-400 hover:text-gray-600"
+          title="Clear filter"
+        >
+          <X className="w-3 h-3" />
+        </Button>
+      )}
+    </div>
   );
 };
