@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { DirectAIService } from '@/services/directAIService';
 import { PerformanceAnalysisResult } from '@/services/EmailAIService';
-import { EmailProviderCompatibilityCard } from '@/components/EmailProviderCompatibilityCard';
+import { CompatibilityBoard } from '@/components/CompatibilityBoard';
 
 interface EnhancedPerformanceAnalyzerProps {
   emailHTML: string;
@@ -173,11 +173,12 @@ export const EnhancedPerformanceAnalyzer: React.FC<EnhancedPerformanceAnalyzerPr
         )}
       </Card>
 
-      {/* Email Provider Compatibility */}
+      {/* Email Provider Compatibility - Replace with new CompatibilityBoard */}
       {emailHTML.trim() && (
-        <EmailProviderCompatibilityCard
+        <CompatibilityBoard
           emailHTML={emailHTML}
           subjectLine={subjectLine}
+          autoAnalyze={autoAnalyze}
         />
       )}
 
