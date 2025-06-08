@@ -168,6 +168,8 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
         onImport={handleImport}
         onExport={handleExport}
         onSave={handleSave}
+        previewMode={previewMode}
+        onPreviewModeChange={onPreviewModeChange}
       />
 
       {/* Toolbar - Only show in edit mode */}

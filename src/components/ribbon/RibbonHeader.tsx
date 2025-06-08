@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +27,8 @@ interface RibbonHeaderProps {
   onImport: () => void;
   onExport: () => void;
   onSave: () => void;
+  previewMode?: 'desktop' | 'mobile';
+  onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
 }
 
 export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
@@ -39,10 +42,17 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
   onDeleteCanvas,
   onImport,
   onExport,
-  onSave
+  onSave,
+  previewMode = 'desktop',
+  onPreviewModeChange
 }) => {
-  const handleDesktopClick = () => onViewModeChange?.('edit'); // Stay in edit mode, just change canvas view
-  const handleMobileClick = () => onViewModeChange?.('edit'); // Stay in edit mode, just change canvas view
+  const handleDesktopClick = () => {
+    onPreviewModeChange?.('desktop');
+  };
+
+  const handleMobileClick = () => {
+    onPreviewModeChange?.('mobile');
+  };
 
   return (
     <div className="px-6 py-3 flex items-center justify-between border-b border-gray-100">
@@ -96,7 +106,7 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             size="sm"
             onClick={handleDesktopClick}
             className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-              true // Desktop is always active since we stay in edit mode
+              previewMode === 'desktop'
                 ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
                 : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
             }`}
@@ -109,7 +119,11 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             variant="ghost"
             size="sm"
             onClick={handleMobileClick}
-            className="flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium text-gray-700 hover:bg-gray-200 hover:text-gray-900"
+            className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
+              previewMode === 'mobile'
+                ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
+                : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
+            }`}
             title="Mobile View"
           >
             <Smartphone className="w-4 h-4" />
