@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -9,6 +8,7 @@ import FontFamily from '@tiptap/extension-font-family';
 import { Underline } from '@tiptap/extension-underline';
 import { Color } from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
+import { Placeholder } from '@tiptap/extension-placeholder';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,17 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
     return '';
   };
 
+  // Get placeholder text from content object or prop
+  const getPlaceholderText = (): string => {
+    if (placeholder) return placeholder;
+    if (typeof content === 'object' && content?.placeholder) {
+      return content.placeholder;
+    }
+    return 'Click to add text...';
+  };
+
   const htmlContent = getHtmlContent(content);
+  const placeholderText = getPlaceholderText();
   const isUrlMode = contentType === 'url' || contentType === 'video';
 
   const editor = useEditor({
@@ -102,6 +112,9 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         multicolor: true,
       }),
       Underline,
+      Placeholder.configure({
+        placeholder: placeholderText,
+      }),
     ],
     content: isUrlMode ? '' : htmlContent,
     onUpdate: ({ editor }) => {
@@ -214,7 +227,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         <EditorContent 
           editor={editor} 
           className="prose prose-sm max-w-none p-4 focus:outline-none min-h-[80px]"
-          placeholder={placeholder}
         />
 
         {/* Enhanced TipTap Pro BubbleMenu with AI features */}

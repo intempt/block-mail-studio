@@ -73,9 +73,9 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         ...baseBlock,
         type: 'text',
         content: {
-          html: '<p>Add your text content here...</p>',
+          html: '',
           textStyle: 'normal',
-          placeholder: 'Click to add text...',
+          placeholder: 'Start typing your content here...',
         },
       };
 
