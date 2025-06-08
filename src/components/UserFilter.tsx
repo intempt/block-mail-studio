@@ -15,9 +15,6 @@ import {
   CommandList,
 } from '@/components/ui/command';
 
-// Import as any to bypass type issues with dummy data
-const userAttributesData = require('../../dummy/userAttributes').userAttributes;
-
 interface UserFilterProps {
   className?: string;
 }
@@ -36,57 +33,74 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
     { value: 'segment', label: 'Calculated attributes', icon: '📊' },
   ];
 
-  const getFilteredAttributes = () => {
-    // Safely handle the dummy data with proper type checks
-    let allAttributes: any[] = [];
-    
+  const loadUserAttributes = async () => {
     try {
-      // Ensure we have an array to work with
-      allAttributes = Array.isArray(userAttributesData) ? userAttributesData : [];
+      const module = await import('../../dummy/userAttributes');
+      return Array.isArray(module.userAttributes) ? module.userAttributes : [];
     } catch (error) {
-      console.log('Error loading user attributes:', error);
+      console.warn('Failed to load user attributes:', error);
       return [];
     }
-    
-    let typeAttributes: any[];
-    if (selectedAttributeType === 'all') {
-      typeAttributes = allAttributes;
-    } else {
-      typeAttributes = allAttributes.filter((attr: any) => {
-        // Handle different type formats in the dummy data
-        return attr?.type === selectedAttributeType || 
-               attr?.category === selectedAttributeType ||
-               attr?.attributeType === selectedAttributeType;
-      });
-    }
-    
-    if (!searchValue) return typeAttributes;
-    
-    return typeAttributes.filter((attr: any) => {
-      if (!attr) return false;
-      const name = attr.name || '';
-      const displayName = attr.displayName || attr.label || '';
-      const description = attr.description || '';
-      
-      const searchLower = searchValue.toLowerCase();
-      return name.toLowerCase().includes(searchLower) ||
-             displayName.toLowerCase().includes(searchLower) ||
-             description.toLowerCase().includes(searchLower);
-    });
   };
 
-  const getSelectedAttributeLabel = () => {
+  const getFilteredAttributes = async () => {
+    try {
+      const allAttributes = await loadUserAttributes();
+      
+      let typeAttributes: any[];
+      if (selectedAttributeType === 'all') {
+        typeAttributes = allAttributes;
+      } else {
+        typeAttributes = allAttributes.filter((attr: any) => {
+          if (!attr) return false;
+          // Handle different type formats in the dummy data with type assertion
+          const attrType = (attr as any).type || (attr as any).category || (attr as any).attributeType;
+          return attrType === selectedAttributeType;
+        });
+      }
+      
+      if (!searchValue) return typeAttributes;
+      
+      return typeAttributes.filter((attr: any) => {
+        if (!attr) return false;
+        const name = (attr as any).name || '';
+        const displayName = (attr as any).displayName || '';
+        const description = (attr as any).description || '';
+        
+        const searchLower = searchValue.toLowerCase();
+        return name.toLowerCase().includes(searchLower) ||
+               displayName.toLowerCase().includes(searchLower) ||
+               description.toLowerCase().includes(searchLower);
+      });
+    } catch (error) {
+      console.warn('Error filtering attributes:', error);
+      return [];
+    }
+  };
+
+  const getSelectedAttributeLabel = async () => {
     if (!selectedAttribute) return 'Select attribute';
     
     try {
-      const allAttributes = Array.isArray(userAttributesData) ? userAttributesData : [];
-      const attribute = allAttributes.find((attr: any) => attr?.name === selectedAttribute);
-      return attribute ? (attribute.displayName || attribute.label || attribute.name) : selectedAttribute;
+      const allAttributes = await loadUserAttributes();
+      const attribute = allAttributes.find((attr: any) => (attr as any)?.name === selectedAttribute);
+      return attribute ? ((attribute as any).displayName || (attribute as any).name) : selectedAttribute;
     } catch (error) {
-      console.log('Error finding attribute:', error);
+      console.warn('Error finding attribute:', error);
       return selectedAttribute;
     }
   };
+
+  const [filteredAttributes, setFilteredAttributes] = useState<any[]>([]);
+  const [selectedLabel, setSelectedLabel] = useState('Select attribute');
+
+  React.useEffect(() => {
+    getFilteredAttributes().then(setFilteredAttributes);
+  }, [selectedAttributeType, searchValue]);
+
+  React.useEffect(() => {
+    getSelectedAttributeLabel().then(setSelectedLabel);
+  }, [selectedAttribute]);
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -114,11 +128,11 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                   aria-expanded={isAttributeOpen}
                   className="w-full h-8 justify-between text-xs"
                 >
-                  {getSelectedAttributeLabel()}
+                  {selectedLabel}
                   <ChevronDown className="ml-2 h-3 w-3 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96 p-0" align="start" side="bottom">
+              <PopoverContent className="w-96 p-0" align="start" side="left">
                 <div className="flex h-80">
                   {/* Left side - Attribute types */}
                   <div className="w-48 border-r">
@@ -162,18 +176,18 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className }) => {
                     <Command className="border-0">
                       <CommandList className="max-h-64">
                         <CommandEmpty>No attributes found.</CommandEmpty>
-                        {getFilteredAttributes().map((attribute: any) => {
-                          if (!attribute?.name) return null;
+                        {filteredAttributes.map((attribute: any) => {
+                          if (!(attribute as any)?.name) return null;
                           
-                          // Safely get the value type with fallback
-                          const valueType = attribute.valueType || attribute.dataType || 'STR';
-                          const displayName = attribute.displayName || attribute.label || attribute.name;
-                          const description = attribute.description || '';
+                          // Safely get the value type with fallback and type assertion
+                          const valueType = (attribute as any).valueType || 'STR';
+                          const displayName = (attribute as any).displayName || (attribute as any).name;
+                          const description = (attribute as any).description || '';
                           
                           return (
                             <CommandItem
-                              key={attribute.name}
-                              value={attribute.name}
+                              key={(attribute as any).name}
+                              value={(attribute as any).name}
                               onSelect={(value) => {
                                 setSelectedAttribute(value);
                                 setIsAttributeOpen(false);
