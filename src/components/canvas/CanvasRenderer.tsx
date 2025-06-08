@@ -230,7 +230,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           )}
 
           {blocks.map((block, index) => (
-            <React.Fragment key={block.id}>
+            <div key={block.id}>
               {/* Drop zone above current block */}
               {isDraggingOver && dragOverIndex === index && dragOverIndex !== 0 && currentDragType && (
                 <DropZoneIndicator
@@ -254,7 +254,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
                   data-testid="drop-zone-indicator"
                 />
               )}
-            </React.Fragment>
+            </div>
           ))}
 
           {/* Bottom drop zone */}
