@@ -1,20 +1,5 @@
 
 import React from 'react';
-import { GmailDesktopPreview } from '../gmail/GmailDesktopPreview';
-import { GmailMobilePreview } from '../gmail/GmailMobilePreview';
-import { GmailResponsiveFrame } from '../gmail/GmailDeviceFrames';
-
-interface SenderInfo {
-  name: string;
-  email: string;
-  avatar?: string;
-  initials?: string;
-}
-
-interface RecipientInfo {
-  name: string;
-  email: string;
-}
 
 interface PreviewViewProps {
   emailHtml: string;
@@ -27,42 +12,30 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
   subject,
   viewMode
 }) => {
-  // Default sender and recipient data for preview
-  const defaultSender: SenderInfo = {
-    name: 'Marketing Team',
-    email: 'marketing@company.com',
-    initials: 'MT'
-  };
-
-  const defaultRecipient: RecipientInfo = {
-    name: 'John Doe',
-    email: 'john.doe@example.com'
-  };
-
-  const gmailPreviewMode = viewMode === 'desktop-preview' ? 'desktop' : 'mobile';
+  const previewTitle = viewMode === 'desktop-preview' ? 'Desktop Preview' : 'Mobile Preview';
+  const previewWidth = viewMode === 'desktop-preview' ? '600px' : '375px';
 
   return (
-    <div className="relative h-full" style={{ backgroundColor: 'var(--gmail-gray-100)' }}>
-      <div className="h-full w-full flex items-center justify-center p-4">
-        <GmailResponsiveFrame mode={gmailPreviewMode} mobileDevice="iphone14pro">
-          {viewMode === 'desktop-preview' ? (
-            <GmailDesktopPreview
-              emailHtml={emailHtml}
-              subject={subject}
-              sender={defaultSender}
-              recipient={defaultRecipient}
-              onClose={() => {}} // No close action needed in preview mode
-            />
-          ) : (
-            <GmailMobilePreview
-              emailHtml={emailHtml}
-              subject={subject}
-              sender={defaultSender}
-              recipient={defaultRecipient}
-              onClose={() => {}} // No close action needed in preview mode
-            />
-          )}
-        </GmailResponsiveFrame>
+    <div className="relative h-full bg-background">
+      <div className="h-full w-full flex flex-col items-center justify-center p-4">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-foreground">{previewTitle}</h2>
+        </div>
+        
+        <div 
+          className="bg-card border rounded-lg p-6 shadow-sm overflow-auto"
+          style={{ 
+            width: previewWidth,
+            maxWidth: '100%',
+            minHeight: '600px',
+            maxHeight: '80vh'
+          }}
+        >
+          <div 
+            className="email-content"
+            dangerouslySetInnerHTML={{ __html: emailHtml }}
+          />
+        </div>
       </div>
     </div>
   );
