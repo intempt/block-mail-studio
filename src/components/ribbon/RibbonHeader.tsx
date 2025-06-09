@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,10 +52,18 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleDesktopClick = () => {
+    if (isInPreviewMode) {
+      // In preview mode, switch to desktop preview
+      onViewModeChange?.('desktop-preview');
+    }
     onPreviewModeChange?.('desktop');
   };
 
   const handleMobileClick = () => {
+    if (isInPreviewMode) {
+      // In preview mode, switch to mobile preview
+      onViewModeChange?.('mobile-preview');
+    }
     onPreviewModeChange?.('mobile');
   };
 
@@ -78,6 +87,8 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
   };
 
   const isInPreviewMode = viewMode === 'desktop-preview' || viewMode === 'mobile-preview';
+  const currentPreviewMode = viewMode === 'desktop-preview' ? 'desktop' : 
+                            viewMode === 'mobile-preview' ? 'mobile' : previewMode;
 
   return (
     <>
@@ -148,13 +159,14 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             )}
           </Button>
 
+          {/* Desktop/Mobile Toggle - Enhanced for preview mode */}
           <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleDesktopClick}
               className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                previewMode === 'desktop'
+                currentPreviewMode === 'desktop'
                   ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}
@@ -168,7 +180,7 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
               size="sm"
               onClick={handleMobileClick}
               className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                previewMode === 'mobile'
+                currentPreviewMode === 'mobile'
                   ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
                   : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
               }`}

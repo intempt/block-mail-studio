@@ -510,6 +510,15 @@ export default function EmailEditor({
     success(`Applied ${autoFixableSuggestions.length} auto-fixes!`);
   };
 
+  // Update canvas width when preview mode changes for better UX
+  useEffect(() => {
+    if (viewMode === 'desktop-preview' && canvasWidth < 600) {
+      setCanvasWidth(600);
+    } else if (viewMode === 'mobile-preview' && canvasWidth > 375) {
+      setCanvasWidth(375);
+    }
+  }, [viewMode, canvasWidth]);
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -654,6 +663,7 @@ export default function EmailEditor({
         </div>
       )}
 
+      {/* Template Library Modal */}
       {showTemplateLibrary && (
         <EmailTemplateLibrary
           onSelectTemplate={(template) => {

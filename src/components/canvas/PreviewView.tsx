@@ -17,12 +17,14 @@ interface PreviewViewProps {
   emailHtml: string;
   subject: string;
   viewMode: 'desktop-preview' | 'mobile-preview';
+  canvasWidth?: number;
 }
 
 export const PreviewView: React.FC<PreviewViewProps> = ({
   emailHtml,
   subject,
-  viewMode
+  viewMode,
+  canvasWidth = 600
 }) => {
   const isDesktop = viewMode === 'desktop-preview';
   
@@ -71,7 +73,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
       multicolor: true,
     }),
     Underline,
-    PreviewVariable, // Use preview-specific variable extension
+    PreviewVariable,
   ], []);
 
   // Create a read-only editor for preview
@@ -81,6 +83,13 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     editable: false,
     immediatelyRender: false,
   });
+
+  // Update editor content when emailHtml changes
+  React.useEffect(() => {
+    if (previewEditor && emailHtml !== previewEditor.getHTML()) {
+      previewEditor.commands.setContent(emailHtml);
+    }
+  }, [emailHtml, previewEditor]);
 
   if (isDesktop) {
     // Use Gmail interface for desktop preview
@@ -103,45 +112,94 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
     );
   }
 
-  // Mobile preview with preview editor
+  // Mobile preview with constrained width and mobile-optimized styling
+  const mobileWidth = Math.min(375, canvasWidth);
+  
   return (
     <div className="relative h-full bg-background">
-      <div className="h-full w-full flex flex-col items-center justify-center p-4">
+      <div className="h-full w-full flex flex-col items-center justify-start p-4">
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-foreground">Mobile Preview</h2>
+          <p className="text-sm text-muted-foreground">Optimized for {mobileWidth}px width</p>
         </div>
         
         <div 
-          className="bg-card border rounded-lg p-6 shadow-sm overflow-auto"
+          className="bg-card border rounded-lg shadow-sm overflow-auto"
           style={{ 
-            width: '375px',
+            width: `${mobileWidth}px`,
             maxWidth: '100%',
             minHeight: '600px',
             maxHeight: '80vh'
           }}
         >
-          <div className="mb-4 pb-4 border-b border-gray-200">
-            <h3 className="font-semibold text-gray-900">{subject}</h3>
-            <p className="text-sm text-gray-600 mt-1">Your Campaign &lt;noreply@yourcompany.com&gt;</p>
+          {/* Mobile email header */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                Y
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm truncate">{subject}</h3>
+                <p className="text-xs text-gray-600 mt-1">Your Campaign</p>
+                <p className="text-xs text-gray-500">noreply@yourcompany.com</p>
+              </div>
+            </div>
           </div>
           
-          {previewEditor ? (
-            <EditorContent 
-              editor={previewEditor}
-              className="prose prose-sm max-w-none"
-            />
-          ) : (
-            <div 
-              className="email-content text-sm"
-              dangerouslySetInnerHTML={{ __html: emailHtml }}
-              style={{
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                lineHeight: '1.5'
-              }}
-            />
-          )}
+          {/* Mobile email content */}
+          <div className="p-4">
+            {previewEditor ? (
+              <EditorContent 
+                editor={previewEditor}
+                className="prose prose-sm max-w-none mobile-email-content"
+                style={{
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  maxWidth: 'none'
+                }}
+              />
+            ) : (
+              <div 
+                className="email-content mobile-email-content"
+                dangerouslySetInnerHTML={{ __html: emailHtml }}
+                style={{
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  fontSize: '14px',
+                  lineHeight: '1.5',
+                  maxWidth: 'none'
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Mobile-specific styles */}
+      <style jsx>{`
+        .mobile-email-content img {
+          max-width: 100% !important;
+          height: auto !important;
+        }
+        .mobile-email-content table {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .mobile-email-content td {
+          display: block !important;
+          width: 100% !important;
+          padding: 8px !important;
+        }
+        .mobile-email-content h1,
+        .mobile-email-content h2,
+        .mobile-email-content h3 {
+          font-size: 1.1em !important;
+          line-height: 1.3 !important;
+          margin: 0.5em 0 !important;
+        }
+        .mobile-email-content p {
+          margin: 0.5em 0 !important;
+        }
+      `}</style>
     </div>
   );
 };
