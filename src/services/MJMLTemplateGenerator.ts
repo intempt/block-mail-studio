@@ -1,25 +1,13 @@
-
 import { EmailBlock } from '@/types/emailBlocks';
 import { MJMLBlockFactory } from './MJMLBlockFactory';
 import { MJMLService } from './MJMLService';
-
-export interface EmailTemplate {
-  subject: string;
-  preheader?: string;
-  blocks: EmailBlock[];
-  globalStyles?: string;
-  settings?: {
-    width: string;
-    backgroundColor: string;
-    fontFamily: string;
-  };
-}
+import { EmailTemplate } from '@/types/emailBlocks';
 
 export class MJMLTemplateGenerator {
   static generateMJML(template: EmailTemplate): string {
     const { blocks, globalStyles, settings } = template;
     
-    const bodyContent = this.generateBodyContent(blocks);
+    const bodyContent = this.generateBodyContent(blocks || []);
     const customStyles = this.generateCustomStyles(globalStyles, settings);
     
     return MJMLService.wrapInTemplate(bodyContent, customStyles);

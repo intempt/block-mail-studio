@@ -1,3 +1,4 @@
+
 export interface Position {
   x: number;
   y: number;
@@ -346,16 +347,21 @@ export interface UniversalContent {
   };
 }
 
+// Unified EmailTemplate interface for consistent usage across the app
 export interface EmailTemplate {
   id: string;
   name: string;
   description: string;
-  thumbnail: string;
-  blocks: EmailBlock[];
+  html?: string;
+  subject?: string;
   category: string;
   tags: string[];
   createdAt: Date;
   updatedAt: Date;
+  isFavorite: boolean;
+  usageCount: number;
+  blocks?: EmailBlock[];
+  thumbnail?: string;
 }
 
 // Legacy type aliases for compatibility

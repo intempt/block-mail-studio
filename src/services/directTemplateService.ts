@@ -1,5 +1,5 @@
 
-import { EmailTemplate } from '@/components/TemplateManager';
+import { EmailTemplate } from '@/types/emailBlocks';
 
 export class DirectTemplateService {
   // Returns default templates only - no persistent storage

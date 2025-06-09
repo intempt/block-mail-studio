@@ -26,7 +26,7 @@ import { OmnipresentRibbon } from './OmnipresentRibbon';
 import { SnippetRibbon } from './SnippetRibbon';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { CanvasStatus } from './canvas/CanvasStatus';
-import { EmailTemplate } from './TemplateManager';
+import { EmailTemplate } from '@/types/emailBlocks';
 import { DirectTemplateService } from '@/services/directTemplateService';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
@@ -402,6 +402,12 @@ export default function EmailEditor({
           onSelectTemplate={(template) => {
             if (template.blocks && canvasRef.current) {
               canvasRef.current.replaceAllBlocks(template.blocks);
+              if (template.subject) {
+                onSubjectChange(template.subject);
+              }
+              success(`Template "${template.name}" loaded successfully`);
+            } else if (template.html && editor) {
+              editor.commands.setContent(template.html);
               if (template.subject) {
                 onSubjectChange(template.subject);
               }

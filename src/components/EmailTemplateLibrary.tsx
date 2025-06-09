@@ -14,7 +14,7 @@ import {
   Star,
   Trophy
 } from 'lucide-react';
-import { EmailTemplate } from './TemplateManager';
+import { EmailTemplate } from '@/types/emailBlocks';
 
 interface EmailTemplateLibraryProps {
   editor?: Editor | null;
@@ -131,7 +131,7 @@ export const EmailTemplateLibrary: React.FC<EmailTemplateLibraryProps> = ({
   const handleTemplateSelect = (template: Template) => {
     if (onSelectTemplate) {
       // Convert internal template to EmailTemplate format
-      const emailTemplate = {
+      const emailTemplate: EmailTemplate = {
         id: template.id,
         name: template.name,
         description: template.preview,
