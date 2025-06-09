@@ -29,6 +29,9 @@ export const handleServiceError = (error: any, context: string): ServiceResult =
   );
 };
 
-export const handleServiceSuccess = <T>(data: T): ServiceResult<T> => {
+// Updated to accept optional success message parameter for backward compatibility
+// but no longer triggers notifications
+export const handleServiceSuccess = <T>(data: T, successMessage?: string): ServiceResult<T> => {
+  // Note: successMessage parameter is ignored (no notifications)
   return createServiceResult(true, data);
 };

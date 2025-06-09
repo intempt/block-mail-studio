@@ -195,7 +195,7 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             variant="outline"
             size="sm"
             onClick={handleDeleteClick}
-            className="flex items-center gap-2 h-9 px-3"
+            className="flex items-center gap-2 h-9 px-3 min-w-[80px] justify-center"
           >
             <Trash2 className="w-4 h-4" />
             Delete
@@ -203,15 +203,15 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
-          <Button onClick={onImport} variant="outline" size="sm" className="h-9 px-3">
+          <Button onClick={onImport} variant="outline" size="sm" className="h-9 px-3 min-w-[80px] justify-center">
             <Upload className="w-4 h-4 mr-2" />
             Import
           </Button>
-          <Button onClick={onExport} variant="outline" size="sm" className="h-9 px-3">
+          <Button onClick={onExport} variant="outline" size="sm" className="h-9 px-3 min-w-[80px] justify-center">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button onClick={onSave} variant="default" size="sm" className="h-9 px-3">
+          <Button onClick={onSave} variant="default" size="sm" className="h-9 px-3 min-w-[80px] justify-center">
             <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
