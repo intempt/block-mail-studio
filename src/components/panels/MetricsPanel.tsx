@@ -21,10 +21,12 @@ import {
   Star,
   Layout,
   AlertTriangle,
-  BarChart3
+  BarChart3,
+  Monitor,
+  Tablet
 } from 'lucide-react';
 import { ComprehensiveEmailMetrics, ComprehensiveMetricsService } from '@/services/comprehensiveMetricsService';
-import { EmailProviderCompatibilityCard } from '@/components/EmailProviderCompatibilityCard';
+import { EmailProviderCompatibilityEnhanced } from '@/services/EmailProviderCompatibilityEnhanced';
 
 interface MetricsPanelProps {
   comprehensiveMetrics: ComprehensiveEmailMetrics | null;
@@ -41,6 +43,11 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
   canvasWidth,
   previewMode
 }) => {
+  const providerMetrics = React.useMemo(() => {
+    if (!emailHTML.trim()) return null;
+    return EmailProviderCompatibilityEnhanced.getCompatibilityMetrics(emailHTML, subjectLine);
+  }, [emailHTML, subjectLine]);
+
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col bg-gray-50 border-r border-gray-200">
@@ -57,7 +64,7 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               {previewMode === 'desktop' ? 
-                <Smartphone className="w-4 h-4" /> : 
+                <Monitor className="w-4 h-4" /> : 
                 <Smartphone className="w-4 h-4" />
               }
               <span>{canvasWidth}px</span>
@@ -251,11 +258,104 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
             </Card>
 
             {/* Email Provider Compatibility */}
-            {emailHTML.trim() && (
-              <EmailProviderCompatibilityCard
-                emailHTML={emailHTML}
-                subjectLine={subjectLine}
-              />
+            {providerMetrics && (
+              <Card className="p-3">
+                <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                  <Mail className="w-3 h-3" />
+                  Email Client Compatibility
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-2 bg-blue-50 rounded border border-blue-100 cursor-help hover:bg-blue-100 transition-colors">
+                        <Mail className="w-3 h-3 mx-auto mb-1 text-blue-600" />
+                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.outlook)}`}>
+                          {providerMetrics.outlook}
+                        </div>
+                        <div className="text-xs text-gray-600">Outlook</div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Microsoft Outlook compatibility score</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-2 bg-red-50 rounded border border-red-100 cursor-help hover:bg-red-100 transition-colors">
+                        <Mail className="w-3 h-3 mx-auto mb-1 text-red-600" />
+                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.gmail)}`}>
+                          {providerMetrics.gmail}
+                        </div>
+                        <div className="text-xs text-gray-600">Gmail</div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Gmail compatibility score</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-2 bg-gray-50 rounded border border-gray-100 cursor-help hover:bg-gray-100 transition-colors">
+                        <Mail className="w-3 h-3 mx-auto mb-1 text-gray-600" />
+                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.appleMail)}`}>
+                          {providerMetrics.appleMail}
+                        </div>
+                        <div className="text-xs text-gray-600">Apple</div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Apple Mail compatibility score</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-2 bg-purple-50 rounded border border-purple-100 cursor-help hover:bg-purple-100 transition-colors">
+                        <Mail className="w-3 h-3 mx-auto mb-1 text-purple-600" />
+                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.yahooMail)}`}>
+                          {providerMetrics.yahooMail}
+                        </div>
+                        <div className="text-xs text-gray-600">Yahoo</div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Yahoo Mail compatibility score</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-2 bg-green-50 rounded border border-green-100 cursor-help hover:bg-green-100 transition-colors">
+                        <Mail className="w-3 h-3 mx-auto mb-1 text-green-600" />
+                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.thunderbird)}`}>
+                          {providerMetrics.thunderbird}
+                        </div>
+                        <div className="text-xs text-gray-600">T-bird</div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Thunderbird compatibility score</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="text-center p-2 bg-orange-50 rounded border border-orange-100 cursor-help hover:bg-orange-100 transition-colors">
+                        <BarChart3 className="w-3 h-3 mx-auto mb-1 text-orange-600" />
+                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.overall)}`}>
+                          {providerMetrics.overall}
+                        </div>
+                        <div className="text-xs text-gray-600">Overall</div>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Overall email client compatibility</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </Card>
             )}
           </div>
         )}

@@ -20,11 +20,13 @@ import {
   Brain,
   Type,
   Target,
-  Smartphone
+  Smartphone,
+  Mail
 } from 'lucide-react';
 import { CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 import { CompleteAnalysisResult } from '@/services/CentralizedAIAnalysisService';
 import { useInlineNotifications } from '@/hooks/useInlineNotifications';
+import { EmailProviderCompatibilityEnhanced } from '@/services/EmailProviderCompatibilityEnhanced';
 
 interface AISuggestionsPanelProps {
   isAnalyzing: boolean;
@@ -35,6 +37,7 @@ interface AISuggestionsPanelProps {
   onApplyFix: (suggestion: CriticalSuggestion) => Promise<void>;
   onApplyAllAutoFixes: () => Promise<void>;
   emailHTML: string;
+  subjectLine: string;
 }
 
 export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
@@ -45,9 +48,26 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
   onRunAnalysis,
   onApplyFix,
   onApplyAllAutoFixes,
-  emailHTML
+  emailHTML,
+  subjectLine
 }) => {
   const { notifications, removeNotification } = useInlineNotifications();
+
+  // Merge provider compatibility suggestions with existing suggestions
+  const compatibilitySuggestions = React.useMemo(() => {
+    if (!emailHTML.trim()) return [];
+    return EmailProviderCompatibilityEnhanced.getCompatibilitySuggestions(emailHTML, subjectLine);
+  }, [emailHTML, subjectLine]);
+
+  const mergedSuggestions = React.useMemo(() => {
+    return [...allSuggestions, ...compatibilitySuggestions].sort((a, b) => {
+      if (a.severity === b.severity) {
+        return b.confidence - a.confidence;
+      }
+      const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
+    });
+  }, [allSuggestions, compatibilitySuggestions]);
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
@@ -71,13 +91,15 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
       case 'personalization': return <User className="w-4 h-4" />;
       case 'tone': return <Brain className="w-4 h-4" />;
       case 'content': return <Type className="w-4 h-4" />;
+      case 'compatibility': return <Mail className="w-4 h-4" />;
       default: return <Lightbulb className="w-4 h-4" />;
     }
   };
 
-  const hasAnalysisResults = allSuggestions.length > 0;
-  const autoFixableCount = allSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
-  const totalSuggestionsCount = allSuggestions.length;
+  const hasAnalysisResults = mergedSuggestions.length > 0;
+  const autoFixableCount = mergedSuggestions.filter(s => s.autoFixable && !appliedFixes.has(s.id)).length;
+  const totalSuggestionsCount = mergedSuggestions.length;
+  const compatibilityIssuesCount = compatibilitySuggestions.length;
 
   return (
     <div className="h-full flex flex-col bg-gray-50 border-l border-gray-200">
@@ -103,6 +125,12 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
             {totalSuggestionsCount > 0 && (
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                 {totalSuggestionsCount} issues
+              </Badge>
+            )}
+            
+            {compatibilityIssuesCount > 0 && (
+              <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                {compatibilityIssuesCount} compatibility
               </Badge>
             )}
             
@@ -185,7 +213,7 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
               <Brain className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">AI Analysis Ready</h3>
               <p className="text-gray-600 mb-4 text-sm">
-                Get intelligent suggestions to improve your email's performance, deliverability, and engagement.
+                Get intelligent suggestions to improve your email's performance, deliverability, and compatibility.
               </p>
               <div className="flex flex-col gap-2 text-sm text-gray-500">
                 <div className="flex items-center justify-center gap-1">
@@ -194,7 +222,7 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
                 </div>
                 <div className="flex items-center justify-center gap-1">
                   <CheckCircle className="w-4 h-4 text-blue-500" />
-                  Mobile Optimization
+                  Email Client Compatibility
                 </div>
                 <div className="flex items-center justify-center gap-1">
                   <CheckCircle className="w-4 h-4 text-purple-500" />
@@ -205,22 +233,22 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
           )}
 
           {/* AI Suggestions & Auto-Fixes */}
-          {allSuggestions.length > 0 && (
+          {mergedSuggestions.length > 0 && (
             <Card className="p-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Suggestions & Auto-Fixes</h3>
                 <div className="flex flex-col gap-1">
                   <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
-                    {allSuggestions.filter(s => s.severity === 'critical').length} critical
+                    {mergedSuggestions.filter(s => s.severity === 'critical').length} critical
                   </Badge>
                   <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-xs">
-                    {allSuggestions.filter(s => s.severity === 'high').length} high
+                    {mergedSuggestions.filter(s => s.severity === 'high').length} high
                   </Badge>
                 </div>
               </div>
 
               <div className="space-y-3">
-                {allSuggestions.map((suggestion) => (
+                {mergedSuggestions.map((suggestion) => (
                   <div
                     key={suggestion.id}
                     className={`p-4 rounded-lg border ${
@@ -255,6 +283,11 @@ export const AISuggestionsPanel: React.FC<AISuggestionsPanelProps> = ({
                       >
                         {suggestion.severity}
                       </Badge>
+                      {suggestion.category === 'compatibility' && (
+                        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                          Email Client
+                        </Badge>
+                      )}
                       {suggestion.autoFixable && (
                         <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                           Auto-fixable

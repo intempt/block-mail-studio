@@ -436,7 +436,22 @@ export default function EmailEditor({
         fixType = 'subject';
         success('Subject line updated!');
       } else if (suggestion.current && suggestion.suggested) {
-        updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
+        // Handle compatibility fixes
+        if (suggestion.category === 'compatibility') {
+          if (suggestion.current.includes('box-shadow') || suggestion.current.includes('border-radius')) {
+            // Remove unsupported CSS
+            updatedContent = emailContent.replace(new RegExp(suggestion.current.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), suggestion.suggested);
+          } else if (suggestion.current.includes('<style') && !suggestion.current.includes('data-embed')) {
+            // Add data-embed attribute
+            updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
+          } else if (suggestion.current.includes('background-image')) {
+            // Add VML fallback (simplified)
+            updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
+          }
+        } else {
+          // Handle regular content fixes
+          updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
+        }
         
         if (updatedContent !== emailContent) {
           onContentChange(updatedContent);
@@ -597,6 +612,7 @@ export default function EmailEditor({
               onApplyFix={handleApplyFix}
               onApplyAllAutoFixes={handleApplyAllAutoFixes}
               emailHTML={emailContent}
+              subjectLine={subject}
             />
           </div>
         )}
