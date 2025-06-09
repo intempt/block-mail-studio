@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,9 +42,29 @@ export const AITestingSuite: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [currentTest, setCurrentTest] = useState<string | null>(null);
   const [overallStatus, setOverallStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
+  const [apiKeyAvailable, setApiKeyAvailable] = useState<boolean>(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<string>('checking...');
 
   // Add analytics hook for testing
   const { analyze, result, isAnalyzing, error, clearCache, getCacheStats } = useEmailAnalytics();
+
+  // Check API key status on component mount
+  useEffect(() => {
+    const checkApiKeyStatus = async () => {
+      try {
+        const isAvailable = await ApiKeyService.isKeyAvailable();
+        const status = await ApiKeyService.getKeyStatus();
+        setApiKeyAvailable(isAvailable);
+        setApiKeyStatus(status);
+      } catch (error) {
+        console.error('Error checking API key status:', error);
+        setApiKeyAvailable(false);
+        setApiKeyStatus('error');
+      }
+    };
+
+    checkApiKeyStatus();
+  }, []);
 
   const testSampleContent = {
     emailHTML: `<div class="email-container">
@@ -100,12 +121,12 @@ export const AITestingSuite: React.FC = () => {
       
       switch (test.id) {
         case 'api-key':
-          const keyStatus = ApiKeyService.getKeyStatus();
+          const keyStatus = await ApiKeyService.getKeyStatus();
           if (keyStatus !== 'valid') {
             throw new Error(`API key status: ${keyStatus}`);
           }
           result = 'API key is properly configured and valid';
-          details = `Key status: ${keyStatus}, Available: ${ApiKeyService.isKeyAvailable()}`;
+          details = `Key status: ${keyStatus}, Available: ${await ApiKeyService.isKeyAvailable()}`;
           break;
 
         case 'api-connectivity':
@@ -125,7 +146,7 @@ export const AITestingSuite: React.FC = () => {
             tone: 'professional',
             type: 'welcome'
           });
-          details = `Generated email with subject: ${result.subject || 'No subject'}`;
+          details = `Generated email with subject: ${result.data?.subject || 'No subject'}`;
           break;
 
         case 'brand-voice-analysis':
@@ -134,7 +155,7 @@ export const AITestingSuite: React.FC = () => {
             testSampleContent.emailHTML,
             testSampleContent.subjectLine
           );
-          details = `Brand voice score: ${result.brandVoiceScore}, Engagement: ${result.engagementScore}`;
+          details = `Brand voice score: ${result.data?.brandVoiceScore}, Engagement: ${result.data?.engagementScore}`;
           break;
 
         case 'performance-analysis':
@@ -143,7 +164,7 @@ export const AITestingSuite: React.FC = () => {
             testSampleContent.emailHTML,
             testSampleContent.subjectLine
           );
-          details = `Overall score: ${result.overallScore}, Deliverability: ${result.deliverabilityScore}`;
+          details = `Overall score: ${result.data?.overallScore}, Deliverability: ${result.data?.deliverabilityScore}`;
           break;
 
         case 'subject-line-optimization':
@@ -152,7 +173,7 @@ export const AITestingSuite: React.FC = () => {
             testSampleContent.subjectLine,
             testSampleContent.emailHTML
           );
-          details = `Generated ${result.suggestions?.length || 0} suggestions, Score: ${result.score}`;
+          details = `Generated ${result.data?.suggestions?.length || 0} suggestions, Score: ${result.data?.score}`;
           break;
 
         case 'content-refinement':
@@ -161,7 +182,7 @@ export const AITestingSuite: React.FC = () => {
             testSampleContent.emailHTML,
             'Make this email more engaging and add urgency'
           );
-          details = `Content refined successfully, length: ${typeof result === 'string' ? result.length : 'N/A'} chars`;
+          details = `Content refined successfully, length: ${typeof result.data === 'string' ? result.data.length : 'N/A'} chars`;
           break;
 
         case 'conversational-ai':
@@ -170,7 +191,7 @@ export const AITestingSuite: React.FC = () => {
             'Help me create a product announcement email',
             []
           );
-          details = `Response length: ${typeof result === 'string' ? result.length : 'N/A'} characters`;
+          details = `Response length: ${typeof result.data === 'string' ? result.data.length : 'N/A'} characters`;
           break;
         
         // New Analytics Architecture Tests
@@ -233,7 +254,6 @@ export const AITestingSuite: React.FC = () => {
           break;
 
         default:
-          // Keep existing test cases...
           throw new Error('Unknown test');
       }
 
@@ -343,14 +363,14 @@ export const AITestingSuite: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Badge variant={ApiKeyService.isKeyAvailable() ? 'default' : 'destructive'} className="flex items-center gap-1">
-              {ApiKeyService.isKeyAvailable() ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
-              {ApiKeyService.isKeyAvailable() ? 'API Connected' : 'API Not Available'}
+            <Badge variant={apiKeyAvailable ? 'default' : 'destructive'} className="flex items-center gap-1">
+              {apiKeyAvailable ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+              {apiKeyAvailable ? 'API Connected' : 'API Not Available'}
             </Badge>
             
             <Button 
               onClick={runAllTests} 
-              disabled={isRunning || !ApiKeyService.isKeyAvailable()}
+              disabled={isRunning || !apiKeyAvailable}
               className="flex items-center gap-2"
             >
               <Play className="w-4 h-4" />
@@ -447,7 +467,7 @@ export const AITestingSuite: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => runSingleTest(test.id)}
-                      disabled={!ApiKeyService.isKeyAvailable()}
+                      disabled={!apiKeyAvailable}
                       className="text-xs"
                     >
                       Retry
@@ -463,8 +483,8 @@ export const AITestingSuite: React.FC = () => {
       <div className="p-4 border-t border-gray-200 bg-gray-50">
         <div className="text-xs text-gray-600 space-y-1">
           <p><strong>Test Coverage:</strong> All major AI components, OpenAI integrations, and new analytics architecture</p>
-          <p><strong>API Key:</strong> {ApiKeyService.isKeyAvailable() ? 'Configured and ready' : 'Not available - check API key configuration'}</p>
-          <p><strong>Service Status:</strong> {ApiKeyService.getKeyStatus()}</p>
+          <p><strong>API Key:</strong> {apiKeyAvailable ? 'Configured and ready' : 'Not available - check API key configuration'}</p>
+          <p><strong>Service Status:</strong> {apiKeyStatus}</p>
           <div className="flex items-center gap-1 mt-2">
             <Info className="w-3 h-3 text-blue-500" />
             <span className="text-blue-600">Enhanced analytics architecture with fallback responses active</span>
