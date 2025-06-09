@@ -1,185 +1,236 @@
-import { OpenAIEmailService } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
 
 export interface CriticalSuggestion {
   id: string;
-  category: 'subject' | 'deliverability' | 'cta' | 'mobile' | 'compliance' | 'accessibility' | 'structure' | 'personalization' | 'tone';
-  type: 'subject' | 'copy' | 'cta' | 'tone' | 'compliance' | 'accessibility' | 'structure' | 'personalization';
   title: string;
+  reason: string;
+  category: 'subject' | 'deliverability' | 'cta' | 'mobile' | 'compliance' | 'accessibility' | 'structure' | 'personalization' | 'tone' | 'content' | 'compatibility';
+  type: 'subject' | 'cta' | 'compliance' | 'accessibility' | 'structure' | 'personalization' | 'tone' | 'copy' | 'compatibility';
   current: string;
   suggested: string;
-  reason: string;
+  severity: 'critical' | 'high' | 'medium' | 'low';
   impact: 'critical' | 'high' | 'medium' | 'low';
   confidence: number;
-  severity: 'critical' | 'high' | 'medium' | 'low';
   autoFixable: boolean;
   priority: number;
-  businessImpact: string;
-  applied?: boolean;
+  businessImpact?: string;
 }
 
 export class CriticalEmailAnalysisService {
-  private static cache = new Map<string, { data: CriticalSuggestion[]; timestamp: number }>();
-  private static CACHE_DURATION = 300000; // 5 minutes
-
-  static async analyzeCriticalIssues(emailHTML: string, subjectLine: string): Promise<CriticalSuggestion[]> {
-    const analysisId = `critical-${Date.now()}`;
-    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - analyzeCriticalIssues() called`);
-    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Email HTML length: ${emailHTML.length}`);
-    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Subject line: "${subjectLine}"`);
+  static async analyzeCriticalIssues(htmlContent: string, subjectLine: string): Promise<CriticalSuggestion[]> {
+    const suggestions: CriticalSuggestion[] = [];
     
-    if (!emailHTML.trim()) {
-      console.warn(`[CRITICAL-ANALYSIS] ${analysisId} - Empty email content provided`);
-      return [];
+    // Add subject line analysis
+    if (subjectLine) {
+      const subjectSuggestions = await this.analyzeSubjectLine(subjectLine);
+      suggestions.push(...subjectSuggestions);
     }
-
-    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Validating API key...`);
-    const isKeyValid = await ApiKeyService.validateKey();
-    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - API key validation result: ${isKeyValid}`);
     
-    if (!isKeyValid) {
-      console.warn(`[CRITICAL-ANALYSIS] ${analysisId} - OpenAI API key not valid, skipping AI analysis`);
-      return [];
+    // Add content analysis
+    if (htmlContent) {
+      const contentSuggestions = await this.analyzeEmailContent(htmlContent);
+      suggestions.push(...contentSuggestions);
     }
-
-    const cacheKey = `critical-${emailHTML}-${subjectLine}`;
-    const cached = this.cache.get(cacheKey);
     
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Using cached result`);
-      return cached.data;
-    }
-
-    try {
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Calling OpenAI for comprehensive issue detection`);
+    return suggestions.sort((a, b) => {
+      // Sort by severity first
+      const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+      const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+      if (severityDiff !== 0) return severityDiff;
       
-      const prompt = `Analyze this COMPLETE EMAIL for critical marketing mistakes and provide actionable suggestions:
-
-SUBJECT LINE: "${subjectLine}"
-
-FULL EMAIL CONTENT:
-${emailHTML}
-
-Analyze for these TOP EMAIL MARKETING MISTAKES:
-1. Subject Line Issues (length, spam triggers, engagement hooks)
-2. Deliverability Threats (spam words, excessive caps, poor sender reputation signals)
-3. Call-to-Action Problems (weak CTAs, too many/few, poor placement)
-4. Mobile Optimization Failures (width issues, font sizes, touch targets)
-5. Compliance Violations (missing unsubscribe, CAN-SPAM issues)
-6. Accessibility Issues (missing alt text, poor contrast, screen reader issues)
-7. Content Structure Problems (poor hierarchy, wall of text, no scanability)
-8. Personalization Missed Opportunities (generic content, no segmentation)
-9. Tone/Voice Inconsistencies (professional vs casual mismatches)
-
-For EACH identified issue, provide specific suggestions with:
-- Exact current problematic text/element
-- Specific suggested improvement
-- Business impact explanation with metrics
-- Priority level based on impact severity
-
-Return JSON array of suggestions:
-{
-  "suggestions": [
-    {
-      "category": "subject",
-      "type": "subject", 
-      "title": "Subject line too long for mobile",
-      "current": "Actual current subject line text",
-      "suggested": "Specific improved version under 50 chars",
-      "reason": "Detailed explanation of why this is problematic",
-      "impact": "critical",
-      "confidence": 92,
-      "severity": "high",
-      "autoFixable": true,
-      "priority": 1,
-      "businessImpact": "Could increase open rates by 15-25% on mobile devices"
-    }
-  ]
-}
-
-Focus on REAL issues found in the actual content. Only suggest improvements for problems that actually exist.`;
-
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Sending prompt to OpenAI (length: ${prompt.length})`);
-      const result = await OpenAIEmailService.callOpenAI(prompt, 2, true);
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - OpenAI response received`);
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Response structure:`, {
-        hasSuggestions: !!result.suggestions,
-        suggestionsLength: result.suggestions?.length || 0
-      });
-      
-      const suggestions: CriticalSuggestion[] = (result.suggestions || []).map((suggestion: any, index: number) => ({
-        id: `critical-${Date.now()}-${index}`,
-        category: suggestion.category || 'structure',
-        type: suggestion.type || suggestion.category || 'copy',
-        title: suggestion.title || 'Improvement suggestion',
-        current: suggestion.current || '',
-        suggested: suggestion.suggested || '',
-        reason: suggestion.reason || '',
-        impact: suggestion.impact || 'medium',
-        confidence: suggestion.confidence || 75,
-        severity: suggestion.severity || suggestion.impact || 'medium',
-        autoFixable: suggestion.autoFixable || false,
-        priority: suggestion.priority || index + 1,
-        businessImpact: suggestion.businessImpact || 'May improve email performance',
-        applied: false
-      }));
-
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Processed ${suggestions.length} suggestions`);
-
-      // Sort by priority and severity
-      suggestions.sort((a, b) => {
-        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
-        if (severityOrder[a.severity] !== severityOrder[b.severity]) {
-          return severityOrder[b.severity] - severityOrder[a.severity];
-        }
-        return a.priority - b.priority;
-      });
-
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Suggestions sorted by priority`);
-
-      // Cache the result
-      this.cache.set(cacheKey, { data: suggestions, timestamp: Date.now() });
-      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Result cached`);
-      
-      return suggestions;
-      
-    } catch (error) {
-      console.error(`[CRITICAL-ANALYSIS] ${analysisId} - Analysis failed:`, {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
-      throw error; // Let the component handle the error inline
-    }
+      // Then by confidence (higher confidence first)
+      return b.confidence - a.confidence;
+    });
   }
-
-  static clearCache(): void {
-    this.cache.clear();
-    console.log('Critical analysis cache cleared');
-  }
-
-  static getSeverityColor(severity: string): string {
-    switch (severity) {
-      case 'critical': return 'bg-red-100 text-red-700 border-red-300';
-      case 'high': return 'bg-orange-100 text-orange-700 border-orange-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-      case 'low': return 'bg-blue-100 text-blue-700 border-blue-300';
-      default: return 'bg-gray-100 text-gray-700 border-gray-300';
+  
+  private static async analyzeSubjectLine(subjectLine: string): Promise<CriticalSuggestion[]> {
+    const suggestions: CriticalSuggestion[] = [];
+    
+    // Check for ALL CAPS
+    if (subjectLine === subjectLine.toUpperCase() && subjectLine.length > 10) {
+      suggestions.push({
+        id: 'subject-caps-1',
+        title: 'Avoid ALL CAPS in subject line',
+        reason: 'Using all capital letters in subject lines can trigger spam filters and appears like shouting to recipients.',
+        category: 'subject',
+        type: 'subject',
+        current: subjectLine,
+        suggested: subjectLine.charAt(0).toUpperCase() + subjectLine.slice(1).toLowerCase(),
+        severity: 'high',
+        impact: 'high',
+        confidence: 95,
+        autoFixable: true,
+        priority: 1,
+        businessImpact: 'May improve deliverability and open rates'
+      });
     }
-  }
-
-  static getCategoryIcon(category: string): string {
-    switch (category) {
-      case 'subject': return 'Target';
-      case 'deliverability': return 'Shield';
-      case 'cta': return 'Zap';
-      case 'mobile': return 'Smartphone';
-      case 'compliance': return 'FileCheck';
-      case 'accessibility': return 'Eye';
-      case 'structure': return 'Layout';
-      case 'personalization': return 'User';
-      case 'tone': return 'Brain';
-      default: return 'Lightbulb';
+    
+    // Check for excessive punctuation
+    if ((subjectLine.match(/!/g) || []).length > 1 || (subjectLine.match(/\?/g) || []).length > 1) {
+      suggestions.push({
+        id: 'subject-punct-1',
+        title: 'Excessive punctuation detected',
+        reason: 'Multiple exclamation or question marks can trigger spam filters.',
+        category: 'subject',
+        type: 'subject',
+        current: subjectLine,
+        suggested: subjectLine.replace(/!{2,}/g, '!').replace(/\?{2,}/g, '?'),
+        severity: 'medium',
+        impact: 'medium',
+        confidence: 90,
+        autoFixable: true,
+        priority: 2,
+        businessImpact: 'May improve deliverability'
+      });
     }
+    
+    // Check for spam trigger words
+    const spamTriggerWords = ['free', 'guarantee', 'no risk', 'winner', 'cash', 'prize', 'urgent'];
+    const lowerSubject = subjectLine.toLowerCase();
+    const foundTriggerWords = spamTriggerWords.filter(word => lowerSubject.includes(word));
+    
+    if (foundTriggerWords.length > 0) {
+      suggestions.push({
+        id: 'subject-spam-1',
+        title: 'Potential spam trigger words',
+        reason: `Subject contains words that may trigger spam filters: ${foundTriggerWords.join(', ')}`,
+        category: 'subject',
+        type: 'subject',
+        current: subjectLine,
+        suggested: 'Consider rephrasing without spam trigger words',
+        severity: 'high',
+        impact: 'high',
+        confidence: 85,
+        autoFixable: false,
+        priority: 1,
+        businessImpact: 'May significantly improve deliverability'
+      });
+    }
+    
+    // Check subject line length
+    if (subjectLine.length > 60) {
+      suggestions.push({
+        id: 'subject-length-1',
+        title: 'Subject line too long',
+        reason: 'Subject lines over 60 characters may be truncated in some email clients.',
+        category: 'subject',
+        type: 'subject',
+        current: subjectLine,
+        suggested: subjectLine.substring(0, 57) + '...',
+        severity: 'medium',
+        impact: 'medium',
+        confidence: 80,
+        autoFixable: true,
+        priority: 3,
+        businessImpact: 'May improve open rates on mobile devices'
+      });
+    }
+    
+    return suggestions;
+  }
+  
+  private static async analyzeEmailContent(htmlContent: string): Promise<CriticalSuggestion[]> {
+    const suggestions: CriticalSuggestion[] = [];
+    
+    // Check image alt text
+    const imgTags = htmlContent.match(/<img[^>]*>/g) || [];
+    const missingAltText = imgTags.filter(img => !img.includes('alt=') || img.includes('alt=""'));
+    
+    if (missingAltText.length > 0) {
+      suggestions.push({
+        id: 'accessibility-alt-1',
+        title: 'Missing image alt text',
+        reason: `${missingAltText.length} images are missing alt text, which is important for accessibility and when images are blocked.`,
+        category: 'accessibility',
+        type: 'accessibility',
+        current: missingAltText[0],
+        suggested: missingAltText[0].replace(/<img/, '<img alt="Descriptive text here"'),
+        severity: 'medium',
+        impact: 'medium',
+        confidence: 95,
+        autoFixable: false,
+        priority: 2,
+        businessImpact: 'Improves accessibility and user experience when images are blocked'
+      });
+    }
+    
+    // Check for mobile responsiveness
+    if (!htmlContent.includes('@media') && !htmlContent.includes('max-width')) {
+      suggestions.push({
+        id: 'mobile-responsive-1',
+        title: 'Not mobile responsive',
+        reason: 'No responsive design elements detected. Email may not display well on mobile devices.',
+        category: 'mobile',
+        type: 'structure',
+        current: '<style>/* Your current CSS */</style>',
+        suggested: '<style>\n@media (max-width: 600px) {\n  .mobile-responsive {\n    width: 100% !important;\n    display: block !important;\n  }\n}\n</style>',
+        severity: 'high',
+        impact: 'high',
+        confidence: 85,
+        autoFixable: false,
+        priority: 1,
+        businessImpact: 'Over 60% of emails are opened on mobile devices'
+      });
+    }
+    
+    // Check for large images
+    if (htmlContent.includes('width="600"') || htmlContent.includes('width="700"') || htmlContent.includes('width="800"')) {
+      suggestions.push({
+        id: 'mobile-image-size-1',
+        title: 'Images too large for mobile',
+        reason: 'Large fixed-width images may cause horizontal scrolling on mobile devices.',
+        category: 'mobile',
+        type: 'structure',
+        current: 'width="600"',
+        suggested: 'width="100%" style="max-width: 600px;"',
+        severity: 'medium',
+        impact: 'medium',
+        confidence: 90,
+        autoFixable: true,
+        priority: 2,
+        businessImpact: 'Improves mobile user experience'
+      });
+    }
+    
+    // Check for CTA visibility
+    const buttonCount = (htmlContent.match(/<button|<a[^>]*class="[^"]*button/g) || []).length;
+    if (buttonCount === 0) {
+      suggestions.push({
+        id: 'cta-missing-1',
+        title: 'No clear call-to-action',
+        reason: 'No buttons or clear CTAs detected in the email.',
+        category: 'cta',
+        type: 'cta',
+        current: '',
+        suggested: '<a href="#" style="background-color: #0066cc; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Click Here</a>',
+        severity: 'high',
+        impact: 'high',
+        confidence: 80,
+        autoFixable: false,
+        priority: 1,
+        businessImpact: 'CTAs significantly increase conversion rates'
+      });
+    }
+    
+    // Check for unsubscribe link
+    if (!htmlContent.toLowerCase().includes('unsubscribe')) {
+      suggestions.push({
+        id: 'compliance-unsub-1',
+        title: 'Missing unsubscribe link',
+        reason: 'No unsubscribe link detected. This is required for CAN-SPAM compliance.',
+        category: 'compliance',
+        type: 'compliance',
+        current: '',
+        suggested: '<p style="font-size: 12px; color: #666;">To unsubscribe from these emails, <a href="#">click here</a>.</p>',
+        severity: 'critical',
+        impact: 'critical',
+        confidence: 95,
+        autoFixable: false,
+        priority: 0,
+        businessImpact: 'Legal requirement in most countries'
+      });
+    }
+    
+    return suggestions;
   }
 }
