@@ -1,7 +1,7 @@
 
 // Centralized API Key Management with Working OpenAI Key
 export class ApiKeyService {
-  private static readonly API_KEY: string = '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';
+  private static readonly API_KEY: string = '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';
   
   public static getOpenAIKey(): string {
     return this.API_KEY;
