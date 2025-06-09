@@ -53,7 +53,6 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
 
   const handleDesktopClick = () => {
     if (isInPreviewMode) {
-      // In preview mode, switch to desktop preview
       onViewModeChange?.('desktop-preview');
     }
     onPreviewModeChange?.('desktop');
@@ -61,7 +60,6 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
 
   const handleMobileClick = () => {
     if (isInPreviewMode) {
-      // In preview mode, switch to mobile preview
       onViewModeChange?.('mobile-preview');
     }
     onPreviewModeChange?.('mobile');
@@ -69,11 +67,9 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
 
   const handlePreviewToggle = () => {
     if (viewMode === 'edit') {
-      // Switch to preview mode based on current preview mode
       const newViewMode = previewMode === 'desktop' ? 'desktop-preview' : 'mobile-preview';
       onViewModeChange?.(newViewMode);
     } else {
-      // Switch back to edit mode
       onViewModeChange?.('edit');
     }
   };
@@ -135,7 +131,7 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
           </div>
         </div>
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           {/* Preview Mode Toggle Button */}
           <Button
             onClick={handlePreviewToggle}
@@ -159,37 +155,28 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             )}
           </Button>
 
-          {/* Desktop/Mobile Toggle - Enhanced for preview mode */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-1 border border-gray-200">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDesktopClick}
-              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                currentPreviewMode === 'desktop'
-                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-              }`}
-              title="Desktop View"
-            >
-              <Monitor className="w-4 h-4" />
-              <span className="text-sm">Desktop</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMobileClick}
-              className={`flex items-center gap-2 h-9 px-4 rounded-md transition-all font-medium ${
-                currentPreviewMode === 'mobile'
-                  ? 'bg-white shadow-sm text-blue-600 border border-blue-200' 
-                  : 'text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-              }`}
-              title="Mobile View"
-            >
-              <Smartphone className="w-4 h-4" />
-              <span className="text-sm">Mobile</span>
-            </Button>
-          </div>
+          {/* Desktop/Mobile Buttons - Now consistent with other action buttons */}
+          <Button
+            variant={currentPreviewMode === 'desktop' ? 'default' : 'outline'}
+            size="sm"
+            onClick={handleDesktopClick}
+            className="flex items-center gap-2 h-9 px-3 min-w-[80px] justify-center"
+            title="Desktop View"
+          >
+            <Monitor className="w-4 h-4" />
+            Desktop
+          </Button>
+          
+          <Button
+            variant={currentPreviewMode === 'mobile' ? 'default' : 'outline'}
+            size="sm"
+            onClick={handleMobileClick}
+            className="flex items-center gap-2 h-9 px-3 min-w-[80px] justify-center"
+            title="Mobile View"
+          >
+            <Smartphone className="w-4 h-4" />
+            Mobile
+          </Button>
           
           <Button
             variant="outline"
