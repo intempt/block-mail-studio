@@ -51,23 +51,19 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
   return (
     <TooltipProvider>
       <div className="h-full flex flex-col bg-gray-50 border-r border-gray-200">
-        {/* Header */}
+        {/* Header with Canvas Width */}
         <div className="p-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-gray-900">Email Metrics</span>
-          </div>
-        </div>
-
-        {/* Canvas Info */}
-        <div className="p-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-3 text-sm text-gray-600">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-gray-900">Email Metrics</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-600">
               {previewMode === 'desktop' ? 
-                <Monitor className="w-4 h-4" /> : 
-                <Smartphone className="w-4 h-4" />
+                <Monitor className="w-3 h-3" /> : 
+                <Smartphone className="w-3 h-3" />
               }
-              <span>{canvasWidth}px</span>
+              <span className="font-mono">{canvasWidth}px</span>
             </div>
           </div>
         </div>
