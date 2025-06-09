@@ -348,7 +348,7 @@ export default function EmailEditor({
         )}
 
         {/* Canvas Area */}
-        <div className="flex-1 overflow-auto bg-gray-50 p-6">
+        <div className="flex-1 overflow-auto bg-gray-50 p-6 relative">
           <EmailBlockCanvas
             ref={canvasRef}
             onContentChange={handleContentChange}
@@ -363,6 +363,22 @@ export default function EmailEditor({
             onSnippetRefresh={() => setSnippetRefreshTrigger(prev => prev + 1)}
             viewMode={viewMode}
           />
+
+          {/* Undo Manager - Fixed position in top-right of canvas */}
+          {viewMode === 'edit' && (
+            <div className="absolute top-4 right-4 z-50">
+              <div className="bg-white rounded-lg shadow-lg border p-2">
+                <UndoManager 
+                  ref={undoManagerRef}
+                  blocks={emailBlocks} 
+                  subject={subject}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  onStateRestore={handleStateRestore}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -401,16 +417,6 @@ export default function EmailEditor({
           onClose={() => setShowTemplateLibrary(false)}
         />
       )}
-
-      {/* Undo Manager */}
-      <UndoManager 
-        ref={undoManagerRef}
-        blocks={emailBlocks} 
-        subject={subject}
-        onUndo={handleUndo}
-        onRedo={handleRedo}
-        onStateRestore={handleStateRestore}
-      />
     </div>
   );
 }
