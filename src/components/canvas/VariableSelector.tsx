@@ -10,7 +10,8 @@ import {
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Variable, ChevronDown } from 'lucide-react';
-import { dummyVariables, VariableOption } from '../../../dummy/variables';
+import { dummyVariables } from '@/services/userData';
+import { VariableOption } from '@/types/user';
 
 interface VariableSelectorProps {
   onSelectVariable: (variable: VariableOption) => void;

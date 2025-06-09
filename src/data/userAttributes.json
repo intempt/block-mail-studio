@@ -1,0 +1,67 @@
+
+[
+  {
+    "name": "identifier",
+    "displayName": "Email Address",
+    "description": "User's email identifier",
+    "valueType": "STR",
+    "type": "user",
+    "category": "extracted"
+  },
+  {
+    "name": "lastSeen",
+    "displayName": "Last Seen",
+    "description": "When the user was last active",
+    "valueType": "DATE",
+    "type": "user", 
+    "category": "extracted"
+  },
+  {
+    "name": "profile",
+    "displayName": "Profile ID",
+    "description": "Unique profile identifier",
+    "valueType": "STR",
+    "type": "user",
+    "category": "extracted"
+  },
+  {
+    "name": "firstName",
+    "displayName": "First Name",
+    "description": "User's first name",
+    "valueType": "STR",
+    "type": "user",
+    "category": "custom"
+  },
+  {
+    "name": "lastName",
+    "displayName": "Last Name", 
+    "description": "User's last name",
+    "valueType": "STR",
+    "type": "user",
+    "category": "custom"
+  },
+  {
+    "name": "signupDate",
+    "displayName": "Signup Date",
+    "description": "When the user signed up",
+    "valueType": "DATE",
+    "type": "user",
+    "category": "extracted"
+  },
+  {
+    "name": "totalPurchases",
+    "displayName": "Total Purchases",
+    "description": "Number of purchases made",
+    "valueType": "NUM",
+    "type": "user",
+    "category": "computed"
+  },
+  {
+    "name": "lifetimeValue",
+    "displayName": "Lifetime Value",
+    "description": "Total customer value",
+    "valueType": "NUM",
+    "type": "user",
+    "category": "computed"
+  }
+]

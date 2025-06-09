@@ -8,8 +8,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { users, User } from '../../dummy/users';
-import { getUserDetails, UserDetails } from '../../dummy/userDetails';
+import { users, getUserDetails } from '@/services/userData';
+import { User, UserDetails } from '@/types/user';
 
 interface FilterCriteria {
   attribute: string;
@@ -108,8 +108,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
       return user[commonAttributes[attributeName]];
     }
 
-    // For other attributes, you might need to extend User type or handle custom attributes
-    // For now, return undefined for unknown attributes
+    // For other attributes, return undefined
     return undefined;
   };
 

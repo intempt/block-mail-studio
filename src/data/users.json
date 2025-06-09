@@ -1,0 +1,28 @@
+
+[
+  {
+    "profile": "user_001",
+    "identifier": "john.doe@example.com",
+    "lastSeen": "2024-01-15"
+  },
+  {
+    "profile": "user_002", 
+    "identifier": "jane.smith@example.com",
+    "lastSeen": "2024-01-14"
+  },
+  {
+    "profile": "user_003",
+    "identifier": "bob.wilson@example.com", 
+    "lastSeen": "2024-01-13"
+  },
+  {
+    "profile": "user_004",
+    "identifier": "alice.brown@example.com",
+    "lastSeen": "2024-01-12"
+  },
+  {
+    "profile": "user_005",
+    "identifier": "charlie.davis@example.com",
+    "lastSeen": "2024-01-11"
+  }
+]

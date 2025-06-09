@@ -14,6 +14,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
+import { userAttributes } from '@/services/userData';
+import { UserAttribute } from '@/types/user';
 
 interface AttributeSelectorProps {
   selectedAttribute: string;
@@ -29,7 +31,7 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [selectedAttributeType, setSelectedAttributeType] = useState<string>('all');
   const [searchValue, setSearchValue] = useState('');
-  const [filteredAttributes, setFilteredAttributes] = useState<any[]>([]);
+  const [filteredAttributes, setFilteredAttributes] = useState<UserAttribute[]>([]);
   const [selectedLabel, setSelectedLabel] = useState('Select attribute');
 
   const attributeTypes = [
@@ -39,89 +41,49 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
     { value: 'segment', label: 'Calculated attributes', icon: BarChart3 },
   ];
 
-  const loadUserAttributes = async () => {
-    try {
-      const module = await import('../../dummy/userAttributes');
-      
-      if (!module || !module.userAttributes) {
-        console.warn('No user attributes found in module');
-        return [];
-      }
-
-      const rawAttributes = module.userAttributes as any[];
-      
-      return rawAttributes.filter((attr: any) => {
-        return attr && 
-               typeof attr === 'object' && 
-               attr.name && 
-               typeof attr.name === 'string';
+  const getFilteredAttributes = () => {
+    let typeAttributes: UserAttribute[];
+    if (selectedAttributeType === 'all') {
+      typeAttributes = userAttributes;
+    } else {
+      typeAttributes = userAttributes.filter((attr: UserAttribute) => {
+        const attrType = attr.type || attr.category;
+        
+        if (selectedAttributeType === 'account' && attrType === 'account') return true;
+        if (selectedAttributeType === 'user' && attrType === 'user') return true;
+        if (selectedAttributeType === 'segment' && (attrType === 'segment' || attrType === 'computed')) return true;
+        
+        return attrType === selectedAttributeType;
       });
-    } catch (error) {
-      console.warn('Failed to load user attributes:', error);
-      return [];
     }
+    
+    if (!searchValue) return typeAttributes;
+    
+    return typeAttributes.filter((attr: UserAttribute) => {
+      const name = String(attr.name || '');
+      const displayName = String(attr.displayName || '');
+      const description = String(attr.description || '');
+      
+      const searchLower = searchValue.toLowerCase();
+      return name.toLowerCase().includes(searchLower) ||
+             displayName.toLowerCase().includes(searchLower) ||
+             description.toLowerCase().includes(searchLower);
+    });
   };
 
-  const getFilteredAttributes = async () => {
-    try {
-      const allAttributes = await loadUserAttributes();
-      
-      let typeAttributes: any[];
-      if (selectedAttributeType === 'all') {
-        typeAttributes = allAttributes;
-      } else {
-        typeAttributes = allAttributes.filter((attr: any) => {
-          if (!attr) return false;
-          
-          const attrType = attr.type || attr.category || attr.attributeType;
-          
-          if (selectedAttributeType === 'account' && attrType === 'account') return true;
-          if (selectedAttributeType === 'user' && attrType === 'user') return true;
-          if (selectedAttributeType === 'segment' && (attrType === 'segment' || attrType === 'scoring' || attrType === 'computed')) return true;
-          
-          return attrType === selectedAttributeType;
-        });
-      }
-      
-      if (!searchValue) return typeAttributes;
-      
-      return typeAttributes.filter((attr: any) => {
-        if (!attr) return false;
-        
-        const name = String(attr.name || '');
-        const displayName = String(attr.displayName || '');
-        const description = String(attr.description || '');
-        
-        const searchLower = searchValue.toLowerCase();
-        return name.toLowerCase().includes(searchLower) ||
-               displayName.toLowerCase().includes(searchLower) ||
-               description.toLowerCase().includes(searchLower);
-      });
-    } catch (error) {
-      console.warn('Error filtering attributes:', error);
-      return [];
-    }
-  };
-
-  const getSelectedAttributeLabel = async () => {
+  const getSelectedAttributeLabel = () => {
     if (!selectedAttribute) return 'Select attribute';
     
-    try {
-      const allAttributes = await loadUserAttributes();
-      const attribute = allAttributes.find((attr: any) => attr?.name === selectedAttribute);
-      return attribute ? (attribute.displayName || attribute.name) : selectedAttribute;
-    } catch (error) {
-      console.warn('Error finding attribute:', error);
-      return selectedAttribute;
-    }
+    const attribute = userAttributes.find((attr: UserAttribute) => attr?.name === selectedAttribute);
+    return attribute ? (attribute.displayName || attribute.name) : selectedAttribute;
   };
 
   useEffect(() => {
-    getFilteredAttributes().then(setFilteredAttributes);
+    setFilteredAttributes(getFilteredAttributes());
   }, [selectedAttributeType, searchValue]);
 
   useEffect(() => {
-    getSelectedAttributeLabel().then(setSelectedLabel);
+    setSelectedLabel(getSelectedAttributeLabel());
   }, [selectedAttribute]);
 
   return (
@@ -154,7 +116,7 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
           </div>
           
           <div className="flex flex-1">
-            {/* Left side - Attribute types (made wider) */}
+            {/* Left side - Attribute types */}
             <div className="w-64 border-r">
               <div className="p-2">
                 <div className="space-y-1">
@@ -184,7 +146,7 @@ export const AttributeSelector: React.FC<AttributeSelectorProps> = ({
               <Command className="border-0">
                 <CommandList className="max-h-64">
                   <CommandEmpty>No attributes found.</CommandEmpty>
-                  {filteredAttributes.map((attribute: any) => {
+                  {filteredAttributes.map((attribute: UserAttribute) => {
                     if (!attribute?.name) return null;
                     
                     const valueType = String(attribute.valueType || 'STR');
