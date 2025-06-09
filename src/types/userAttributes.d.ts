@@ -8,9 +8,9 @@ declare module '*/dummy/userAttributes' {
     name: string;
     displayName?: string;
     description?: string;
-    type?: any; // Made flexible to support all dummy data types
-    category?: any; // Made flexible to support all dummy data values
-    attributeType?: any; // Made flexible to support all dummy data types
+    type?: AttributeType;
+    category?: AttributeCategory;
+    attributeType?: AttributeType;
     valueType?: string;
     lastUpdated?: string;
     createdBy?: number;
@@ -25,7 +25,7 @@ declare module '*/dummy/userAttributes' {
 
   interface UserAttributeSchemaField {
     name: string;
-    type?: any; // Made flexible to support arrays and other types
+    type?: any;
     default?: any; // Made optional to match dummy data
     [key: string]: any; // Allow any additional properties
   }
@@ -52,10 +52,31 @@ interface UserAttribute {
   lastUpdated?: string;
 }
 
-// Global type augmentation for missing attribute types
+// Global type augmentation for attribute types
 declare global {
-  type AttributeType = any; // Made flexible to support all types used in dummy data
-  type AttributeCategory = any; // Made flexible to support all categories used in dummy data
+  type AttributeType = 
+    | 'user' 
+    | 'system' 
+    | 'event' 
+    | 'account'  // Added missing type
+    | 'custom' 
+    | 'extracted' 
+    | 'computed' 
+    | 'scoring'  // Added missing type
+    | 'predicted' // Added missing type
+    | string;    // Allow any string for flexibility
+
+  type AttributeCategory = 
+    | 'user' 
+    | 'system' 
+    | 'event' 
+    | 'account'  // Added missing category
+    | 'custom' 
+    | 'extracted' 
+    | 'computed' 
+    | 'scoring'  // Added missing category
+    | 'predicted' // Added missing category
+    | string;    // Allow any string for flexibility
 }
 
 export {};
