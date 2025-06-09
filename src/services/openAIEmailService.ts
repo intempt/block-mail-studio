@@ -13,35 +13,13 @@ export interface ConversationalRequest {
 }
 
 export interface BrandVoiceAnalysis {
-  brandVoiceScore: number;
-  engagementScore: number;
-  toneConsistency: number;
-  readabilityScore: number;
-  performancePrediction: {
-    openRate: number;
-    clickRate: number;
-    conversionRate: number;
-  };
-  suggestions: Array<{
-    type: string;
-    title: string;
-    current: string;
-    suggested: string;
-    reason: string;
-    impact: string;
-    confidence: number;
-  }>;
+  emailHTML: string;
+  subjectLine: string;
 }
 
 export interface PerformanceAnalysis {
-  overallScore: number;
-  deliverabilityScore: number;
-  mobileScore: number;
-  spamScore: number;
-  engagementScore: number;
-  metrics: any;
-  accessibilityIssues: any[];
-  optimizationSuggestions: any[];
+  emailHTML: string;
+  subjectLine: string;
 }
 
 export class OpenAIEmailService {
@@ -136,7 +114,7 @@ export class OpenAIEmailService {
     }
   }
 
-  static async analyzeBrandVoice(analysis: { emailHTML: string; subjectLine: string }): Promise<BrandVoiceAnalysis> {
+  static async analyzeBrandVoice(analysis: BrandVoiceAnalysis): Promise<any> {
     const prompt = `Analyze this email for brand voice consistency and engagement potential:
     
     Subject: ${analysis.subjectLine}
@@ -153,13 +131,13 @@ export class OpenAIEmailService {
     }
   }
 
-  static async analyzePerformance(analysis: { emailHTML: string; subjectLine: string }): Promise<PerformanceAnalysis> {
+  static async analyzePerformance(analysis: PerformanceAnalysis): Promise<any> {
     const prompt = `Analyze this email for technical performance and deliverability:
     
     Subject: ${analysis.subjectLine}
     Content: ${analysis.emailHTML}
     
-    Return JSON with: overallScore, deliverabilityScore, mobileScore, spamScore, engagementScore, metrics, accessibilityIssues, and optimizationSuggestions.`;
+    Return JSON with: overallScore, deliverabilityScore, mobileScore, spamScore, metrics, accessibilityIssues, and optimizationSuggestions.`;
 
     try {
       const result = await this.callOpenAI(prompt, 0.5, true);

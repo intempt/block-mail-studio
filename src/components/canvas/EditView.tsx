@@ -291,6 +291,14 @@ export const EditView: React.FC<EditViewProps> = ({
     return baseStyle;
   }, [canvasWidth, isDraggingOver, currentDragType]);
 
+  const handleApplyFix = useCallback((fixedContent: string, fixType?: 'subject' | 'content') => {
+    if (fixType === 'subject') {
+      onSubjectChange(fixedContent);
+    } else {
+      console.log('Applied AI fix to email content');
+    }
+  }, [onSubjectChange]);
+
   return (
     <div className="relative">
       <div
@@ -339,8 +347,12 @@ export const EditView: React.FC<EditViewProps> = ({
 
       {showAIAnalytics && (
         <CanvasStatus 
+          selectedBlockId={selectedBlockId}
+          canvasWidth={canvasWidth}
+          previewMode={previewMode}
           emailHTML={currentEmailHTML}
           subjectLine={subject}
+          onApplyFix={handleApplyFix}
         />
       )}
     </div>
