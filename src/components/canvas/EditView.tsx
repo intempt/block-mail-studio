@@ -344,17 +344,6 @@ export const EditView: React.FC<EditViewProps> = ({
           />
         </div>
       </div>
-
-      {showAIAnalytics && (
-        <CanvasStatus 
-          selectedBlockId={selectedBlockId}
-          canvasWidth={canvasWidth}
-          previewMode={previewMode}
-          emailHTML={currentEmailHTML}
-          subjectLine={subject}
-          onApplyFix={handleApplyFix}
-        />
-      )}
     </div>
   );
 };

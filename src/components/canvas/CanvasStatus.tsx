@@ -18,7 +18,8 @@ import {
   Brain,
   Type,
   Target,
-  Smartphone
+  Smartphone,
+  Mail
 } from 'lucide-react';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 import { CentralizedAIAnalysisService, CompleteAnalysisResult } from '@/services/CentralizedAIAnalysisService';
