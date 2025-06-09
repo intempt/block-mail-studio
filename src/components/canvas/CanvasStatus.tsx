@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -185,6 +186,17 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     setAnalysisTimestamp(Date.now());
     
     try {
+      console.log('Starting analysis - checking API key availability...');
+      
+      // Fix: Add await for async function call
+      const isKeyAvailable = await ApiKeyService.isKeyAvailable();
+      console.log('API key available:', isKeyAvailable);
+      
+      if (!isKeyAvailable) {
+        error('OpenAI API key not available. Please check your configuration.');
+        return;
+      }
+
       const metrics = ComprehensiveMetricsService.calculateMetrics(emailHTML, subjectLine);
       setComprehensiveMetrics(metrics);
 
@@ -193,22 +205,32 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
       setAppliedFixes(new Set());
       clearCache();
 
+      console.log('Running analytics analysis...');
       await analyze({ html: emailHTML, subjectLine });
 
+      console.log('Running critical issues analysis...');
       const critical = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
       setCriticalSuggestions(critical);
 
-      if (ApiKeyService.isKeyAvailable()) {
-        const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
-        setComprehensiveAnalysis(comprehensive);
-      }
+      console.log('Running comprehensive AI analysis...');
+      const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
+      setComprehensiveAnalysis(comprehensive);
 
       success('Analysis complete! Review suggestions below.');
       
-      // Don't auto-expand the analysis center - let user choose to expand
-    } catch (analysisError) {
-      console.error('Analysis failed:', analysisError);
-      error('Analysis failed. Check your API configuration.');
+    } catch (analysisError: any) {
+      console.error('Analysis failed with error:', analysisError);
+      
+      // More specific error messages based on error type
+      if (analysisError.message?.includes('OpenAI API key')) {
+        error('OpenAI API key issue: ' + analysisError.message);
+      } else if (analysisError.message?.includes('rate limit')) {
+        error('OpenAI rate limit exceeded. Please try again later.');
+      } else if (analysisError.message?.includes('network')) {
+        error('Network error. Please check your connection and try again.');
+      } else {
+        error('Analysis failed: ' + (analysisError.message || 'Unknown error'));
+      }
     } finally {
       setIsAnalyzing(false);
     }

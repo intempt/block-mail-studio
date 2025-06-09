@@ -36,10 +36,13 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
     setShowVariants(true);
     
     try {
+      console.log('Generating subject line variants...');
       const result = await DirectAIService.generateSubjectVariants(value, 3);
       if (result.success && result.data) {
+        console.log('Subject variants generated successfully:', result.data);
         setVariants(result.data);
       } else {
+        console.warn('Subject variant generation failed:', result.error);
         setVariants([]);
       }
     } catch (error) {

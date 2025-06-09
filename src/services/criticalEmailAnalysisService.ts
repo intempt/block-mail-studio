@@ -1,4 +1,3 @@
-
 import { OpenAIEmailService } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
 
@@ -24,7 +23,14 @@ export class CriticalEmailAnalysisService {
   private static CACHE_DURATION = 300000; // 5 minutes
 
   static async analyzeCriticalIssues(emailHTML: string, subjectLine: string): Promise<CriticalSuggestion[]> {
-    if (!emailHTML.trim() || !ApiKeyService.validateKey()) {
+    if (!emailHTML.trim()) {
+      return [];
+    }
+
+    // Fix: Add await for async function call
+    const isKeyValid = await ApiKeyService.validateKey();
+    if (!isKeyValid) {
+      console.warn('OpenAI API key not valid, skipping AI analysis');
       return [];
     }
 

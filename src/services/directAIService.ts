@@ -1,3 +1,4 @@
+
 import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult, PerformanceAnalysisResult } from './EmailAIService';
 import { OpenAIEmailService } from './openAIEmailService';
 import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
@@ -156,6 +157,14 @@ class DirectAIServiceManager {
     console.log('Generating email marketing optimized subject variants for:', subjectLine);
     
     try {
+      // Fix: Add await for async function call
+      const isKeyValid = await ApiKeyService.validateKey();
+      if (!isKeyValid) {
+        console.warn('OpenAI API key not valid, using fallback variants');
+        const fallbackResult = this.generateFallbackVariants(subjectLine, count);
+        return handleServiceSuccess(fallbackResult, 'Subject variants generated (fallback mode)');
+      }
+
       const variants = await OpenAIEmailService.generateSubjectLines(
         `Original subject: ${subjectLine}. Generate variations optimized for email marketing.`,
         count + 2
