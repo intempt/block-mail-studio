@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { Eye } from 'lucide-react';
 import { UserSelector } from './UserSelector';
 import { UserFilter } from './UserFilter';
-import { User } from '../../dummy/users';
-import { UserDetails } from '../../dummy/userDetails';
+import { User, UserDetails } from '@/types/user';
 
 interface FilterCriteria {
   attribute: string;

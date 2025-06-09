@@ -39,8 +39,8 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChang
     
     // Get the attribute's value type and display name for operator filtering
     try {
-      const module = await import('../../dummy/userAttributes');
-      const userAttribute = module.userAttributes.find((attr: any) => attr?.name === attribute);
+      const { userAttributes } = await import('@/services/userData');
+      const userAttribute = userAttributes.find((attr: any) => attr?.name === attribute);
       if (userAttribute) {
         setAttributeValueType((userAttribute as any).valueType || (userAttribute as any).type || 'STR');
         setSelectedAttributeLabel((userAttribute as any).displayName || userAttribute.name || attribute);
