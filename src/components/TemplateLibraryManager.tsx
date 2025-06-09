@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +29,7 @@ import {
 } from 'lucide-react';
 import { EmailTemplate } from './TemplateManager';
 import { Editor } from '@tiptap/react';
+import { ConfirmationDialog } from './ConfirmationDialog';
 
 interface TemplateLibraryManagerProps {
   editor: Editor | null;
@@ -60,6 +60,12 @@ export const TemplateLibraryManager: React.FC<TemplateLibraryManagerProps> = ({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [selectedTemplates, setSelectedTemplates] = useState<string[]>([]);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    templateId?: string;
+    templateName?: string;
+    isBulk?: boolean;
+  }>({ isOpen: false });
 
   const categories = [
     'All', 'Welcome', 'Promotional', 'Newsletter', 'Transactional', 
@@ -143,13 +149,37 @@ export const TemplateLibraryManager: React.FC<TemplateLibraryManagerProps> = ({
     );
   };
 
+  const handleSingleDelete = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    setDeleteDialog({
+      isOpen: true,
+      templateId,
+      templateName: template?.name,
+      isBulk: false
+    });
+  };
+
+  const handleBulkDelete = () => {
+    setDeleteDialog({
+      isOpen: true,
+      isBulk: true
+    });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteDialog.isBulk) {
+      selectedTemplates.forEach(id => onDeleteTemplate(id));
+      setSelectedTemplates([]);
+    } else if (deleteDialog.templateId) {
+      onDeleteTemplate(deleteDialog.templateId);
+    }
+    setDeleteDialog({ isOpen: false });
+  };
+
   const handleBulkAction = (action: string) => {
     switch (action) {
       case 'delete':
-        if (confirm(`Delete ${selectedTemplates.length} templates?`)) {
-          selectedTemplates.forEach(id => onDeleteTemplate(id));
-          setSelectedTemplates([]);
-        }
+        handleBulkDelete();
         break;
       case 'favorite':
         selectedTemplates.forEach(id => onToggleFavorite(id));
@@ -236,7 +266,7 @@ export const TemplateLibraryManager: React.FC<TemplateLibraryManagerProps> = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onDeleteTemplate(template.id)}
+                  onClick={() => handleSingleDelete(template.id)}
                   className="text-red-600"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -316,6 +346,14 @@ export const TemplateLibraryManager: React.FC<TemplateLibraryManagerProps> = ({
               onClick={() => navigator.clipboard.writeText(template.html)}
             >
               <Copy className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleSingleDelete(template.id)}
+              className="text-red-600"
+            >
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -489,6 +527,20 @@ export const TemplateLibraryManager: React.FC<TemplateLibraryManagerProps> = ({
           )}
         </div>
       </ScrollArea>
+
+      <ConfirmationDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false })}
+        onConfirm={handleDeleteConfirm}
+        title={deleteDialog.isBulk ? "Delete Templates" : "Delete Template"}
+        description={
+          deleteDialog.isBulk
+            ? `Are you sure you want to delete ${selectedTemplates.length} templates? This action cannot be undone.`
+            : `Are you sure you want to delete "${deleteDialog.templateName}"? This action cannot be undone.`
+        }
+        confirmText="Delete"
+        destructive={true}
+      />
     </div>
   );
 };
