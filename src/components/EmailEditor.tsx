@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -34,7 +33,7 @@ import { EmailSnippet } from '@/types/snippets';
 import { EmailBlock } from '@/types/emailBlocks';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
-import { UndoManager } from './UndoManager';
+import { UndoManager, UndoManagerRef } from './UndoManager';
 
 interface Block {
   id: string;
@@ -91,6 +90,7 @@ export default function EmailEditor({
   const [emailContent, setEmailContent] = useState(content);
 
   const canvasRef = useRef<any>(null);
+  const undoManagerRef = useRef<UndoManagerRef>(null);
 
   console.log('EmailEditor: State initialized, creating extensions');
 
@@ -158,6 +158,36 @@ export default function EmailEditor({
     } catch (error) {
       console.warn('Error loading templates:', error);
       setTemplates([]);
+    }
+  }, []);
+
+  // State restoration callback for UndoManager
+  const handleStateRestore = useCallback((state: any) => {
+    console.log('EmailEditor: Restoring state from UndoManager:', state);
+    
+    // Restore blocks via canvas
+    if (canvasRef.current && state.blocks) {
+      canvasRef.current.replaceAllBlocks(state.blocks);
+    }
+    
+    // Restore subject
+    if (state.subject !== undefined) {
+      onSubjectChange(state.subject);
+    }
+    
+    success('State restored successfully');
+  }, [onSubjectChange, success]);
+
+  // Undo/Redo handlers
+  const handleUndo = useCallback(() => {
+    if (undoManagerRef.current) {
+      undoManagerRef.current.handleUndo();
+    }
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    if (undoManagerRef.current) {
+      undoManagerRef.current.handleRedo();
     }
   }, []);
 
@@ -357,8 +387,6 @@ export default function EmailEditor({
 
       {showTemplateLibrary && (
         <EmailTemplateLibrary
-          open={showTemplateLibrary}
-          onOpenChange={setShowTemplateLibrary}
           onSelectTemplate={(template) => {
             if (template.blocks && canvasRef.current) {
               canvasRef.current.replaceAllBlocks(template.blocks);
@@ -370,14 +398,18 @@ export default function EmailEditor({
             setShowTemplateLibrary(false);
           }}
           templates={templates}
+          onClose={() => setShowTemplateLibrary(false)}
         />
       )}
 
       {/* Undo Manager */}
       <UndoManager 
+        ref={undoManagerRef}
         blocks={emailBlocks} 
-        onUndo={() => {}}
-        onRedo={() => {}}
+        subject={subject}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        onStateRestore={handleStateRestore}
       />
     </div>
   );

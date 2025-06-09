@@ -52,8 +52,8 @@ interface UserAttribute {
 
 // Global type augmentation for missing attribute types
 declare global {
-  type AttributeType = string;
-  type AttributeCategory = string;
+  type AttributeType = "user" | "system" | "event" | "account" | "scoring" | "predicted";
+  type AttributeCategory = "custom" | "extracted" | "computed" | "event" | "scoring" | "predicted";
 }
 
 export {};
