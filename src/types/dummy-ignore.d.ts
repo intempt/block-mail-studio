@@ -5,6 +5,11 @@ declare module 'dummy/*' {
   export = content;
 }
 
+declare module 'dummy/**/*' {
+  const content: any;
+  export = content;
+}
+
 // Prevent any imports from dummy folder
 declare module 'dummy/userAttributes' {
   export const userAttributes: never;
@@ -21,3 +26,14 @@ declare module 'dummy/userDetails' {
 declare module 'dummy/variables' {
   export const variables: never;
 }
+
+// Add global declarations to prevent TypeScript from processing dummy files
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      EXCLUDE_DUMMY?: string;
+    }
+  }
+}
+
+export {};

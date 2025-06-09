@@ -20,15 +20,19 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Exclude dummy folder from build
+  // Aggressively exclude dummy folder from all processing
   build: {
     rollupOptions: {
-      external: ['dummy/**']
+      external: (id) => id.includes('dummy/') || id.startsWith('dummy/'),
     }
   },
-  // Exclude dummy folder from processing
+  // Completely exclude dummy folder from dependency optimization
   optimizeDeps: {
-    exclude: ['dummy/**']
+    exclude: ['dummy', 'dummy/**', 'dummy/*'],
+  },
+  // Define to help with module resolution
+  define: {
+    'process.env.EXCLUDE_DUMMY': 'true'
   },
   test: {
     globals: true,
