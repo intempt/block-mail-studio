@@ -17,11 +17,11 @@ serve(async (req) => {
   }
 
   try {
-    console.log(`[EDGE-FUNCTION] ${requestId} - Retrieving OPENAI secret from environment`);
-    const OPENAI_API_KEY = Deno.env.get('OPENAI')
+    console.log(`[EDGE-FUNCTION] ${requestId} - Retrieving LoveableKey secret from environment`);
+    const OPENAI_API_KEY = Deno.env.get('LoveableKey')
     
     if (!OPENAI_API_KEY) {
-      console.error(`[EDGE-FUNCTION] ${requestId} - OPENAI secret not found in environment variables`);
+      console.error(`[EDGE-FUNCTION] ${requestId} - LoveableKey secret not found in environment variables`);
       console.error(`[EDGE-FUNCTION] ${requestId} - Available env vars: ${Object.keys(Deno.env.toObject()).join(', ')}`);
       return new Response(
         JSON.stringify({ error: 'OpenAI API key not configured' }),
@@ -33,7 +33,7 @@ serve(async (req) => {
     }
 
     // Log key characteristics without exposing the actual key
-    console.log(`[EDGE-FUNCTION] ${requestId} - OPENAI key found`);
+    console.log(`[EDGE-FUNCTION] ${requestId} - LoveableKey found`);
     console.log(`[EDGE-FUNCTION] ${requestId} - Key length: ${OPENAI_API_KEY.length}`);
     console.log(`[EDGE-FUNCTION] ${requestId} - Key prefix: ${OPENAI_API_KEY.substring(0, 7)}...`);
     console.log(`[EDGE-FUNCTION] ${requestId} - Key ends with: ...${OPENAI_API_KEY.substring(OPENAI_API_KEY.length - 4)}`);
