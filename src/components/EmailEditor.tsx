@@ -36,6 +36,7 @@ import { InlineNotificationContainer } from '@/components/ui/inline-notification
 import { UndoManager, UndoManagerRef } from './UndoManager';
 import { MetricsPanel } from './panels/MetricsPanel';
 import { AISuggestionsPanel } from './panels/AISuggestionsPanel';
+import { CollapsiblePanel } from '@/components/ui/CollapsiblePanel';
 import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
 import { CentralizedAIAnalysisService, CompleteAnalysisResult } from '@/services/CentralizedAIAnalysisService';
 import { ApiKeyService } from '@/services/apiKeyService';
@@ -94,6 +95,10 @@ export default function EmailEditor({
 
   // Track the actual email content for preview synchronization
   const [emailContent, setEmailContent] = useState(content);
+
+  // New state for panel collapse functionality
+  const [isMetricsPanelCollapsed, setIsMetricsPanelCollapsed] = useState(false);
+  const [isAISuggestionsPanelCollapsed, setIsAISuggestionsPanelCollapsed] = useState(false);
 
   const canvasRef = useRef<any>(null);
   const undoManagerRef = useRef<UndoManagerRef>(null);
@@ -549,7 +554,13 @@ export default function EmailEditor({
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Metrics (Only show in edit mode) */}
         {viewMode === 'edit' && (
-          <div className="w-80 flex-shrink-0">
+          <CollapsiblePanel
+            isCollapsed={isMetricsPanelCollapsed}
+            onToggle={() => setIsMetricsPanelCollapsed(!isMetricsPanelCollapsed)}
+            title="Metrics"
+            side="left"
+            expandedWidth="w-80"
+          >
             <MetricsPanel
               comprehensiveMetrics={comprehensiveMetrics}
               emailHTML={emailContent}
@@ -557,7 +568,7 @@ export default function EmailEditor({
               canvasWidth={canvasWidth}
               previewMode={previewMode}
             />
-          </div>
+          </CollapsiblePanel>
         )}
 
         {/* Snippet Ribbon - Only show in edit mode */}
@@ -602,7 +613,13 @@ export default function EmailEditor({
 
         {/* Right Panel - AI Suggestions (Only show in edit mode) */}
         {viewMode === 'edit' && (
-          <div className="w-96 flex-shrink-0">
+          <CollapsiblePanel
+            isCollapsed={isAISuggestionsPanelCollapsed}
+            onToggle={() => setIsAISuggestionsPanelCollapsed(!isAISuggestionsPanelCollapsed)}
+            title="AI Suggestions"
+            side="right"
+            expandedWidth="w-96"
+          >
             <AISuggestionsPanel
               isAnalyzing={isAnalyzing}
               allSuggestions={allSuggestions}
@@ -614,7 +631,7 @@ export default function EmailEditor({
               emailHTML={emailContent}
               subjectLine={subject}
             />
-          </div>
+          </CollapsiblePanel>
         )}
       </div>
 
