@@ -34,6 +34,12 @@ import { EmailBlock } from '@/types/emailBlocks';
 import { useNotification } from '@/contexts/NotificationContext';
 import { InlineNotificationContainer } from '@/components/ui/inline-notification';
 import { UndoManager, UndoManagerRef } from './UndoManager';
+import { MetricsPanel } from './panels/MetricsPanel';
+import { AISuggestionsPanel } from './panels/AISuggestionsPanel';
+import { CriticalEmailAnalysisService, CriticalSuggestion } from '@/services/criticalEmailAnalysisService';
+import { CentralizedAIAnalysisService, CompleteAnalysisResult } from '@/services/CentralizedAIAnalysisService';
+import { ApiKeyService } from '@/services/apiKeyService';
+import { ComprehensiveMetricsService, ComprehensiveEmailMetrics } from '@/services/comprehensiveMetricsService';
 
 interface Block {
   id: string;
@@ -295,6 +301,195 @@ export default function EmailEditor({
     setShowPreview(true);
   }, []);
 
+  // New state for AI analysis
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [criticalSuggestions, setCriticalSuggestions] = useState<CriticalSuggestion[]>([]);
+  const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState<CompleteAnalysisResult | null>(null);
+  const [allSuggestions, setAllSuggestions] = useState<CriticalSuggestion[]>([]);
+  const [appliedFixes, setAppliedFixes] = useState<Set<string>>(new Set());
+  const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
+  const [comprehensiveMetrics, setComprehensiveMetrics] = useState<ComprehensiveEmailMetrics | null>(null);
+
+  // Add AI analysis handlers from CanvasStatus
+  const extractAndMergeSuggestions = useCallback((critical: CriticalSuggestion[], comprehensive: CompleteAnalysisResult | null) => {
+    let merged = [...critical];
+
+    if (comprehensive) {
+      if (comprehensive.brandVoice?.suggestions) {
+        comprehensive.brandVoice.suggestions.forEach((suggestion, index) => {
+          merged.push({
+            id: `brand-voice-${index}`,
+            title: suggestion.title,
+            reason: suggestion.reason,
+            category: 'tone',
+            type: 'tone',
+            current: suggestion.current || '',
+            suggested: suggestion.suggested || '',
+            severity: suggestion.impact === 'high' ? 'high' : suggestion.impact === 'medium' ? 'medium' : 'low',
+            impact: suggestion.impact === 'high' ? 'high' : suggestion.impact === 'medium' ? 'medium' : 'low',
+            confidence: suggestion.confidence || 75,
+            autoFixable: false,
+            priority: index + 1,
+            businessImpact: `Brand voice improvement: ${suggestion.reason}`
+          });
+        });
+      }
+
+      if (comprehensive.subjectVariants && comprehensive.subjectVariants.length > 0) {
+        comprehensive.subjectVariants.forEach((variant, index) => {
+          merged.push({
+            id: `subject-variant-${index}`,
+            title: `Subject Line Alternative ${index + 1}`,
+            reason: 'AI-generated subject line variant to improve engagement',
+            category: 'subject',
+            type: 'subject',
+            current: subject,
+            suggested: variant,
+            severity: 'medium',
+            impact: 'medium',
+            confidence: 80,
+            autoFixable: true,
+            priority: index + 1,
+            businessImpact: 'May improve open rates with fresh messaging'
+          });
+        });
+      }
+    }
+
+    merged.sort((a, b) => b.confidence - a.confidence);
+    return merged;
+  }, [subject]);
+
+  useEffect(() => {
+    const merged = extractAndMergeSuggestions(criticalSuggestions, comprehensiveAnalysis);
+    setAllSuggestions(merged);
+  }, [criticalSuggestions, comprehensiveAnalysis, extractAndMergeSuggestions]);
+
+  const runCompleteAnalysis = async () => {
+    const analysisId = `analysis-${Date.now()}`;
+    
+    if (!emailContent.trim() || emailContent.length < 50) {
+      error('Add more content before analyzing');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAnalysisTimestamp(Date.now());
+    
+    try {
+      const isKeyAvailable = await ApiKeyService.isKeyAvailable();
+      
+      if (!isKeyAvailable) {
+        error('OpenAI API key not available. Please check your configuration.');
+        return;
+      }
+
+      const metrics = ComprehensiveMetricsService.calculateMetrics(emailContent, subject);
+      setComprehensiveMetrics(metrics);
+
+      setCriticalSuggestions([]);
+      setComprehensiveAnalysis(null);
+      setAppliedFixes(new Set());
+
+      const critical = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailContent, subject);
+      setCriticalSuggestions(critical);
+
+      const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailContent, subject);
+      setComprehensiveAnalysis(comprehensive);
+
+      success('Analysis complete! Review suggestions below.');
+      
+    } catch (analysisError: any) {
+      if (analysisError.message?.includes('OpenAI API key')) {
+        error('OpenAI API key issue: ' + analysisError.message);
+      } else if (analysisError.message?.includes('rate limit')) {
+        error('OpenAI rate limit exceeded. Please try again later.');
+      } else if (analysisError.message?.includes('network')) {
+        error('Network error. Please check your connection and try again.');
+      } else {
+        error('Analysis failed: ' + (analysisError.message || 'Unknown error'));
+      }
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (emailContent.trim()) {
+      const metrics = ComprehensiveMetricsService.calculateMetrics(emailContent, subject);
+      setComprehensiveMetrics(metrics);
+    }
+  }, [emailContent, subject]);
+
+  const handleApplyFix = async (suggestion: CriticalSuggestion) => {
+    if (appliedFixes.has(suggestion.id)) {
+      warning('Fix already applied');
+      return;
+    }
+
+    try {
+      let updatedContent = emailContent;
+      let fixType: 'subject' | 'content' = 'content';
+
+      if (suggestion.category === 'subject' && suggestion.suggested) {
+        onSubjectChange(suggestion.suggested);
+        fixType = 'subject';
+        success('Subject line updated!');
+      } else if (suggestion.current && suggestion.suggested) {
+        updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
+        
+        if (updatedContent !== emailContent) {
+          onContentChange(updatedContent);
+          success('Content updated!');
+        } else {
+          const lines = emailContent.split('\n');
+          const updatedLines = lines.map(line => {
+            if (line.includes(suggestion.current)) {
+              return line.replace(suggestion.current, suggestion.suggested);
+            }
+            return line;
+          });
+          updatedContent = updatedLines.join('\n');
+          
+          if (updatedContent !== emailContent) {
+            onContentChange(updatedContent);
+            success('Content updated!');
+          } else {
+            warning('Could not automatically apply this fix');
+            return;
+          }
+        }
+      } else {
+        warning('This fix cannot be applied automatically');
+        return;
+      }
+
+      setAppliedFixes(prev => new Set([...prev, suggestion.id]));
+      
+    } catch (fixError) {
+      console.error('Error applying fix:', fixError);
+      error('Failed to apply fix');
+    }
+  };
+
+  const handleApplyAllAutoFixes = async () => {
+    const autoFixableSuggestions = allSuggestions.filter(s => 
+      s.autoFixable && !appliedFixes.has(s.id)
+    );
+
+    if (autoFixableSuggestions.length === 0) {
+      warning('No auto-fixable suggestions available');
+      return;
+    }
+
+    for (const suggestion of autoFixableSuggestions) {
+      await handleApplyFix(suggestion);
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    success(`Applied ${autoFixableSuggestions.length} auto-fixes!`);
+  };
+
   console.log('EmailEditor: About to render main component');
 
   return (
@@ -335,8 +530,21 @@ export default function EmailEditor({
         onViewModeChange={handleViewModeChange}
       />
 
-      {/* Main Content Area */}
+      {/* Main Content Area - 3 Column Layout */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - Metrics (Only show in edit mode) */}
+        {viewMode === 'edit' && (
+          <div className="w-80 flex-shrink-0">
+            <MetricsPanel
+              comprehensiveMetrics={comprehensiveMetrics}
+              emailHTML={emailContent}
+              subjectLine={subject}
+              canvasWidth={canvasWidth}
+              previewMode={previewMode}
+            />
+          </div>
+        )}
+
         {/* Snippet Ribbon - Only show in edit mode */}
         {viewMode === 'edit' && (
           <SnippetRibbon
@@ -345,7 +553,7 @@ export default function EmailEditor({
           />
         )}
 
-        {/* Canvas Area */}
+        {/* Center - Canvas Area */}
         <div className="flex-1 overflow-auto bg-gray-50 p-6 relative">
           <EmailBlockCanvas
             ref={canvasRef}
@@ -376,6 +584,22 @@ export default function EmailEditor({
             </div>
           )}
         </div>
+
+        {/* Right Panel - AI Suggestions (Only show in edit mode) */}
+        {viewMode === 'edit' && (
+          <div className="w-96 flex-shrink-0">
+            <AISuggestionsPanel
+              isAnalyzing={isAnalyzing}
+              allSuggestions={allSuggestions}
+              appliedFixes={appliedFixes}
+              analysisTimestamp={analysisTimestamp}
+              onRunAnalysis={runCompleteAnalysis}
+              onApplyFix={handleApplyFix}
+              onApplyAllAutoFixes={handleApplyAllAutoFixes}
+              emailHTML={emailContent}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modals */}
