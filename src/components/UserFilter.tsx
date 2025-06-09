@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -91,7 +92,7 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChang
   // Check if we should show the value input
   const shouldShowValueInput = selectedOperator && !['has_any_value', 'has_no_value'].includes(selectedOperator);
 
-  // Construct human-readable filter text
+  // Construct concise filter text
   const getFilterText = () => {
     if (!selectedAttribute || !selectedOperator) {
       return '';
@@ -132,6 +133,14 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChang
   const hasCompleteFilter = selectedAttribute && selectedOperator && 
     (!shouldShowValueInput || (filterValue && (Array.isArray(filterValue) ? filterValue.length > 0 : filterValue.toString().trim())));
 
+  // Determine button text based on filter state
+  const getButtonText = () => {
+    if (hasCompleteFilter) {
+      return filterText;
+    }
+    return 'Filter';
+  };
+
   return (
     <div className={`flex items-center gap-1 ${className || ''}`}>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -144,14 +153,12 @@ export const UserFilter: React.FC<UserFilterProps> = ({ className, onFilterChang
             }`}
           >
             <Filter className="w-3 h-3 mr-1" />
-            Filter by{filterText ? `: ${filterText}` : ''}
+            {getButtonText()}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-4" align="start" side="left">
+        <PopoverContent className="w-64 p-3" align="start" side="left">
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-700">Filter Options</h4>
             <div className="space-y-2">
-              <label className="text-xs text-gray-600">Attribute</label>
               <AttributeSelector
                 selectedAttribute={selectedAttribute}
                 onAttributeSelect={handleAttributeSelect}
