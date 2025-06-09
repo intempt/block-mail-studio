@@ -175,7 +175,7 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
       </div>
       
       {/* Mobile-specific styles */}
-      <style jsx>{`
+      <style>{`
         .mobile-email-content img {
           max-width: 100% !important;
           height: auto !important;
