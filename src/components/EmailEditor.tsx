@@ -174,9 +174,7 @@ export default function EmailEditor({
     if (state.subject !== undefined) {
       onSubjectChange(state.subject);
     }
-    
-    success('State restored successfully');
-  }, [onSubjectChange, success]);
+  }, [onSubjectChange]);
 
   // Undo/Redo handlers
   const handleUndo = useCallback(() => {
@@ -372,8 +370,6 @@ export default function EmailEditor({
                   ref={undoManagerRef}
                   blocks={emailBlocks} 
                   subject={subject}
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
                   onStateRestore={handleStateRestore}
                 />
               </div>

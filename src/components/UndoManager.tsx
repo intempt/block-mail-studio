@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
 import { Undo, Redo } from 'lucide-react';
@@ -34,6 +35,8 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
   const [stateHistory, setStateHistory] = useState<EmailEditorState[]>([]);
   const [currentStateIndex, setCurrentStateIndex] = useState(-1);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [lastActionTime, setLastActionTime] = useState(0);
 
   // Create a new state entry
   const createState = useCallback((blocks: EmailBlock[], subject: string, description: string): EmailEditorState => {
@@ -48,7 +51,8 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
 
   // Save current state to history
   const saveState = useCallback((description: string = 'Change made') => {
-    if (!blocks || blocks.length === 0) return;
+    // Don't save state if we're currently restoring or if there are no blocks
+    if (isRestoring || !blocks || blocks.length === 0) return;
 
     const newState = createState(blocks, subject, description);
     
@@ -73,22 +77,22 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
     });
 
     console.log('UndoManager: State saved -', description);
-  }, [blocks, subject, currentStateIndex, createState]);
+  }, [blocks, subject, currentStateIndex, createState, isRestoring]);
 
   // Initialize with first state
   useEffect(() => {
-    if (!isInitialized && blocks.length > 0) {
+    if (!isInitialized && blocks.length > 0 && !isRestoring) {
       const initialState = createState(blocks, subject, 'Initial state');
       setStateHistory([initialState]);
       setCurrentStateIndex(0);
       setIsInitialized(true);
       console.log('UndoManager: Initialized with initial state');
     }
-  }, [blocks, subject, isInitialized, createState]);
+  }, [blocks, subject, isInitialized, createState, isRestoring]);
 
   // Auto-save state when blocks or subject change (debounced)
   useEffect(() => {
-    if (!isInitialized) return;
+    if (!isInitialized || isRestoring) return;
 
     const timeoutId = setTimeout(() => {
       // Check if there's actually a change
@@ -113,10 +117,17 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
     }, 1000); // 1 second debounce
 
     return () => clearTimeout(timeoutId);
-  }, [blocks, subject, isInitialized, stateHistory, currentStateIndex, saveState]);
+  }, [blocks, subject, isInitialized, stateHistory, currentStateIndex, saveState, isRestoring]);
 
   const handleUndo = useCallback(() => {
+    const now = Date.now();
+    // Throttle to prevent rapid clicking (500ms cooldown)
+    if (now - lastActionTime < 500) return;
+    
     if (currentStateIndex > 0) {
+      setIsRestoring(true);
+      setLastActionTime(now);
+      
       const newIndex = currentStateIndex - 1;
       const previousState = stateHistory[newIndex];
       
@@ -125,14 +136,21 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
         onStateRestore(previousState);
         console.log('UndoManager: Undo to state -', previousState.description);
       }
+      
+      // Reset restoring flag after a short delay
+      setTimeout(() => setIsRestoring(false), 100);
     }
-    
-    // Call original onUndo if provided
-    onUndo?.();
-  }, [currentStateIndex, stateHistory, onStateRestore, onUndo]);
+  }, [currentStateIndex, stateHistory, onStateRestore, lastActionTime]);
 
   const handleRedo = useCallback(() => {
+    const now = Date.now();
+    // Throttle to prevent rapid clicking (500ms cooldown)
+    if (now - lastActionTime < 500) return;
+    
     if (currentStateIndex < stateHistory.length - 1) {
+      setIsRestoring(true);
+      setLastActionTime(now);
+      
       const newIndex = currentStateIndex + 1;
       const nextState = stateHistory[newIndex];
       
@@ -141,11 +159,11 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
         onStateRestore(nextState);
         console.log('UndoManager: Redo to state -', nextState.description);
       }
+      
+      // Reset restoring flag after a short delay
+      setTimeout(() => setIsRestoring(false), 100);
     }
-    
-    // Call original onRedo if provided
-    onRedo?.();
-  }, [currentStateIndex, stateHistory, onStateRestore, onRedo]);
+  }, [currentStateIndex, stateHistory, onStateRestore, lastActionTime]);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
@@ -162,7 +180,7 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
         variant="outline"
         size="sm"
         onClick={handleUndo}
-        disabled={!canUndo}
+        disabled={!canUndo || isRestoring}
         className="h-8 w-8 p-0"
         title={`Undo (${stateHistory.length > 0 ? stateHistory[Math.max(0, currentStateIndex - 1)]?.description || 'Previous change' : 'No previous state'})`}
       >
@@ -172,7 +190,7 @@ export const UndoManager = forwardRef<UndoManagerRef, UndoManagerProps>(({
         variant="outline"
         size="sm"
         onClick={handleRedo}
-        disabled={!canRedo}
+        disabled={!canRedo || isRestoring}
         className="h-8 w-8 p-0"
         title={`Redo (${currentStateIndex < stateHistory.length - 1 ? stateHistory[currentStateIndex + 1]?.description || 'Next change' : 'No next state'})`}
       >
