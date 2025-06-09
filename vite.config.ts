@@ -23,7 +23,14 @@ export default defineConfig(({ mode }) => ({
   // Aggressively exclude dummy folder from all processing
   build: {
     rollupOptions: {
-      external: (id) => id.includes('dummy/') || id.startsWith('dummy/'),
+      external: (id) => {
+        // Exclude any import that references dummy folder
+        return id.includes('dummy/') || 
+               id.startsWith('dummy/') || 
+               id.includes('/dummy/') ||
+               id.endsWith('/dummy') ||
+               id === 'dummy';
+      },
     }
   },
   // Completely exclude dummy folder from dependency optimization
@@ -33,6 +40,10 @@ export default defineConfig(({ mode }) => ({
   // Define to help with module resolution
   define: {
     'process.env.EXCLUDE_DUMMY': 'true'
+  },
+  // Exclude dummy files from being watched
+  esbuild: {
+    exclude: ['dummy/**/*', 'dummy/*'],
   },
   test: {
     globals: true,

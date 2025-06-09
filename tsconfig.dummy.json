@@ -16,17 +16,27 @@
     "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": false,
     "noUncheckedIndexedAccess": false,
-    "noImplicitOverride": false
+    "noImplicitOverride": false,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmitOnError": false
   },
   "include": [
     "src/**/*"
   ],
   "exclude": [
-    "dummy/**/*",
     "dummy",
+    "dummy/**",
+    "dummy/**/*",
+    "**/dummy",
     "**/dummy/**",
-    "**/dummy/*",
+    "**/dummy/**/*",
+    "./dummy",
     "./dummy/**",
-    "./dummy/*"
+    "./dummy/**/*",
+    "node_modules",
+    "dist"
   ]
 }
