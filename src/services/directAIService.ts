@@ -4,9 +4,17 @@ import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils
 import { ApiKeyService } from './apiKeyService';
 
 class DirectAIServiceManager {
+  private async validateKeyBeforeCall(): Promise<void> {
+    const isValid = await ApiKeyService.validateKey();
+    if (!isValid) {
+      throw new Error('OpenAI API key is not available or invalid. Please check your API key configuration.');
+    }
+  }
+
   async generateEmail(prompt: string, type: string): Promise<ServiceResult<any>> {
     console.log('Generating email:', { prompt, type });
     try {
+      await this.validateKeyBeforeCall();
       const result = await emailAIService.generateEmail({
         prompt,
         tone: 'professional',
@@ -34,6 +42,7 @@ class DirectAIServiceManager {
   async improveContent(content: string): Promise<ServiceResult<string>> {
     console.log('Improving content:', content);
     try {
+      await this.validateKeyBeforeCall();
       const result = await emailAIService.refineEmail(content, 'Improve this content for better engagement');
       return result;
     } catch (error) {
@@ -48,6 +57,7 @@ class DirectAIServiceManager {
     console.log('Direct subject line analysis for:', subjectLine);
     
     try {
+      await this.validateKeyBeforeCall();
       const suggestions = await OpenAIEmailService.generateSubjectLines(emailContent || subjectLine, 5);
       const score = this.calculateSubjectLineScore(subjectLine);
       
@@ -132,6 +142,7 @@ class DirectAIServiceManager {
   ): Promise<ServiceResult<BrandVoiceAnalysisResult>> {
     console.log('Direct brand voice analysis with email marketing expertise');
     try {
+      await this.validateKeyBeforeCall();
       const result = await OpenAIEmailService.analyzeBrandVoice({ emailHTML, subjectLine });
       return handleServiceSuccess(result, 'Brand voice analysis completed');
     } catch (error) {
@@ -145,6 +156,7 @@ class DirectAIServiceManager {
   ): Promise<ServiceResult<PerformanceAnalysisResult>> {
     console.log('Direct performance analysis with email standards');
     try {
+      await this.validateKeyBeforeCall();
       const result = await OpenAIEmailService.analyzePerformance({ emailHTML, subjectLine });
       return handleServiceSuccess(result, 'Performance analysis completed');
     } catch (error) {
@@ -156,6 +168,7 @@ class DirectAIServiceManager {
     console.log('Generating email marketing optimized subject variants for:', subjectLine);
     
     try {
+      await this.validateKeyBeforeCall();
       const variants = await OpenAIEmailService.generateSubjectLines(
         `Original subject: ${subjectLine}. Generate variations optimized for email marketing.`,
         count + 2
@@ -204,11 +217,18 @@ class DirectAIServiceManager {
   async generateContent(prompt: string, type: string = 'general'): Promise<ServiceResult<string>> {
     console.log('Generating content:', { prompt, type });
     try {
+      await this.validateKeyBeforeCall();
       const result = await emailAIService.generateContent(prompt, type);
       return result;
     } catch (error) {
       return handleServiceError(error, 'generateContent');
     }
+  }
+
+  // Add method to refresh API key cache
+  refreshApiKey(): void {
+    ApiKeyService.forceRefresh();
+    console.log('API key cache refreshed for DirectAIService');
   }
 }
 

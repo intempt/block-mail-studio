@@ -4,9 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 // Centralized API Key Management using Supabase Secrets
 export class ApiKeyService {
   private static cachedKey: string | null = null;
+  private static cacheTimestamp: number = 0;
+  private static CACHE_DURATION = 300000; // 5 minutes
   
   public static async getOpenAIKey(): Promise<string> {
-    if (this.cachedKey) {
+    // Check if cache is still valid
+    if (this.cachedKey && (Date.now() - this.cacheTimestamp) < this.CACHE_DURATION) {
       return this.cachedKey;
     }
 
@@ -20,6 +23,7 @@ export class ApiKeyService {
       
       if (data?.key) {
         this.cachedKey = data.key;
+        this.cacheTimestamp = Date.now();
         return data.key;
       }
       
@@ -66,8 +70,25 @@ export class ApiKeyService {
     }
   }
 
+  // Force refresh of cached key - call this when user updates their key
+  public static forceRefresh(): void {
+    this.cachedKey = null;
+    this.cacheTimestamp = 0;
+    console.log('OpenAI API key cache forcefully cleared');
+  }
+
   // Clear cached key (useful for testing or key rotation)
   public static clearCache(): void {
     this.cachedKey = null;
+    this.cacheTimestamp = 0;
+    console.log('OpenAI API key cache cleared');
+  }
+
+  // Get cache status for debugging
+  public static getCacheStatus(): { cached: boolean; age: number } {
+    return {
+      cached: !!this.cachedKey,
+      age: this.cacheTimestamp ? Date.now() - this.cacheTimestamp : 0
+    };
   }
 }

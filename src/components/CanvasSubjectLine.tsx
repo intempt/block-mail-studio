@@ -3,6 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { 
   Lightbulb, 
   Target, 
@@ -10,9 +11,13 @@ import {
   CheckCircle,
   RefreshCw,
   Copy,
-  BarChart3
+  BarChart3,
+  Key,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { DirectAIService } from '@/services/directAIService';
+import { ApiKeyService } from '@/services/apiKeyService';
 
 interface CanvasSubjectLineProps {
   value: string;
@@ -28,9 +33,41 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
   const [variants, setVariants] = useState<string[]>([]);
   const [isGeneratingVariants, setIsGeneratingVariants] = useState(false);
   const [showVariants, setShowVariants] = useState(false);
+  const [apiKeyStatus, setApiKeyStatus] = useState<'checking' | 'valid' | 'invalid' | 'missing'>('checking');
+  const [lastKeyCheck, setLastKeyCheck] = useState<number>(0);
+
+  // Check API key status periodically
+  const checkApiKeyStatus = useCallback(async () => {
+    const now = Date.now();
+    if (now - lastKeyCheck < 30000) return; // Check at most every 30 seconds
+    
+    try {
+      const status = await ApiKeyService.getKeyStatus();
+      setApiKeyStatus(status);
+      setLastKeyCheck(now);
+    } catch (error) {
+      setApiKeyStatus('missing');
+      setLastKeyCheck(now);
+    }
+  }, [lastKeyCheck]);
+
+  const refreshApiKey = () => {
+    ApiKeyService.forceRefresh();
+    DirectAIService.refreshApiKey();
+    setApiKeyStatus('checking');
+    setLastKeyCheck(0);
+    checkApiKeyStatus();
+  };
 
   const generateVariants = async () => {
     if (!value.trim()) return;
+
+    // Check API key before generating
+    await checkApiKeyStatus();
+    if (apiKeyStatus !== 'valid') {
+      console.warn('Cannot generate variants: API key not valid');
+      return;
+    }
 
     setIsGeneratingVariants(true);
     setShowVariants(true);
@@ -41,10 +78,13 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
         setVariants(result.data);
       } else {
         setVariants([]);
+        console.error('Failed to generate variants:', result.error);
       }
     } catch (error) {
       console.error('Error generating variants:', error);
       setVariants([]);
+      // Refresh API key on error in case it's a key issue
+      refreshApiKey();
     } finally {
       setIsGeneratingVariants(false);
     }
@@ -63,6 +103,11 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
   const isTooLong = characterCount > 50;
   const isTooShort = characterCount < 10 && characterCount > 0;
 
+  // Check API key status on component mount
+  React.useEffect(() => {
+    checkApiKeyStatus();
+  }, [checkApiKeyStatus]);
+
   return (
     <div className="p-4 space-y-3 bg-white">
       <div className="flex items-center justify-between">
@@ -71,20 +116,43 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
           Subject Line
         </h3>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={generateVariants}
-            disabled={isGeneratingVariants || !value.trim()}
-            className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+          {/* API Key Status Indicator */}
+          <Badge 
+            variant={apiKeyStatus === 'valid' ? 'default' : 'destructive'}
+            className="h-5 text-xs flex items-center gap-1"
           >
-            {isGeneratingVariants ? (
-              <RefreshCw className="w-4 h-4 animate-spin mr-1 text-purple-600" />
-            ) : (
-              <Lightbulb className="w-4 h-4 mr-1" />
-            )}
-            Subject AI
-          </Button>
+            {apiKeyStatus === 'valid' ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+            {apiKeyStatus === 'checking' ? 'Checking...' : 
+             apiKeyStatus === 'valid' ? 'AI Ready' : 
+             'API Key Issue'}
+          </Badge>
+          
+          {apiKeyStatus !== 'valid' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refreshApiKey}
+              className="h-6 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+            >
+              <Key className="w-4 h-4 mr-1" />
+              Refresh Key
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={generateVariants}
+              disabled={isGeneratingVariants || !value.trim()}
+              className="h-6 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+            >
+              {isGeneratingVariants ? (
+                <RefreshCw className="w-4 h-4 animate-spin mr-1 text-purple-600" />
+              ) : (
+                <Lightbulb className="w-4 h-4 mr-1" />
+              )}
+              Subject AI
+            </Button>
+          )}
         </div>
       </div>
 
