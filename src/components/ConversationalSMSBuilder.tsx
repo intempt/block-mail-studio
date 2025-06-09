@@ -19,7 +19,7 @@ export const ConversationalSMSBuilder: React.FC<ConversationalSMSBuilderProps> =
   const [smsContent, setSmsContent] = useState('');
   const [characterCount, setCharacterCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
-  const { success, info } = useNotification();
+  const { error } = useNotification();
 
   const maxCharacters = 160;
 
@@ -30,12 +30,12 @@ export const ConversationalSMSBuilder: React.FC<ConversationalSMSBuilderProps> =
 
   const handleCopy = () => {
     navigator.clipboard.writeText(smsContent);
-    success('SMS content copied to clipboard');
+    // Note: Removed success notification as per plan to only show errors
   };
 
   const handleComplete = () => {
     setIsComplete(true);
-    success('Your SMS message is ready to send');
+    // Note: Removed success notification as per plan to only show errors
   };
 
   return (

@@ -53,7 +53,7 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { notifications, removeNotification, success, error } = useNotification();
+  const { notifications, removeNotification, error } = useNotification();
 
   useEffect(() => {
     const initialMessage: Message = {
@@ -114,7 +114,6 @@ export const AgenticAIEngine: React.FC<AgenticAIEngineProps> = ({
             emailData: emailResult.data
           };
           setMessages(prev => [...prev, aiResponse]);
-          success('Email draft created successfully');
         } else {
           error(emailResult.error || 'Failed to generate email');
         }

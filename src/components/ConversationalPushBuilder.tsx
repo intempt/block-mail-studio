@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,7 +26,7 @@ export const ConversationalPushBuilder: React.FC<ConversationalPushBuilderProps>
     badge: ''
   });
   const [isComplete, setIsComplete] = useState(false);
-  const { success, info } = useNotification();
+  const { error } = useNotification();
 
   const handleFieldChange = (field: string, value: string) => {
     setPushData(prev => ({ ...prev, [field]: value }));
@@ -36,12 +35,12 @@ export const ConversationalPushBuilder: React.FC<ConversationalPushBuilderProps>
   const handleCopy = () => {
     const pushJson = JSON.stringify(pushData, null, 2);
     navigator.clipboard.writeText(pushJson);
-    success('Push notification data copied to clipboard');
+    // Note: Removed success notification as per plan to only show errors
   };
 
   const handleComplete = () => {
     setIsComplete(true);
-    success('Your push notification is ready to send');
+    // Note: Removed success notification as per plan to only show errors
   };
 
   return (
