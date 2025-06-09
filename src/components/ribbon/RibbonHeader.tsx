@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -125,7 +124,6 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
           </div>
         </div>
         
-        {/* View Mode Controls - Desktop/Mobile Toggle with Active State */}
         <div className="flex items-center gap-6">
           {/* Preview Mode Toggle Button */}
           <Button
@@ -201,7 +199,7 @@ export const RibbonHeader: React.FC<RibbonHeaderProps> = ({
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-          <Button onClick={onSave} className="bg-blue-600 hover:bg-blue-700 h-9 px-3" size="sm">
+          <Button onClick={onSave} variant="default" size="sm" className="h-9 px-3">
             <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
