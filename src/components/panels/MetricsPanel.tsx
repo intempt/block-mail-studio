@@ -57,13 +57,6 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
               <BarChart3 className="w-4 h-4 text-blue-600" />
               <span className="text-sm font-medium text-gray-900">Email Metrics</span>
             </div>
-            <div className="flex items-center gap-1 text-xs text-gray-600">
-              {previewMode === 'desktop' ? 
-                <Monitor className="w-3 h-3" /> : 
-                <Smartphone className="w-3 h-3" />
-              }
-              <span className="font-mono">{canvasWidth}px</span>
-            </div>
           </div>
         </div>
 
