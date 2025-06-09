@@ -24,26 +24,29 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       external: (id) => {
-        // Exclude any import that references dummy folder
+        // Exclude any import that references dummy folder or disabled files
         return id.includes('dummy/') || 
                id.startsWith('dummy/') || 
                id.includes('/dummy/') ||
                id.endsWith('/dummy') ||
-               id === 'dummy';
+               id === 'dummy' ||
+               id.includes('.disabled') ||
+               id.endsWith('.ts.disabled') ||
+               id.endsWith('.tsx.disabled');
       },
     }
   },
   // Completely exclude dummy folder from dependency optimization
   optimizeDeps: {
-    exclude: ['dummy', 'dummy/**', 'dummy/*'],
+    exclude: ['dummy', 'dummy/**', 'dummy/*', '**/*.disabled'],
   },
   // Define to help with module resolution
   define: {
     'process.env.EXCLUDE_DUMMY': 'true'
   },
-  // Exclude dummy files from being watched
+  // Exclude dummy files and disabled files from being watched
   esbuild: {
-    exclude: ['dummy/**/*', 'dummy/*'],
+    exclude: ['dummy/**/*', 'dummy/*', '**/*.disabled', '**/*.ts.disabled'],
   },
   test: {
     globals: true,

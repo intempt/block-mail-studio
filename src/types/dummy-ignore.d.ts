@@ -15,6 +15,22 @@ declare module 'dummy/**/**/*' {
   export = content;
 }
 
+// Ignore disabled files
+declare module '*.disabled' {
+  const content: any;
+  export = content;
+}
+
+declare module '*.ts.disabled' {
+  const content: any;
+  export = content;
+}
+
+declare module '*.tsx.disabled' {
+  const content: any;
+  export = content;
+}
+
 // Prevent any imports from dummy folder
 declare module 'dummy/userAttributes' {
   export const userAttributes: never;

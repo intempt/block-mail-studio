@@ -30,12 +30,17 @@
     "dummy",
     "dummy/**",
     "dummy/**/*",
+    "dummy/**/*.ts",
+    "dummy/**/*.tsx",
+    "dummy/**/*.disabled",
     "**/dummy",
     "**/dummy/**",
     "**/dummy/**/*",
     "./dummy",
     "./dummy/**",
     "./dummy/**/*",
+    "**/*.disabled",
+    "**/*.ts.disabled",
     "node_modules",
     "dist"
   ]

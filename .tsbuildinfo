@@ -1,2 +1,6 @@
 
+# TypeScript build info - dummy folder and .disabled files are excluded from compilation
 dummy/
+*.disabled
+*.ts.disabled
+*.tsx.disabled
