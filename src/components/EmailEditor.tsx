@@ -545,7 +545,7 @@ export default function EmailEditor({
             onToggle={() => setIsMetricsPanelCollapsed(!isMetricsPanelCollapsed)}
             title="Metrics"
             side="left"
-            expandedWidth="w-80"
+            expandedWidth="w-[200px]"
           >
             <MetricsPanel
               comprehensiveMetrics={comprehensiveMetrics}
