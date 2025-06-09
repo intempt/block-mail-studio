@@ -32,7 +32,9 @@ export interface UserDetailAttribute {
   lastUpdated?: string;
 }
 
+// Fix the VariableOption interface to match what BlockControls expects
 export interface VariableOption {
   text: string;
   description: string;
+  value: string; // Add the value property that BlockControls expects
 }

@@ -18,8 +18,11 @@
     "noUncheckedIndexedAccess": false,
     "noImplicitOverride": false
   },
-  "include": [],
+  "include": [
+    "src/**/*"
+  ],
   "exclude": [
-    "dummy/**/*"
+    "dummy/**/*",
+    "dummy"
   ]
 }

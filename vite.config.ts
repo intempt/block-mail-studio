@@ -20,6 +20,16 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Exclude dummy folder from build
+  build: {
+    rollupOptions: {
+      external: ['dummy/**']
+    }
+  },
+  // Exclude dummy folder from processing
+  optimizeDeps: {
+    exclude: ['dummy/**']
+  },
   test: {
     globals: true,
     environment: 'jsdom',
