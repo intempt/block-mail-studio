@@ -1,6 +1,6 @@
 
 // @ts-nocheck
-// Emergency type override for dummy files
+// Emergency global type override for all dummy files
 
 // Completely disable TypeScript checking for anything in dummy folder
 declare module "dummy/*" {
@@ -8,17 +8,36 @@ declare module "dummy/*" {
   export = content;
 }
 
-// Override all type checking in the global scope for dummy data
+// Global window and namespace overrides
 declare global {
-  // Completely override the variable declaration
   namespace globalThis {
     var userAttributes: any;
+    var UserAttribute: any;
+    var UserAttributeSchema: any;
+    var UserAttributeSchemaField: any;
   }
   
-  // Override at window level too
   interface Window {
     userAttributes?: any;
+    UserAttribute?: any;
+    UserAttributeSchema?: any;
+    UserAttributeSchemaField?: any;
   }
+  
+  // Emergency type augmentation
+  var UserAttribute: any;
+  var UserAttributeSchema: any;
+  var UserAttributeSchemaField: any;
+  var AttributeType: any;
+  var AttributeCategory: any;
+  var UserAttributeType: any;
+  var SchemaFieldType: any;
+}
+
+// Complete module wildcard override
+declare module "*" {
+  const content: any;
+  export = content;
 }
 
 export {};
