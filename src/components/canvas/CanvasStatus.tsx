@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,7 +29,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   const [metrics, setMetrics] = useState({
     overallScore: 0,
     deliverabilityScore: 0,
-    engagementScore: 0,
+    spamScore: 0,
     mobileScore: 0
   });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -62,7 +63,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
         setMetrics({
           overallScore: result.data.overallScore || 0,
           deliverabilityScore: result.data.deliverabilityScore || 0,
-          engagementScore: result.data.engagementScore || 0,
+          spamScore: result.data.spamScore || 0,
           mobileScore: result.data.mobileScore || 0
         });
         setLastAnalysis(Date.now());
@@ -202,12 +203,12 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
             
             <div className="space-y-1">
               <div className="flex justify-between">
-                <span className="text-gray-600">Engagement</span>
-                <span className={getScoreColor(metrics.engagementScore)}>
-                  {metrics.engagementScore}
+                <span className="text-gray-600">Spam Risk</span>
+                <span className={metrics.spamScore > 20 ? 'text-red-600' : 'text-green-600'}>
+                  {metrics.spamScore}
                 </span>
               </div>
-              <Progress value={metrics.engagementScore} className="h-1" />
+              <Progress value={metrics.spamScore} className="h-1" />
             </div>
             
             <div className="space-y-1">

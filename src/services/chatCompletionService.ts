@@ -8,7 +8,7 @@ interface ConversationMessage {
 
 interface CampaignContext {
   type?: 'email' | 'sms' | 'push';
-  purpose?: 'welcome' | 'newsletter' | 'promotional' | 'announcement' | 'followup';
+  purpose?: 'welcome' | 'newsletter' | 'promotional' | 'announcement';
   specific?: string;
   stage: 'type' | 'purpose' | 'specific' | 'generation';
 }
