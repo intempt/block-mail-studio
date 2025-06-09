@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -258,7 +257,7 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
               <Card className="p-2">
                 <h4 className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                   <Mail className="w-3 h-3" />
-                  Email Client Compatibility
+                  Compatibility
                 </h4>
                 <div className="grid grid-cols-2 gap-1">
                   <Tooltip>
