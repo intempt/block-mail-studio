@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Editor } from '@tiptap/react';
 import { Card } from '@/components/ui/card';
@@ -65,7 +64,7 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [errorType, setErrorType] = useState<'api-key' | 'network' | 'server' | 'unknown'>('unknown');
 
-  const { notifications, removeNotification, success, error, warning, info } = useInlineNotifications();
+  const { notifications, removeNotification, error } = useInlineNotifications();
 
   const analyzingMessages = [
     "Analyzing content tone and voice...",
@@ -154,7 +153,6 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
       }));
 
       setSuggestions(newSuggestions);
-      success('Brand voice analysis complete!');
     } catch (analysisError) {
       console.error('Analysis failed:', analysisError);
       const errorDetails = getErrorDetails(analysisError);
@@ -185,22 +183,18 @@ export const IntelligentAssistant: React.FC<IntelligentAssistantProps> = ({
     if (suggestion.type === 'subject' && onSubjectLineChange) {
       // Apply subject line suggestion
       onSubjectLineChange(suggestion.suggested);
-      success('Subject line updated!');
     } else if (canvasRef?.current) {
       // Apply content suggestions through canvas
       switch (suggestion.type) {
         case 'copy':
           canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
-          success('Content updated!');
           break;
         case 'cta':
           canvasRef.current.findAndReplaceText(suggestion.current, suggestion.suggested);
-          success('Call-to-action updated!');
           break;
         case 'tone':
           // For tone adjustments, we could modify text style or content
           console.log('Applying tone adjustment:', suggestion.suggested);
-          info('Tone suggestion noted - manual review recommended');
           break;
       }
     }

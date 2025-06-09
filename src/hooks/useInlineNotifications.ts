@@ -11,8 +11,8 @@ export const useInlineNotifications = () => {
     const id = `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const newNotification: InlineNotification = {
       id,
-      autoRemove: true,
-      duration: 5000,
+      autoRemove: false,
+      duration: 0,
       ...notification
     };
 
@@ -28,14 +28,6 @@ export const useInlineNotifications = () => {
     setNotifications([]);
   }, []);
 
-  const success = useCallback((message: string, options?: Partial<InlineNotification>) => {
-    return addNotification({
-      type: 'success',
-      message,
-      ...options
-    });
-  }, [addNotification]);
-
   const error = useCallback((message: string, options?: Partial<InlineNotification>) => {
     return addNotification({
       type: 'error',
@@ -45,30 +37,11 @@ export const useInlineNotifications = () => {
     });
   }, [addNotification]);
 
-  const warning = useCallback((message: string, options?: Partial<InlineNotification>) => {
-    return addNotification({
-      type: 'warning',
-      message,
-      ...options
-    });
-  }, [addNotification]);
-
-  const info = useCallback((message: string, options?: Partial<InlineNotification>) => {
-    return addNotification({
-      type: 'info',
-      message,
-      ...options
-    });
-  }, [addNotification]);
-
   return {
     notifications,
     addNotification,
     removeNotification,
     clearAll,
-    success,
-    error,
-    warning,
-    info
+    error
   };
 };

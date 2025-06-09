@@ -77,7 +77,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   viewMode = 'edit',
   onViewModeChange
 }) => {
-  const { success, error, warning } = useNotification();
+  const { error } = useNotification();
   const [showButtons, setShowButtons] = useState(false);
   const [showLinks, setShowLinks] = useState(false);
   const [showEmailSettings, setShowEmailSettings] = useState(false);
@@ -124,7 +124,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
       };
       
       localStorage.setItem('email-builder-draft', JSON.stringify(draftData));
-      success('Email draft saved successfully');
     } catch (err) {
       error('Failed to save email draft');
     }
@@ -134,7 +133,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
     if (confirm('Are you sure you want to clear all content? This will also clear your saved draft.')) {
       try {
         localStorage.removeItem('email-builder-draft');
-        success('Canvas cleared successfully');
       } catch (err) {
         error('Failed to clear canvas');
       }
@@ -148,7 +146,6 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const handleImportBlocks = (blocks: EmailBlock[], subject?: string) => {
     if (onImportBlocks) {
       onImportBlocks(blocks, subject);
-      success(`Successfully imported ${blocks.length} blocks`);
     }
     setShowImportDialog(false);
   };

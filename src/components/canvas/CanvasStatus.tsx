@@ -42,7 +42,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = React.memo(({
   onSnippetRefresh,
   viewMode
 }) => {
-  const { success, error, warning } = useNotification();
+  const { error } = useNotification();
   const [isKeyAvailable, setIsKeyAvailable] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [criticalSuggestions, setCriticalSuggestions] = useState<CriticalSuggestion[]>([]);
@@ -105,7 +105,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = React.memo(({
 
   const runCriticalAnalysis = async () => {
     if (!emailHTML.trim() || emailHTML.length < 50) {
-      warning('Add more content before analyzing');
+      error('Add more content before analyzing');
       return;
     }
 
@@ -113,7 +113,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = React.memo(({
     try {
       const critical = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
       setCriticalSuggestions(critical);
-      success('Critical analysis complete! Review suggestions below.');
     } catch (analysisError: any) {
       if (analysisError.message?.includes('OpenAI API key')) {
         error('OpenAI API key issue: ' + analysisError.message);
@@ -131,7 +130,7 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = React.memo(({
 
   const runCompleteAnalysis = async () => {
     if (!emailHTML.trim() || emailHTML.length < 50) {
-      warning('Add more content before analyzing');
+      error('Add more content before analyzing');
       return;
     }
 
@@ -139,7 +138,6 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = React.memo(({
     try {
       const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
       setComprehensiveAnalysis(comprehensive);
-      success('Complete analysis complete! Review suggestions below.');
     } catch (analysisError: any) {
        if (analysisError.message?.includes('OpenAI API key')) {
         error('OpenAI API key issue: ' + analysisError.message);

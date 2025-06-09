@@ -7,10 +7,7 @@ interface NotificationContextType {
   addNotification: (notification: Omit<InlineNotification, 'id'>) => string;
   removeNotification: (id: string) => void;
   clearAll: () => void;
-  success: (message: string, options?: Partial<InlineNotification>) => string;
   error: (message: string, options?: Partial<InlineNotification>) => string;
-  warning: (message: string, options?: Partial<InlineNotification>) => string;
-  info: (message: string, options?: Partial<InlineNotification>) => string;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -32,8 +29,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const id = `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const newNotification: InlineNotification = {
       id,
-      autoRemove: true,
-      duration: 5000,
+      autoRemove: false, // Errors should not auto-remove
+      duration: 0,
       ...notification
     };
 
@@ -49,35 +46,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setNotifications([]);
   }, []);
 
-  const success = useCallback((message: string, options?: Partial<InlineNotification>) => {
-    return addNotification({
-      type: 'success',
-      message,
-      ...options
-    });
-  }, [addNotification]);
-
   const error = useCallback((message: string, options?: Partial<InlineNotification>) => {
     return addNotification({
       type: 'error',
       message,
       autoRemove: false,
-      ...options
-    });
-  }, [addNotification]);
-
-  const warning = useCallback((message: string, options?: Partial<InlineNotification>) => {
-    return addNotification({
-      type: 'warning',
-      message,
-      ...options
-    });
-  }, [addNotification]);
-
-  const info = useCallback((message: string, options?: Partial<InlineNotification>) => {
-    return addNotification({
-      type: 'info',
-      message,
       ...options
     });
   }, [addNotification]);
@@ -88,10 +61,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       addNotification,
       removeNotification,
       clearAll,
-      success,
-      error,
-      warning,
-      info
+      error
     }}>
       {children}
     </NotificationContext.Provider>

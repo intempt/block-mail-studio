@@ -76,7 +76,7 @@ export default function EmailEditor({
 }: EmailEditorProps) {
   console.log('EmailEditor: Component starting to render');
 
-  const { notifications, removeNotification, success, error, warning } = useNotification();
+  const { notifications, removeNotification, error } = useNotification();
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [emailBlocks, setEmailBlocks] = useState<EmailBlock[]>([]);
@@ -222,9 +222,8 @@ export default function EmailEditor({
       }
 
       canvasRef.current.addBlock(newBlock);
-      success(`${blockType} block added successfully`);
     }
-  }, [success]);
+  }, []);
 
   const getDefaultContent = (blockType: string) => {
     switch (blockType) {
@@ -250,9 +249,8 @@ export default function EmailEditor({
   const handleSnippetAdd = useCallback((snippet: EmailSnippet) => {
     if (snippet.blockData && canvasRef.current) {
       canvasRef.current.addBlock(snippet.blockData);
-      success(`Snippet "${snippet.name}" added successfully`);
     }
-  }, [success]);
+  }, []);
 
   const handleDeviceChange = useCallback((device: 'desktop' | 'tablet' | 'mobile' | 'custom') => {
     setDeviceMode(device);
@@ -279,34 +277,31 @@ export default function EmailEditor({
   const handleImportBlocks = useCallback((blocks: EmailBlock[], subject?: string) => {
     if (canvasRef.current) {
       canvasRef.current.replaceAllBlocks(blocks);
-      success(`Successfully imported ${blocks.length} blocks`);
       
       if (subject) {
         onSubjectChange(subject);
       }
     }
-  }, [onSubjectChange, success]);
+  }, [onSubjectChange]);
 
   const handleSaveTemplate = useCallback((template: any) => {
     try {
       DirectTemplateService.saveTemplate(template);
       const updatedTemplates = DirectTemplateService.getAllTemplates();
       setTemplates(updatedTemplates);
-      success('Template saved successfully');
     } catch (err) {
       error('Failed to save template');
     }
-  }, [success, error]);
+  }, [error]);
 
   const handlePublish = useCallback(() => {
-    success('Email published successfully');
-  }, [success]);
+    // Silent publish - no notification
+  }, []);
 
   const handlePreview = useCallback(() => {
     setShowPreview(true);
   }, []);
 
-  // New state for AI analysis
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [criticalSuggestions, setCriticalSuggestions] = useState<CriticalSuggestion[]>([]);
   const [comprehensiveAnalysis, setComprehensiveAnalysis] = useState<CompleteAnalysisResult | null>(null);
@@ -315,7 +310,6 @@ export default function EmailEditor({
   const [analysisTimestamp, setAnalysisTimestamp] = useState<number>(0);
   const [comprehensiveMetrics, setComprehensiveMetrics] = useState<ComprehensiveEmailMetrics | null>(null);
 
-  // Add AI analysis handlers from CanvasStatus
   const extractAndMergeSuggestions = useCallback((critical: CriticalSuggestion[], comprehensive: CompleteAnalysisResult | null) => {
     let merged = [...critical];
 
@@ -401,8 +395,6 @@ export default function EmailEditor({
 
       const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailContent, subject);
       setComprehensiveAnalysis(comprehensive);
-
-      success('Analysis complete! Review suggestions below.');
       
     } catch (analysisError: any) {
       if (analysisError.message?.includes('OpenAI API key')) {
@@ -428,7 +420,6 @@ export default function EmailEditor({
 
   const handleApplyFix = async (suggestion: CriticalSuggestion) => {
     if (appliedFixes.has(suggestion.id)) {
-      warning('Fix already applied');
       return;
     }
 
@@ -439,28 +430,21 @@ export default function EmailEditor({
       if (suggestion.category === 'subject' && suggestion.suggested) {
         onSubjectChange(suggestion.suggested);
         fixType = 'subject';
-        success('Subject line updated!');
       } else if (suggestion.current && suggestion.suggested) {
-        // Handle compatibility fixes
         if (suggestion.category === 'compatibility') {
           if (suggestion.current.includes('box-shadow') || suggestion.current.includes('border-radius')) {
-            // Remove unsupported CSS
             updatedContent = emailContent.replace(new RegExp(suggestion.current.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), suggestion.suggested);
           } else if (suggestion.current.includes('<style') && !suggestion.current.includes('data-embed')) {
-            // Add data-embed attribute
             updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
           } else if (suggestion.current.includes('background-image')) {
-            // Add VML fallback (simplified)
             updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
           }
         } else {
-          // Handle regular content fixes
           updatedContent = emailContent.replace(suggestion.current, suggestion.suggested);
         }
         
         if (updatedContent !== emailContent) {
           onContentChange(updatedContent);
-          success('Content updated!');
         } else {
           const lines = emailContent.split('\n');
           const updatedLines = lines.map(line => {
@@ -473,14 +457,11 @@ export default function EmailEditor({
           
           if (updatedContent !== emailContent) {
             onContentChange(updatedContent);
-            success('Content updated!');
           } else {
-            warning('Could not automatically apply this fix');
             return;
           }
         }
       } else {
-        warning('This fix cannot be applied automatically');
         return;
       }
 
@@ -498,7 +479,6 @@ export default function EmailEditor({
     );
 
     if (autoFixableSuggestions.length === 0) {
-      warning('No auto-fixable suggestions available');
       return;
     }
 
@@ -506,11 +486,8 @@ export default function EmailEditor({
       await handleApplyFix(suggestion);
       await new Promise(resolve => setTimeout(resolve, 100));
     }
-
-    success(`Applied ${autoFixableSuggestions.length} auto-fixes!`);
   };
 
-  // Update canvas width when preview mode changes for better UX
   useEffect(() => {
     if (viewMode === 'desktop-preview' && canvasWidth < 600) {
       setCanvasWidth(600);
@@ -672,13 +649,11 @@ export default function EmailEditor({
               if (template.subject) {
                 onSubjectChange(template.subject);
               }
-              success(`Template "${template.name}" loaded successfully`);
             } else if (template.html && editor) {
               editor.commands.setContent(template.html);
               if (template.subject) {
                 onSubjectChange(template.subject);
               }
-              success(`Template "${template.name}" loaded successfully`);
             }
             setShowTemplateLibrary(false);
           }}

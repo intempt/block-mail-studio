@@ -29,6 +29,6 @@ export const handleServiceError = (error: any, context: string): ServiceResult =
   );
 };
 
-export const handleServiceSuccess = <T>(data: T, message?: string): ServiceResult<T> => {
-  return createServiceResult(true, data, message);
+export const handleServiceSuccess = <T>(data: T): ServiceResult<T> => {
+  return createServiceResult(true, data);
 };
