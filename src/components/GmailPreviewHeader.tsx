@@ -38,7 +38,7 @@ export const GmailPreviewHeader: React.FC<GmailPreviewHeaderProps> = ({
         <div className="flex items-center gap-2">
           <Eye className="w-4 h-4 text-blue-600" />
           <span className="text-sm font-medium text-blue-700">
-            Gmail Desktop Preview
+            Desktop Preview
           </span>
         </div>
         
