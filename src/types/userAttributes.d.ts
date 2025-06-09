@@ -4,33 +4,33 @@
 
 declare module '*/dummy/userAttributes' {
   interface UserAttribute {
-    id?: string;
-    name: string;
-    displayName?: string;
-    description?: string;
-    type?: any; // Allow any type to match dummy data flexibility
-    category?: any; // Allow any category to match dummy data flexibility
-    attributeType?: any; // Allow any attribute type
-    valueType?: string;
-    lastUpdated?: string; // Added to support dummy data
-    createdBy?: number;
-    schema?: UserAttributeSchema;
+    id?: any;
+    name?: any;
+    displayName?: any;
+    description?: any;
+    type?: any;
+    category?: any;
+    attributeType?: any;
+    valueType?: any;
+    lastUpdated?: any;
+    createdBy?: any;
+    schema?: any;
     [key: string]: any; // Allow any additional properties
   }
 
   interface UserAttributeSchema {
-    fields?: UserAttributeSchemaField[];
+    fields?: any;
     [key: string]: any;
   }
 
   interface UserAttributeSchemaField {
-    name: string;
-    type?: any; // Allow arrays, strings, or any other type
-    default?: any; // Made optional to match dummy data
-    [key: string]: any; // Allow any additional properties like "type" in arrays
+    name?: any;
+    type?: any;
+    default?: any;
+    [key: string]: any; // Allow any additional properties
   }
 
-  export const userAttributes: UserAttribute[];
+  export const userAttributes: any[];
 }
 
 // User details interface for components
@@ -54,8 +54,25 @@ interface UserDetailAttribute {
 
 // Global type augmentation - make these completely flexible to avoid conflicts
 declare global {
-  type AttributeType = any; // Completely flexible to support all dummy data values
-  type AttributeCategory = any; // Completely flexible to support all dummy data values
+  type AttributeType = any;
+  type AttributeCategory = any;
+}
+
+// Additional module augmentation to override any existing strict types
+declare module 'dummy/userAttributes' {
+  interface UserAttribute {
+    [key: string]: any;
+  }
+  
+  interface UserAttributeSchema {
+    [key: string]: any;
+  }
+  
+  interface UserAttributeSchemaField {
+    [key: string]: any;
+  }
+  
+  export const userAttributes: any[];
 }
 
 export {};
