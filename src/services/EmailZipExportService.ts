@@ -1,7 +1,7 @@
-
 import JSZip from 'jszip';
 import { EmailBlock } from '@/types/emailBlocks';
 import { MJMLTemplateGenerator } from './MJMLTemplateGenerator';
+import { EmailTemplate } from '@/types/emailBlocks';
 
 interface ImageAsset {
   fileName: string;
@@ -28,9 +28,18 @@ export class EmailZipExportService {
     const { processedBlocks, imageAssets } = await this.extractAndProcessImages(blocks);
 
     // Generate template with settings
-    const template = {
+    const template: EmailTemplate = {
+      id: `export_${Date.now()}`,
+      name: 'Exported Template',
+      description: 'Template exported as ZIP',
       subject,
       blocks: processedBlocks,
+      category: 'Export',
+      tags: ['export', 'zip'],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isFavorite: false,
+      usageCount: 0,
       settings: settings || {
         width: '600px',
         backgroundColor: '#f5f5f5',

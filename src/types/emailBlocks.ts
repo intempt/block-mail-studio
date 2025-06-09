@@ -1,4 +1,3 @@
-
 export interface Position {
   x: number;
   y: number;
@@ -362,6 +361,13 @@ export interface EmailTemplate {
   usageCount: number;
   blocks?: EmailBlock[];
   thumbnail?: string;
+  globalStyles?: string;
+  settings?: {
+    width?: string;
+    backgroundColor?: string;
+    fontFamily?: string;
+    [key: string]: any;
+  };
 }
 
 // Legacy type aliases for compatibility
