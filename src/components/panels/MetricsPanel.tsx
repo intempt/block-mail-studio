@@ -74,19 +74,19 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
         {/* Comprehensive Metrics */}
         {comprehensiveMetrics && (
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
             {/* Content Group */}
-            <Card className="p-3">
-              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+            <Card className="p-2">
+              <h4 className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                 <Type className="w-3 h-3" />
                 Content
               </h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-blue-50 rounded border border-blue-100 cursor-help hover:bg-blue-100 transition-colors">
-                      <Type className="w-3 h-3 mx-auto mb-1 text-blue-600" />
-                      <div className="text-sm font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
+                    <div className="text-center p-1 bg-blue-50 rounded border border-blue-100 cursor-help hover:bg-blue-100 transition-colors">
+                      <Type className="w-2.5 h-2.5 mx-auto mb-0.5 text-blue-600" />
+                      <div className="text-xs font-bold text-blue-600">{comprehensiveMetrics.wordCount}</div>
                       <div className="text-xs text-gray-600">Words</div>
                     </div>
                   </TooltipTrigger>
@@ -97,9 +97,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-green-50 rounded border border-green-100 cursor-help hover:bg-green-100 transition-colors">
-                      <Timer className="w-3 h-3 mx-auto mb-1 text-green-600" />
-                      <div className="text-sm font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
+                    <div className="text-center p-1 bg-green-50 rounded border border-green-100 cursor-help hover:bg-green-100 transition-colors">
+                      <Timer className="w-2.5 h-2.5 mx-auto mb-0.5 text-green-600" />
+                      <div className="text-xs font-bold text-green-600">{comprehensiveMetrics.readTimeMinutes}m</div>
                       <div className="text-xs text-gray-600">Read Time</div>
                     </div>
                   </TooltipTrigger>
@@ -110,9 +110,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-purple-50 rounded border border-purple-100 cursor-help hover:bg-purple-100 transition-colors">
-                      <Image className="w-3 h-3 mx-auto mb-1 text-purple-600" />
-                      <div className="text-sm font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
+                    <div className="text-center p-1 bg-purple-50 rounded border border-purple-100 cursor-help hover:bg-purple-100 transition-colors">
+                      <Image className="w-2.5 h-2.5 mx-auto mb-0.5 text-purple-600" />
+                      <div className="text-xs font-bold text-purple-600">{comprehensiveMetrics.imageCount}</div>
                       <div className="text-xs text-gray-600">Images</div>
                     </div>
                   </TooltipTrigger>
@@ -123,9 +123,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-indigo-50 rounded border border-indigo-100 cursor-help hover:bg-indigo-100 transition-colors">
-                      <Link className="w-3 h-3 mx-auto mb-1 text-indigo-600" />
-                      <div className="text-sm font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
+                    <div className="text-center p-1 bg-indigo-50 rounded border border-indigo-100 cursor-help hover:bg-indigo-100 transition-colors">
+                      <Link className="w-2.5 h-2.5 mx-auto mb-0.5 text-indigo-600" />
+                      <div className="text-xs font-bold text-indigo-600">{comprehensiveMetrics.linkCount}</div>
                       <div className="text-xs text-gray-600">Links</div>
                     </div>
                   </TooltipTrigger>
@@ -137,17 +137,17 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
             </Card>
 
             {/* Performance Group */}
-            <Card className="p-3">
-              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+            <Card className="p-2">
+              <h4 className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                 <Globe className="w-3 h-3" />
                 Performance
               </h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-gray-50 rounded border border-gray-100 cursor-help hover:bg-gray-100 transition-colors">
-                      <Globe className="w-3 h-3 mx-auto mb-1 text-gray-600" />
-                      <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
+                    <div className="text-center p-1 bg-gray-50 rounded border border-gray-100 cursor-help hover:bg-gray-100 transition-colors">
+                      <Globe className="w-2.5 h-2.5 mx-auto mb-0.5 text-gray-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.sizeKB, 'size')}`}>
                         {comprehensiveMetrics.sizeKB}KB
                       </div>
                       <div className="text-xs text-gray-600">Size</div>
@@ -160,9 +160,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-yellow-50 rounded border border-yellow-100 cursor-help hover:bg-yellow-100 transition-colors">
-                      <Clock className="w-3 h-3 mx-auto mb-1 text-yellow-600" />
-                      <div className="text-sm font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
+                    <div className="text-center p-1 bg-yellow-50 rounded border border-yellow-100 cursor-help hover:bg-yellow-100 transition-colors">
+                      <Clock className="w-2.5 h-2.5 mx-auto mb-0.5 text-yellow-600" />
+                      <div className="text-xs font-bold text-yellow-600">{comprehensiveMetrics.loadTimeEstimate}</div>
                       <div className="text-xs text-gray-600">Load Time</div>
                     </div>
                   </TooltipTrigger>
@@ -173,9 +173,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-pink-50 rounded border border-pink-100 cursor-help hover:bg-pink-100 transition-colors">
-                      <Smartphone className="w-3 h-3 mx-auto mb-1 text-pink-600" />
-                      <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
+                    <div className="text-center p-1 bg-pink-50 rounded border border-pink-100 cursor-help hover:bg-pink-100 transition-colors">
+                      <Smartphone className="w-2.5 h-2.5 mx-auto mb-0.5 text-pink-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.mobileScore, 'score')}`}>
                         {comprehensiveMetrics.mobileScore}
                       </div>
                       <div className="text-xs text-gray-600">Mobile</div>
@@ -188,9 +188,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-teal-50 rounded border border-teal-100 cursor-help hover:bg-teal-100 transition-colors">
-                      <Eye className="w-3 h-3 mx-auto mb-1 text-teal-600" />
-                      <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
+                    <div className="text-center p-1 bg-teal-50 rounded border border-teal-100 cursor-help hover:bg-teal-100 transition-colors">
+                      <Eye className="w-2.5 h-2.5 mx-auto mb-0.5 text-teal-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.accessibilityScore, 'score')}`}>
                         {comprehensiveMetrics.accessibilityScore}
                       </div>
                       <div className="text-xs text-gray-600">A11y</div>
@@ -204,17 +204,17 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
             </Card>
 
             {/* Deliverability Group */}
-            <Card className="p-3">
-              <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+            <Card className="p-2">
+              <h4 className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                 <Shield className="w-3 h-3" />
                 Deliverability
               </h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-red-50 rounded border border-red-100 cursor-help hover:bg-red-100 transition-colors">
-                      <Shield className="w-3 h-3 mx-auto mb-1 text-red-600" />
-                      <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
+                    <div className="text-center p-1 bg-red-50 rounded border border-red-100 cursor-help hover:bg-red-100 transition-colors">
+                      <Shield className="w-2.5 h-2.5 mx-auto mb-0.5 text-red-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(100 - comprehensiveMetrics.spamScore, 'score')}`}>
                         {comprehensiveMetrics.spamScore}%
                       </div>
                       <div className="text-xs text-gray-600">Spam Risk</div>
@@ -227,9 +227,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-emerald-50 rounded border border-emerald-100 cursor-help hover:bg-emerald-100 transition-colors">
-                      <Mail className="w-3 h-3 mx-auto mb-1 text-emerald-600" />
-                      <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
+                    <div className="text-center p-1 bg-emerald-50 rounded border border-emerald-100 cursor-help hover:bg-emerald-100 transition-colors">
+                      <Mail className="w-2.5 h-2.5 mx-auto mb-0.5 text-emerald-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.deliverabilityScore, 'score')}`}>
                         {comprehensiveMetrics.deliverabilityScore}
                       </div>
                       <div className="text-xs text-gray-600">Deliver</div>
@@ -242,9 +242,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="text-center p-2 bg-cyan-50 rounded border border-cyan-100 cursor-help hover:bg-cyan-100 transition-colors">
-                      <MessageSquare className="w-3 h-3 mx-auto mb-1 text-cyan-600" />
-                      <div className={`text-sm font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
+                    <div className="text-center p-1 bg-cyan-50 rounded border border-cyan-100 cursor-help hover:bg-cyan-100 transition-colors">
+                      <MessageSquare className="w-2.5 h-2.5 mx-auto mb-0.5 text-cyan-600" />
+                      <div className={`text-xs font-bold ${ComprehensiveMetricsService.getMetricColor(comprehensiveMetrics.subjectLineScore, 'score')}`}>
                         {comprehensiveMetrics.subjectLineScore}
                       </div>
                       <div className="text-xs text-gray-600">Subject</div>
@@ -259,17 +259,17 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
             {/* Email Provider Compatibility */}
             {providerMetrics && (
-              <Card className="p-3">
-                <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+              <Card className="p-2">
+                <h4 className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
                   <Mail className="w-3 h-3" />
                   Email Client Compatibility
                 </h4>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1">
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-center p-2 bg-blue-50 rounded border border-blue-100 cursor-help hover:bg-blue-100 transition-colors">
-                        <Mail className="w-3 h-3 mx-auto mb-1 text-blue-600" />
-                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.outlook)}`}>
+                      <div className="text-center p-1 bg-blue-50 rounded border border-blue-100 cursor-help hover:bg-blue-100 transition-colors">
+                        <Mail className="w-2.5 h-2.5 mx-auto mb-0.5 text-blue-600" />
+                        <div className={`text-xs font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.outlook)}`}>
                           {providerMetrics.outlook}
                         </div>
                         <div className="text-xs text-gray-600">Outlook</div>
@@ -282,9 +282,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-center p-2 bg-red-50 rounded border border-red-100 cursor-help hover:bg-red-100 transition-colors">
-                        <Mail className="w-3 h-3 mx-auto mb-1 text-red-600" />
-                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.gmail)}`}>
+                      <div className="text-center p-1 bg-red-50 rounded border border-red-100 cursor-help hover:bg-red-100 transition-colors">
+                        <Mail className="w-2.5 h-2.5 mx-auto mb-0.5 text-red-600" />
+                        <div className={`text-xs font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.gmail)}`}>
                           {providerMetrics.gmail}
                         </div>
                         <div className="text-xs text-gray-600">Gmail</div>
@@ -297,9 +297,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-center p-2 bg-gray-50 rounded border border-gray-100 cursor-help hover:bg-gray-100 transition-colors">
-                        <Mail className="w-3 h-3 mx-auto mb-1 text-gray-600" />
-                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.appleMail)}`}>
+                      <div className="text-center p-1 bg-gray-50 rounded border border-gray-100 cursor-help hover:bg-gray-100 transition-colors">
+                        <Mail className="w-2.5 h-2.5 mx-auto mb-0.5 text-gray-600" />
+                        <div className={`text-xs font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.appleMail)}`}>
                           {providerMetrics.appleMail}
                         </div>
                         <div className="text-xs text-gray-600">Apple</div>
@@ -312,9 +312,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-center p-2 bg-purple-50 rounded border border-purple-100 cursor-help hover:bg-purple-100 transition-colors">
-                        <Mail className="w-3 h-3 mx-auto mb-1 text-purple-600" />
-                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.yahooMail)}`}>
+                      <div className="text-center p-1 bg-purple-50 rounded border border-purple-100 cursor-help hover:bg-purple-100 transition-colors">
+                        <Mail className="w-2.5 h-2.5 mx-auto mb-0.5 text-purple-600" />
+                        <div className={`text-xs font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.yahooMail)}`}>
                           {providerMetrics.yahooMail}
                         </div>
                         <div className="text-xs text-gray-600">Yahoo</div>
@@ -327,9 +327,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-center p-2 bg-green-50 rounded border border-green-100 cursor-help hover:bg-green-100 transition-colors">
-                        <Mail className="w-3 h-3 mx-auto mb-1 text-green-600" />
-                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.thunderbird)}`}>
+                      <div className="text-center p-1 bg-green-50 rounded border border-green-100 cursor-help hover:bg-green-100 transition-colors">
+                        <Mail className="w-2.5 h-2.5 mx-auto mb-0.5 text-green-600" />
+                        <div className={`text-xs font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.thunderbird)}`}>
                           {providerMetrics.thunderbird}
                         </div>
                         <div className="text-xs text-gray-600">T-bird</div>
@@ -342,9 +342,9 @@ export const MetricsPanel: React.FC<MetricsPanelProps> = ({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="text-center p-2 bg-orange-50 rounded border border-orange-100 cursor-help hover:bg-orange-100 transition-colors">
-                        <BarChart3 className="w-3 h-3 mx-auto mb-1 text-orange-600" />
-                        <div className={`text-sm font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.overall)}`}>
+                      <div className="text-center p-1 bg-orange-50 rounded border border-orange-100 cursor-help hover:bg-orange-100 transition-colors">
+                        <BarChart3 className="w-2.5 h-2.5 mx-auto mb-0.5 text-orange-600" />
+                        <div className={`text-xs font-bold ${EmailProviderCompatibilityEnhanced.getMetricColor(providerMetrics.overall)}`}>
                           {providerMetrics.overall}
                         </div>
                         <div className="text-xs text-gray-600">Overall</div>
