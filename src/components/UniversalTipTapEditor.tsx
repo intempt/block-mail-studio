@@ -18,10 +18,8 @@ import { ProBubbleMenuToolbar } from './ProBubbleMenuToolbar';
 import { EmailContext } from '@/services/tiptapAIService';
 import { 
   ExternalLink,
-  Play,
-  Sparkles
+  Play
 } from 'lucide-react';
-import { AIDropdownMenu } from './AIDropdownMenu';
 
 interface TextContent {
   html: string;
@@ -232,25 +230,6 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         border rounded-lg bg-white transition-all duration-200
         ${hasFocus ? 'border-blue-400 shadow-md ring-1 ring-blue-400/20' : 'border-gray-200 hover:border-gray-300'}
       `}>
-        {/* TipTap Pro AI Toolbar - Show when focused or has content */}
-        {(hasFocus || htmlContent) && (
-          <div className="flex items-center gap-1 px-3 py-2 border-b bg-gradient-to-r from-purple-50 to-blue-50">
-            <div className="flex items-center gap-1 text-xs text-purple-700">
-              <Sparkles className="w-3 h-3" />
-              <span className="font-medium">TipTap Pro AI</span>
-            </div>
-            
-            <div className="ml-auto">
-              <AIDropdownMenu
-                selectedText=""
-                fullContent={htmlContent}
-                onContentUpdate={handleContentUpdate}
-                size="sm"
-              />
-            </div>
-          </div>
-        )}
-
         <EditorContent 
           editor={editor} 
           className="prose prose-sm max-w-none p-4 focus:outline-none min-h-[80px]"
