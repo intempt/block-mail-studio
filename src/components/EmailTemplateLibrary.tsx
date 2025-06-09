@@ -14,9 +14,13 @@ import {
   Star,
   Trophy
 } from 'lucide-react';
+import { EmailTemplate } from './TemplateManager';
 
 interface EmailTemplateLibraryProps {
-  editor: Editor | null;
+  editor?: Editor | null;
+  onSelectTemplate?: (template: EmailTemplate) => void;
+  templates?: EmailTemplate[];
+  onClose?: () => void;
 }
 
 interface Template {
@@ -112,10 +116,37 @@ const templates: Template[] = [
   }
 ];
 
-export const EmailTemplateLibrary: React.FC<EmailTemplateLibraryProps> = ({ editor }) => {
+export const EmailTemplateLibrary: React.FC<EmailTemplateLibraryProps> = ({ 
+  editor, 
+  onSelectTemplate, 
+  templates: externalTemplates, 
+  onClose 
+}) => {
   const applyTemplate = (template: string) => {
     if (editor) {
       editor.commands.setContent(template);
+    }
+  };
+
+  const handleTemplateSelect = (template: Template) => {
+    if (onSelectTemplate) {
+      // Convert internal template to EmailTemplate format
+      const emailTemplate = {
+        id: template.id,
+        name: template.name,
+        description: template.preview,
+        html: template.template,
+        subject: `${template.name} - ${template.preview}`,
+        category: template.category,
+        tags: [template.category],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isFavorite: false,
+        usageCount: 0
+      };
+      onSelectTemplate(emailTemplate);
+    } else {
+      applyTemplate(template.template);
     }
   };
 
@@ -136,7 +167,7 @@ export const EmailTemplateLibrary: React.FC<EmailTemplateLibraryProps> = ({ edit
         <TabsContent value="all" className="space-y-2 mt-4">
           {templates.map((template) => (
             <Card key={template.id} className="p-3 hover:bg-gray-50 transition-colors cursor-pointer">
-              <div onClick={() => applyTemplate(template.template)} className="flex items-start gap-3">
+              <div onClick={() => handleTemplateSelect(template)} className="flex items-start gap-3">
                 <div className="flex-shrink-0 p-2 bg-blue-50 rounded-lg">
                   {template.icon}
                 </div>
@@ -153,7 +184,7 @@ export const EmailTemplateLibrary: React.FC<EmailTemplateLibraryProps> = ({ edit
           <TabsContent key={category} value={category} className="space-y-2 mt-4">
             {templates.filter(t => t.category === category).map((template) => (
               <Card key={template.id} className="p-3 hover:bg-gray-50 transition-colors cursor-pointer">
-                <div onClick={() => applyTemplate(template.template)} className="flex items-start gap-3">
+                <div onClick={() => handleTemplateSelect(template)} className="flex items-start gap-3">
                   <div className="flex-shrink-0 p-2 bg-blue-50 rounded-lg">
                     {template.icon}
                   </div>

@@ -48,6 +48,7 @@ interface UserAttribute {
   attrId: string;
   title: string;
   value: any;
+  lastUpdated?: string;
 }
 
 // Global type augmentation for missing attribute types
