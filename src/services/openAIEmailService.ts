@@ -105,9 +105,9 @@ export class OpenAIEmailService {
   }
 
   static async callOpenAI(prompt: string, retries: number = 2, expectJSON: boolean = true): Promise<any> {
-    const apiKey = ApiKeyService.getOpenAIKey();
+    const apiKey = await ApiKeyService.getOpenAIKey();
 
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       throw new OpenAIServiceError('OpenAI API key not available or invalid');
     }
 

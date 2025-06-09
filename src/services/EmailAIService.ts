@@ -65,7 +65,7 @@ export interface PerformanceAnalysisResult {
 
 export class EmailAIService {
   static async generateEmail(request: EmailGenerationRequest): Promise<ServiceResult<any>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'generateEmail'
@@ -100,7 +100,7 @@ export class EmailAIService {
   }
 
   static async refineEmail(currentHTML: string, refinementPrompt: string): Promise<ServiceResult<string>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'refineEmail'
@@ -120,7 +120,7 @@ export class EmailAIService {
   }
 
   static async generateContent(userInput: string, contentType: string): Promise<ServiceResult<string>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'generateContent'
@@ -142,7 +142,7 @@ export class EmailAIService {
   }
 
   static async getConversationalResponse(userMessage: string, context?: string[]): Promise<ServiceResult<string>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'getConversationalResponse'
@@ -164,7 +164,7 @@ export class EmailAIService {
   }
 
   static async analyzeBrandVoice(emailHTML: string, subjectLine: string): Promise<ServiceResult<BrandVoiceAnalysisResult>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'analyzeBrandVoice'
@@ -180,7 +180,7 @@ export class EmailAIService {
   }
 
   static async analyzeSubjectLine(subjectLine: string, emailContent: string): Promise<ServiceResult<SubjectLineAnalysisResult>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'analyzeSubjectLine'
@@ -266,7 +266,7 @@ export class EmailAIService {
   }
 
   static async analyzeEmailPerformance(emailHTML: string, subjectLine: string): Promise<ServiceResult<PerformanceAnalysisResult>> {
-    if (!ApiKeyService.validateKey()) {
+    if (!(await ApiKeyService.validateKey())) {
       return handleServiceError(
         new Error('OpenAI API key not available. Please configure your API key to use AI features.'),
         'analyzeEmailPerformance'

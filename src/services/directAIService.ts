@@ -1,7 +1,7 @@
-
 import { emailAIService, BrandVoiceAnalysisResult, SubjectLineAnalysisResult, PerformanceAnalysisResult } from './EmailAIService';
 import { OpenAIEmailService } from './openAIEmailService';
 import { ServiceResult, handleServiceError, handleServiceSuccess } from '@/utils/serviceErrorHandler';
+import { ApiKeyService } from './apiKeyService';
 
 class DirectAIServiceManager {
   async generateEmail(prompt: string, type: string): Promise<ServiceResult<any>> {
