@@ -1,3 +1,4 @@
+
 import { OpenAIEmailService } from './openAIEmailService';
 import { ApiKeyService } from './apiKeyService';
 
@@ -22,20 +23,10 @@ export class CriticalEmailAnalysisService {
   private static cache = new Map<string, { data: CriticalSuggestion[]; timestamp: number }>();
   private static CACHE_DURATION = 300000; // 5 minutes
 
-  private static async validateKeyBeforeCall(): Promise<void> {
-    const isValid = await ApiKeyService.validateKey();
-    if (!isValid) {
-      throw new Error('OpenAI API key is not available or invalid. Please refresh your API key.');
-    }
-  }
-
   static async analyzeCriticalIssues(emailHTML: string, subjectLine: string): Promise<CriticalSuggestion[]> {
-    if (!emailHTML.trim()) {
+    if (!emailHTML.trim() || !ApiKeyService.validateKey()) {
       return [];
     }
-
-    // Validate API key before proceeding
-    await this.validateKeyBeforeCall();
 
     const cacheKey = `critical-${emailHTML}-${subjectLine}`;
     const cached = this.cache.get(cacheKey);
@@ -136,11 +127,6 @@ Focus on REAL issues found in the actual content. Only suggest improvements for 
   static clearCache(): void {
     this.cache.clear();
     console.log('Critical analysis cache cleared');
-  }
-
-  static forceRefreshApiKey(): void {
-    ApiKeyService.forceRefresh();
-    console.log('API key cache refreshed for CriticalEmailAnalysisService');
   }
 
   static getSeverityColor(severity: string): string {
