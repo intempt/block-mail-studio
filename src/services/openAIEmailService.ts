@@ -1,3 +1,4 @@
+
 import { ApiKeyService } from './apiKeyService';
 
 export interface OpenAIEmailAnalysisRequest {
@@ -105,9 +106,21 @@ export class OpenAIEmailService {
   }
 
   static async callOpenAI(prompt: string, retries: number = 2, expectJSON: boolean = true): Promise<any> {
-    const apiKey = await ApiKeyService.getOpenAIKey();
+    const requestId = `openai-${Date.now()}`;
+    console.log(`[OPENAI-SERVICE] ${requestId} - callOpenAI() initiated`);
+    console.log(`[OPENAI-SERVICE] ${requestId} - Parameters: retries=${retries}, expectJSON=${expectJSON}`);
+    console.log(`[OPENAI-SERVICE] ${requestId} - Prompt length: ${prompt.length} characters`);
 
-    if (!(await ApiKeyService.validateKey())) {
+    console.log(`[OPENAI-SERVICE] ${requestId} - Getting API key...`);
+    const apiKey = await ApiKeyService.getOpenAIKey();
+    console.log(`[OPENAI-SERVICE] ${requestId} - API key retrieved (length: ${apiKey.length})`);
+
+    console.log(`[OPENAI-SERVICE] ${requestId} - Validating API key...`);
+    const isValid = await ApiKeyService.validateKey();
+    console.log(`[OPENAI-SERVICE] ${requestId} - Key validation result: ${isValid}`);
+
+    if (!isValid) {
+      console.error(`[OPENAI-SERVICE] ${requestId} - API key validation failed`);
       throw new OpenAIServiceError('OpenAI API key not available or invalid');
     }
 
@@ -115,42 +128,58 @@ export class OpenAIEmailService {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        console.log(`OpenAI API call attempt ${attempt + 1}/${retries + 1}`);
+        console.log(`[OPENAI-SERVICE] ${requestId} - API call attempt ${attempt + 1}/${retries + 1}`);
+        console.log(`[OPENAI-SERVICE] ${requestId} - Making request to OpenAI API...`);
         
+        const requestBody = {
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: expectJSON 
+                ? `You are an expert email marketing specialist analyzing real email content. Always return valid JSON without markdown formatting. Provide genuine analysis based on the actual content provided.`
+                : `You are a helpful email marketing expert. Respond directly and helpfully based on the actual content.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: expectJSON ? 2000 : 800
+        };
+
+        console.log(`[OPENAI-SERVICE] ${requestId} - Request body prepared (model: ${requestBody.model})`);
+        console.log(`[OPENAI-SERVICE] ${requestId} - Using API key: ${apiKey.substring(0, 7)}...${apiKey.substring(apiKey.length - 4)}`);
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [
-              {
-                role: 'system',
-                content: expectJSON 
-                  ? `You are an expert email marketing specialist analyzing real email content. Always return valid JSON without markdown formatting. Provide genuine analysis based on the actual content provided.`
-                  : `You are a helpful email marketing expert. Respond directly and helpfully based on the actual content.`
-              },
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: expectJSON ? 2000 : 800
-          })
+          body: JSON.stringify(requestBody)
         });
+
+        console.log(`[OPENAI-SERVICE] ${requestId} - API response received`);
+        console.log(`[OPENAI-SERVICE] ${requestId} - Response status: ${response.status} ${response.statusText}`);
+        console.log(`[OPENAI-SERVICE] ${requestId} - Response headers:`, Object.fromEntries(response.headers.entries()));
 
         if (!response.ok) {
           const errorText = await response.text();
+          console.error(`[OPENAI-SERVICE] ${requestId} - API error response:`, errorText);
+          
           let errorMessage = `API error: ${response.status} ${response.statusText}`;
           
           if (response.status === 401) {
+            console.error(`[OPENAI-SERVICE] ${requestId} - Authentication failed - invalid API key`);
+            console.error(`[OPENAI-SERVICE] ${requestId} - Key used: ${apiKey.substring(0, 10)}...`);
             errorMessage = 'Invalid OpenAI API key';
           } else if (response.status === 429) {
+            console.error(`[OPENAI-SERVICE] ${requestId} - Rate limit exceeded`);
             errorMessage = 'OpenAI rate limit exceeded';
           } else if (response.status >= 500) {
+            console.error(`[OPENAI-SERVICE] ${requestId} - Server error`);
             errorMessage = 'OpenAI service temporarily unavailable';
           }
           
@@ -158,32 +187,53 @@ export class OpenAIEmailService {
         }
 
         const data = await response.json();
+        console.log(`[OPENAI-SERVICE] ${requestId} - Response data received successfully`);
+        console.log(`[OPENAI-SERVICE] ${requestId} - Response structure:`, {
+          hasChoices: !!data.choices,
+          choicesLength: data.choices?.length,
+          hasUsage: !!data.usage,
+          model: data.model
+        });
+        
         this.validateAPIResponse(data);
         
         const content = data.choices[0].message.content;
+        console.log(`[OPENAI-SERVICE] ${requestId} - Content extracted (length: ${content.length})`);
         
         if (expectJSON) {
-          return this.extractJSONFromResponse(content);
+          console.log(`[OPENAI-SERVICE] ${requestId} - Parsing JSON response...`);
+          const parsed = this.extractJSONFromResponse(content);
+          console.log(`[OPENAI-SERVICE] ${requestId} - JSON parsed successfully`);
+          return parsed;
         } else {
+          console.log(`[OPENAI-SERVICE] ${requestId} - Returning raw content`);
           return content;
         }
 
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
-        console.error(`OpenAI API attempt ${attempt + 1} failed:`, lastError);
+        console.error(`[OPENAI-SERVICE] ${requestId} - Attempt ${attempt + 1} failed:`, {
+          name: lastError.name,
+          message: lastError.message,
+          stack: lastError.stack
+        });
         
         if (error instanceof OpenAIServiceError && 
             (error.message.includes('Invalid OpenAI API key') || 
              error.message.includes('API error: 4'))) {
+          console.error(`[OPENAI-SERVICE] ${requestId} - Fatal error, not retrying`);
           throw error;
         }
         
         if (attempt < retries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+          const waitTime = 1000 * (attempt + 1);
+          console.log(`[OPENAI-SERVICE] ${requestId} - Waiting ${waitTime}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
     }
 
+    console.error(`[OPENAI-SERVICE] ${requestId} - All attempts failed`);
     throw lastError || new OpenAIServiceError('All API attempts failed');
   }
 

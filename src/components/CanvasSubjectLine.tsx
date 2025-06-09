@@ -30,25 +30,44 @@ export const CanvasSubjectLine: React.FC<CanvasSubjectLineProps> = ({
   const [showVariants, setShowVariants] = useState(false);
 
   const generateVariants = async () => {
-    if (!value.trim()) return;
+    const sessionId = `subject-variants-${Date.now()}`;
+    console.log(`[CANVAS-SUBJECT-LINE] ${sessionId} - generateVariants() called`);
+    console.log(`[CANVAS-SUBJECT-LINE] ${sessionId} - Current value: "${value}"`);
+    
+    if (!value.trim()) {
+      console.warn(`[CANVAS-SUBJECT-LINE] ${sessionId} - Empty subject line, aborting`);
+      return;
+    }
 
     setIsGeneratingVariants(true);
     setShowVariants(true);
     
     try {
-      console.log('Generating subject line variants...');
+      console.log(`[CANVAS-SUBJECT-LINE] ${sessionId} - Calling DirectAIService for variants...`);
       const result = await DirectAIService.generateSubjectVariants(value, 3);
+      
+      console.log(`[CANVAS-SUBJECT-LINE] ${sessionId} - DirectAIService response:`, {
+        success: result.success,
+        dataLength: result.data?.length || 0,
+        error: result.error || 'None'
+      });
+      
       if (result.success && result.data) {
-        console.log('Subject variants generated successfully:', result.data);
+        console.log(`[CANVAS-SUBJECT-LINE] ${sessionId} - Variants generated successfully:`, result.data);
         setVariants(result.data);
       } else {
-        console.warn('Subject variant generation failed:', result.error);
+        console.warn(`[CANVAS-SUBJECT-LINE] ${sessionId} - Variant generation failed:`, result.error);
         setVariants([]);
       }
     } catch (error) {
-      console.error('Error generating variants:', error);
+      console.error(`[CANVAS-SUBJECT-LINE] ${sessionId} - Error generating variants:`, {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       setVariants([]);
     } finally {
+      console.log(`[CANVAS-SUBJECT-LINE] ${sessionId} - Variant generation process completed`);
       setIsGeneratingVariants(false);
     }
   };

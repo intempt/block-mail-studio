@@ -23,14 +23,22 @@ export class CriticalEmailAnalysisService {
   private static CACHE_DURATION = 300000; // 5 minutes
 
   static async analyzeCriticalIssues(emailHTML: string, subjectLine: string): Promise<CriticalSuggestion[]> {
+    const analysisId = `critical-${Date.now()}`;
+    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - analyzeCriticalIssues() called`);
+    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Email HTML length: ${emailHTML.length}`);
+    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Subject line: "${subjectLine}"`);
+    
     if (!emailHTML.trim()) {
+      console.warn(`[CRITICAL-ANALYSIS] ${analysisId} - Empty email content provided`);
       return [];
     }
 
-    // Fix: Add await for async function call
+    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Validating API key...`);
     const isKeyValid = await ApiKeyService.validateKey();
+    console.log(`[CRITICAL-ANALYSIS] ${analysisId} - API key validation result: ${isKeyValid}`);
+    
     if (!isKeyValid) {
-      console.warn('OpenAI API key not valid, skipping AI analysis');
+      console.warn(`[CRITICAL-ANALYSIS] ${analysisId} - OpenAI API key not valid, skipping AI analysis`);
       return [];
     }
 
@@ -38,12 +46,12 @@ export class CriticalEmailAnalysisService {
     const cached = this.cache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      console.log('Critical analysis: Using cached result');
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Using cached result`);
       return cached.data;
     }
 
     try {
-      console.log('Critical analysis: Calling OpenAI for comprehensive issue detection');
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Calling OpenAI for comprehensive issue detection`);
       
       const prompt = `Analyze this COMPLETE EMAIL for critical marketing mistakes and provide actionable suggestions:
 
@@ -91,7 +99,13 @@ Return JSON array of suggestions:
 
 Focus on REAL issues found in the actual content. Only suggest improvements for problems that actually exist.`;
 
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Sending prompt to OpenAI (length: ${prompt.length})`);
       const result = await OpenAIEmailService.callOpenAI(prompt, 2, true);
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - OpenAI response received`);
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Response structure:`, {
+        hasSuggestions: !!result.suggestions,
+        suggestionsLength: result.suggestions?.length || 0
+      });
       
       const suggestions: CriticalSuggestion[] = (result.suggestions || []).map((suggestion: any, index: number) => ({
         id: `critical-${Date.now()}-${index}`,
@@ -110,6 +124,8 @@ Focus on REAL issues found in the actual content. Only suggest improvements for 
         applied: false
       }));
 
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Processed ${suggestions.length} suggestions`);
+
       // Sort by priority and severity
       suggestions.sort((a, b) => {
         const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -119,13 +135,20 @@ Focus on REAL issues found in the actual content. Only suggest improvements for 
         return a.priority - b.priority;
       });
 
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Suggestions sorted by priority`);
+
       // Cache the result
       this.cache.set(cacheKey, { data: suggestions, timestamp: Date.now() });
+      console.log(`[CRITICAL-ANALYSIS] ${analysisId} - Result cached`);
       
       return suggestions;
       
     } catch (error) {
-      console.error('Critical analysis error:', error);
+      console.error(`[CRITICAL-ANALYSIS] ${analysisId} - Analysis failed:`, {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       throw error; // Let the component handle the error inline
     }
   }

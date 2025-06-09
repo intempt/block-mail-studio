@@ -177,7 +177,11 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
   }, [criticalSuggestions, comprehensiveAnalysis, extractAndMergeSuggestions]);
 
   const runCompleteAnalysis = async () => {
+    const analysisId = `analysis-${Date.now()}`;
+    console.log(`[CANVAS-STATUS] ${analysisId} - runCompleteAnalysis() initiated`);
+    
     if (!emailHTML.trim() || emailHTML.length < 50) {
+      console.warn(`[CANVAS-STATUS] ${analysisId} - Insufficient content for analysis`);
       error('Add more content before analyzing');
       return;
     }
@@ -186,52 +190,69 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = ({
     setAnalysisTimestamp(Date.now());
     
     try {
-      console.log('Starting analysis - checking API key availability...');
+      console.log(`[CANVAS-STATUS] ${analysisId} - Checking API key availability...`);
       
-      // Fix: Add await for async function call
       const isKeyAvailable = await ApiKeyService.isKeyAvailable();
-      console.log('API key available:', isKeyAvailable);
+      console.log(`[CANVAS-STATUS] ${analysisId} - API key availability: ${isKeyAvailable}`);
       
       if (!isKeyAvailable) {
+        console.error(`[CANVAS-STATUS] ${analysisId} - API key not available`);
+        const keyStatus = await ApiKeyService.getKeyStatus();
+        console.error(`[CANVAS-STATUS] ${analysisId} - Key status: ${keyStatus}`);
         error('OpenAI API key not available. Please check your configuration.');
         return;
       }
 
+      console.log(`[CANVAS-STATUS] ${analysisId} - Calculating comprehensive metrics...`);
       const metrics = ComprehensiveMetricsService.calculateMetrics(emailHTML, subjectLine);
       setComprehensiveMetrics(metrics);
 
+      console.log(`[CANVAS-STATUS] ${analysisId} - Resetting analysis state...`);
       setCriticalSuggestions([]);
       setComprehensiveAnalysis(null);
       setAppliedFixes(new Set());
       clearCache();
 
-      console.log('Running analytics analysis...');
+      console.log(`[CANVAS-STATUS] ${analysisId} - Starting analytics analysis...`);
       await analyze({ html: emailHTML, subjectLine });
+      console.log(`[CANVAS-STATUS] ${analysisId} - Analytics analysis completed`);
 
-      console.log('Running critical issues analysis...');
+      console.log(`[CANVAS-STATUS] ${analysisId} - Starting critical issues analysis...`);
       const critical = await CriticalEmailAnalysisService.analyzeCriticalIssues(emailHTML, subjectLine);
+      console.log(`[CANVAS-STATUS] ${analysisId} - Critical analysis completed (${critical.length} issues found)`);
       setCriticalSuggestions(critical);
 
-      console.log('Running comprehensive AI analysis...');
+      console.log(`[CANVAS-STATUS] ${analysisId} - Starting comprehensive AI analysis...`);
       const comprehensive = await CentralizedAIAnalysisService.runCompleteAnalysis(emailHTML, subjectLine);
+      console.log(`[CANVAS-STATUS] ${analysisId} - Comprehensive analysis completed`);
       setComprehensiveAnalysis(comprehensive);
 
+      console.log(`[CANVAS-STATUS] ${analysisId} - Analysis completed successfully`);
       success('Analysis complete! Review suggestions below.');
       
     } catch (analysisError: any) {
-      console.error('Analysis failed with error:', analysisError);
+      console.error(`[CANVAS-STATUS] ${analysisId} - Analysis failed:`, {
+        name: analysisError.name,
+        message: analysisError.message,
+        stack: analysisError.stack
+      });
       
       // More specific error messages based on error type
       if (analysisError.message?.includes('OpenAI API key')) {
+        console.error(`[CANVAS-STATUS] ${analysisId} - API key specific error`);
         error('OpenAI API key issue: ' + analysisError.message);
       } else if (analysisError.message?.includes('rate limit')) {
+        console.error(`[CANVAS-STATUS] ${analysisId} - Rate limit error`);
         error('OpenAI rate limit exceeded. Please try again later.');
       } else if (analysisError.message?.includes('network')) {
+        console.error(`[CANVAS-STATUS] ${analysisId} - Network error`);
         error('Network error. Please check your connection and try again.');
       } else {
+        console.error(`[CANVAS-STATUS] ${analysisId} - Unknown error`);
         error('Analysis failed: ' + (analysisError.message || 'Unknown error'));
       }
     } finally {
+      console.log(`[CANVAS-STATUS] ${analysisId} - Analysis process finished`);
       setIsAnalyzing(false);
     }
   };

@@ -154,31 +154,46 @@ class DirectAIServiceManager {
   }
 
   async generateSubjectVariants(subjectLine: string, count: number = 3): Promise<ServiceResult<string[]>> {
-    console.log('Generating email marketing optimized subject variants for:', subjectLine);
+    const sessionId = `subject-variants-${Date.now()}`;
+    console.log(`[DIRECT-AI-SERVICE] ${sessionId} - generateSubjectVariants() called`);
+    console.log(`[DIRECT-AI-SERVICE] ${sessionId} - Subject line: "${subjectLine}"`);
+    console.log(`[DIRECT-AI-SERVICE] ${sessionId} - Count requested: ${count}`);
     
     try {
-      // Fix: Add await for async function call
+      console.log(`[DIRECT-AI-SERVICE] ${sessionId} - Validating API key...`);
       const isKeyValid = await ApiKeyService.validateKey();
+      console.log(`[DIRECT-AI-SERVICE] ${sessionId} - API key validation result: ${isKeyValid}`);
+      
       if (!isKeyValid) {
-        console.warn('OpenAI API key not valid, using fallback variants');
+        console.warn(`[DIRECT-AI-SERVICE] ${sessionId} - OpenAI API key not valid, using fallback variants`);
         const fallbackResult = this.generateFallbackVariants(subjectLine, count);
         return handleServiceSuccess(fallbackResult, 'Subject variants generated (fallback mode)');
       }
 
+      console.log(`[DIRECT-AI-SERVICE] ${sessionId} - Calling OpenAI for subject line variants...`);
       const variants = await OpenAIEmailService.generateSubjectLines(
         `Original subject: ${subjectLine}. Generate variations optimized for email marketing.`,
         count + 2
       );
+      
+      console.log(`[DIRECT-AI-SERVICE] ${sessionId} - OpenAI returned ${variants.length} variants`);
       
       const scoredVariants = variants.map(variant => ({
         text: variant,
         score: this.calculateSubjectLineScore(variant)
       })).sort((a, b) => b.score - a.score);
       
+      console.log(`[DIRECT-AI-SERVICE] ${sessionId} - Variants scored and sorted`);
+      
       const result = scoredVariants.slice(0, count).map(v => v.text);
+      console.log(`[DIRECT-AI-SERVICE] ${sessionId} - Returning ${result.length} top variants`);
       return handleServiceSuccess(result, 'Subject variants generated successfully');
     } catch (error) {
-      console.error('Subject variant generation failed:', error);
+      console.error(`[DIRECT-AI-SERVICE] ${sessionId} - Subject variant generation failed:`, {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
       const fallbackResult = this.generateFallbackVariants(subjectLine, count);
       return handleServiceSuccess(fallbackResult, 'Subject variants generated (fallback mode)');
     }
