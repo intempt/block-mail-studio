@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
@@ -36,6 +36,10 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   onSaveAsSnippet,
   onUnstarBlock
 }) => {
+  // Add hover state management for blocks within columns
+  const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
+  const [controlsLocked, setControlsLocked] = useState<string | null>(null);
+
   const styling = block.styling.desktop;
   
   const getColumnWidths = () => {
@@ -165,6 +169,33 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     onBlockDuplicate?.(blockId);
   };
 
+  // Hover state handlers for blocks within columns
+  const handleBlockHover = (blockId: string) => {
+    if (!controlsLocked || controlsLocked === blockId) {
+      setHoveredBlockId(blockId);
+    }
+  };
+
+  const handleBlockLeave = (blockId: string) => {
+    if (!controlsLocked || controlsLocked !== blockId) {
+      setHoveredBlockId(null);
+    }
+  };
+
+  const handleControlsEnter = (blockId: string) => {
+    setControlsLocked(blockId);
+    setHoveredBlockId(blockId);
+  };
+
+  const handleControlsLeave = (blockId: string) => {
+    setControlsLocked(null);
+    setTimeout(() => {
+      if (controlsLocked === null) {
+        setHoveredBlockId(null);
+      }
+    }, 100);
+  };
+
   // Ensure blocks have all required properties for EmailBlock interface
   const ensureCompleteBlock = (innerBlock: EmailBlock): EmailBlock => {
     const defaultStyling = {
@@ -193,22 +224,35 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     const completeBlock = ensureCompleteBlock(innerBlock);
     const isBlockSelected = selectedBlockId === innerBlock.id;
     const isBlockEditing = editingBlockId === innerBlock.id;
+    const isBlockHovered = hoveredBlockId === innerBlock.id;
 
     return (
-      <div key={innerBlock.id} className="relative group mb-2">
+      <div 
+        key={innerBlock.id} 
+        className="relative mb-2"
+        style={{
+          isolation: 'isolate',
+          position: 'relative',
+          zIndex: isBlockSelected ? 10 : isBlockHovered ? 5 : 1,
+          paddingLeft: '60px', // Space for controls
+        }}
+        onMouseEnter={() => handleBlockHover(innerBlock.id)}
+        onMouseLeave={() => handleBlockLeave(innerBlock.id)}
+      >
         {/* Block Controls */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <BlockControls
-            blockId={innerBlock.id}
-            onDelete={handleBlockDelete}
-            onDuplicate={handleBlockDuplicate}
-            onDragStart={() => {}} // Disable drag for now within columns
-            onSaveAsSnippet={onSaveAsSnippet || (() => {})}
-            isStarred={innerBlock.isStarred}
-            onUnstar={onUnstarBlock}
-            onAddVariable={() => {}} // Handle variable insertion
-          />
-        </div>
+        <BlockControls
+          blockId={innerBlock.id}
+          isVisible={isBlockHovered}
+          onDelete={handleBlockDelete}
+          onDuplicate={handleBlockDuplicate}
+          onDragStart={() => {}} // Disable drag for now within columns
+          onSaveAsSnippet={onSaveAsSnippet || (() => {})}
+          isStarred={innerBlock.isStarred}
+          onUnstar={onUnstarBlock}
+          onAddVariable={() => {}} // Handle variable insertion
+          onControlsEnter={handleControlsEnter}
+          onControlsLeave={handleControlsLeave}
+        />
 
         {/* Block Content */}
         <div
