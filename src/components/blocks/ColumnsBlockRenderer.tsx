@@ -39,6 +39,8 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   onBlockHover,
   onBlockLeave
 }) => {
+  const [dragOverColumnIndex, setDragOverColumnIndex] = useState<number | null>(null);
+  
   const styling = block.styling.desktop;
   
   const getColumnWidths = () => {
@@ -81,12 +83,29 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     e.stopPropagation();
     
     console.log('ColumnsBlockRenderer: Drop event in column', columnIndex, 'for layout', block.id);
+    setDragOverColumnIndex(null);
     onColumnDrop(e, block.id, columnIndex);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent, columnIndex: number) => {
     e.preventDefault();
     e.stopPropagation();
+    setDragOverColumnIndex(columnIndex);
+    console.log('ColumnsBlockRenderer: Drag over column', columnIndex);
+  };
+
+  const handleDragLeave = (e: React.DragEvent, columnIndex: number) => {
+    // Only clear if we're actually leaving the column (not moving to a child)
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverColumnIndex(null);
+      console.log('ColumnsBlockRenderer: Drag leave column', columnIndex);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent, columnIndex: number) => {
+    e.preventDefault();
+    setDragOverColumnIndex(columnIndex);
+    console.log('ColumnsBlockRenderer: Drag enter column', columnIndex);
   };
 
   const handleBlockUpdate = (updatedBlock: EmailBlock, columnId: string) => {
@@ -274,13 +293,27 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
               }}
             >
               <div 
-                className="min-h-24 rounded-lg border-2 border-dashed transition-all duration-200 hover:border-blue-300"
+                className={`min-h-24 rounded-lg border-2 border-dashed transition-all duration-200 ${
+                  dragOverColumnIndex === index 
+                    ? 'border-blue-400 bg-blue-50 shadow-lg scale-105' 
+                    : 'border-gray-300 hover:border-blue-300'
+                }`}
                 style={{
-                  backgroundColor: isSelected ? '#f1f5f9' : '#f8fafc',
-                  borderColor: column.blocks.length > 0 ? '#e2e8f0' : '#cbd5e1'
+                  backgroundColor: dragOverColumnIndex === index 
+                    ? '#dbeafe' 
+                    : column.blocks.length > 0 
+                      ? '#f8fafc' 
+                      : '#f1f5f9',
+                  borderColor: dragOverColumnIndex === index 
+                    ? '#60a5fa' 
+                    : column.blocks.length > 0 
+                      ? '#e2e8f0' 
+                      : '#cbd5e1'
                 }}
                 onDrop={(e) => handleDrop(e, index)}
-                onDragOver={handleDragOver}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDragEnter={(e) => handleDragEnter(e, index)}
+                onDragLeave={(e) => handleDragLeave(e, index)}
               >
                 {column.blocks.length === 0 ? (
                   <div className="p-4 text-center text-slate-500 text-sm">
@@ -288,11 +321,21 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
                     <div className="text-xs text-slate-500">
                       Drop blocks here ({columnWidths[index]})
                     </div>
+                    {dragOverColumnIndex === index && (
+                      <div className="text-xs text-blue-600 font-medium mt-1">
+                        Ready to drop!
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-2 space-y-2">
                     {column.blocks.map((innerBlock) => 
                       renderColumnBlock(innerBlock, column.id)
+                    )}
+                    {dragOverColumnIndex === index && (
+                      <div className="p-2 border-2 border-dashed border-blue-400 bg-blue-50 rounded text-center text-xs text-blue-600">
+                        Drop here to add
+                      </div>
                     )}
                   </div>
                 )}
