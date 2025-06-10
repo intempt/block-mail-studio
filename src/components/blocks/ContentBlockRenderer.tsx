@@ -45,10 +45,10 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       jsonData: dummyProductData,
       selectedFields: ['title', 'price', 'description', 'image_link'],
       fieldMappings: {
-        title: { label: 'Product Name', type: 'text' },
-        price: { label: 'Price', type: 'currency' },
-        description: { label: 'Description', type: 'text' },
-        image_link: { label: 'Image', type: 'image' }
+        title: { label: 'Product Name', type: 'text' as const },
+        price: { label: 'Price', type: 'currency' as const },
+        description: { label: 'Description', type: 'text' as const },
+        image_link: { label: 'Image', type: 'image' as const }
       }
     };
 
