@@ -101,12 +101,14 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
     ? "grid-cols-1 gap-2" 
     : "grid-cols-2 gap-3";
 
-  // Convert layout option to DynamicLayoutIcon format
+  // Convert layout option to DynamicLayoutIcon format (RibbonLayoutOption)
   const createLayoutForIcon = (layout: LayoutOption) => {
     const percentages = layout.ratio.split('-').map(p => `${p}%`);
     return {
       id: layout.id,
       name: layout.name,
+      columns: layout.columns,
+      ratio: layout.ratio,
       preview: percentages
     };
   };
