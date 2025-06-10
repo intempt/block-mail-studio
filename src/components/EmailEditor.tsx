@@ -582,7 +582,8 @@ export default function EmailEditor({
             viewMode={viewMode}
           />
 
-          {/* Undo Manager - Fixed position in top-right of canvas */}
+          {/* UndoManager - Hidden for now */}
+          {/* 
           {viewMode === 'edit' && (
             <div className="absolute top-4 right-4 z-50">
               <div className="bg-white rounded-lg shadow-lg border p-2">
@@ -595,6 +596,7 @@ export default function EmailEditor({
               </div>
             </div>
           )}
+          */}
         </div>
 
         {/* Right Panel - AI Suggestions (Only show in edit mode) */}
