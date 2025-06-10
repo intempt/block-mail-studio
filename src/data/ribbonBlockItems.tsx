@@ -10,7 +10,7 @@ import {
   Table,
   Minus,
   Code,
-  Database
+  ShoppingBasket
 } from 'lucide-react';
 
 export interface RibbonBlockItem {
@@ -29,5 +29,5 @@ export const ribbonBlockItems: RibbonBlockItem[] = [
   { id: 'social', name: 'Social', icon: <Share2 className="w-9 h-9" /> },
   { id: 'html', name: 'HTML', icon: <Code className="w-9 h-9" /> },
   { id: 'table', name: 'Table', icon: <Table className="w-9 h-9" /> },
-  { id: 'content', name: 'Content', icon: <Database className="w-9 h-9" /> }
+  { id: 'content', name: 'Content', icon: <ShoppingBasket className="w-9 h-9" /> }
 ];
