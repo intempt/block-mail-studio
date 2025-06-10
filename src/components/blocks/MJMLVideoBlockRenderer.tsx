@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { VideoBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,22 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
   onUpdate 
 }) => {
   const [showVideoDialog, setShowVideoDialog] = useState(false);
-  const styling = block.styling.desktop;
+  
+  // Defensive programming: ensure content and styling exist with defaults
+  const content = block.content || {
+    videoUrl: '',
+    thumbnail: 'https://via.placeholder.com/400x225?text=Video+Thumbnail',
+    showPlayButton: true,
+    platform: 'youtube' as const,
+    autoThumbnail: true
+  };
+  
+  const styling = block.styling?.desktop || {
+    backgroundColor: 'transparent',
+    padding: '16px',
+    margin: '0',
+    borderRadius: '0'
+  };
 
   const handleVideoSelect = (videoData: {
     videoUrl: string;
@@ -28,17 +44,23 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
     onUpdate({
       ...block,
       content: {
-        ...block.content,
+        ...content,
         ...videoData
       }
     });
   };
 
   const handleThumbnailClick = () => {
-    if (!block.content.thumbnail || block.content.thumbnail.includes('placeholder')) {
+    if (!content.thumbnail || content.thumbnail.includes('placeholder')) {
       setShowVideoDialog(true);
     }
   };
+
+  // Safe access to content properties with fallbacks
+  const videoUrl = content.videoUrl || '';
+  const thumbnail = content.thumbnail || 'https://via.placeholder.com/400x225?text=Video+Thumbnail';
+  const showPlayButton = content.showPlayButton !== false; // Default to true
+  const platform = content.platform || 'youtube';
 
   return (
     <div
@@ -51,7 +73,7 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
       }}
     >
       {/* Empty state with upload prompt */}
-      {(!block.content.thumbnail || block.content.thumbnail.includes('placeholder')) && (
+      {(!thumbnail || thumbnail.includes('placeholder')) && (
         <div 
           className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
           onClick={() => setShowVideoDialog(true)}
@@ -68,16 +90,16 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
       )}
 
       {/* Video thumbnail with play button */}
-      {block.content.thumbnail && !block.content.thumbnail.includes('placeholder') && (
+      {thumbnail && !thumbnail.includes('placeholder') && (
         <div className="relative inline-block">
           <a
-            href={block.content.videoUrl || '#'}
+            href={videoUrl || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="block"
           >
             <img
-              src={block.content.thumbnail}
+              src={thumbnail}
               alt="Video thumbnail"
               style={{
                 width: '100%',
@@ -90,7 +112,7 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
             />
             
             {/* Play button overlay */}
-            {block.content.showPlayButton && (
+            {showPlayButton && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-16 h-16 bg-black bg-opacity-70 rounded-full flex items-center justify-center transition-all hover:bg-opacity-80">
                   <Play className="w-8 h-8 text-white ml-1" />
@@ -100,10 +122,10 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
           </a>
 
           {/* Platform indicator */}
-          {block.content.platform && isSelected && (
+          {platform && isSelected && (
             <div className="absolute top-2 left-2">
               <span className="bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded">
-                {block.content.platform.toUpperCase()}
+                {platform.toUpperCase()}
               </span>
             </div>
           )}
@@ -137,7 +159,7 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
         isOpen={showVideoDialog}
         onClose={() => setShowVideoDialog(false)}
         onVideoSelect={handleVideoSelect}
-        currentVideo={block.content}
+        currentVideo={content}
       />
     </div>
   );

@@ -15,6 +15,55 @@ interface DragDropHandlerProps {
   setCurrentDragType?: React.Dispatch<React.SetStateAction<'block' | 'layout' | 'reorder' | null>>;
 }
 
+const createCompleteBlock = (blockType: string, getDefaultContent: (type: string) => any, getDefaultStyles: (type: string) => any): EmailBlock => {
+  const baseBlock = {
+    id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    type: blockType as any,
+    content: getDefaultContent(blockType),
+    styling: getDefaultStyles(blockType),
+    position: { x: 0, y: 0 },
+    displayOptions: {
+      showOnDesktop: true,
+      showOnTablet: true,
+      showOnMobile: true
+    }
+  };
+
+  // Ensure specific block types have complete content structures
+  if (blockType === 'video') {
+    baseBlock.content = {
+      videoUrl: '',
+      thumbnail: 'https://via.placeholder.com/400x225?text=Video+Thumbnail',
+      showPlayButton: true,
+      platform: 'youtube',
+      autoThumbnail: true,
+      ...baseBlock.content
+    };
+  } else if (blockType === 'table') {
+    baseBlock.content = {
+      rows: 2,
+      columns: 2,
+      cells: [
+        [
+          { type: 'text', content: 'Header 1' },
+          { type: 'text', content: 'Header 2' }
+        ],
+        [
+          { type: 'text', content: 'Cell 1' },
+          { type: 'text', content: 'Cell 2' }
+        ]
+      ],
+      headerRow: true,
+      borderStyle: 'solid',
+      borderColor: '#e0e0e0',
+      borderWidth: '1px',
+      ...baseBlock.content
+    };
+  }
+
+  return baseBlock;
+};
+
 export const useDragDropHandler = ({
   blocks,
   setBlocks,
@@ -101,18 +150,7 @@ export const useDragDropHandler = ({
       } else if (data.blockType) {
         console.log('DragDropHandler: Creating regular block:', data.blockType);
         
-        const newBlock: EmailBlock = {
-          id: `block-${Date.now()}`,
-          type: data.blockType as any,
-          content: getDefaultContent(data.blockType),
-          styling: getDefaultStyles(data.blockType),
-          position: { x: 0, y: 0 },
-          displayOptions: {
-            showOnDesktop: true,
-            showOnTablet: true,
-            showOnMobile: true
-          }
-        };
+        const newBlock = createCompleteBlock(data.blockType, getDefaultContent, getDefaultStyles);
         
         const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
         setBlocks(prev => {
@@ -259,18 +297,7 @@ export const useDragDropHandler = ({
       
       console.log('DragDropHandler: Adding block to column:', { blockType: data.blockType, layoutBlockId, columnIndex });
       
-      const newBlock: EmailBlock = {
-        id: `block-${Date.now()}`,
-        type: data.blockType as any,
-        content: getDefaultContent(data.blockType),
-        styling: getDefaultStyles(data.blockType),
-        position: { x: 0, y: 0 },
-        displayOptions: {
-          showOnDesktop: true,
-          showOnTablet: true,
-          showOnMobile: true
-        }
-      };
+      const newBlock = createCompleteBlock(data.blockType, getDefaultContent, getDefaultStyles);
       
       setBlocks(prev => prev.map(block => {
         if (block.id === layoutBlockId && block.type === 'columns') {

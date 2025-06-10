@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TableBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -15,20 +16,84 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
   onUpdate
 }) => {
   const [editingCell, setEditingCell] = useState<{ row: number; col: number } | null>(null);
-  const styling = block.styling.desktop;
+  
+  // Defensive programming: ensure content and styling exist with defaults
+  const content = block.content || {
+    rows: 2,
+    columns: 2,
+    cells: [
+      [
+        { type: 'text' as const, content: 'Header 1' },
+        { type: 'text' as const, content: 'Header 2' }
+      ],
+      [
+        { type: 'text' as const, content: 'Cell 1' },
+        { type: 'text' as const, content: 'Cell 2' }
+      ]
+    ],
+    headerRow: true,
+    borderStyle: 'solid' as const,
+    borderColor: '#e0e0e0',
+    borderWidth: '1px'
+  };
 
-  const updateCellContent = (row: number, col: number, content: string) => {
-    console.log(`Updating cell [${row}][${col}] with content:`, content);
-    const newCells = [...block.content.cells];
-    newCells[row][col] = { ...newCells[row][col], content };
+  const styling = block.styling?.desktop || {
+    backgroundColor: 'transparent',
+    padding: '16px',
+    margin: '0'
+  };
+
+  // Ensure cells array exists and has proper structure
+  const safeRows = Math.max(1, content.rows || 2);
+  const safeColumns = Math.max(1, content.columns || 2);
+  const safeCells = content.cells || [];
+
+  // Fill missing cells with default content
+  const ensureCellsStructure = () => {
+    const cells = [...safeCells];
     
-    onUpdate({
-      ...block,
-      content: {
-        ...block.content,
-        cells: newCells
+    // Ensure we have enough rows
+    while (cells.length < safeRows) {
+      cells.push([]);
+    }
+    
+    // Ensure each row has enough columns
+    cells.forEach((row, rowIndex) => {
+      while (row.length < safeColumns) {
+        row.push({ 
+          type: 'text' as const, 
+          content: `Cell ${rowIndex + 1},${row.length + 1}` 
+        });
       }
     });
+    
+    return cells;
+  };
+
+  const structuredCells = ensureCellsStructure();
+
+  const updateCellContent = (row: number, col: number, newContent: string) => {
+    console.log(`Updating cell [${row}][${col}] with content:`, newContent);
+    
+    try {
+      const newCells = structuredCells.map((cellRow, rowIndex) =>
+        cellRow.map((cell, colIndex) =>
+          rowIndex === row && colIndex === col
+            ? { ...cell, content: newContent }
+            : cell
+        )
+      );
+      
+      onUpdate({
+        ...block,
+        content: {
+          ...content,
+          cells: newCells
+        }
+      });
+    } catch (error) {
+      console.error('Error updating cell content:', error);
+    }
   };
 
   const handleCellClick = (row: number, col: number, e: React.MouseEvent) => {
@@ -43,39 +108,49 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
   };
 
   const addRow = () => {
-    const newRow = Array(block.content.columns).fill(null).map(() => ({
-      type: 'text' as const,
-      content: 'New cell'
-    }));
-    
-    onUpdate({
-      ...block,
-      content: {
-        ...block.content,
-        rows: block.content.rows + 1,
-        cells: [...block.content.cells, newRow]
-      }
-    });
+    try {
+      const newRow = Array(safeColumns).fill(null).map((_, index) => ({
+        type: 'text' as const,
+        content: `New cell ${structuredCells.length + 1},${index + 1}`
+      }));
+      
+      onUpdate({
+        ...block,
+        content: {
+          ...content,
+          rows: safeRows + 1,
+          cells: [...structuredCells, newRow]
+        }
+      });
+    } catch (error) {
+      console.error('Error adding row:', error);
+    }
   };
 
   const addColumn = () => {
-    const newCells = block.content.cells.map(row => [
-      ...row,
-      { type: 'text' as const, content: 'New cell' }
-    ]);
-    
-    onUpdate({
-      ...block,
-      content: {
-        ...block.content,
-        columns: block.content.columns + 1,
-        cells: newCells
-      }
-    });
+    try {
+      const newCells = structuredCells.map((row, rowIndex) => [
+        ...row,
+        { type: 'text' as const, content: `New cell ${rowIndex + 1},${row.length + 1}` }
+      ]);
+      
+      onUpdate({
+        ...block,
+        content: {
+          ...content,
+          columns: safeColumns + 1,
+          cells: newCells
+        }
+      });
+    } catch (error) {
+      console.error('Error adding column:', error);
+    }
   };
 
   const getBorderStyle = () => {
-    const { borderStyle, borderColor, borderWidth } = block.content;
+    const borderStyle = content.borderStyle || 'solid';
+    const borderColor = content.borderColor || '#e0e0e0';
+    const borderWidth = content.borderWidth || '1px';
     return `${borderWidth} ${borderStyle} ${borderColor}`;
   };
 
@@ -98,16 +173,16 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
           }}
         >
           <tbody>
-            {block.content.cells.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+            {structuredCells.map((row, rowIndex) => (
+              <tr key={`row-${rowIndex}`}>
                 {row.map((cell, colIndex) => {
-                  const isHeader = block.content.headerRow && rowIndex === 0;
+                  const isHeader = content.headerRow && rowIndex === 0;
                   const CellTag = isHeader ? 'th' : 'td';
                   const isEditing = editingCell?.row === rowIndex && editingCell?.col === colIndex;
                   
                   return (
                     <CellTag
-                      key={colIndex}
+                      key={`cell-${rowIndex}-${colIndex}`}
                       style={{
                         border: getBorderStyle(),
                         padding: '4px',
@@ -122,14 +197,16 @@ export const MJMLTableBlockRenderer: React.FC<MJMLTableBlockRendererProps> = ({
                     >
                       {isEditing ? (
                         <TableCellEditor
-                          content={cell.content}
-                          onChange={(content) => updateCellContent(rowIndex, colIndex, content)}
+                          content={cell?.content || ''}
+                          onChange={(newContent) => updateCellContent(rowIndex, colIndex, newContent)}
                           onBlur={handleCellBlur}
                           autoFocus
                         />
                       ) : (
                         <div 
-                          dangerouslySetInnerHTML={{ __html: cell.content || '<p>Click to edit</p>' }}
+                          dangerouslySetInnerHTML={{ 
+                            __html: cell?.content || '<p>Click to edit</p>' 
+                          }}
                           className="min-h-[24px] w-full"
                         />
                       )}

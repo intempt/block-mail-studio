@@ -149,6 +149,9 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
           showPlayButton: true,
           platform: 'youtube',
           autoThumbnail: true,
+          width: '100%',
+          height: 'auto',
+          alignment: 'center',
         },
       };
 
@@ -203,6 +206,10 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
           borderStyle: 'solid',
           borderColor: '#e0e0e0',
           borderWidth: '1px',
+          cellPadding: '8px',
+          backgroundColor: 'transparent',
+          headerBackgroundColor: '#f8fafc',
+          textAlign: 'left',
         },
       };
 
