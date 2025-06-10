@@ -85,86 +85,276 @@ export const useDragDropHandler = ({
     setDragOverIndex(null);
   }, [setIsDraggingOver, setDragOverIndex]);
 
-  const createBlockFromDragData = useCallback((dragData: any, getDefaultContent: Function, getDefaultStyles: Function) => {
-    const baseBlock = {
-      id: generateUniqueId('block'), // Use enhanced ID generation
-      type: dragData.blockType,
-      content: getDefaultContent(dragData.blockType),
-      styling: getDefaultStyles(dragData.blockType),
-      position: { x: 0, y: 0 },
-      displayOptions: {
-        showOnDesktop: true,
-        showOnTablet: true,
-        showOnMobile: true
+  const getCompleteDefaultContent = useCallback((blockType: string) => {
+    console.log('Getting default content for block type:', blockType);
+    
+    // Get base content from provided function
+    const baseContent = getDefaultContent(blockType);
+    
+    // Ensure we have complete content for all block types
+    const defaultContentMap = {
+      text: {
+        html: '<p>Enter your text here...</p>',
+        textStyle: 'normal',
+        ...baseContent
       },
-      isStarred: false
+      image: {
+        src: '',
+        alt: 'Image description',
+        width: '100%',
+        height: 'auto',
+        alignment: 'center',
+        ...baseContent
+      },
+      button: {
+        text: 'Click Here',
+        url: '#',
+        backgroundColor: '#007bff',
+        textColor: '#ffffff',
+        borderRadius: '4px',
+        padding: '12px 24px',
+        alignment: 'center',
+        ...baseContent
+      },
+      divider: {
+        style: 'solid',
+        color: '#e5e7eb',
+        thickness: '1px',
+        width: '100%',
+        ...baseContent
+      },
+      spacer: {
+        height: '20px',
+        ...baseContent
+      },
+      social: {
+        platforms: [],
+        alignment: 'center',
+        iconSize: 'medium',
+        ...baseContent
+      },
+      video: {
+        src: '',
+        thumbnail: '',
+        width: '100%',
+        height: 'auto',
+        alignment: 'center',
+        ...baseContent
+      },
+      html: {
+        content: '<p>Custom HTML content</p>',
+        ...baseContent
+      },
+      table: {
+        rows: 2,
+        columns: 2,
+        data: [['Cell 1', 'Cell 2'], ['Cell 3', 'Cell 4']],
+        ...baseContent
+      },
+      content: {
+        html: '<p>Dynamic content placeholder</p>',
+        contentType: 'text',
+        ...baseContent
+      },
+      productfeed: {
+        products: [],
+        layout: 'grid',
+        itemsPerRow: 2,
+        ...baseContent
+      },
+      columns: {
+        columnRatio: '50-50',
+        columns: [],
+        gap: '16px',
+        ...baseContent
+      }
     };
+    
+    const content = defaultContentMap[blockType as keyof typeof defaultContentMap] || baseContent;
+    console.log('Generated default content for', blockType, ':', content);
+    return content;
+  }, [getDefaultContent]);
 
-    // Handle layout-specific data
-    if (dragData.layoutData && dragData.blockType === 'columns') {
-      const columnCount = dragData.layoutData.columnCount || 2;
-      const columnRatio = dragData.layoutData.columnRatio || '50-50';
-      
-      const columns = Array.from({ length: columnCount }, (_, index) => ({
-        id: generateUniqueId(`column-${index}`), // Use enhanced ID generation for columns too
-        blocks: []
-      }));
+  const getCompleteDefaultStyles = useCallback((blockType: string) => {
+    console.log('Getting default styles for block type:', blockType);
+    
+    // Get base styles from provided function
+    const baseStyles = getDefaultStyles(blockType);
+    
+    // Ensure complete responsive styles
+    const completeStyles = {
+      desktop: {
+        width: '100%',
+        height: 'auto',
+        margin: '0',
+        padding: '0',
+        backgroundColor: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        ...baseStyles?.desktop
+      },
+      tablet: {
+        width: '100%',
+        height: 'auto',
+        margin: '0',
+        padding: '0',
+        backgroundColor: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        ...baseStyles?.tablet
+      },
+      mobile: {
+        width: '100%',
+        height: 'auto',
+        margin: '0',
+        padding: '0',
+        backgroundColor: 'transparent',
+        border: 'none',
+        borderRadius: '0',
+        ...baseStyles?.mobile
+      }
+    };
+    
+    console.log('Generated default styles for', blockType, ':', completeStyles);
+    return completeStyles;
+  }, [getDefaultStyles]);
 
-      baseBlock.content = {
-        ...baseBlock.content,
-        columnRatio,
-        columns,
-        gap: '16px'
-      };
+  const createBlockFromDragData = useCallback((dragData: any) => {
+    console.log('Creating block from drag data:', dragData);
+    
+    if (!dragData || !dragData.blockType) {
+      console.error('Invalid drag data - missing blockType:', dragData);
+      return null;
     }
+    
+    try {
+      const baseBlock = {
+        id: generateUniqueId('block'),
+        type: dragData.blockType,
+        content: getCompleteDefaultContent(dragData.blockType),
+        styling: getCompleteDefaultStyles(dragData.blockType),
+        position: { x: 0, y: 0 },
+        displayOptions: {
+          showOnDesktop: true,
+          showOnTablet: true,
+          showOnMobile: true
+        },
+        isStarred: false
+      };
 
-    return baseBlock;
-  }, []);
+      // Handle layout-specific data for columns
+      if (dragData.layoutData && dragData.blockType === 'columns') {
+        const columnCount = dragData.layoutData.columnCount || 2;
+        const columnRatio = dragData.layoutData.columnRatio || '50-50';
+        
+        const columns = Array.from({ length: columnCount }, (_, index) => ({
+          id: generateUniqueId(`column-${index}`),
+          blocks: []
+        }));
+
+        baseBlock.content = {
+          ...baseBlock.content,
+          columnRatio,
+          columns,
+          gap: '16px'
+        };
+      }
+
+      console.log('Successfully created block:', baseBlock);
+      return baseBlock;
+    } catch (error) {
+      console.error('Error creating block from drag data:', error);
+      return null;
+    }
+  }, [getCompleteDefaultContent, getCompleteDefaultStyles]);
 
   const handleCanvasDrop = useCallback(async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDraggingOver(false);
     setDragOverIndex(null);
 
-    const dragData = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
-    const blockType = dragData.blockType;
+    console.log('Canvas drop event triggered');
 
-    if (!blockType) {
-      const blockId = e.dataTransfer.getData('text/plain');
-      
-      setBlocks(prev => {
-        const reorderedBlocks = [...prev];
-        const blockToMoveIndex = reorderedBlocks.findIndex(block => block.id === blockId);
-        
-        if (blockToMoveIndex === -1) {
-          return prev;
-        }
-        
-        const [blockToMove] = reorderedBlocks.splice(blockToMoveIndex, 1);
-        
-        if (dragOverIndex === null) {
-          reorderedBlocks.push(blockToMove);
-        } else {
-          reorderedBlocks.splice(dragOverIndex, 0, blockToMove);
-        }
-        
-        return reorderedBlocks;
-      });
-      return;
-    }
+    try {
+      const dragDataString = e.dataTransfer.getData('text/plain');
+      console.log('Raw drag data string:', dragDataString);
 
-    const newBlock = createBlockFromDragData(dragData, getDefaultContent, getDefaultStyles);
-
-    setBlocks(prev => {
-      const newBlocks = [...prev];
-      if (dragOverIndex === null || dragOverIndex >= newBlocks.length) {
-        newBlocks.push(newBlock);
-      } else {
-        newBlocks.splice(dragOverIndex, 0, newBlock);
+      if (!dragDataString) {
+        console.error('No drag data found');
+        return;
       }
-      return newBlocks;
-    });
-  }, [setBlocks, setIsDraggingOver, setDragOverIndex, createBlockFromDragData, getDefaultContent, getDefaultStyles, dragOverIndex]);
+
+      let dragData;
+      try {
+        dragData = JSON.parse(dragDataString);
+        console.log('Parsed drag data:', dragData);
+      } catch (parseError) {
+        console.error('Failed to parse drag data:', parseError);
+        
+        // Fallback: treat as block ID reordering
+        const blockId = dragDataString;
+        console.log('Treating as block reorder for ID:', blockId);
+        
+        setBlocks(prev => {
+          const reorderedBlocks = [...prev];
+          const blockToMoveIndex = reorderedBlocks.findIndex(block => block.id === blockId);
+          
+          if (blockToMoveIndex === -1) {
+            console.error('Block not found for reordering:', blockId);
+            return prev;
+          }
+          
+          const [blockToMove] = reorderedBlocks.splice(blockToMoveIndex, 1);
+          
+          if (dragOverIndex === null) {
+            reorderedBlocks.push(blockToMove);
+          } else {
+            reorderedBlocks.splice(dragOverIndex, 0, blockToMove);
+          }
+          
+          console.log('Reordered blocks successfully');
+          return reorderedBlocks;
+        });
+        return;
+      }
+
+      const blockType = dragData.blockType;
+
+      if (!blockType) {
+        console.error('No blockType found in drag data:', dragData);
+        return;
+      }
+
+      console.log('Creating new block of type:', blockType);
+
+      const newBlock = createBlockFromDragData(dragData);
+
+      if (!newBlock) {
+        console.error('Failed to create block from drag data');
+        return;
+      }
+
+      console.log('Adding new block to canvas:', newBlock);
+
+      setBlocks(prev => {
+        const newBlocks = [...prev];
+        if (dragOverIndex === null || dragOverIndex >= newBlocks.length) {
+          newBlocks.push(newBlock);
+          console.log('Added block to end of canvas');
+        } else {
+          newBlocks.splice(dragOverIndex, 0, newBlock);
+          console.log('Inserted block at index:', dragOverIndex);
+        }
+        
+        console.log('Updated blocks array:', newBlocks);
+        return newBlocks;
+      });
+
+      console.log('Block successfully added to canvas');
+    } catch (error) {
+      console.error('Error handling canvas drop:', error);
+    }
+  }, [setBlocks, setIsDraggingOver, setDragOverIndex, createBlockFromDragData, dragOverIndex]);
 
   const handleBlockDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();

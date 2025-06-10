@@ -42,9 +42,14 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
-    console.log('Dragging block:', blockType);
-    e.dataTransfer.setData('application/json', JSON.stringify({ blockType }));
+    console.log('EnhancedEmailBlockPalette: Dragging block:', blockType);
+    
+    // Use text/plain to match the drop handler expectation
+    const dragData = JSON.stringify({ blockType });
+    e.dataTransfer.setData('text/plain', dragData);
     e.dataTransfer.effectAllowed = 'copy';
+    
+    console.log('EnhancedEmailBlockPalette: Set drag data:', dragData);
   };
 
   const handleLayoutSelect = (layout: any) => {
