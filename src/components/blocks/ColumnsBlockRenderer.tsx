@@ -1,29 +1,47 @@
 
 import React from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
+import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
+import { BlockControls } from '../canvas/BlockControls';
 
 interface ColumnsBlockRendererProps {
   block: ColumnsBlock;
   isSelected: boolean;
   onUpdate: (block: ColumnsBlock) => void;
   onBlockAdd?: (blockType: string, columnId: string) => void;
+  selectedBlockId?: string | null;
+  editingBlockId?: string | null;
+  onBlockSelect?: (blockId: string | null) => void;
+  onBlockEditStart?: (blockId: string) => void;
+  onBlockEditEnd?: () => void;
+  onBlockDelete?: (blockId: string) => void;
+  onBlockDuplicate?: (blockId: string) => void;
+  onSaveAsSnippet?: (blockId: string) => void;
+  onUnstarBlock?: (blockId: string) => void;
 }
 
 export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({ 
   block, 
   isSelected,
   onUpdate,
-  onBlockAdd
+  onBlockAdd,
+  selectedBlockId,
+  editingBlockId,
+  onBlockSelect,
+  onBlockEditStart,
+  onBlockEditEnd,
+  onBlockDelete,
+  onBlockDuplicate,
+  onSaveAsSnippet,
+  onUnstarBlock
 }) => {
   const styling = block.styling.desktop;
   
   const getColumnWidths = () => {
     switch (block.content.columnRatio) {
-      // 1 Column
       case '100%':
         return ['100%'];
-      // 2 Column layouts
       case '50-50':
         return ['50%', '50%'];
       case '33-67':
@@ -34,12 +52,10 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
         return ['25%', '75%'];
       case '75-25':
         return ['75%', '25%'];
-      // Legacy 2 column (keeping for backwards compatibility)
       case '60-40':
         return ['60%', '40%'];
       case '40-60':
         return ['40%', '60%'];
-      // 3 Column layouts
       case '33-33-33':
         return ['33.33%', '33.33%', '33.33%'];
       case '25-50-25':
@@ -48,7 +64,6 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
         return ['25%', '25%', '50%'];
       case '50-25-25':
         return ['50%', '25%', '25%'];
-      // 4 Column layout
       case '25-25-25-25':
         return ['25%', '25%', '25%', '25%'];
       default:
@@ -97,6 +112,114 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     });
   };
 
+  const handleBlockClick = (blockId: string) => {
+    onBlockSelect?.(blockId);
+  };
+
+  const handleBlockDoubleClick = (blockId: string) => {
+    onBlockEditStart?.(blockId);
+  };
+
+  const handleBlockDelete = (blockId: string) => {
+    const updatedColumns = block.content.columns.map(column => ({
+      ...column,
+      blocks: column.blocks.filter(b => b.id !== blockId)
+    }));
+
+    onUpdate({
+      ...block,
+      content: {
+        ...block.content,
+        columns: updatedColumns
+      }
+    });
+
+    onBlockDelete?.(blockId);
+  };
+
+  const handleBlockDuplicate = (blockId: string) => {
+    const blockToDuplicate = block.content.columns
+      .flatMap(col => col.blocks)
+      .find(b => b.id === blockId);
+    
+    if (!blockToDuplicate) return;
+
+    const duplicatedBlock: EmailBlock = {
+      ...blockToDuplicate,
+      id: `${blockToDuplicate.id}_copy_${Date.now()}`,
+      isStarred: false
+    };
+
+    const updatedColumns = block.content.columns.map(column => {
+      const blockIndex = column.blocks.findIndex(b => b.id === blockId);
+      if (blockIndex !== -1) {
+        const newBlocks = [...column.blocks];
+        newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
+        return { ...column, blocks: newBlocks };
+      }
+      return column;
+    });
+
+    onUpdate({
+      ...block,
+      content: {
+        ...block.content,
+        columns: updatedColumns
+      }
+    });
+
+    onBlockDuplicate?.(blockId);
+  };
+
+  const renderColumnBlock = (innerBlock: EmailBlock, columnId: string) => {
+    const isBlockSelected = selectedBlockId === innerBlock.id;
+    const isBlockEditing = editingBlockId === innerBlock.id;
+
+    return (
+      <div key={innerBlock.id} className="relative group mb-2">
+        {/* Block Controls */}
+        <BlockControls
+          blockId={innerBlock.id}
+          onDelete={handleBlockDelete}
+          onDuplicate={handleBlockDuplicate}
+          onDragStart={() => {}} // Disable drag for now within columns
+          onSaveAsSnippet={onSaveAsSnippet || (() => {})}
+          isStarred={innerBlock.isStarred}
+          onUnstar={onUnstarBlock}
+          onAddVariable={() => {}} // Handle variable insertion
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+        />
+
+        {/* Block Content */}
+        <div
+          className={`border border-gray-100 rounded p-2 transition-colors cursor-pointer ${
+            isBlockSelected ? 'border-blue-300 bg-blue-50' : 'hover:border-gray-300'
+          }`}
+          onClick={() => handleBlockClick(innerBlock.id)}
+          onDoubleClick={() => handleBlockDoubleClick(innerBlock.id)}
+        >
+          {innerBlock.type === 'text' ? (
+            <EnhancedTextBlockRenderer
+              block={innerBlock as any}
+              editor={null}
+              isSelected={isBlockSelected}
+              isEditing={isBlockEditing}
+              onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, columnId)}
+              onEditStart={() => onBlockEditStart?.(innerBlock.id)}
+              onEditEnd={onBlockEditEnd}
+            />
+          ) : (
+            <BlockRenderer 
+              block={innerBlock}
+              isSelected={isBlockSelected}
+              onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, columnId)}
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className="columns-block-renderer"
@@ -138,15 +261,9 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
                   </div>
                 ) : (
                   <div className="p-2 space-y-2">
-                    {column.blocks.map((innerBlock) => (
-                      <div key={innerBlock.id} className="block-in-column">
-                        <BlockRenderer 
-                          block={innerBlock}
-                          isSelected={false}
-                          onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, column.id)}
-                        />
-                      </div>
-                    ))}
+                    {column.blocks.map((innerBlock) => 
+                      renderColumnBlock(innerBlock, column.id)
+                    )}
                   </div>
                 )}
               </div>

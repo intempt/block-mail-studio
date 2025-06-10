@@ -6,6 +6,7 @@ import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
 import { BlockControls } from './BlockControls';
 import { DropZoneIndicator } from '../DropZoneIndicator';
+import { ColumnsBlockRenderer } from '../blocks/ColumnsBlockRenderer';
 
 interface VariableOption {
   text: string;
@@ -83,9 +84,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     const isSelected = selectedBlockId === block.id;
     const isEditing = editingBlockId === block.id;
 
-    // Handle columns blocks specially
+    // Handle columns blocks with the new unified renderer
     if (block.type === 'columns') {
-      // Type assertion with proper check
       const columnsBlock = block as ColumnsBlock;
       return (
         <div
@@ -110,20 +110,19 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onUnstar={onUnstarBlock}
             onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
           />
-          <ColumnRenderer
+          <ColumnsBlockRenderer
             block={columnsBlock}
-            onColumnDrop={onColumnDrop}
-            renderBlock={(innerBlock) => (
-              <BlockRenderer 
-                block={innerBlock}
-                isSelected={false}
-                onUpdate={onBlockUpdate}
-              />
-            )}
+            isSelected={isSelected}
+            onUpdate={onBlockUpdate}
+            selectedBlockId={selectedBlockId}
             editingBlockId={editingBlockId}
+            onBlockSelect={onBlockClick}
             onBlockEditStart={onBlockEditStart}
             onBlockEditEnd={onBlockEditEnd}
-            onBlockUpdate={onBlockUpdate}
+            onBlockDelete={onDeleteBlock}
+            onBlockDuplicate={onDuplicateBlock}
+            onSaveAsSnippet={onSaveAsSnippet}
+            onUnstarBlock={onUnstarBlock}
           />
         </div>
       );

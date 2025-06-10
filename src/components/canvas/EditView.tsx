@@ -65,7 +65,24 @@ export const EditView: React.FC<EditViewProps> = ({
   }, [setEditingBlockId]);
 
   const handleBlockDelete = useCallback((blockId: string) => {
-    setBlocks(prev => prev.filter(block => block.id !== blockId));
+    // Handle deletion of blocks inside columns
+    setBlocks(prev => prev.map(block => {
+      if (block.type === 'columns') {
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.filter(b => b.id !== blockId)
+        }));
+        return {
+          ...block,
+          content: {
+            ...block.content,
+            columns: updatedColumns
+          }
+        };
+      }
+      return block;
+    }).filter(block => block.id !== blockId));
+
     if (selectedBlockId === blockId) {
       setSelectedBlockId(null);
       onBlockSelect(null);
@@ -73,17 +90,64 @@ export const EditView: React.FC<EditViewProps> = ({
   }, [selectedBlockId, onBlockSelect, setBlocks, setSelectedBlockId]);
 
   const handleBlockDuplicate = useCallback((blockId: string) => {
-    const blockToDuplicate = blocks.find(block => block.id === blockId);
+    // First try to find block at top level
+    let blockToDuplicate = blocks.find(block => block.id === blockId);
+    let isNestedBlock = false;
+    
+    // If not found at top level, search in columns
+    if (!blockToDuplicate) {
+      for (const block of blocks) {
+        if (block.type === 'columns') {
+          for (const column of block.content.columns) {
+            const found = column.blocks.find(b => b.id === blockId);
+            if (found) {
+              blockToDuplicate = found;
+              isNestedBlock = true;
+              break;
+            }
+          }
+          if (blockToDuplicate) break;
+        }
+      }
+    }
+
     if (blockToDuplicate) {
       const duplicatedBlock: EmailBlock = {
         ...blockToDuplicate,
         id: `${blockToDuplicate.id}_copy_${Date.now()}`,
         isStarred: false
       };
-      const blockIndex = blocks.findIndex(block => block.id === blockId);
-      const newBlocks = [...blocks];
-      newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
-      setBlocks(newBlocks);
+
+      if (isNestedBlock) {
+        // Handle duplication within columns
+        setBlocks(prev => prev.map(block => {
+          if (block.type === 'columns') {
+            const updatedColumns = block.content.columns.map(column => {
+              const blockIndex = column.blocks.findIndex(b => b.id === blockId);
+              if (blockIndex !== -1) {
+                const newBlocks = [...column.blocks];
+                newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
+                return { ...column, blocks: newBlocks };
+              }
+              return column;
+            });
+            return {
+              ...block,
+              content: {
+                ...block.content,
+                columns: updatedColumns
+              }
+            };
+          }
+          return block;
+        }));
+      } else {
+        // Handle top-level duplication
+        const blockIndex = blocks.findIndex(block => block.id === blockId);
+        const newBlocks = [...blocks];
+        newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
+        setBlocks(newBlocks);
+      }
     }
   }, [blocks, setBlocks]);
 
@@ -175,9 +239,39 @@ export const EditView: React.FC<EditViewProps> = ({
   }, [setEditingBlockId]);
 
   const handleBlockUpdate = useCallback((updatedBlock: EmailBlock) => {
-    setBlocks(prev => prev.map(block => 
-      block.id === updatedBlock.id ? updatedBlock : block
-    ));
+    setBlocks(prev => prev.map(block => {
+      // Direct block update
+      if (block.id === updatedBlock.id) {
+        return updatedBlock;
+      }
+      
+      // Check if it's a block inside a column layout
+      if (block.type === 'columns') {
+        const updatedColumns = block.content.columns.map(column => ({
+          ...column,
+          blocks: column.blocks.map(columnBlock => 
+            columnBlock.id === updatedBlock.id ? updatedBlock : columnBlock
+          )
+        }));
+        
+        // Only update if we actually found the block in this column layout
+        const hasChanges = block.content.columns.some(column =>
+          column.blocks.some(columnBlock => columnBlock.id === updatedBlock.id)
+        );
+        
+        if (hasChanges) {
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              columns: updatedColumns
+            }
+          };
+        }
+      }
+      
+      return block;
+    }));
   }, [setBlocks]);
 
   const handleAddVariable = useCallback((blockId: string, variable: VariableOption) => {
