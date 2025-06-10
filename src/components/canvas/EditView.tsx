@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { CanvasRenderer } from './CanvasRenderer';
 import { StandaloneBlockControls } from './StandaloneBlockControls';
@@ -56,11 +56,27 @@ export const EditView: React.FC<EditViewProps> = ({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   
-  // Enhanced hover state tracking
+  // Enhanced hover state tracking with debouncing
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
   const [isHoveringAnyBlock, setIsHoveringAnyBlock] = useState(false);
   const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
   const [isHoveringControls, setIsHoveringControls] = useState(false);
+
+  // Debounce timeout refs
+  const blockLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const canvasLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (blockLeaveTimeoutRef.current) {
+        clearTimeout(blockLeaveTimeoutRef.current);
+      }
+      if (canvasLeaveTimeoutRef.current) {
+        clearTimeout(canvasLeaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleBlockClick = useCallback((blockId: string) => {
     setSelectedBlockId(blockId);
@@ -71,49 +87,102 @@ export const EditView: React.FC<EditViewProps> = ({
     setEditingBlockId(blockId);
   }, [setEditingBlockId]);
 
-  // Enhanced block hover handlers with proper state management
+  // Enhanced block hover handlers with debouncing
   const handleBlockHover = useCallback((blockId: string) => {
     console.log('Block hover:', blockId);
+    
+    // Clear any pending hide timeout since we're hovering a block
+    if (blockLeaveTimeoutRef.current) {
+      clearTimeout(blockLeaveTimeoutRef.current);
+      blockLeaveTimeoutRef.current = null;
+    }
+    
     if (hoveredBlockId !== blockId) {
       setHoveredBlockId(blockId);
       setSelectedBlockId(blockId);
       onBlockSelect(blockId);
-      setIsHoveringAnyBlock(true);
+      setIsHoveringAnyBlock(true); // Show immediately when hovering
     }
   }, [hoveredBlockId, setSelectedBlockId, onBlockSelect]);
 
   const handleBlockLeave = useCallback((blockId: string) => {
     console.log('Block leave:', blockId);
     setHoveredBlockId(null);
-    setIsHoveringAnyBlock(false);
-    // Don't clear selectedBlockId immediately - let canvas leave handle it
+    
+    // Debounce hiding with 200ms delay
+    if (blockLeaveTimeoutRef.current) {
+      clearTimeout(blockLeaveTimeoutRef.current);
+    }
+    
+    blockLeaveTimeoutRef.current = setTimeout(() => {
+      console.log('Debounced block leave - hiding controls');
+      setIsHoveringAnyBlock(false);
+      blockLeaveTimeoutRef.current = null;
+    }, 200);
   }, []);
 
-  // Canvas hover handlers with improved logic
+  // Canvas hover handlers with improved debounced logic
   const handleCanvasMouseEnter = useCallback(() => {
     console.log('Canvas enter');
     setIsHoveringCanvas(true);
+    
+    // Clear any pending canvas leave timeout
+    if (canvasLeaveTimeoutRef.current) {
+      clearTimeout(canvasLeaveTimeoutRef.current);
+      canvasLeaveTimeoutRef.current = null;
+    }
   }, []);
 
   const handleCanvasMouseLeave = useCallback(() => {
     console.log('Canvas leave');
     setIsHoveringCanvas(false);
     
-    // Clear selection when leaving canvas entirely (unless hovering controls)
-    setTimeout(() => {
+    // Clear any pending timeouts
+    if (canvasLeaveTimeoutRef.current) {
+      clearTimeout(canvasLeaveTimeoutRef.current);
+    }
+    
+    // Debounced canvas leave with same 200ms delay
+    canvasLeaveTimeoutRef.current = setTimeout(() => {
       if (!isHoveringControls && !isHoveringAnyBlock) {
-        console.log('Clearing selection - left canvas and not hovering controls');
+        console.log('Debounced canvas leave - clearing selection');
         setSelectedBlockId(null);
         onBlockSelect(null);
       }
-    }, 100); // Small delay to allow for transitions
+      canvasLeaveTimeoutRef.current = null;
+    }, 200);
   }, [isHoveringControls, isHoveringAnyBlock, setSelectedBlockId, onBlockSelect]);
 
-  // Controls hover handler
+  // Controls hover handler with immediate cancel of hide timeouts
   const handleControlsHoverChange = useCallback((isHovering: boolean) => {
     console.log('Controls hover change:', isHovering);
     setIsHoveringControls(isHovering);
-  }, []);
+    
+    if (isHovering) {
+      // Cancel any pending hide timeouts when hovering controls
+      if (blockLeaveTimeoutRef.current) {
+        clearTimeout(blockLeaveTimeoutRef.current);
+        blockLeaveTimeoutRef.current = null;
+      }
+      if (canvasLeaveTimeoutRef.current) {
+        clearTimeout(canvasLeaveTimeoutRef.current);
+        canvasLeaveTimeoutRef.current = null;
+      }
+    } else {
+      // When leaving controls, start debounced hide if not hovering blocks
+      if (!isHoveringAnyBlock) {
+        blockLeaveTimeoutRef.current = setTimeout(() => {
+          console.log('Debounced controls leave - hiding');
+          setIsHoveringAnyBlock(false);
+          if (!isHoveringCanvas) {
+            setSelectedBlockId(null);
+            onBlockSelect(null);
+          }
+          blockLeaveTimeoutRef.current = null;
+        }, 200);
+      }
+    }
+  }, [isHoveringAnyBlock, isHoveringCanvas, setSelectedBlockId, onBlockSelect]);
 
   const handleBlockDelete = useCallback((blockId: string) => {
     // Handle deletion of blocks inside columns
