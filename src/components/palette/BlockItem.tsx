@@ -12,28 +12,49 @@ export const BlockItem: React.FC<BlockItemProps> = ({
   const gridClasses = compactMode ? "p-2" : "p-3";
   
   const handleDragStart = (e: React.DragEvent) => {
-    console.log('BlockItem: Starting drag for block:', block.id);
+    console.log('=== BlockItem Drag Start ===');
+    console.log('BlockItem: Starting drag for block:', block.id, block.name);
     
-    // Use text/plain to match drop handler expectation
-    const dragData = JSON.stringify({ blockType: block.id });
+    // Prevent event from being stopped
+    e.stopPropagation();
+    
+    // Create drag data with consistent format
+    const dragData = JSON.stringify({ 
+      blockType: block.id,
+      source: 'palette'
+    });
+    
+    console.log('BlockItem: Setting drag data:', dragData);
+    
+    // Set data in multiple formats for better compatibility
     e.dataTransfer.setData('text/plain', dragData);
+    e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'copy';
     
-    console.log('BlockItem: Set drag data:', dragData);
+    console.log('BlockItem: Data transfer configured');
+    console.log('BlockItem: effectAllowed:', e.dataTransfer.effectAllowed);
     
     // Call the parent's drag start handler
     if (onDragStart) {
+      console.log('BlockItem: Calling parent onDragStart');
       onDragStart(e, block.id);
     }
+    
+    console.log('=== BlockItem Drag Start Complete ===');
+  };
+  
+  const handleClick = () => {
+    console.log('BlockItem: Clicked, adding block:', block.id);
+    onBlockAdd(block.id);
   };
   
   return (
     <Card
       key={block.id}
-      className={`cursor-grab hover:shadow-md transition-all duration-200 group ${gridClasses} active:cursor-grabbing`}
+      className={`cursor-grab hover:shadow-md transition-all duration-200 group ${gridClasses} active:cursor-grabbing border-2 border-transparent hover:border-blue-200`}
       draggable
       onDragStart={handleDragStart}
-      onClick={() => onBlockAdd(block.id)}
+      onClick={handleClick}
     >
       <div className="text-center space-y-2">
         <div className="flex justify-center text-slate-600 group-hover:text-blue-600 transition-colors">

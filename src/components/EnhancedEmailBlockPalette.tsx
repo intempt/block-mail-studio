@@ -26,12 +26,9 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   compactMode = false,
   snippetRefreshTrigger = 0
 }) => {
-  console.log('=== EnhancedEmailBlockPalette START ===');
+  console.log('=== EnhancedEmailBlockPalette Render ===');
   console.log('EnhancedEmailBlockPalette rendering with', blockItems.length, 'block items');
-  console.log('Block items array:', blockItems);
-  console.log('Looking for content block:', blockItems.find(item => item.id === 'content'));
-  console.log('All block IDs:', blockItems.map(item => item.id));
-  console.log('=== EnhancedEmailBlockPalette END ===');
+  console.log('Block items:', blockItems.map(item => ({ id: item.id, name: item.name })));
   
   const [sectionsExpanded, setSectionsExpanded] = useState({
     blocks: true
@@ -42,14 +39,27 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   };
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
-    console.log('EnhancedEmailBlockPalette: Dragging block:', blockType);
+    console.log('=== Palette Drag Start ===');
+    console.log('EnhancedEmailBlockPalette: Handling drag start for:', blockType);
     
-    // Use text/plain to match the drop handler expectation
-    const dragData = JSON.stringify({ blockType });
+    // Prevent default and stop propagation to ensure clean event handling
+    e.stopPropagation();
+    
+    // Create consistent drag data format
+    const dragData = JSON.stringify({ 
+      blockType,
+      source: 'palette-handler'
+    });
+    
+    console.log('EnhancedEmailBlockPalette: Setting drag data:', dragData);
+    
+    // Set data in multiple formats for compatibility
     e.dataTransfer.setData('text/plain', dragData);
+    e.dataTransfer.setData('application/json', dragData);
     e.dataTransfer.effectAllowed = 'copy';
     
-    console.log('EnhancedEmailBlockPalette: Set drag data:', dragData);
+    console.log('EnhancedEmailBlockPalette: Drag data set successfully');
+    console.log('=== Palette Drag Start Complete ===');
   };
 
   const handleLayoutSelect = (layout: any) => {

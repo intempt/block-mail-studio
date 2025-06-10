@@ -42,9 +42,11 @@ export const useDragDropHandler = ({
   }, [setCurrentDragType]);
 
   const handleCanvasDragEnter = useCallback((e: React.DragEvent) => {
+    console.log('=== Canvas Drag Enter ===');
     e.preventDefault();
     setIsDraggingOver(true);
     setDragOverIndex(null);
+    console.log('Canvas drag enter completed');
   }, [setIsDraggingOver, setDragOverIndex]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
@@ -80,9 +82,11 @@ export const useDragDropHandler = ({
   }, [setDragOverIndex, setIsDraggingOver]);
 
   const handleCanvasDragLeave = useCallback((e: React.DragEvent) => {
+    console.log('=== Canvas Drag Leave ===');
     e.preventDefault();
     setIsDraggingOver(false);
     setDragOverIndex(null);
+    console.log('Canvas drag leave completed');
   }, [setIsDraggingOver, setDragOverIndex]);
 
   const getCompleteDefaultContent = useCallback((blockType: string) => {
@@ -269,31 +273,56 @@ export const useDragDropHandler = ({
   }, [getCompleteDefaultContent, getCompleteDefaultStyles]);
 
   const handleCanvasDrop = useCallback(async (e: React.DragEvent) => {
+    console.log('=== Canvas Drop Event START ===');
     e.preventDefault();
     setIsDraggingOver(false);
     setDragOverIndex(null);
 
     console.log('Canvas drop event triggered');
+    console.log('Event dataTransfer:', e.dataTransfer);
+    console.log('Event dataTransfer types:', e.dataTransfer.types);
 
     try {
-      const dragDataString = e.dataTransfer.getData('text/plain');
-      console.log('Raw drag data string:', dragDataString);
+      // Try to get data from multiple formats
+      let dragDataString = '';
+      
+      // Try text/plain first
+      dragDataString = e.dataTransfer.getData('text/plain');
+      console.log('Raw drag data (text/plain):', dragDataString);
+      
+      // Fallback to application/json
+      if (!dragDataString) {
+        dragDataString = e.dataTransfer.getData('application/json');
+        console.log('Raw drag data (application/json):', dragDataString);
+      }
+      
+      // Check all available types
+      console.log('All available data types:', Array.from(e.dataTransfer.types));
+      for (const type of e.dataTransfer.types) {
+        const data = e.dataTransfer.getData(type);
+        console.log(`Data for type ${type}:`, data);
+      }
 
       if (!dragDataString) {
-        console.error('No drag data found');
+        console.error('No drag data found in any format');
+        console.error('DataTransfer object:', {
+          types: Array.from(e.dataTransfer.types),
+          effectAllowed: e.dataTransfer.effectAllowed,
+          dropEffect: e.dataTransfer.dropEffect
+        });
         return;
       }
 
       let dragData;
       try {
         dragData = JSON.parse(dragDataString);
-        console.log('Parsed drag data:', dragData);
+        console.log('Successfully parsed drag data:', dragData);
       } catch (parseError) {
-        console.error('Failed to parse drag data:', parseError);
+        console.error('Failed to parse drag data as JSON:', parseError);
+        console.log('Treating as block ID for reordering:', dragDataString);
         
         // Fallback: treat as block ID reordering
         const blockId = dragDataString;
-        console.log('Treating as block reorder for ID:', blockId);
         
         setBlocks(prev => {
           const reorderedBlocks = [...prev];
@@ -315,6 +344,7 @@ export const useDragDropHandler = ({
           console.log('Reordered blocks successfully');
           return reorderedBlocks;
         });
+        console.log('=== Canvas Drop Event END (Reorder) ===');
         return;
       }
 
@@ -322,6 +352,7 @@ export const useDragDropHandler = ({
 
       if (!blockType) {
         console.error('No blockType found in drag data:', dragData);
+        console.log('=== Canvas Drop Event END (Error) ===');
         return;
       }
 
@@ -331,6 +362,7 @@ export const useDragDropHandler = ({
 
       if (!newBlock) {
         console.error('Failed to create block from drag data');
+        console.log('=== Canvas Drop Event END (Error) ===');
         return;
       }
 
@@ -346,13 +378,16 @@ export const useDragDropHandler = ({
           console.log('Inserted block at index:', dragOverIndex);
         }
         
-        console.log('Updated blocks array:', newBlocks);
+        console.log('Updated blocks array length:', newBlocks.length);
+        console.log('New block added with ID:', newBlock.id);
         return newBlocks;
       });
 
       console.log('Block successfully added to canvas');
+      console.log('=== Canvas Drop Event END (Success) ===');
     } catch (error) {
       console.error('Error handling canvas drop:', error);
+      console.log('=== Canvas Drop Event END (Error) ===');
     }
   }, [setBlocks, setIsDraggingOver, setDragOverIndex, createBlockFromDragData, dragOverIndex]);
 
