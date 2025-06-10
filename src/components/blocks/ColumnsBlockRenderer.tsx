@@ -171,24 +171,44 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     onBlockDuplicate?.(blockId);
   };
 
+  // Ensure blocks have all required properties for EmailBlock interface
+  const ensureCompleteBlock = (innerBlock: EmailBlock): EmailBlock => {
+    return {
+      ...innerBlock,
+      styling: innerBlock.styling || {
+        desktop: { width: '100%', height: 'auto' },
+        tablet: { width: '100%', height: 'auto' },
+        mobile: { width: '100%', height: 'auto' }
+      },
+      position: innerBlock.position || { x: 0, y: 0 },
+      displayOptions: innerBlock.displayOptions || {
+        showOnDesktop: true,
+        showOnTablet: true,
+        showOnMobile: true
+      }
+    };
+  };
+
   const renderColumnBlock = (innerBlock: EmailBlock, columnId: string) => {
+    const completeBlock = ensureCompleteBlock(innerBlock);
     const isBlockSelected = selectedBlockId === innerBlock.id;
     const isBlockEditing = editingBlockId === innerBlock.id;
 
     return (
       <div key={innerBlock.id} className="relative group mb-2">
         {/* Block Controls */}
-        <BlockControls
-          blockId={innerBlock.id}
-          onDelete={handleBlockDelete}
-          onDuplicate={handleBlockDuplicate}
-          onDragStart={() => {}} // Disable drag for now within columns
-          onSaveAsSnippet={onSaveAsSnippet || (() => {})}
-          isStarred={innerBlock.isStarred}
-          onUnstar={onUnstarBlock}
-          onAddVariable={() => {}} // Handle variable insertion
-          className="opacity-0 group-hover:opacity-100 transition-opacity"
-        />
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <BlockControls
+            blockId={innerBlock.id}
+            onDelete={handleBlockDelete}
+            onDuplicate={handleBlockDuplicate}
+            onDragStart={() => {}} // Disable drag for now within columns
+            onSaveAsSnippet={onSaveAsSnippet || (() => {})}
+            isStarred={innerBlock.isStarred}
+            onUnstar={onUnstarBlock}
+            onAddVariable={() => {}} // Handle variable insertion
+          />
+        </div>
 
         {/* Block Content */}
         <div
@@ -200,7 +220,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
         >
           {innerBlock.type === 'text' ? (
             <EnhancedTextBlockRenderer
-              block={innerBlock as any}
+              block={completeBlock as any}
               editor={null}
               isSelected={isBlockSelected}
               isEditing={isBlockEditing}
@@ -210,7 +230,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
             />
           ) : (
             <BlockRenderer 
-              block={innerBlock}
+              block={completeBlock}
               isSelected={isBlockSelected}
               onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, columnId)}
             />
