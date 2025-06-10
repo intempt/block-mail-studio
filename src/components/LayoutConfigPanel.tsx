@@ -91,7 +91,6 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
       }
     });
     
-    // Use text/plain to match drop handler expectation
     e.dataTransfer.setData('text/plain', dragData);
     e.dataTransfer.effectAllowed = 'copy';
     
@@ -101,6 +100,16 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
   const gridClasses = compactMode 
     ? "grid-cols-1 gap-2" 
     : "grid-cols-2 gap-3";
+
+  // Convert layout option to DynamicLayoutIcon format
+  const createLayoutForIcon = (layout: LayoutOption) => {
+    const percentages = layout.ratio.split('-').map(p => `${p}%`);
+    return {
+      id: layout.id,
+      name: layout.name,
+      preview: percentages
+    };
+  };
 
   return (
     <div className="p-4 space-y-4">
@@ -122,9 +131,8 @@ export const LayoutConfigPanel: React.FC<LayoutConfigPanelProps> = ({
             <div className="text-center space-y-2">
               <div className="flex justify-center text-slate-600 group-hover:text-purple-600 transition-colors">
                 <DynamicLayoutIcon 
-                  columns={layout.columns} 
-                  ratio={layout.ratio}
-                  size={compactMode ? 24 : 32}
+                  layout={createLayoutForIcon(layout)}
+                  className={compactMode ? 'w-5 h-4' : 'w-6 h-5'}
                 />
               </div>
               <div>
