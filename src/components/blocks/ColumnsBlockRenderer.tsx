@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
@@ -39,6 +40,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   onBlockHover,
   onBlockLeave
 }) => {
+  const [dragOverColumnIndex, setDragOverColumnIndex] = useState<number | null>(null);
   const styling = block.styling.desktop;
   
   const getColumnWidths = () => {
@@ -76,17 +78,54 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
 
   const columnWidths = getColumnWidths();
 
+  const handleColumnDragEnter = (e: React.DragEvent, columnIndex: number) => {
+    console.log('=== Column Drag Enter ===');
+    console.log('Column drag enter for column:', columnIndex);
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverColumnIndex(columnIndex);
+  };
+
+  const handleColumnDragOver = (e: React.DragEvent, columnIndex: number) => {
+    console.log('Column drag over for column:', columnIndex);
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverColumnIndex(columnIndex);
+  };
+
+  const handleColumnDragLeave = (e: React.DragEvent, columnIndex: number) => {
+    console.log('Column drag leave for column:', columnIndex);
+    // Only clear if we're actually leaving the column area
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDragOverColumnIndex(null);
+    }
+  };
+
   const handleDrop = (e: React.DragEvent, columnIndex: number) => {
+    console.log('=== Column Drop Handler ===');
+    console.log('ColumnsBlockRenderer: Drop event in column', columnIndex, 'for layout', block.id);
+    console.log('Event target:', e.target);
+    console.log('Event currentTarget:', e.currentTarget);
+    
     e.preventDefault();
     e.stopPropagation();
     
-    console.log('ColumnsBlockRenderer: Drop event in column', columnIndex, 'for layout', block.id);
+    setDragOverColumnIndex(null);
+    
+    // Debug drag data availability
+    const dataTypes = Array.from(e.dataTransfer.types);
+    console.log('Available data types in column drop:', dataTypes);
+    
+    dataTypes.forEach(type => {
+      const data = e.dataTransfer.getData(type);
+      console.log(`Column drop - ${type}:`, data);
+    });
+    
     onColumnDrop(e, block.id, columnIndex);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   const handleBlockUpdate = (updatedBlock: EmailBlock, columnId: string) => {
@@ -148,7 +187,6 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
 
     console.log('Found nested block to duplicate:', blockToDuplicate.type);
     
-    // Use the recursive ID regeneration utility
     const duplicatedBlock = regenerateBlockIds(blockToDuplicate);
     
     console.log('Generated duplicated nested block with new ID:', duplicatedBlock.id);
@@ -171,13 +209,11 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
       }
     });
 
-    // Notify parent component
     onBlockDuplicate?.(blockId);
     
     console.log('Nested block duplication completed successfully');
   };
 
-  // Ensure blocks have all required properties for EmailBlock interface
   const ensureCompleteBlock = (innerBlock: EmailBlock): EmailBlock => {
     const defaultStyling = {
       desktop: { width: '100%', height: 'auto' },
@@ -220,7 +256,6 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
         data-testid={`email-block-${innerBlock.id}`}
         data-block-type={innerBlock.type}
       >
-        {/* Block Content - No more inline controls */}
         <div
           className={`border border-gray-100 rounded p-2 transition-colors cursor-pointer ${
             isBlockSelected ? 'border-blue-300 bg-blue-50' : 'hover:border-gray-300'
@@ -274,23 +309,38 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
               }}
             >
               <div 
-                className="min-h-24 rounded-lg border-2 border-dashed transition-all duration-200 hover:border-blue-300"
+                className={`min-h-24 rounded-lg border-2 border-dashed transition-all duration-200 relative ${
+                  dragOverColumnIndex === index 
+                    ? 'border-blue-400 bg-blue-50 scale-[1.02] shadow-lg' 
+                    : 'border-gray-300 hover:border-blue-300 hover:bg-slate-50'
+                }`}
                 style={{
-                  backgroundColor: isSelected ? '#f1f5f9' : '#f8fafc',
-                  borderColor: column.blocks.length > 0 ? '#e2e8f0' : '#cbd5e1'
+                  backgroundColor: dragOverColumnIndex === index ? '#eff6ff' : (column.blocks.length > 0 ? '#f8fafc' : '#fafafa'),
                 }}
                 onDrop={(e) => handleDrop(e, index)}
-                onDragOver={handleDragOver}
+                onDragEnter={(e) => handleColumnDragEnter(e, index)}
+                onDragOver={(e) => handleColumnDragOver(e, index)}
+                onDragLeave={(e) => handleColumnDragLeave(e, index)}
+                data-column-index={index}
+                data-layout-id={block.id}
               >
+                {dragOverColumnIndex === index && (
+                  <div className="absolute inset-0 border-2 border-blue-400 rounded-lg bg-blue-100 bg-opacity-30 flex items-center justify-center z-10 pointer-events-none">
+                    <div className="text-blue-600 font-medium text-sm bg-white px-2 py-1 rounded shadow">
+                      Drop here
+                    </div>
+                  </div>
+                )}
+                
                 {column.blocks.length === 0 ? (
-                  <div className="p-4 text-center text-slate-500 text-sm">
+                  <div className="p-4 text-center text-slate-500 text-sm relative z-0">
                     <div className="text-xs text-slate-400 mb-2">Column {index + 1}</div>
                     <div className="text-xs text-slate-500">
                       Drop blocks here ({columnWidths[index]})
                     </div>
                   </div>
                 ) : (
-                  <div className="p-2 space-y-2">
+                  <div className="p-2 space-y-2 relative z-0">
                     {column.blocks.map((innerBlock) => 
                       renderColumnBlock(innerBlock, column.id)
                     )}

@@ -1,7 +1,5 @@
-
 import { useState, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
-
 import { generateUniqueId } from '@/utils/idGenerator';
 
 interface UseDragDropHandlerProps {
@@ -28,18 +26,24 @@ export const useDragDropHandler = ({
   setCurrentDragType
 }: UseDragDropHandlerProps) => {
   const handleDragStart = useCallback((e: React.DragEvent, blockId: string) => {
+    console.log('=== Main Drag Start ===');
+    console.log('Starting drag for block:', blockId);
     e.stopPropagation();
     const blockType = (e.target as HTMLElement).dataset.blockType;
     setCurrentDragType(blockType === 'columns' ? 'layout' : 'block');
     e.dataTransfer.setData('text/plain', blockId);
     e.dataTransfer.effectAllowed = 'move';
+    console.log('Drag data set:', blockId);
   }, [setCurrentDragType]);
 
   const handleBlockDragStart = useCallback((e: React.DragEvent, blockId: string) => {
+    console.log('=== Block Reorder Drag Start ===');
+    console.log('Starting block reorder drag for:', blockId);
     e.stopPropagation();
     setCurrentDragType('reorder');
     e.dataTransfer.setData('text/plain', blockId);
     e.dataTransfer.effectAllowed = 'move';
+    console.log('Block reorder drag data set:', blockId);
   }, [setCurrentDragType]);
 
   const handleCanvasDragEnter = useCallback((e: React.DragEvent) => {
@@ -93,10 +97,8 @@ export const useDragDropHandler = ({
   const getCompleteDefaultContent = useCallback((blockType: string) => {
     console.log('Getting default content for block type:', blockType);
     
-    // Get base content from provided function
     const baseContent = getDefaultContent(blockType);
     
-    // Ensure we have complete content for all block types
     const defaultContentMap = {
       text: {
         html: '<p>Enter your text here...</p>',
@@ -183,10 +185,8 @@ export const useDragDropHandler = ({
   const getCompleteDefaultStyles = useCallback((blockType: string) => {
     console.log('Getting default styles for block type:', blockType);
     
-    // Get base styles from provided function
     const baseStyles = getDefaultStyles(blockType);
     
-    // Ensure complete responsive styles
     const completeStyles = {
       desktop: {
         width: '100%',
@@ -247,7 +247,6 @@ export const useDragDropHandler = ({
         isStarred: false
       };
 
-      // Handle layout-specific data for columns
       if (dragData.layoutData && dragData.blockType === 'columns') {
         const columnCount = dragData.layoutData.columnCount || 2;
         const columnRatio = dragData.layoutData.columnRatio || '50-50';
@@ -284,20 +283,16 @@ export const useDragDropHandler = ({
     console.log('Event dataTransfer types:', e.dataTransfer.types);
 
     try {
-      // Try to get data from multiple formats
       let dragDataString = '';
       
-      // Try text/plain first
       dragDataString = e.dataTransfer.getData('text/plain');
       console.log('Raw drag data (text/plain):', dragDataString);
       
-      // Fallback to application/json
       if (!dragDataString) {
         dragDataString = e.dataTransfer.getData('application/json');
         console.log('Raw drag data (application/json):', dragDataString);
       }
       
-      // Check all available types
       console.log('All available data types:', Array.from(e.dataTransfer.types));
       for (const type of e.dataTransfer.types) {
         const data = e.dataTransfer.getData(type);
@@ -322,7 +317,6 @@ export const useDragDropHandler = ({
         console.error('Failed to parse drag data as JSON:', parseError);
         console.log('Treating as block ID for reordering:', dragDataString);
         
-        // Fallback: treat as block ID reordering
         const blockId = dragDataString;
         
         setBlocks(prev => {
@@ -413,16 +407,33 @@ export const useDragDropHandler = ({
 
   const handleColumnDrop = useCallback((e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
     console.log('=== Column Drop Event START ===');
+    console.log('Column drop - layoutBlockId:', layoutBlockId, 'columnIndex:', columnIndex);
     e.preventDefault();
     e.stopPropagation();
     
-    const rawDragData = e.dataTransfer.getData('text/plain');
-    console.log('Column drop - raw drag data:', rawDragData);
+    // Get drag data from all possible formats
+    let rawDragData = '';
+    const dataTypes = Array.from(e.dataTransfer.types);
+    console.log('Available data types:', dataTypes);
+    
+    // Try each data type until we find data
+    for (const type of dataTypes) {
+      const data = e.dataTransfer.getData(type);
+      console.log(`Data for type ${type}:`, data);
+      if (data && data.length > 0) {
+        rawDragData = data;
+        break;
+      }
+    }
     
     if (!rawDragData) {
       console.error('No drag data found in column drop');
+      console.error('Available types:', dataTypes);
+      console.error('DataTransfer object:', e.dataTransfer);
       return;
     }
+
+    console.log('Column drop - raw drag data found:', rawDragData);
 
     let dragData;
     let isNewBlock = false;
@@ -441,7 +452,6 @@ export const useDragDropHandler = ({
 
     setBlocks(prev => {
       if (isNewBlock) {
-        // Handle new block from palette
         console.log('Creating new block for column from palette data');
         const newBlock = createBlockFromDragData(dragData);
         
@@ -452,7 +462,6 @@ export const useDragDropHandler = ({
         
         console.log('Created new block for column:', newBlock.id, newBlock.type);
         
-        // Add the new block to the target column
         return prev.map(block => {
           if (block.id === layoutBlockId && block.type === 'columns') {
             const updatedColumns = block.content.columns.map((column, index) => {
@@ -480,7 +489,6 @@ export const useDragDropHandler = ({
         
         let droppedBlock: EmailBlock | undefined;
         
-        // Remove block from its original position
         const updatedBlocks = prev.map(block => {
           if (block.id === layoutBlockId && block.type === 'columns') {
             const updatedColumns = block.content.columns.map(column => {
@@ -503,7 +511,7 @@ export const useDragDropHandler = ({
           } else {
             return block;
           }
-        }).filter(block => block.id !== droppedBlockId); // Remove from top level if it was there
+        }).filter(block => block.id !== droppedBlockId);
         
         if (!droppedBlock) {
           droppedBlock = prev.find(b => b.id === droppedBlockId);
@@ -516,7 +524,6 @@ export const useDragDropHandler = ({
         
         console.log('Found existing block to move:', droppedBlock.type);
         
-        // Add block to the target column
         const finalBlocks = updatedBlocks.map(block => {
           if (block.id === layoutBlockId && block.type === 'columns') {
             const updatedColumns = block.content.columns.map((column, index) => {
@@ -547,11 +554,182 @@ export const useDragDropHandler = ({
   return {
     handleDragStart,
     handleBlockDragStart,
-    handleCanvasDragEnter,
-    handleCanvasDragOver,
-    handleCanvasDragLeave,
-    handleCanvasDrop,
-    handleBlockDrop,
+    handleCanvasDragEnter: useCallback((e: React.DragEvent) => {
+      console.log('=== Canvas Drag Enter ===');
+      e.preventDefault();
+      setIsDraggingOver(true);
+      setDragOverIndex(null);
+      console.log('Canvas drag enter completed');
+    }, [setIsDraggingOver, setDragOverIndex]),
+    handleCanvasDragOver: useCallback((e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDraggingOver(true);
+
+      const target = e.target as HTMLElement;
+      const canvas = target.closest('.email-canvas');
+
+      if (canvas) {
+        const children = Array.from(canvas.querySelectorAll('[data-testid^="email-block-"]'));
+        
+        if (children.length === 0) {
+          setDragOverIndex(0);
+          return;
+        }
+
+        for (let i = 0; i < children.length; i++) {
+          const child = children[i] as HTMLElement;
+          const rect = child.getBoundingClientRect();
+          const mouseY = e.clientY;
+          
+          if (mouseY >= rect.top && mouseY <= rect.bottom) {
+            setDragOverIndex(i);
+            return;
+          } else if (mouseY < rect.top) {
+            setDragOverIndex(i);
+            return;
+          }
+        }
+        setDragOverIndex(children.length);
+      }
+    }, [setDragOverIndex, setIsDraggingOver]),
+    handleCanvasDragLeave: useCallback((e: React.DragEvent) => {
+      console.log('=== Canvas Drag Leave ===');
+      e.preventDefault();
+      setIsDraggingOver(false);
+      setDragOverIndex(null);
+      console.log('Canvas drag leave completed');
+    }, [setIsDraggingOver, setDragOverIndex]),
+    handleCanvasDrop: useCallback(async (e: React.DragEvent) => {
+      console.log('=== Canvas Drop Event START ===');
+      e.preventDefault();
+      setIsDraggingOver(false);
+      setDragOverIndex(null);
+
+      console.log('Canvas drop event triggered');
+      console.log('Event dataTransfer:', e.dataTransfer);
+      console.log('Event dataTransfer types:', e.dataTransfer.types);
+
+      try {
+        let dragDataString = '';
+        
+        dragDataString = e.dataTransfer.getData('text/plain');
+        console.log('Raw drag data (text/plain):', dragDataString);
+        
+        if (!dragDataString) {
+          dragDataString = e.dataTransfer.getData('application/json');
+          console.log('Raw drag data (application/json):', dragDataString);
+        }
+        
+        console.log('All available data types:', Array.from(e.dataTransfer.types));
+        for (const type of e.dataTransfer.types) {
+          const data = e.dataTransfer.getData(type);
+          console.log(`Data for type ${type}:`, data);
+        }
+
+        if (!dragDataString) {
+          console.error('No drag data found in any format');
+          console.error('DataTransfer object:', {
+            types: Array.from(e.dataTransfer.types),
+            effectAllowed: e.dataTransfer.effectAllowed,
+            dropEffect: e.dataTransfer.dropEffect
+          });
+          return;
+        }
+
+        let dragData;
+        try {
+          dragData = JSON.parse(dragDataString);
+          console.log('Successfully parsed drag data:', dragData);
+        } catch (parseError) {
+          console.error('Failed to parse drag data as JSON:', parseError);
+          console.log('Treating as block ID for reordering:', dragDataString);
+          
+          const blockId = dragDataString;
+          
+          setBlocks(prev => {
+            const reorderedBlocks = [...prev];
+            const blockToMoveIndex = reorderedBlocks.findIndex(block => block.id === blockId);
+            
+            if (blockToMoveIndex === -1) {
+              console.error('Block not found for reordering:', blockId);
+              return prev;
+            }
+            
+            const [blockToMove] = reorderedBlocks.splice(blockToMoveIndex, 1);
+            
+            if (dragOverIndex === null) {
+              reorderedBlocks.push(blockToMove);
+            } else {
+              reorderedBlocks.splice(dragOverIndex, 0, blockToMove);
+            }
+            
+            console.log('Reordered blocks successfully');
+            return reorderedBlocks;
+          });
+          console.log('=== Canvas Drop Event END (Reorder) ===');
+          return;
+        }
+
+        const blockType = dragData.blockType;
+
+        if (!blockType) {
+          console.error('No blockType found in drag data:', dragData);
+          console.log('=== Canvas Drop Event END (Error) ===');
+          return;
+        }
+
+        console.log('Creating new block of type:', blockType);
+
+        const newBlock = createBlockFromDragData(dragData);
+
+        if (!newBlock) {
+          console.error('Failed to create block from drag data');
+          console.log('=== Canvas Drop Event END (Error) ===');
+          return;
+        }
+
+        console.log('Adding new block to canvas:', newBlock);
+
+        setBlocks(prev => {
+          const newBlocks = [...prev];
+          if (dragOverIndex === null || dragOverIndex >= newBlocks.length) {
+            newBlocks.push(newBlock);
+            console.log('Added block to end of canvas');
+          } else {
+            newBlocks.splice(dragOverIndex, 0, newBlock);
+            console.log('Inserted block at index:', dragOverIndex);
+          }
+          
+          console.log('Updated blocks array length:', newBlocks.length);
+          console.log('New block added with ID:', newBlock.id);
+          return newBlocks;
+        });
+
+        console.log('Block successfully added to canvas');
+        console.log('=== Canvas Drop Event END (Success) ===');
+      } catch (error) {
+        console.error('Error handling canvas drop:', error);
+        console.log('=== Canvas Drop Event END (Error) ===');
+      }
+    }, [setBlocks, setIsDraggingOver, setDragOverIndex, createBlockFromDragData, dragOverIndex]),
+    handleBlockDrop: useCallback((e: React.DragEvent, targetIndex: number) => {
+      e.preventDefault();
+      const blockId = e.dataTransfer.getData('text/plain');
+      
+      setBlocks(prev => {
+        const reorderedBlocks = [...prev];
+        const blockToMoveIndex = reorderedBlocks.findIndex(block => block.id === blockId);
+        
+        if (blockToMoveIndex === -1) {
+          return prev;
+        }
+        
+        const [blockToMove] = reorderedBlocks.splice(blockToMoveIndex, 1);
+        reorderedBlocks.splice(targetIndex, 0, blockToMove);
+        
+        return reorderedBlocks;
+      });
+    }, [setBlocks]),
     handleColumnDrop
   };
 };

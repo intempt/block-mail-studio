@@ -15,10 +15,8 @@ export const BlockItem: React.FC<BlockItemProps> = ({
     console.log('=== BlockItem Drag Start ===');
     console.log('BlockItem: Starting drag for block:', block.id, block.name);
     
-    // Prevent event from being stopped
     e.stopPropagation();
     
-    // Create drag data with consistent format
     const dragData = JSON.stringify({ 
       blockType: block.id,
       source: 'palette'
@@ -26,15 +24,42 @@ export const BlockItem: React.FC<BlockItemProps> = ({
     
     console.log('BlockItem: Setting drag data:', dragData);
     
-    // Set data in multiple formats for better compatibility
+    // Set data in multiple formats for maximum compatibility
     e.dataTransfer.setData('text/plain', dragData);
     e.dataTransfer.setData('application/json', dragData);
+    e.dataTransfer.setData('text/x-block-data', dragData);
     e.dataTransfer.effectAllowed = 'copy';
+    
+    // Set custom drag image to indicate copying
+    const dragImage = document.createElement('div');
+    dragImage.innerHTML = `
+      <div style="
+        background: white; 
+        border: 2px solid #3b82f6; 
+        border-radius: 8px; 
+        padding: 8px 12px; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 14px;
+        color: #1e40af;
+        font-weight: 500;
+      ">
+        ${block.name}
+      </div>
+    `;
+    dragImage.style.position = 'absolute';
+    dragImage.style.top = '-1000px';
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 50, 20);
+    
+    // Clean up drag image after a delay
+    setTimeout(() => {
+      document.body.removeChild(dragImage);
+    }, 0);
     
     console.log('BlockItem: Data transfer configured');
     console.log('BlockItem: effectAllowed:', e.dataTransfer.effectAllowed);
+    console.log('BlockItem: Available types after setting:', Array.from(e.dataTransfer.types));
     
-    // Call the parent's drag start handler
     if (onDragStart) {
       console.log('BlockItem: Calling parent onDragStart');
       onDragStart(e, block.id);
