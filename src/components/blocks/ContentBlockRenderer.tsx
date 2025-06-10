@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Edit3, Database, Package } from 'lucide-react';
+import { Plus, Trash2, Database, Package } from 'lucide-react';
 import { dummyProductData } from '@/data/dummyProductData';
 
 interface ContentBlockRendererProps {
@@ -23,9 +22,6 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
   isSelected,
   onUpdate
 }) => {
-  const [jsonInput, setJsonInput] = useState('');
-  const [showEditor, setShowEditor] = useState(false);
-
   // Extract schema from JSON data
   const schema = useMemo(() => {
     if (!block.content.jsonData || block.content.jsonData.length === 0) {
@@ -60,26 +56,6 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       }
     };
     onUpdate(updatedBlock);
-  };
-
-  const handleJsonUpdate = () => {
-    try {
-      const parsedData = JSON.parse(jsonInput);
-      if (Array.isArray(parsedData)) {
-        const updatedBlock = {
-          ...block,
-          content: {
-            ...block.content,
-            jsonData: parsedData,
-            selectedFields: schema.length > 0 ? schema.slice(0, block.content.columns).map(s => s.key) : []
-          }
-        };
-        onUpdate(updatedBlock);
-        setShowEditor(false);
-      }
-    } catch (error) {
-      console.error('Invalid JSON:', error);
-    }
   };
 
   const handleFieldToggle = (fieldKey: string) => {
@@ -274,34 +250,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       {/* Controls */}
       {isSelected && (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Product Feed Settings</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEditor(!showEditor)}
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                {showEditor ? 'Hide' : 'Edit'} JSON
-              </Button>
-            </div>
-          </div>
-
-          {showEditor && (
-            <div className="space-y-3">
-              <div>
-                <Label>JSON Data Array</Label>
-                <Textarea
-                  value={jsonInput}
-                  onChange={(e) => setJsonInput(e.target.value)}
-                  placeholder='[{"name": "Product 1", "price": 29.99, "description": "Great product"}]'
-                  rows={4}
-                />
-              </div>
-              <Button onClick={handleJsonUpdate}>Update Data</Button>
-            </div>
-          )}
+          <h3 className="font-semibold">Product Feed Settings</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
