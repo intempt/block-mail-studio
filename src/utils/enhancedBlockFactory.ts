@@ -1,4 +1,5 @@
 import { EmailBlock, Styling, DisplayOptions } from '@/types/emailBlocks';
+import { generateUniqueId } from '@/utils/idGenerator';
 
 const createDefaultStyling = (): Styling => ({
   desktop: {
@@ -53,10 +54,6 @@ const createDefaultDisplayOptions = (): DisplayOptions => ({
   showOnTablet: true,
   showOnMobile: true,
 });
-
-export const generateUniqueId = (): string => {
-  return `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-};
 
 export const createBlock = (type: string, sectionId?: string): EmailBlock => {
   const baseBlock = {
@@ -243,9 +240,95 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         },
       };
 
+    case 'columns':
+      return createColumnsBlock('50-50');
+
     default:
       throw new Error(`Unknown block type: ${type}`);
   }
+};
+
+const createColumnsBlock = (ratio: string): EmailBlock => {
+  const baseBlock = {
+    id: generateUniqueId(),
+    styling: createDefaultStyling(),
+    position: { x: 0, y: 0 },
+    displayOptions: createDefaultDisplayOptions(),
+  };
+
+  const getColumnsConfig = (ratio: string) => {
+    switch (ratio) {
+      case '100%':
+        return {
+          columnCount: 1,
+          columns: [{ id: generateUniqueId('column'), blocks: [] }]
+        };
+      case '50-50':
+        return {
+          columnCount: 2,
+          columns: [
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] }
+          ]
+        };
+      case '33-67':
+        return {
+          columnCount: 2,
+          columns: [
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] }
+          ]
+        };
+      case '67-33':
+        return {
+          columnCount: 2,
+          columns: [
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] }
+          ]
+        };
+      case '33-33-33':
+        return {
+          columnCount: 3,
+          columns: [
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] }
+          ]
+        };
+      case '25-25-25-25':
+        return {
+          columnCount: 4,
+          columns: [
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] }
+          ]
+        };
+      default:
+        return {
+          columnCount: 2,
+          columns: [
+            { id: generateUniqueId('column'), blocks: [] },
+            { id: generateUniqueId('column'), blocks: [] }
+          ]
+        };
+    }
+  };
+
+  const config = getColumnsConfig(ratio);
+
+  return {
+    ...baseBlock,
+    type: 'columns',
+    content: {
+      columnCount: config.columnCount,
+      columnRatio: ratio,
+      columns: config.columns,
+      gap: '16px',
+    },
+  };
 };
 
 export const duplicateBlock = (block: EmailBlock): EmailBlock => {

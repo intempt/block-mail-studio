@@ -17,6 +17,7 @@ import { MJMLHtmlBlockRenderer } from './blocks/MJMLHtmlBlockRenderer';
 import { MJMLTableBlockRenderer } from './blocks/MJMLTableBlockRenderer';
 import { MJMLSocialBlockRenderer } from './blocks/MJMLSocialBlockRenderer';
 import { ContentBlockRenderer } from './blocks/ContentBlockRenderer';
+import { ColumnsBlockRenderer } from './blocks/ColumnsBlockRenderer';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -26,6 +27,17 @@ interface BlockRendererProps {
   onStarBlock?: (block: EmailBlock) => void;
   onUnstarBlock?: (blockId: string) => void;
   onSnippetRefresh?: () => void;
+  onColumnDrop?: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
+  selectedBlockId?: string | null;
+  editingBlockId?: string | null;
+  onBlockSelect?: (blockId: string | null) => void;
+  onBlockEditStart?: (blockId: string) => void;
+  onBlockEditEnd?: () => void;
+  onBlockDelete?: (blockId: string) => void;
+  onBlockDuplicate?: (blockId: string) => void;
+  onSaveAsSnippet?: (blockId: string) => void;
+  onBlockHover?: (blockId: string) => void;
+  onBlockLeave?: (blockId: string) => void;
 }
 
 export const BlockRenderer: React.FC<BlockRendererProps> = ({ 
@@ -35,7 +47,18 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
   onBlockAdd,
   onStarBlock,
   onUnstarBlock,
-  onSnippetRefresh
+  onSnippetRefresh,
+  onColumnDrop,
+  selectedBlockId,
+  editingBlockId,
+  onBlockSelect,
+  onBlockEditStart,
+  onBlockEditEnd,
+  onBlockDelete,
+  onBlockDuplicate,
+  onSaveAsSnippet,
+  onBlockHover,
+  onBlockLeave
 }) => {
   const getBlockComponent = () => {
     switch (block.type) {
@@ -57,6 +80,26 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
         return <MJMLHtmlBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'table':
         return <MJMLTableBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'columns':
+        return (
+          <ColumnsBlockRenderer
+            block={block as any}
+            isSelected={isSelected}
+            onUpdate={onUpdate}
+            onColumnDrop={onColumnDrop!}
+            selectedBlockId={selectedBlockId}
+            editingBlockId={editingBlockId}
+            onBlockSelect={onBlockSelect}
+            onBlockEditStart={onBlockEditStart}
+            onBlockEditEnd={onBlockEditEnd}
+            onBlockDelete={onBlockDelete}
+            onBlockDuplicate={onBlockDuplicate}
+            onSaveAsSnippet={onSaveAsSnippet}
+            onUnstarBlock={onUnstarBlock}
+            onBlockHover={onBlockHover}
+            onBlockLeave={onBlockLeave}
+          />
+        );
       case 'content':
       case 'productfeed':
         return <ContentBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
