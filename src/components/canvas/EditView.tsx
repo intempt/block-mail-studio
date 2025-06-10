@@ -54,6 +54,10 @@ export const EditView: React.FC<EditViewProps> = ({
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
+  
+  // New centralized hover state management
+  const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
+  const [controlsLocked, setControlsLocked] = useState<string | null>(null);
 
   const handleBlockClick = useCallback((blockId: string) => {
     setSelectedBlockId(blockId);
@@ -63,6 +67,36 @@ export const EditView: React.FC<EditViewProps> = ({
   const handleBlockDoubleClick = useCallback((blockId: string, blockType: string) => {
     setEditingBlockId(blockId);
   }, [setEditingBlockId]);
+
+  // New hover state handlers
+  const handleBlockHover = useCallback((blockId: string) => {
+    // Only allow hover changes if controls are not locked or locked to the same block
+    if (!controlsLocked || controlsLocked === blockId) {
+      setHoveredBlockId(blockId);
+    }
+  }, [controlsLocked]);
+
+  const handleBlockLeave = useCallback((blockId: string) => {
+    // Only clear hover if controls are not locked to this block
+    if (!controlsLocked || controlsLocked !== blockId) {
+      setHoveredBlockId(null);
+    }
+  }, [controlsLocked]);
+
+  const handleControlsEnter = useCallback((blockId: string) => {
+    setControlsLocked(blockId);
+    setHoveredBlockId(blockId);
+  }, []);
+
+  const handleControlsLeave = useCallback((blockId: string) => {
+    setControlsLocked(null);
+    // Small delay to allow smooth transition
+    setTimeout(() => {
+      if (controlsLocked === null) {
+        setHoveredBlockId(null);
+      }
+    }, 100);
+  }, [controlsLocked]);
 
   const handleBlockDelete = useCallback((blockId: string) => {
     // Handle deletion of blocks inside columns
@@ -87,7 +121,15 @@ export const EditView: React.FC<EditViewProps> = ({
       setSelectedBlockId(null);
       onBlockSelect(null);
     }
-  }, [selectedBlockId, onBlockSelect, setBlocks, setSelectedBlockId]);
+    
+    // Clear hover state if deleted block was hovered
+    if (hoveredBlockId === blockId) {
+      setHoveredBlockId(null);
+    }
+    if (controlsLocked === blockId) {
+      setControlsLocked(null);
+    }
+  }, [selectedBlockId, onBlockSelect, setBlocks, setSelectedBlockId, hoveredBlockId, controlsLocked]);
 
   const handleBlockDuplicate = useCallback((blockId: string) => {
     // First try to find block at top level
@@ -420,6 +462,8 @@ export const EditView: React.FC<EditViewProps> = ({
             isDraggingOver={isDraggingOver}
             dragOverIndex={dragOverIndex}
             currentDragType={currentDragType}
+            hoveredBlockId={hoveredBlockId}
+            controlsLocked={controlsLocked}
             onBlockClick={handleBlockClick}
             onBlockDoubleClick={handleBlockDoubleClick}
             onBlockDragStart={dragDropHandler.handleBlockDragStart}
@@ -435,6 +479,10 @@ export const EditView: React.FC<EditViewProps> = ({
             onBlockEditEnd={handleBlockEditEnd}
             onBlockUpdate={handleBlockUpdate}
             onAddVariable={handleAddVariable}
+            onBlockHover={handleBlockHover}
+            onBlockLeave={handleBlockLeave}
+            onControlsEnter={handleControlsEnter}
+            onControlsLeave={handleControlsLeave}
           />
         </div>
       </div>

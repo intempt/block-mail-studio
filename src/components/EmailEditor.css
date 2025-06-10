@@ -32,15 +32,9 @@
   isolation: isolate;
 }
 
-.email-block .block-controls {
-  position: absolute;
-  z-index: 30;
-  isolation: isolate;
-}
-
 /* Ensure proper stacking context for block controls */
-.email-block:hover .block-controls {
-  z-index: 40;
+.email-block:hover {
+  z-index: 10;
 }
 
 /* Prevent hover bleed between adjacent blocks */
@@ -60,4 +54,28 @@
   z-index: 20;
   transform: scale(1.05);
   transition: transform 0.1s ease;
+}
+
+/* Block hover improvements */
+.email-block {
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+}
+
+.email-block:hover {
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+/* Control container improvements */
+.block-controls-container {
+  position: absolute;
+  left: -56px;
+  top: 8px;
+  z-index: 50;
+  isolation: isolate;
+}
+
+/* Ensure controls don't interfere with each other */
+.block-controls-container:hover {
+  z-index: 60;
 }

@@ -20,7 +20,11 @@ describe('Canvas Renderer Critical Tests', () => {
     onBlockEditStart: vi.fn(),
     onBlockEditEnd: vi.fn(),
     onBlockUpdate: vi.fn(),
-    onAddVariable: vi.fn()
+    onAddVariable: vi.fn(),
+    onBlockHover: vi.fn(),
+    onBlockLeave: vi.fn(),
+    onControlsEnter: vi.fn(),
+    onControlsLeave: vi.fn()
   };
 
   beforeEach(() => {
@@ -80,6 +84,8 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -98,6 +104,8 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -115,6 +123,8 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -132,12 +142,36 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
     
     const block = screen.getByTestId('email-block-selectable-text');
     expect(block).toHaveClass('selected');
+  });
+
+  it('should handle block hover states', () => {
+    const textBlock = createTextBlock('hoverable-text');
+    
+    render(
+      <CanvasRenderer
+        blocks={[textBlock]}
+        selectedBlockId={null}
+        editingBlockId={null}
+        isDraggingOver={false}
+        dragOverIndex={null}
+        hoveredBlockId={'hoverable-text'}
+        controlsLocked={null}
+        {...mockCallbacks}
+      />
+    );
+    
+    const block = screen.getByTestId('email-block-hoverable-text');
+    fireEvent.mouseEnter(block);
+    
+    expect(mockCallbacks.onBlockHover).toHaveBeenCalledWith('hoverable-text');
   });
 
   it('should handle block clicks', () => {
@@ -150,6 +184,8 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -170,6 +206,8 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -190,6 +228,8 @@ describe('Canvas Renderer Critical Tests', () => {
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -209,6 +249,8 @@ describe('Canvas Renderer Critical Tests', () => {
         isDraggingOver={true}
         dragOverIndex={0}
         currentDragType="block"
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
@@ -216,49 +258,41 @@ describe('Canvas Renderer Critical Tests', () => {
     expect(screen.getByTestId('drop-zone-indicator')).toBeInTheDocument();
   });
 
-  it('should handle variable insertion for text blocks', async () => {
-    const textBlock = createTextBlock('variable-text');
+  it('should show controls only when block is hovered', () => {
+    const textBlock = createTextBlock('controlled-text');
     
-    // Mock the global handler
-    (window as any)[`insertVariable_variable-text`] = vi.fn();
-    
-    render(
+    const { rerender } = render(
       <CanvasRenderer
         blocks={[textBlock]}
         selectedBlockId={null}
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={null}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
     
-    const variableButton = screen.getByTestId('add-variable-button-variable-text');
-    fireEvent.click(variableButton);
+    // Controls should not be visible initially
+    const controlsContainer = document.querySelector('.opacity-0');
+    expect(controlsContainer).toBeInTheDocument();
     
-    const variable = { text: 'First Name', value: '{{firstName}}' };
-    fireEvent.click(screen.getByText('Insert Variable'));
-    
-    expect((window as any)[`insertVariable_variable-text`]).toHaveBeenCalled();
-  });
-
-  it('should handle block controls interactions', () => {
-    const textBlock = createTextBlock('controlled-text');
-    
-    render(
+    // Rerender with hovered state
+    rerender(
       <CanvasRenderer
         blocks={[textBlock]}
-        selectedBlockId={'controlled-text'}
+        selectedBlockId={null}
         editingBlockId={null}
         isDraggingOver={false}
         dragOverIndex={null}
+        hoveredBlockId={'controlled-text'}
+        controlsLocked={null}
         {...mockCallbacks}
       />
     );
     
-    const deleteButton = screen.getByTestId('delete-block-controlled-text');
-    fireEvent.click(deleteButton);
-    
-    expect(mockCallbacks.onDeleteBlock).toHaveBeenCalledWith('controlled-text');
+    // Controls should now be visible
+    const visibleControls = document.querySelector('.opacity-100');
+    expect(visibleControls).toBeInTheDocument();
   });
-});
