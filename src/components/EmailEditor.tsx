@@ -550,7 +550,7 @@ export default function EmailEditor({
         onImportBlocks={handleImportBlocks}
         blocks={emailBlocks}
         viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
+        onViewModeChange={handleViewModeChange}
       />
 
       {/* Snippet Ribbon - Horizontal toolbar below main ribbon, only in edit mode */}
