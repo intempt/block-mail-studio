@@ -32,18 +32,18 @@ interface SnippetRibbonProps {
 
 const getBlockIcon = (blockType: string) => {
   const iconMap = {
-    text: <Type className="w-5 h-5" />,
-    image: <Image className="w-5 h-5" />,
-    button: <MousePointer className="w-5 h-5" />,
-    spacer: <MoveVertical className="w-5 h-5" />,
-    divider: <Minus className="w-5 h-5" />,
-    video: <Video className="w-5 h-5" />,
-    social: <Share2 className="w-5 h-5" />,
-    html: <FileCode className="w-5 h-5" />,
-    table: <Table className="w-5 h-5" />,
-    columns: <Table className="w-5 h-5" />
+    text: <Type className="w-4 h-4" />,
+    image: <Image className="w-4 h-4" />,
+    button: <MousePointer className="w-4 h-4" />,
+    spacer: <MoveVertical className="w-4 h-4" />,
+    divider: <Minus className="w-4 h-4" />,
+    video: <Video className="w-4 h-4" />,
+    social: <Share2 className="w-4 h-4" />,
+    html: <FileCode className="w-4 h-4" />,
+    table: <Table className="w-4 h-4" />,
+    columns: <Table className="w-4 h-4" />
   };
-  return iconMap[blockType] || <Type className="w-5 h-5" />;
+  return iconMap[blockType] || <Type className="w-4 h-4" />;
 };
 
 export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
@@ -120,52 +120,55 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
   }
 
   return (
-    <div className="border-t border-gray-200 bg-white shadow-sm">
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm">
       {/* Ribbon Header */}
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-2 bg-gray-50 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
           <span className="text-sm font-medium text-gray-700">My Snippets</span>
-          <span className="text-xs text-gray-500">({snippets.length})</span>
+          <span className="text-xs text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+            {snippets.length}
+          </span>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-6 w-6 p-0"
+          className="h-7 w-7 p-0 hover:bg-gray-200"
+          title={isCollapsed ? 'Show snippets' : 'Hide snippets'}
         >
-          {isCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          {isCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
         </Button>
       </div>
 
-      {/* Snippet Cards */}
+      {/* Snippet Cards - Horizontal Layout */}
       {!isCollapsed && (
-        <div className="p-3">
+        <div className="px-4 py-3">
           <ScrollArea className="w-full">
-            <div className="flex gap-2 pb-2">
+            <div className="flex gap-3 pb-2">
               {snippets.map((snippet) => (
                 <Card 
                   key={snippet.id}
-                  className="flex-shrink-0 w-24 h-20 p-2 cursor-grab hover:shadow-lg transition-all duration-200 group bg-gradient-to-br from-white to-gray-50 relative hover:scale-105"
+                  className="flex-shrink-0 w-28 h-20 p-3 cursor-grab hover:shadow-md transition-all duration-200 group bg-gradient-to-br from-white to-gray-50 relative hover:scale-105 border border-gray-200"
                   draggable
                   onDragStart={(e) => handleDragStart(e, snippet)}
                   onClick={() => handleSnippetUse(snippet)}
-                  title={snippet.blockType}
+                  title={`${snippet.blockType} block - ${snippet.name}`}
                 >
                   <div className="h-full flex flex-col items-center justify-center text-center">
                     {/* Centered Icon */}
-                    <div className="text-purple-600 mb-1">
+                    <div className="text-purple-600 mb-1.5 flex-shrink-0">
                       {getBlockIcon(snippet.blockType)}
                     </div>
                     
                     {/* Snippet Name */}
-                    <div className="flex-1 flex items-center justify-center w-full">
+                    <div className="flex-1 flex items-center justify-center w-full min-h-0">
                       {editingId === snippet.id ? (
                         <div className="w-full">
                           <Input
                             value={editingName}
                             onChange={(e) => setEditingName(e.target.value)}
-                            className="h-4 text-xs p-1 border-blue-300 focus:border-blue-500 text-center"
+                            className="h-5 text-xs p-1 border-blue-300 focus:border-blue-500 text-center"
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') handleSaveName();
                               if (e.key === 'Escape') handleCancelEdit();
@@ -181,9 +184,9 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                                 e.stopPropagation();
                                 handleSaveName();
                               }}
-                              className="h-3 w-3 p-0 text-green-600 hover:bg-green-50"
+                              className="h-4 w-4 p-0 text-green-600 hover:bg-green-50"
                             >
-                              <Check className="w-2 h-2" />
+                              <Check className="w-2.5 h-2.5" />
                             </Button>
                             <Button
                               variant="ghost"
@@ -192,14 +195,14 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                                 e.stopPropagation();
                                 handleCancelEdit();
                               }}
-                              className="h-3 w-3 p-0 text-red-600 hover:bg-red-50"
+                              className="h-4 w-4 p-0 text-red-600 hover:bg-red-50"
                             >
-                              <X className="w-2 h-2" />
+                              <X className="w-2.5 h-2.5" />
                             </Button>
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full">
+                        <div className="w-full overflow-hidden">
                           <div className="text-xs font-medium text-gray-800 truncate leading-tight">
                             {snippet.name}
                           </div>
@@ -214,19 +217,19 @@ export const SnippetRibbon: React.FC<SnippetRibbonProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={(e) => handleEditName(snippet, e)}
-                      className="h-4 w-4 p-0 text-gray-400 hover:text-blue-500 hover:bg-blue-50 bg-white/90 rounded shadow-sm"
+                      className="h-5 w-5 p-0 text-gray-400 hover:text-blue-500 hover:bg-blue-50 bg-white/90 rounded shadow-sm"
                       title="Edit name"
                     >
-                      <Edit2 className="w-2.5 h-2.5" />
+                      <Edit2 className="w-3 h-3" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={(e) => handleDeleteSnippet(snippet.id, e)}
-                      className="h-4 w-4 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 bg-white/90 rounded shadow-sm"
+                      className="h-5 w-5 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 bg-white/90 rounded shadow-sm"
                       title="Delete snippet"
                     >
-                      <Trash2 className="w-2.5 h-2.5" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </Card>

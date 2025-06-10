@@ -550,8 +550,16 @@ export default function EmailEditor({
         onImportBlocks={handleImportBlocks}
         blocks={emailBlocks}
         viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
+        onViewModeChange={onViewModeChange}
       />
+
+      {/* Snippet Ribbon - Horizontal toolbar below main ribbon, only in edit mode */}
+      {viewMode === 'edit' && (
+        <SnippetRibbon
+          refreshTrigger={snippetRefreshTrigger}
+          onSnippetSelect={handleSnippetAdd}
+        />
+      )}
 
       {/* Main Content Area - 3 Column Layout */}
       <div className="flex-1 flex overflow-hidden">
@@ -572,14 +580,6 @@ export default function EmailEditor({
               previewMode={previewMode}
             />
           </CollapsiblePanel>
-        )}
-
-        {/* Snippet Ribbon - Only show in edit mode */}
-        {viewMode === 'edit' && (
-          <SnippetRibbon
-            refreshTrigger={snippetRefreshTrigger}
-            onSnippetSelect={handleSnippetAdd}
-          />
         )}
 
         {/* Center - Canvas Area */}
