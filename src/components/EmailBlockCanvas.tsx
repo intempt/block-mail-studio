@@ -5,6 +5,8 @@ import { EmailSnippet } from '@/types/snippets';
 import { EditView } from './canvas/EditView';
 import { PreviewView } from './canvas/PreviewView';
 import { useEmailHTMLGenerator } from '@/hooks/useEmailHTMLGenerator';
+import { createBlock } from '@/utils/enhancedBlockFactory';
+import { createDefaultBlockStyling } from '@/utils/blockUtils';
 
 interface VariableOption {
   text: string;
@@ -53,6 +55,16 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
   const { currentEmailHTML } = useEmailHTMLGenerator(blocks, onContentChange);
+
+  // Helper functions for creating default content and styles
+  const getDefaultContent = useCallback((blockType: string) => {
+    const block = createBlock(blockType);
+    return block.content;
+  }, []);
+
+  const getDefaultStyles = useCallback((blockType: string) => {
+    return createDefaultBlockStyling(blockType);
+  }, []);
 
   // Emit blocks changes whenever blocks state changes
   useEffect(() => {
