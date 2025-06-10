@@ -4,7 +4,6 @@ import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
-import { BlockControls } from './BlockControls';
 import { DropZoneIndicator } from '../DropZoneIndicator';
 import { ColumnsBlockRenderer } from '../blocks/ColumnsBlockRenderer';
 
@@ -20,8 +19,6 @@ interface CanvasRendererProps {
   isDraggingOver: boolean;
   dragOverIndex: number | null;
   currentDragType?: 'block' | 'layout' | 'reorder' | null;
-  hoveredBlockId: string | null;
-  controlsLocked: string | null;
   onBlockClick: (blockId: string) => void;
   onBlockDoubleClick: (blockId: string, blockType: string) => void;
   onBlockDragStart: (e: React.DragEvent, blockId: string) => void;
@@ -39,8 +36,6 @@ interface CanvasRendererProps {
   onAddVariable?: (blockId: string, variable: VariableOption) => void;
   onBlockHover: (blockId: string) => void;
   onBlockLeave: (blockId: string) => void;
-  onControlsEnter: (blockId: string) => void;
-  onControlsLeave: (blockId: string) => void;
 }
 
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
@@ -50,8 +45,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   isDraggingOver,
   dragOverIndex,
   currentDragType = null,
-  hoveredBlockId,
-  controlsLocked,
   onBlockClick,
   onBlockDoubleClick,
   onBlockDragStart,
@@ -68,9 +61,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onBlockUpdate,
   onAddVariable,
   onBlockHover,
-  onBlockLeave,
-  onControlsEnter,
-  onControlsLeave
+  onBlockLeave
 }) => {
   // Simplified variable handling
   const handleAddVariable = (blockId: string, variable: any) => {
@@ -103,7 +94,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   const renderBlock = (block: EmailBlock, index: number) => {
     const isSelected = selectedBlockId === block.id;
     const isEditing = editingBlockId === block.id;
-    const isHovered = hoveredBlockId === block.id;
 
     // Handle columns blocks with the new unified renderer
     if (block.type === 'columns') {
@@ -111,14 +101,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return (
         <div
           key={block.id}
-          className={`email-block relative mb-8 transition-all duration-200 ${
+          className={`email-block relative mb-8 transition-all duration-200 rounded-lg ${
             isSelected ? 'selected ring-2 ring-purple-400 ring-opacity-50' : ''
-          } ${isHovered ? 'shadow-lg' : 'shadow-sm'}`}
+          }`}
           style={{
             isolation: 'isolate',
             position: 'relative',
-            zIndex: isSelected ? 10 : isHovered ? 5 : 1,
-            paddingLeft: '60px', // More space for controls
+            zIndex: isSelected ? 10 : 1,
             marginBottom: '32px',
           }}
           draggable
@@ -132,19 +121,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           data-testid={`email-block-${block.id}`}
           data-block-type="columns"
         >
-          <BlockControls
-            blockId={block.id}
-            isVisible={isHovered}
-            onDelete={onDeleteBlock}
-            onDuplicate={onDuplicateBlock}
-            onDragStart={onBlockDragStart}
-            onSaveAsSnippet={onSaveAsSnippet}
-            isStarred={block.isStarred}
-            onUnstar={onUnstarBlock}
-            onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
-            onControlsEnter={onControlsEnter}
-            onControlsLeave={onControlsLeave}
-          />
           <ColumnsBlockRenderer
             block={columnsBlock}
             isSelected={isSelected}
@@ -159,6 +135,8 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             onBlockDuplicate={onDuplicateBlock}
             onSaveAsSnippet={onSaveAsSnippet}
             onUnstarBlock={onUnstarBlock}
+            onBlockHover={onBlockHover}
+            onBlockLeave={onBlockLeave}
           />
         </div>
       );
@@ -169,14 +147,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return (
         <div 
           key={block.id} 
-          className={`relative mb-8 transition-all duration-200 ${
-            isHovered ? 'shadow-lg' : 'shadow-sm'
+          className={`relative mb-8 transition-all duration-200 rounded-lg ${
+            isSelected ? 'selected ring-2 ring-blue-400 ring-opacity-50' : ''
           }`}
           style={{
             isolation: 'isolate',
             position: 'relative',
-            zIndex: isSelected ? 10 : isHovered ? 5 : 1,
-            paddingLeft: '60px', // More space for controls
+            zIndex: isSelected ? 10 : 1,
             marginBottom: '32px',
           }}
           onMouseEnter={() => handleBlockMouseEnter(block.id)}
@@ -184,19 +161,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           data-testid={`email-block-${block.id}`}
           data-block-type="text"
         >
-          <BlockControls
-            blockId={block.id}
-            isVisible={isHovered}
-            onDelete={onDeleteBlock}
-            onDuplicate={onDuplicateBlock}
-            onDragStart={onBlockDragStart}
-            onSaveAsSnippet={onSaveAsSnippet}
-            isStarred={block.isStarred}
-            onUnstar={onUnstarBlock}
-            onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
-            onControlsEnter={onControlsEnter}
-            onControlsLeave={onControlsLeave}
-          />
           <EnhancedTextBlockRenderer
             block={block as any}
             editor={null}
@@ -215,14 +179,13 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     return (
       <div
         key={block.id}
-        className={`email-block relative mb-8 transition-all duration-200 ${
+        className={`email-block relative mb-8 transition-all duration-200 rounded-lg ${
           isSelected ? 'selected ring-2 ring-blue-400 ring-opacity-50' : ''
-        } ${isHovered ? 'shadow-lg' : 'shadow-sm'} rounded-lg`}
+        }`}
         style={{
           isolation: 'isolate',
           position: 'relative',
-          zIndex: isSelected ? 10 : isHovered ? 5 : 1,
-          paddingLeft: '60px', // More space for controls
+          zIndex: isSelected ? 10 : 1,
           marginBottom: '32px',
         }}
         draggable
@@ -236,19 +199,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
         data-testid={`email-block-${block.id}`}
         data-block-type={block.type}
       >
-        <BlockControls
-          blockId={block.id}
-          isVisible={isHovered}
-          onDelete={onDeleteBlock}
-          onDuplicate={onDuplicateBlock}
-          onDragStart={onBlockDragStart}
-          onSaveAsSnippet={onSaveAsSnippet}
-          isStarred={block.isStarred}
-          onUnstar={onUnstarBlock}
-          onAddVariable={(blockId, variable) => handleAddVariable(blockId, variable)}
-          onControlsEnter={onControlsEnter}
-          onControlsLeave={onControlsLeave}
-        />
         <BlockRenderer 
           block={block}
           isSelected={isSelected}

@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
-import { BlockControls } from '../canvas/BlockControls';
 
 interface ColumnsBlockRendererProps {
   block: ColumnsBlock;
@@ -19,6 +17,8 @@ interface ColumnsBlockRendererProps {
   onBlockDuplicate?: (blockId: string) => void;
   onSaveAsSnippet?: (blockId: string) => void;
   onUnstarBlock?: (blockId: string) => void;
+  onBlockHover?: (blockId: string) => void;
+  onBlockLeave?: (blockId: string) => void;
 }
 
 export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({ 
@@ -34,12 +34,10 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   onBlockDelete,
   onBlockDuplicate,
   onSaveAsSnippet,
-  onUnstarBlock
+  onUnstarBlock,
+  onBlockHover,
+  onBlockLeave
 }) => {
-  // Add hover state management for blocks within columns
-  const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
-  const [controlsLocked, setControlsLocked] = useState<string | null>(null);
-
   const styling = block.styling.desktop;
   
   const getColumnWidths = () => {
@@ -169,33 +167,6 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     onBlockDuplicate?.(blockId);
   };
 
-  // Hover state handlers for blocks within columns
-  const handleBlockHover = (blockId: string) => {
-    if (!controlsLocked || controlsLocked === blockId) {
-      setHoveredBlockId(blockId);
-    }
-  };
-
-  const handleBlockLeave = (blockId: string) => {
-    if (!controlsLocked || controlsLocked !== blockId) {
-      setHoveredBlockId(null);
-    }
-  };
-
-  const handleControlsEnter = (blockId: string) => {
-    setControlsLocked(blockId);
-    setHoveredBlockId(blockId);
-  };
-
-  const handleControlsLeave = (blockId: string) => {
-    setControlsLocked(null);
-    setTimeout(() => {
-      if (controlsLocked === null) {
-        setHoveredBlockId(null);
-      }
-    }, 100);
-  };
-
   // Ensure blocks have all required properties for EmailBlock interface
   const ensureCompleteBlock = (innerBlock: EmailBlock): EmailBlock => {
     const defaultStyling = {
@@ -224,7 +195,6 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
     const completeBlock = ensureCompleteBlock(innerBlock);
     const isBlockSelected = selectedBlockId === innerBlock.id;
     const isBlockEditing = editingBlockId === innerBlock.id;
-    const isBlockHovered = hoveredBlockId === innerBlock.id;
 
     return (
       <div 
@@ -233,28 +203,14 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
         style={{
           isolation: 'isolate',
           position: 'relative',
-          zIndex: isBlockSelected ? 10 : isBlockHovered ? 5 : 1,
-          paddingLeft: '60px', // Space for controls
+          zIndex: isBlockSelected ? 10 : 1,
         }}
-        onMouseEnter={() => handleBlockHover(innerBlock.id)}
-        onMouseLeave={() => handleBlockLeave(innerBlock.id)}
+        onMouseEnter={() => onBlockHover?.(innerBlock.id)}
+        onMouseLeave={() => onBlockLeave?.(innerBlock.id)}
+        data-testid={`email-block-${innerBlock.id}`}
+        data-block-type={innerBlock.type}
       >
-        {/* Block Controls */}
-        <BlockControls
-          blockId={innerBlock.id}
-          isVisible={isBlockHovered}
-          onDelete={handleBlockDelete}
-          onDuplicate={handleBlockDuplicate}
-          onDragStart={() => {}} // Disable drag for now within columns
-          onSaveAsSnippet={onSaveAsSnippet || (() => {})}
-          isStarred={innerBlock.isStarred}
-          onUnstar={onUnstarBlock}
-          onAddVariable={() => {}} // Handle variable insertion
-          onControlsEnter={handleControlsEnter}
-          onControlsLeave={handleControlsLeave}
-        />
-
-        {/* Block Content */}
+        {/* Block Content - No more inline controls */}
         <div
           className={`border border-gray-100 rounded p-2 transition-colors cursor-pointer ${
             isBlockSelected ? 'border-blue-300 bg-blue-50' : 'hover:border-gray-300'
