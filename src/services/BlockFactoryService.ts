@@ -17,28 +17,13 @@ export class BlockFactoryService {
 
   createFromDragData(dragData: DragData): EmailBlock | null {
     if (!dragData || !dragData.blockType) {
-      console.warn('BlockFactoryService: No blockType in drag data:', dragData);
-      return null;
-    }
-
-    // Validate block type
-    const validBlockTypes = [
-      'text', 'button', 'image', 'spacer', 'divider', 'html', 'video', 
-      'social', 'table', 'columns', 'code', 'menu', 'split', 'product', 
-      'header-link-bar', 'drop-shadow', 'review-quote', 'content', 'productfeed'
-    ];
-
-    if (!validBlockTypes.includes(dragData.blockType)) {
-      console.error('BlockFactoryService: Invalid block type:', dragData.blockType);
       return null;
     }
 
     try {
-      console.log('BlockFactoryService: Creating block of type:', dragData.blockType);
-      
-      const baseBlock: EmailBlock = {
+      const baseBlock = {
         id: generateUniqueId('block'),
-        type: dragData.blockType as EmailBlock['type'], // Proper type casting
+        type: dragData.blockType,
         content: this.getCompleteDefaultContent(dragData.blockType),
         styling: this.getCompleteDefaultStyles(dragData.blockType),
         position: { x: 0, y: 0 },
@@ -52,7 +37,6 @@ export class BlockFactoryService {
 
       // Handle layout-specific data for columns
       if (dragData.layoutData && dragData.blockType === 'columns') {
-        console.log('BlockFactoryService: Adding layout data for columns:', dragData.layoutData);
         const columnCount = dragData.layoutData.columnCount || 2;
         const columnRatio = dragData.layoutData.columnRatio || '50-50';
         
@@ -69,10 +53,9 @@ export class BlockFactoryService {
         };
       }
 
-      console.log('BlockFactoryService: Successfully created block:', baseBlock.id, baseBlock.type);
       return baseBlock;
     } catch (error) {
-      console.error('BlockFactoryService: Error creating block from drag data:', error, dragData);
+      console.error('Error creating block from drag data:', error);
       return null;
     }
   }
