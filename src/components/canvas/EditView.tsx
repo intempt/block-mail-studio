@@ -56,10 +56,9 @@ export const EditView: React.FC<EditViewProps> = ({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   
-  // Simplified hover state - only track which block is hovered
+  // Enhanced hover state tracking
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
-  
-  // Canvas hover state for controls visibility
+  const [isHoveringAnyBlock, setIsHoveringAnyBlock] = useState(false);
   const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
   const [isHoveringControls, setIsHoveringControls] = useState(false);
 
@@ -72,32 +71,47 @@ export const EditView: React.FC<EditViewProps> = ({
     setEditingBlockId(blockId);
   }, [setEditingBlockId]);
 
-  // Simplified hover handlers - only update selectedBlockId when block actually changes
+  // Enhanced block hover handlers with proper state management
   const handleBlockHover = useCallback((blockId: string) => {
+    console.log('Block hover:', blockId);
     if (hoveredBlockId !== blockId) {
       setHoveredBlockId(blockId);
       setSelectedBlockId(blockId);
       onBlockSelect(blockId);
+      setIsHoveringAnyBlock(true);
     }
   }, [hoveredBlockId, setSelectedBlockId, onBlockSelect]);
 
   const handleBlockLeave = useCallback((blockId: string) => {
-    // Don't clear selectedBlockId when leaving blocks - keep it persistent
-    // Only clear hoveredBlockId for visual feedback
+    console.log('Block leave:', blockId);
     setHoveredBlockId(null);
+    setIsHoveringAnyBlock(false);
+    // Don't clear selectedBlockId immediately - let canvas leave handle it
   }, []);
 
-  // Canvas hover handlers
+  // Canvas hover handlers with improved logic
   const handleCanvasMouseEnter = useCallback(() => {
+    console.log('Canvas enter');
     setIsHoveringCanvas(true);
   }, []);
 
   const handleCanvasMouseLeave = useCallback(() => {
+    console.log('Canvas leave');
     setIsHoveringCanvas(false);
-  }, []);
+    
+    // Clear selection when leaving canvas entirely (unless hovering controls)
+    setTimeout(() => {
+      if (!isHoveringControls && !isHoveringAnyBlock) {
+        console.log('Clearing selection - left canvas and not hovering controls');
+        setSelectedBlockId(null);
+        onBlockSelect(null);
+      }
+    }, 100); // Small delay to allow for transitions
+  }, [isHoveringControls, isHoveringAnyBlock, setSelectedBlockId, onBlockSelect]);
 
   // Controls hover handler
   const handleControlsHoverChange = useCallback((isHovering: boolean) => {
+    console.log('Controls hover change:', isHovering);
     setIsHoveringControls(isHovering);
   }, []);
 
@@ -434,6 +448,17 @@ export const EditView: React.FC<EditViewProps> = ({
     }
   }, [onSubjectChange]);
 
+  // Debug logging for hover states
+  useEffect(() => {
+    console.log('Hover states:', {
+      selectedBlockId,
+      isHoveringAnyBlock,
+      isHoveringCanvas,
+      isHoveringControls,
+      shouldShowControls: selectedBlockId && (isHoveringAnyBlock || isHoveringControls)
+    });
+  }, [selectedBlockId, isHoveringAnyBlock, isHoveringCanvas, isHoveringControls]);
+
   return (
     <div className="relative">
       <div
@@ -482,7 +507,7 @@ export const EditView: React.FC<EditViewProps> = ({
             onBlockLeave={handleBlockLeave}
           />
 
-          {/* Standalone Block Controls */}
+          {/* Standalone Block Controls - Updated visibility logic */}
           <StandaloneBlockControls
             selectedBlockId={selectedBlockId}
             blocks={blocks}
@@ -492,7 +517,8 @@ export const EditView: React.FC<EditViewProps> = ({
             onSaveAsSnippet={handleSaveAsSnippet}
             onUnstar={handleUnstarBlock}
             onAddVariable={handleAddVariable}
-            isHoveringCanvas={isHoveringCanvas}
+            isHoveringAnyBlock={isHoveringAnyBlock}
+            isHoveringControls={isHoveringControls}
             onControlsHoverChange={handleControlsHoverChange}
           />
         </div>

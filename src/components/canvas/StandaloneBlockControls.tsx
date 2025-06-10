@@ -19,7 +19,8 @@ interface StandaloneBlockControlsProps {
   onSaveAsSnippet?: (blockId: string) => void;
   onUnstar?: (blockId: string) => void;
   onAddVariable?: (blockId: string, variable: VariableOption) => void;
-  isHoveringCanvas: boolean;
+  isHoveringAnyBlock: boolean;
+  isHoveringControls: boolean;
   onControlsHoverChange: (isHovering: boolean) => void;
 }
 
@@ -32,15 +33,22 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
   onSaveAsSnippet,
   onUnstar,
   onAddVariable,
-  isHoveringCanvas,
+  isHoveringAnyBlock,
+  isHoveringControls,
   onControlsHoverChange
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [isHoveringControls, setIsHoveringControls] = useState(false);
   const controlsRef = useRef<HTMLDivElement>(null);
 
-  // Determine if controls should be visible
-  const shouldShowControls = selectedBlockId && (isHoveringCanvas || isHoveringControls);
+  // Refined visibility logic - only show when hovering blocks or controls
+  const shouldShowControls = selectedBlockId && (isHoveringAnyBlock || isHoveringControls);
+
+  console.log('StandaloneBlockControls render:', {
+    selectedBlockId,
+    isHoveringAnyBlock,
+    isHoveringControls,
+    shouldShowControls
+  });
 
   // Find the selected block to get its starred state
   const selectedBlock = blocks.find(block => {
@@ -96,12 +104,12 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
 
   // Handle controls hover state
   const handleControlsMouseEnter = () => {
-    setIsHoveringControls(true);
+    console.log('Controls mouse enter');
     onControlsHoverChange(true);
   };
 
   const handleControlsMouseLeave = () => {
-    setIsHoveringControls(false);
+    console.log('Controls mouse leave');
     onControlsHoverChange(false);
   };
 
@@ -224,7 +232,7 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
             <TooltipContent>
               <p>Duplicate block</p>
             </TooltipContent>
-          </Tooltip>
+            </Tooltip>
           
           <Tooltip>
             <TooltipTrigger asChild>
