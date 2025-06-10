@@ -9,7 +9,7 @@ interface ColumnsBlockRendererProps {
   block: ColumnsBlock;
   isSelected: boolean;
   onUpdate: (block: ColumnsBlock) => void;
-  onBlockAdd?: (blockType: string, columnId: string) => void;
+  onColumnDrop: (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => void;
   selectedBlockId?: string | null;
   editingBlockId?: string | null;
   onBlockSelect?: (blockId: string | null) => void;
@@ -25,7 +25,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   block, 
   isSelected,
   onUpdate,
-  onBlockAdd,
+  onColumnDrop,
   selectedBlockId,
   editingBlockId,
   onBlockSelect,
@@ -73,18 +73,12 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
 
   const columnWidths = getColumnWidths();
 
-  const handleDrop = (e: React.DragEvent, columnId: string) => {
+  const handleDrop = (e: React.DragEvent, columnIndex: number) => {
     e.preventDefault();
     e.stopPropagation();
     
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.blockType && onBlockAdd) {
-        onBlockAdd(data.blockType, columnId);
-      }
-    } catch (error) {
-      console.error('Error handling drop in column:', error);
-    }
+    console.log('ColumnsBlockRenderer: Drop event in column', columnIndex, 'for layout', block.id);
+    onColumnDrop(e, block.id, columnIndex);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -275,7 +269,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
                   backgroundColor: isSelected ? '#f1f5f9' : '#f8fafc',
                   borderColor: column.blocks.length > 0 ? '#e2e8f0' : '#cbd5e1'
                 }}
-                onDrop={(e) => handleDrop(e, column.id)}
+                onDrop={(e) => handleDrop(e, index)}
                 onDragOver={handleDragOver}
               >
                 {column.blocks.length === 0 ? (

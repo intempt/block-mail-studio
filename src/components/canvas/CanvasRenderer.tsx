@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
@@ -114,6 +113,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
             block={columnsBlock}
             isSelected={isSelected}
             onUpdate={onBlockUpdate}
+            onColumnDrop={onColumnDrop}
             selectedBlockId={selectedBlockId}
             editingBlockId={editingBlockId}
             onBlockSelect={onBlockClick}
