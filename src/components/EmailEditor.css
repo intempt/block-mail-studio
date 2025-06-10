@@ -25,3 +25,39 @@
   outline: 2px solid #3B82F6;
   outline-offset: 2px;
 }
+
+/* Block controls positioning and hover improvements */
+.email-block {
+  position: relative;
+  isolation: isolate;
+}
+
+.email-block .block-controls {
+  position: absolute;
+  z-index: 30;
+  isolation: isolate;
+}
+
+/* Ensure proper stacking context for block controls */
+.email-block:hover .block-controls {
+  z-index: 40;
+}
+
+/* Prevent hover bleed between adjacent blocks */
+.email-block + .email-block {
+  margin-top: 2rem;
+  clear: both;
+}
+
+/* Improved control button interactions */
+.block-control-button {
+  position: relative;
+  z-index: 10;
+  isolation: isolate;
+}
+
+.block-control-button:hover {
+  z-index: 20;
+  transform: scale(1.05);
+  transition: transform 0.1s ease;
+}

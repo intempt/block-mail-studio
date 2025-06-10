@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trash2, Copy, GripVertical, Star } from 'lucide-react';
@@ -31,6 +31,9 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
   onUnstar,
   onAddVariable
 }) => {
+  const [isHovering, setIsHovering] = useState(false);
+  const [stickyMode, setStickyMode] = useState(false);
+
   const handleDragStart = (e: React.DragEvent) => {
     console.log('BlockControls: Drag start for block:', blockId);
     onDragStart(e, blockId);
@@ -38,6 +41,7 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
 
   const handleStarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (isStarred && onUnstar) {
       onUnstar(blockId);
     } else if (onSaveAsSnippet) {
@@ -51,17 +55,57 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
     }
   };
 
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!stickyMode) {
+      setIsHovering(false);
+    }
+  };
+
+  const handleControlInteraction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setStickyMode(true);
+    setTimeout(() => setStickyMode(false), 2000); // Auto-release sticky mode after 2 seconds
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDelete(blockId);
+  };
+
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onDuplicate(blockId);
+  };
+
   return (
     <TooltipProvider>
-      <div className="absolute -left-10 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col gap-1 z-10">
+      <div 
+        className="absolute -left-12 top-2 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col gap-1 z-30 bg-white/10 backdrop-blur-sm rounded-lg p-1"
+        style={{
+          isolation: 'isolate',
+          transform: 'translateZ(0)', // Create stacking context
+        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               size="sm"
               variant="ghost"
-              className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 cursor-grab hover:cursor-grabbing hover:bg-gray-50"
+              className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 cursor-grab hover:cursor-grabbing hover:bg-gray-50 relative z-10"
               draggable={true}
               onDragStart={handleDragStart}
+              onMouseDown={handleControlInteraction}
             >
               <GripVertical className="w-4 h-4 text-gray-600" />
             </Button>
@@ -74,7 +118,7 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
         {onAddVariable && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <div>
+              <div onMouseDown={handleControlInteraction}>
                 <VariableSelector onSelectVariable={handleVariableSelect} />
               </div>
             </TooltipTrigger>
@@ -90,12 +134,13 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className={`w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 transition-colors ${
+                className={`w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 transition-colors relative z-10 ${
                   isStarred 
                     ? 'text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50' 
                     : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-50'
                 }`}
                 onClick={handleStarClick}
+                onMouseDown={handleControlInteraction}
               >
                 <Star className={`w-4 h-4 ${isStarred ? 'fill-yellow-400' : ''}`} />
               </Button>
@@ -111,11 +156,9 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
             <Button
               size="sm"
               variant="ghost"
-              className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDuplicate(blockId);
-              }}
+              className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50 relative z-10"
+              onClick={handleDuplicate}
+              onMouseDown={handleControlInteraction}
             >
               <Copy className="w-4 h-4" />
             </Button>
@@ -130,11 +173,9 @@ export const BlockControls: React.FC<BlockControlsProps> = ({
             <Button
               size="sm"
               variant="ghost"
-              className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(blockId);
-              }}
+              className="w-8 h-8 p-0 bg-white shadow-lg border border-gray-200 text-red-600 hover:text-red-700 hover:bg-red-50 relative z-10"
+              onClick={handleDelete}
+              onMouseDown={handleControlInteraction}
             >
               <Trash2 className="w-4 h-4" />
             </Button>

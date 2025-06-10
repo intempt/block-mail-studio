@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
@@ -89,7 +90,14 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return (
         <div
           key={block.id}
-          className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-purple-400 ring-opacity-50' : ''}`}
+          className={`email-block group relative mb-6 ${isSelected ? 'selected ring-2 ring-purple-400 ring-opacity-50' : ''}`}
+          style={{
+            isolation: 'isolate',
+            position: 'relative',
+            zIndex: isSelected ? 10 : 1,
+            paddingLeft: '16px', // Add padding to prevent control overlap
+            marginBottom: '32px', // Increase spacing between blocks
+          }}
           draggable
           onDragStart={(e) => onBlockDragStart(e, block.id)}
           onDrop={(e) => onBlockDrop(e, index)}
@@ -133,7 +141,14 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
       return (
         <div 
           key={block.id} 
-          className="group relative"
+          className="group relative mb-6"
+          style={{
+            isolation: 'isolate',
+            position: 'relative',
+            zIndex: isSelected ? 10 : 1,
+            paddingLeft: '16px', // Add padding to prevent control overlap
+            marginBottom: '32px', // Increase spacing between blocks
+          }}
           data-testid={`email-block-${block.id}`}
           data-block-type="text"
         >
@@ -165,7 +180,14 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
     return (
       <div
         key={block.id}
-        className={`email-block group relative mb-4 ${isSelected ? 'selected ring-2 ring-blue-400 ring-opacity-50' : ''} hover:shadow-lg transition-all duration-200 rounded-lg`}
+        className={`email-block group relative mb-6 ${isSelected ? 'selected ring-2 ring-blue-400 ring-opacity-50' : ''} hover:shadow-lg transition-all duration-200 rounded-lg`}
+        style={{
+          isolation: 'isolate',
+          position: 'relative',
+          zIndex: isSelected ? 10 : 1,
+          paddingLeft: '16px', // Add padding to prevent control overlap
+          marginBottom: '32px', // Increase spacing between blocks
+        }}
         draggable
         onDragStart={(e) => onBlockDragStart(e, block.id)}
         onDrop={(e) => onBlockDrop(e, index)}
@@ -216,7 +238,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           )}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Top drop zone */}
           {isDraggingOver && dragOverIndex === 0 && currentDragType && (
             <DropZoneIndicator
