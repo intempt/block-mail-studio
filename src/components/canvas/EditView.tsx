@@ -62,7 +62,7 @@ export const EditView: React.FC<EditViewProps> = ({
   const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
   const [isHoveringControls, setIsHoveringControls] = useState(false);
 
-  // Debounce timeout refs
+  // Debounce timeout refs with increased delay
   const blockLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const canvasLeaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -87,7 +87,7 @@ export const EditView: React.FC<EditViewProps> = ({
     setEditingBlockId(blockId);
   }, [setEditingBlockId]);
 
-  // Enhanced block hover handlers with debouncing
+  // Enhanced block hover handlers with 500ms debouncing
   const handleBlockHover = useCallback((blockId: string) => {
     console.log('Block hover:', blockId);
     
@@ -109,7 +109,7 @@ export const EditView: React.FC<EditViewProps> = ({
     console.log('Block leave:', blockId);
     setHoveredBlockId(null);
     
-    // Debounce hiding with 200ms delay
+    // Debounce hiding with 500ms delay
     if (blockLeaveTimeoutRef.current) {
       clearTimeout(blockLeaveTimeoutRef.current);
     }
@@ -118,7 +118,7 @@ export const EditView: React.FC<EditViewProps> = ({
       console.log('Debounced block leave - hiding controls');
       setIsHoveringAnyBlock(false);
       blockLeaveTimeoutRef.current = null;
-    }, 200);
+    }, 500);
   }, []);
 
   // Canvas hover handlers with improved debounced logic
@@ -142,7 +142,7 @@ export const EditView: React.FC<EditViewProps> = ({
       clearTimeout(canvasLeaveTimeoutRef.current);
     }
     
-    // Debounced canvas leave with same 200ms delay
+    // Debounced canvas leave with 500ms delay
     canvasLeaveTimeoutRef.current = setTimeout(() => {
       if (!isHoveringControls && !isHoveringAnyBlock) {
         console.log('Debounced canvas leave - clearing selection');
@@ -150,7 +150,7 @@ export const EditView: React.FC<EditViewProps> = ({
         onBlockSelect(null);
       }
       canvasLeaveTimeoutRef.current = null;
-    }, 200);
+    }, 500);
   }, [isHoveringControls, isHoveringAnyBlock, setSelectedBlockId, onBlockSelect]);
 
   // Controls hover handler with immediate cancel of hide timeouts
@@ -179,7 +179,7 @@ export const EditView: React.FC<EditViewProps> = ({
             onBlockSelect(null);
           }
           blockLeaveTimeoutRef.current = null;
-        }, 200);
+        }, 500);
       }
     }
   }, [isHoveringAnyBlock, isHoveringCanvas, setSelectedBlockId, onBlockSelect]);
