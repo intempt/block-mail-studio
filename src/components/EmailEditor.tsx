@@ -233,6 +233,23 @@ export default function EmailEditor({
         return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
       case 'image':
         return { src: '', alt: '', alignment: 'center', width: '100%', isDynamic: false };
+      case 'productfeed':
+        return {
+          jsonData: [],
+          selectedFields: ['title', 'price', 'description', 'image_link'],
+          fieldMappings: {
+            title: { label: 'Product Name', type: 'text' },
+            price: { label: 'Price', type: 'currency' },
+            description: { label: 'Description', type: 'text' },
+            image_link: { label: 'Image', type: 'image' }
+          },
+          layout: 'grid' as 'table' | 'grid' | 'list',
+          columns: 3,
+          rows: 6,
+          itemsToShow: 6,
+          showHeaders: false,
+          alternateRowColors: true
+        };
       default:
         return {};
     }

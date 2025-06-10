@@ -58,6 +58,7 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
       case 'table':
         return <MJMLTableBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'content':
+      case 'productfeed':
         return <ContentBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       default:
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
