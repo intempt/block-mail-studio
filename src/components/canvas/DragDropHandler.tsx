@@ -1,9 +1,9 @@
-import React from 'react';
-import { createDragData, parseDragData, getDragTypeColor, getDragTypeMessage } from '@/utils/dragDropUtils';
+import { useState, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
-import { DirectSnippetService } from '@/services/directSnippetService';
 
-interface DragDropHandlerProps {
+import { generateUniqueId } from '@/utils/idGenerator';
+
+interface UseDragDropHandlerProps {
   blocks: EmailBlock[];
   setBlocks: React.Dispatch<React.SetStateAction<EmailBlock[]>>;
   getDefaultContent: (blockType: string) => any;
@@ -12,57 +12,8 @@ interface DragDropHandlerProps {
   setDragOverIndex: React.Dispatch<React.SetStateAction<number | null>>;
   isDraggingOver: boolean;
   setIsDraggingOver: React.Dispatch<React.SetStateAction<boolean>>;
-  setCurrentDragType?: React.Dispatch<React.SetStateAction<'block' | 'layout' | 'reorder' | null>>;
+  setCurrentDragType: React.Dispatch<React.SetStateAction<'block' | 'layout' | 'reorder' | null>>;
 }
-
-const createCompleteBlock = (blockType: string, getDefaultContent: (type: string) => any, getDefaultStyles: (type: string) => any): EmailBlock => {
-  const baseBlock = {
-    id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    type: blockType as any,
-    content: getDefaultContent(blockType),
-    styling: getDefaultStyles(blockType),
-    position: { x: 0, y: 0 },
-    displayOptions: {
-      showOnDesktop: true,
-      showOnTablet: true,
-      showOnMobile: true
-    }
-  };
-
-  // Ensure specific block types have complete content structures
-  if (blockType === 'video') {
-    baseBlock.content = {
-      videoUrl: '',
-      thumbnail: 'https://via.placeholder.com/400x225?text=Video+Thumbnail',
-      showPlayButton: true,
-      platform: 'youtube',
-      autoThumbnail: true,
-      ...baseBlock.content
-    };
-  } else if (blockType === 'table') {
-    baseBlock.content = {
-      rows: 2,
-      columns: 2,
-      cells: [
-        [
-          { type: 'text', content: 'Header 1' },
-          { type: 'text', content: 'Header 2' }
-        ],
-        [
-          { type: 'text', content: 'Cell 1' },
-          { type: 'text', content: 'Cell 2' }
-        ]
-      ],
-      headerRow: true,
-      borderStyle: 'solid',
-      borderColor: '#e0e0e0',
-      borderWidth: '1px',
-      ...baseBlock.content
-    };
-  }
-
-  return baseBlock;
-};
 
 export const useDragDropHandler = ({
   blocks,
@@ -74,241 +25,216 @@ export const useDragDropHandler = ({
   isDraggingOver,
   setIsDraggingOver,
   setCurrentDragType
-}: DragDropHandlerProps) => {
-  const handleCanvasDrop = (e: React.DragEvent) => {
-    e.preventDefault();
+}: UseDragDropHandlerProps) => {
+  const handleDragStart = useCallback((e: React.DragEvent, blockId: string) => {
     e.stopPropagation();
-    setIsDraggingOver(false);
-    setDragOverIndex(null);
-    setCurrentDragType?.(null);
+    const blockType = (e.target as HTMLElement).dataset.blockType;
+    setCurrentDragType(blockType === 'columns' ? 'layout' : 'block');
+    e.dataTransfer.setData('text/plain', blockId);
+    e.dataTransfer.effectAllowed = 'move';
+  }, [setCurrentDragType]);
 
-    try {
-      const data = parseDragData(e.dataTransfer.getData('application/json'));
-      if (!data) return;
+  const handleBlockDragStart = useCallback((e: React.DragEvent, blockId: string) => {
+    e.stopPropagation();
+    setCurrentDragType('reorder');
+    e.dataTransfer.setData('text/plain', blockId);
+    e.dataTransfer.effectAllowed = 'move';
+  }, [setCurrentDragType]);
+
+  const handleCanvasDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+    setDragOverIndex(null);
+  }, [setIsDraggingOver, setDragOverIndex]);
+
+  const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(true);
+
+    const target = e.target as HTMLElement;
+    const canvas = target.closest('.email-canvas');
+
+    if (canvas) {
+      const children = Array.from(canvas.querySelectorAll('[data-testid^="email-block-"]'));
       
-      console.log('DragDropHandler: Canvas drop data:', data);
-      
-      // Handle snippet drops
-      if (data.isSnippet && data.snippetId) {
-        console.log('DragDropHandler: Dropping snippet:', data.snippetId);
-        const allSnippets = DirectSnippetService.getAllSnippets();
-        const snippet = allSnippets.find(s => s.id === data.snippetId);
-        
-        if (snippet?.blockData) {
-          const newBlock: EmailBlock = {
-            ...snippet.blockData,
-            id: `block-${Date.now()}`, // Generate new unique ID
-          };
-          
-          const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
-          setBlocks(prev => {
-            const newBlocks = [...prev];
-            newBlocks.splice(insertIndex, 0, newBlock);
-            return newBlocks;
-          });
-          console.log('DragDropHandler: Snippet block added:', newBlock);
-        }
+      if (children.length === 0) {
+        setDragOverIndex(0);
         return;
       }
-      
-      if ((data.isLayout || data.blockType === 'columns') && data.layoutData) {
-        console.log('DragDropHandler: Creating layout block with data:', data.layoutData);
-        
-        const columnCount = data.layoutData.columnCount || 2;
-        const columnRatio = data.layoutData.columnRatio || '50-50';
-        const columnElements = data.layoutData.columnElements || [];
 
-        const newBlock: EmailBlock = {
-          id: `layout-${Date.now()}`,
-          type: 'columns',
-          content: {
-            columnCount: columnCount as 1 | 2 | 3 | 4,
-            columnRatio: columnRatio,
-            columns: columnElements.length > 0 ? columnElements : Array.from({ length: columnCount }, (_, i) => ({
-              id: `col-${i}-${Date.now()}`,
-              blocks: [],
-              width: `${100 / columnCount}%`
-            })),
-            gap: '16px'
-          },
-          styling: getDefaultStyles('columns'),
-          position: { x: 0, y: 0 },
-          displayOptions: {
-            showOnDesktop: true,
-            showOnTablet: true,
-            showOnMobile: true
-          }
-        };
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i] as HTMLElement;
+        const rect = child.getBoundingClientRect();
+        const mouseY = e.clientY;
         
-        const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
-        setBlocks(prev => {
-          const newBlocks = [...prev];
-          newBlocks.splice(insertIndex, 0, newBlock);
-          return newBlocks;
-        });
-        console.log('DragDropHandler: Layout block added:', newBlock);
-      } else if (data.blockType) {
-        console.log('DragDropHandler: Creating regular block:', data.blockType);
-        
-        const newBlock = createCompleteBlock(data.blockType, getDefaultContent, getDefaultStyles);
-        
-        const insertIndex = dragOverIndex !== null ? dragOverIndex : blocks.length;
-        setBlocks(prev => {
-          const newBlocks = [...prev];
-          newBlocks.splice(insertIndex, 0, newBlock);
-          return newBlocks;
-        });
-        console.log('DragDropHandler: Regular block added:', newBlock);
+        if (mouseY >= rect.top && mouseY <= rect.bottom) {
+          setDragOverIndex(i);
+          return;
+        } else if (mouseY < rect.top) {
+          setDragOverIndex(i);
+          return;
+        }
       }
-    } catch (error) {
-      console.error('DragDropHandler: Error handling drop:', error);
+      setDragOverIndex(children.length);
     }
-  };
+  }, [setDragOverIndex, setIsDraggingOver]);
 
-  const handleCanvasDragOver = (e: React.DragEvent) => {
+  const handleCanvasDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    setIsDraggingOver(true);
-    
-    // More reliable drag type detection using dataTransfer types
-    const types = Array.from(e.dataTransfer.types);
-    if (types.includes('application/json')) {
-      try {
-        const dragDataString = e.dataTransfer.getData('application/json');
-        if (dragDataString) {
-          const data = parseDragData(dragDataString);
-          if (data) {
-            if (data.isReorder) {
-              setCurrentDragType?.('reorder');
-            } else if (data.isLayout || data.blockType === 'columns') {
-              setCurrentDragType?.('layout');
-            } else {
-              setCurrentDragType?.('block');
-            }
-          }
-        }
-      } catch (error) {
-        // If we can't parse, detect from effectAllowed
-        if (e.dataTransfer.effectAllowed === 'move') {
-          setCurrentDragType?.('reorder');
-        } else {
-          setCurrentDragType?.('block');
-        }
-      }
+    setIsDraggingOver(false);
+    setDragOverIndex(null);
+  }, [setIsDraggingOver, setDragOverIndex]);
+
+  const createBlockFromDragData = useCallback((dragData: any, getDefaultContent: Function, getDefaultStyles: Function) => {
+    const baseBlock = {
+      id: generateUniqueId('block'), // Use enhanced ID generation
+      type: dragData.blockType,
+      content: getDefaultContent(dragData.blockType),
+      styling: getDefaultStyles(dragData.blockType),
+      position: { x: 0, y: 0 },
+      displayOptions: {
+        showOnDesktop: true,
+        showOnTablet: true,
+        showOnMobile: true
+      },
+      isStarred: false
+    };
+
+    // Handle layout-specific data
+    if (dragData.layoutData && dragData.blockType === 'columns') {
+      const columnCount = dragData.layoutData.columnCount || 2;
+      const columnRatio = dragData.layoutData.columnRatio || '50-50';
+      
+      const columns = Array.from({ length: columnCount }, (_, index) => ({
+        id: generateUniqueId(`column-${index}`), // Use enhanced ID generation for columns too
+        blocks: []
+      }));
+
+      baseBlock.content = {
+        ...baseBlock.content,
+        columnRatio,
+        columns,
+        gap: '16px'
+      };
     }
-    
-    // Enhanced drop index calculation
-    const rect = e.currentTarget.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const blockElements = e.currentTarget.querySelectorAll('.email-block');
-    
-    if (blockElements.length === 0) {
-      setDragOverIndex(0);
+
+    return baseBlock;
+  }, []);
+
+  const handleCanvasDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    setDragOverIndex(null);
+
+    const dragData = JSON.parse(e.dataTransfer.getData('text/plain') || '{}');
+    const blockType = dragData.blockType;
+
+    if (!blockType) {
+      const blockId = e.dataTransfer.getData('text/plain');
+      
+      setBlocks(prev => {
+        const reorderedBlocks = [...prev];
+        const blockToMoveIndex = reorderedBlocks.findIndex(block => block.id === blockId);
+        
+        if (blockToMoveIndex === -1) {
+          return prev;
+        }
+        
+        const [blockToMove] = reorderedBlocks.splice(blockToMoveIndex, 1);
+        
+        if (dragOverIndex === null) {
+          reorderedBlocks.push(blockToMove);
+        } else {
+          reorderedBlocks.splice(dragOverIndex, 0, blockToMove);
+        }
+        
+        return reorderedBlocks;
+      });
       return;
     }
+
+    const newBlock = createBlockFromDragData(dragData, getDefaultContent, getDefaultStyles);
+
+    setBlocks(prev => {
+      const newBlocks = [...prev];
+      if (dragOverIndex === null || dragOverIndex >= newBlocks.length) {
+        newBlocks.push(newBlock);
+      } else {
+        newBlocks.splice(dragOverIndex, 0, newBlock);
+      }
+      return newBlocks;
+    });
+  }, [setBlocks, setIsDraggingOver, setDragOverIndex, createBlockFromDragData, getDefaultContent, getDefaultStyles, dragOverIndex]);
+
+  const handleBlockDrop = useCallback((e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    const blockId = e.dataTransfer.getData('text/plain');
     
-    let insertIndex = blocks.length;
-    let closestDistance = Infinity;
-    
-    for (let i = 0; i < blockElements.length; i++) {
-      const blockRect = blockElements[i].getBoundingClientRect();
-      const blockTop = blockRect.top - rect.top;
-      const blockBottom = blockRect.bottom - rect.top;
-      const blockCenter = blockTop + (blockRect.height / 2);
+    setBlocks(prev => {
+      const reorderedBlocks = [...prev];
+      const blockToMoveIndex = reorderedBlocks.findIndex(block => block.id === blockId);
       
-      // Check if we're above this block
-      if (y < blockCenter) {
-        const distance = Math.abs(y - blockTop);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          insertIndex = i;
-        }
-        break;
+      if (blockToMoveIndex === -1) {
+        return prev;
       }
       
-      // Check if we're below the last block
-      if (i === blockElements.length - 1 && y > blockBottom) {
-        insertIndex = i + 1;
-      }
-    }
-    
-    setDragOverIndex(insertIndex);
-  };
+      const [blockToMove] = reorderedBlocks.splice(blockToMoveIndex, 1);
+      reorderedBlocks.splice(targetIndex, 0, blockToMove);
+      
+      return reorderedBlocks;
+    });
+  }, [setBlocks]);
 
-  const handleCanvasDragEnter = (e: React.DragEvent) => {
+  const handleColumnDrop = useCallback((e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
     e.preventDefault();
-    setIsDraggingOver(true);
-  };
-
-  const handleCanvasDragLeave = (e: React.DragEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
+    const droppedBlockId = e.dataTransfer.getData('text/plain');
     
-    // Only hide if we're actually leaving the canvas bounds
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setIsDraggingOver(false);
-      setDragOverIndex(null);
-      setCurrentDragType?.(null);
-    }
-  };
-
-  const handleBlockDragStart = (e: React.DragEvent, blockId: string) => {
-    const dragData = createDragData({ blockId, isReorder: true });
-    e.dataTransfer.setData('application/json', dragData);
-    e.dataTransfer.effectAllowed = 'move';
-    setCurrentDragType?.('reorder');
-  };
-
-  const handleBlockDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      const data = parseDragData(e.dataTransfer.getData('application/json'));
-      if (!data) return;
+    setBlocks(prev => {
+      let droppedBlock: EmailBlock | undefined;
       
-      if (data.isReorder && data.blockId) {
-        const sourceIndex = blocks.findIndex(b => b.id === data.blockId);
-        if (sourceIndex !== -1 && sourceIndex !== targetIndex) {
-          setBlocks(prev => {
-            const newBlocks = [...prev];
-            const [movedBlock] = newBlocks.splice(sourceIndex, 1);
-            const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
-            newBlocks.splice(adjustedTargetIndex, 0, movedBlock);
-            return newBlocks;
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error handling block reorder:', error);
-    } finally {
-      setCurrentDragType?.(null);
-    }
-  };
-
-  const handleColumnDrop = (e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    try {
-      const data = parseDragData(e.dataTransfer.getData('application/json'));
-      if (!data?.blockType) return;
-      
-      console.log('DragDropHandler: Adding block to column:', { blockType: data.blockType, layoutBlockId, columnIndex });
-      
-      const newBlock = createCompleteBlock(data.blockType, getDefaultContent, getDefaultStyles);
-      
-      setBlocks(prev => prev.map(block => {
+      // Remove block from its original position
+      const updatedBlocks = prev.map(block => {
         if (block.id === layoutBlockId && block.type === 'columns') {
-          const updatedColumns = [...(block.content.columns || [])];
-          if (updatedColumns[columnIndex]) {
-            updatedColumns[columnIndex] = {
-              ...updatedColumns[columnIndex],
-              blocks: [...updatedColumns[columnIndex].blocks, newBlock]
-            };
-          }
-          
+          const updatedColumns = block.content.columns.map(column => {
+            const blockIndex = column.blocks.findIndex(b => b.id === droppedBlockId);
+            if (blockIndex !== -1) {
+              droppedBlock = column.blocks[blockIndex];
+              const newBlocks = [...column.blocks];
+              newBlocks.splice(blockIndex, 1);
+              return { ...column, blocks: newBlocks };
+            }
+            return column;
+          });
+          return {
+            ...block,
+            content: {
+              ...block.content,
+              columns: updatedColumns
+            }
+          };
+        } else {
+          return block;
+        }
+      }).filter(block => block.id !== droppedBlockId); // Remove from top level if it was there
+      
+      if (!droppedBlock) {
+        droppedBlock = prev.find(b => b.id === droppedBlockId);
+      }
+      
+      if (!droppedBlock) {
+        console.error('Dropped block not found:', droppedBlockId);
+        return updatedBlocks;
+      }
+      
+      // Add block to the target column
+      const finalBlocks = updatedBlocks.map(block => {
+        if (block.id === layoutBlockId && block.type === 'columns') {
+          const updatedColumns = block.content.columns.map((column, index) => {
+            if (index === columnIndex) {
+              return { ...column, blocks: [...column.blocks, droppedBlock!] };
+            }
+            return column;
+          });
           return {
             ...block,
             content: {
@@ -318,22 +244,19 @@ export const useDragDropHandler = ({
           };
         }
         return block;
-      }));
+      });
       
-      console.log('DragDropHandler: Block added to column:', newBlock);
-    } catch (error) {
-      console.error('DragDropHandler: Error handling column drop:', error);
-    } finally {
-      setCurrentDragType?.(null);
-    }
-  };
+      return finalBlocks;
+    });
+  }, [setBlocks]);
 
   return {
-    handleCanvasDrop,
-    handleCanvasDragOver,
-    handleCanvasDragEnter,
-    handleCanvasDragLeave,
+    handleDragStart,
     handleBlockDragStart,
+    handleCanvasDragEnter,
+    handleCanvasDragOver,
+    handleCanvasDragLeave,
+    handleCanvasDrop,
     handleBlockDrop,
     handleColumnDrop
   };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ColumnsBlock, EmailBlock } from '@/types/emailBlocks';
 import { EnhancedTextBlockRenderer } from '../EnhancedTextBlockRenderer';
 import { BlockRenderer } from '../BlockRenderer';
+import { regenerateBlockIds } from '@/utils/idGenerator';
 
 interface ColumnsBlockRendererProps {
   block: ColumnsBlock;
@@ -134,17 +135,23 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
   };
 
   const handleBlockDuplicate = (blockId: string) => {
+    console.log('Duplicating nested block:', blockId);
+    
     const blockToDuplicate = block.content.columns
       .flatMap(col => col.blocks)
       .find(b => b.id === blockId);
     
-    if (!blockToDuplicate) return;
+    if (!blockToDuplicate) {
+      console.error('Block not found for duplication in columns:', blockId);
+      return;
+    }
 
-    const duplicatedBlock: EmailBlock = {
-      ...blockToDuplicate,
-      id: `${blockToDuplicate.id}_copy_${Date.now()}`,
-      isStarred: false
-    };
+    console.log('Found nested block to duplicate:', blockToDuplicate.type);
+    
+    // Use the recursive ID regeneration utility
+    const duplicatedBlock = regenerateBlockIds(blockToDuplicate);
+    
+    console.log('Generated duplicated nested block with new ID:', duplicatedBlock.id);
 
     const updatedColumns = block.content.columns.map(column => {
       const blockIndex = column.blocks.findIndex(b => b.id === blockId);
@@ -164,7 +171,10 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
       }
     });
 
+    // Notify parent component
     onBlockDuplicate?.(blockId);
+    
+    console.log('Nested block duplication completed successfully');
   };
 
   // Ensure blocks have all required properties for EmailBlock interface

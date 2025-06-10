@@ -7,6 +7,7 @@ import { CanvasStatus } from './CanvasStatus';
 import { CanvasSubjectLine } from '../CanvasSubjectLine';
 import { DirectSnippetService } from '@/services/directSnippetService';
 import { EmailSnippet } from '@/types/snippets';
+import { regenerateBlockIds, hasIdCollisions } from '@/utils/idGenerator';
 
 interface VariableOption {
   text: string;
@@ -216,19 +217,25 @@ export const EditView: React.FC<EditViewProps> = ({
   }, [selectedBlockId, onBlockSelect, setBlocks, setSelectedBlockId, hoveredBlockId]);
 
   const handleBlockDuplicate = useCallback((blockId: string) => {
+    console.log('Duplicating block:', blockId);
+    
     // First try to find block at top level
     let blockToDuplicate = blocks.find(block => block.id === blockId);
     let isNestedBlock = false;
+    let parentColumnInfo: { blockIndex: number; columnIndex: number } | null = null;
     
     // If not found at top level, search in columns
     if (!blockToDuplicate) {
-      for (const block of blocks) {
+      for (let blockIndex = 0; blockIndex < blocks.length; blockIndex++) {
+        const block = blocks[blockIndex];
         if (block.type === 'columns') {
-          for (const column of block.content.columns) {
+          for (let columnIndex = 0; columnIndex < block.content.columns.length; columnIndex++) {
+            const column = block.content.columns[columnIndex];
             const found = column.blocks.find(b => b.id === blockId);
             if (found) {
               blockToDuplicate = found;
               isNestedBlock = true;
+              parentColumnInfo = { blockIndex, columnIndex };
               break;
             }
           }
@@ -238,42 +245,70 @@ export const EditView: React.FC<EditViewProps> = ({
     }
 
     if (blockToDuplicate) {
-      const duplicatedBlock: EmailBlock = {
-        ...blockToDuplicate,
-        id: `${blockToDuplicate.id}_copy_${Date.now()}`,
-        isStarred: false
-      };
-
-      if (isNestedBlock) {
-        // Handle duplication within columns
-        setBlocks(prev => prev.map(block => {
-          if (block.type === 'columns') {
-            const updatedColumns = block.content.columns.map(column => {
-              const blockIndex = column.blocks.findIndex(b => b.id === blockId);
-              if (blockIndex !== -1) {
-                const newBlocks = [...column.blocks];
-                newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
-                return { ...column, blocks: newBlocks };
-              }
-              return column;
-            });
-            return {
-              ...block,
-              content: {
-                ...block.content,
-                columns: updatedColumns
-              }
-            };
-          }
-          return block;
-        }));
+      console.log('Found block to duplicate:', blockToDuplicate.type, 'isNested:', isNestedBlock);
+      
+      // Use the recursive ID regeneration utility
+      const duplicatedBlock = regenerateBlockIds(blockToDuplicate);
+      
+      console.log('Generated duplicated block with new ID:', duplicatedBlock.id);
+      
+      // Check for ID collisions before adding
+      const tempBlocks = [...blocks];
+      if (isNestedBlock && parentColumnInfo) {
+        // Add to the nested location temporarily for collision check
+        const targetBlock = tempBlocks[parentColumnInfo.blockIndex] as ColumnsBlock;
+        const targetColumn = targetBlock.content.columns[parentColumnInfo.columnIndex];
+        const originalIndex = targetColumn.blocks.findIndex(b => b.id === blockId);
+        targetColumn.blocks.splice(originalIndex + 1, 0, duplicatedBlock);
       } else {
-        // Handle top-level duplication
-        const blockIndex = blocks.findIndex(block => block.id === blockId);
-        const newBlocks = [...blocks];
-        newBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
-        setBlocks(newBlocks);
+        // Add to top level temporarily for collision check
+        const blockIndex = tempBlocks.findIndex(block => block.id === blockId);
+        tempBlocks.splice(blockIndex + 1, 0, duplicatedBlock);
       }
+      
+      // Check for collisions
+      if (hasIdCollisions(tempBlocks)) {
+        console.error('ID collision detected! Regenerating IDs...');
+        // If collision detected, regenerate again (very rare edge case)
+        const newDuplicatedBlock = regenerateBlockIds(blockToDuplicate);
+        setBlocks(prev => {
+          if (isNestedBlock && parentColumnInfo) {
+            return prev.map((block, blockIndex) => {
+              if (blockIndex === parentColumnInfo!.blockIndex && block.type === 'columns') {
+                const updatedColumns = block.content.columns.map((column, columnIndex) => {
+                  if (columnIndex === parentColumnInfo!.columnIndex) {
+                    const originalIndex = column.blocks.findIndex(b => b.id === blockId);
+                    const newBlocks = [...column.blocks];
+                    newBlocks.splice(originalIndex + 1, 0, newDuplicatedBlock);
+                    return { ...column, blocks: newBlocks };
+                  }
+                  return column;
+                });
+                return {
+                  ...block,
+                  content: {
+                    ...block.content,
+                    columns: updatedColumns
+                  }
+                };
+              }
+              return block;
+            });
+          } else {
+            const blockIndex = prev.findIndex(block => block.id === blockId);
+            const newBlocks = [...prev];
+            newBlocks.splice(blockIndex + 1, 0, newDuplicatedBlock);
+            return newBlocks;
+          }
+        });
+      } else {
+        // No collision, use the original duplicated block
+        setBlocks(tempBlocks);
+      }
+      
+      console.log('Block duplication completed successfully');
+    } else {
+      console.error('Block not found for duplication:', blockId);
     }
   }, [blocks, setBlocks]);
 
