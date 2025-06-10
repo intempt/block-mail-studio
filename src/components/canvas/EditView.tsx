@@ -58,6 +58,10 @@ export const EditView: React.FC<EditViewProps> = ({
   
   // Simplified hover state - only track which block is hovered
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
+  
+  // Canvas hover state for controls visibility
+  const [isHoveringCanvas, setIsHoveringCanvas] = useState(false);
+  const [isHoveringControls, setIsHoveringControls] = useState(false);
 
   const handleBlockClick = useCallback((blockId: string) => {
     setSelectedBlockId(blockId);
@@ -81,6 +85,20 @@ export const EditView: React.FC<EditViewProps> = ({
     // Don't clear selectedBlockId when leaving blocks - keep it persistent
     // Only clear hoveredBlockId for visual feedback
     setHoveredBlockId(null);
+  }, []);
+
+  // Canvas hover handlers
+  const handleCanvasMouseEnter = useCallback(() => {
+    setIsHoveringCanvas(true);
+  }, []);
+
+  const handleCanvasMouseLeave = useCallback(() => {
+    setIsHoveringCanvas(false);
+  }, []);
+
+  // Controls hover handler
+  const handleControlsHoverChange = useCallback((isHovering: boolean) => {
+    setIsHoveringControls(isHovering);
   }, []);
 
   const handleBlockDelete = useCallback((blockId: string) => {
@@ -426,6 +444,8 @@ export const EditView: React.FC<EditViewProps> = ({
         onDragOver={dragDropHandler.handleCanvasDragOver}
         onDragEnter={dragDropHandler.handleCanvasDragEnter}
         onDragLeave={dragDropHandler.handleCanvasDragLeave}
+        onMouseEnter={handleCanvasMouseEnter}
+        onMouseLeave={handleCanvasMouseLeave}
       >
         <div className="border-b border-gray-100 bg-white">
           <CanvasSubjectLine
@@ -472,6 +492,8 @@ export const EditView: React.FC<EditViewProps> = ({
             onSaveAsSnippet={handleSaveAsSnippet}
             onUnstar={handleUnstarBlock}
             onAddVariable={handleAddVariable}
+            isHoveringCanvas={isHoveringCanvas}
+            onControlsHoverChange={handleControlsHoverChange}
           />
         </div>
       </div>

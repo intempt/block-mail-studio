@@ -19,6 +19,8 @@ interface StandaloneBlockControlsProps {
   onSaveAsSnippet?: (blockId: string) => void;
   onUnstar?: (blockId: string) => void;
   onAddVariable?: (blockId: string, variable: VariableOption) => void;
+  isHoveringCanvas: boolean;
+  onControlsHoverChange: (isHovering: boolean) => void;
 }
 
 export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = ({
@@ -29,11 +31,16 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
   onDragStart,
   onSaveAsSnippet,
   onUnstar,
-  onAddVariable
+  onAddVariable,
+  isHoveringCanvas,
+  onControlsHoverChange
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [isVisible, setIsVisible] = useState(false);
+  const [isHoveringControls, setIsHoveringControls] = useState(false);
   const controlsRef = useRef<HTMLDivElement>(null);
+
+  // Determine if controls should be visible
+  const shouldShowControls = selectedBlockId && (isHoveringCanvas || isHoveringControls);
 
   // Find the selected block to get its starred state
   const selectedBlock = blocks.find(block => {
@@ -52,14 +59,12 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
   };
 
   useEffect(() => {
-    if (!selectedBlockId) {
-      setIsVisible(false);
+    if (!selectedBlockId || !shouldShowControls) {
       return;
     }
 
     const blockElement = getBlockElement(selectedBlockId);
     if (!blockElement) {
-      setIsVisible(false);
       return;
     }
 
@@ -73,7 +78,6 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
           top: rect.top - canvasRect.top + 8,
           left: rect.left - canvasRect.left - 56
         });
-        setIsVisible(true);
       }
     };
 
@@ -88,14 +92,25 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
       window.removeEventListener('scroll', handleUpdate);
       window.removeEventListener('resize', handleUpdate);
     };
-  }, [selectedBlockId]);
+  }, [selectedBlockId, shouldShowControls]);
 
-  if (!selectedBlockId || !isVisible) {
+  // Handle controls hover state
+  const handleControlsMouseEnter = () => {
+    setIsHoveringControls(true);
+    onControlsHoverChange(true);
+  };
+
+  const handleControlsMouseLeave = () => {
+    setIsHoveringControls(false);
+    onControlsHoverChange(false);
+  };
+
+  if (!shouldShowControls) {
     return null;
   }
 
   const handleDragStart = (e: React.DragEvent) => {
-    onDragStart(e, selectedBlockId);
+    onDragStart(e, selectedBlockId!);
   };
 
   const handleStarClick = (e: React.MouseEvent) => {
@@ -104,28 +119,28 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
     
     const isStarred = selectedBlock?.isStarred;
     if (isStarred && onUnstar) {
-      onUnstar(selectedBlockId);
+      onUnstar(selectedBlockId!);
     } else if (onSaveAsSnippet) {
-      onSaveAsSnippet(selectedBlockId);
+      onSaveAsSnippet(selectedBlockId!);
     }
   };
 
   const handleVariableSelect = (variable: VariableOption) => {
     if (onAddVariable) {
-      onAddVariable(selectedBlockId, variable);
+      onAddVariable(selectedBlockId!, variable);
     }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    onDelete(selectedBlockId);
+    onDelete(selectedBlockId!);
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    onDuplicate(selectedBlockId);
+    onDuplicate(selectedBlockId!);
   };
 
   return (
@@ -139,6 +154,8 @@ export const StandaloneBlockControls: React.FC<StandaloneBlockControlsProps> = (
           isolation: 'isolate',
           transform: 'translateZ(0)',
         }}
+        onMouseEnter={handleControlsMouseEnter}
+        onMouseLeave={handleControlsMouseLeave}
       >
         <div className="flex flex-col gap-1">
           <Tooltip>
