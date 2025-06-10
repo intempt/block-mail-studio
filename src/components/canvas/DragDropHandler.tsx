@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 
@@ -411,69 +412,137 @@ export const useDragDropHandler = ({
   }, [setBlocks]);
 
   const handleColumnDrop = useCallback((e: React.DragEvent, layoutBlockId: string, columnIndex: number) => {
+    console.log('=== Column Drop Event START ===');
     e.preventDefault();
-    const droppedBlockId = e.dataTransfer.getData('text/plain');
+    e.stopPropagation();
     
+    const rawDragData = e.dataTransfer.getData('text/plain');
+    console.log('Column drop - raw drag data:', rawDragData);
+    
+    if (!rawDragData) {
+      console.error('No drag data found in column drop');
+      return;
+    }
+
+    let dragData;
+    let isNewBlock = false;
+    
+    // Try to parse as JSON first (new block from palette)
+    try {
+      dragData = JSON.parse(rawDragData);
+      isNewBlock = true;
+      console.log('Column drop - parsed as new block from palette:', dragData);
+    } catch (error) {
+      // If parsing fails, treat as existing block ID
+      dragData = rawDragData;
+      isNewBlock = false;
+      console.log('Column drop - treating as existing block ID:', dragData);
+    }
+
     setBlocks(prev => {
-      let droppedBlock: EmailBlock | undefined;
-      
-      // Remove block from its original position
-      const updatedBlocks = prev.map(block => {
-        if (block.id === layoutBlockId && block.type === 'columns') {
-          const updatedColumns = block.content.columns.map(column => {
-            const blockIndex = column.blocks.findIndex(b => b.id === droppedBlockId);
-            if (blockIndex !== -1) {
-              droppedBlock = column.blocks[blockIndex];
-              const newBlocks = [...column.blocks];
-              newBlocks.splice(blockIndex, 1);
-              return { ...column, blocks: newBlocks };
-            }
-            return column;
-          });
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              columns: updatedColumns
-            }
-          };
-        } else {
+      if (isNewBlock) {
+        // Handle new block from palette
+        console.log('Creating new block for column from palette data');
+        const newBlock = createBlockFromDragData(dragData);
+        
+        if (!newBlock) {
+          console.error('Failed to create new block for column');
+          return prev;
+        }
+        
+        console.log('Created new block for column:', newBlock.id, newBlock.type);
+        
+        // Add the new block to the target column
+        return prev.map(block => {
+          if (block.id === layoutBlockId && block.type === 'columns') {
+            const updatedColumns = block.content.columns.map((column, index) => {
+              if (index === columnIndex) {
+                console.log('Adding new block to column', index);
+                return { ...column, blocks: [...column.blocks, newBlock] };
+              }
+              return column;
+            });
+            
+            return {
+              ...block,
+              content: {
+                ...block.content,
+                columns: updatedColumns
+              }
+            };
+          }
           return block;
+        });
+      } else {
+        // Handle existing block movement
+        const droppedBlockId = dragData;
+        console.log('Moving existing block to column:', droppedBlockId);
+        
+        let droppedBlock: EmailBlock | undefined;
+        
+        // Remove block from its original position
+        const updatedBlocks = prev.map(block => {
+          if (block.id === layoutBlockId && block.type === 'columns') {
+            const updatedColumns = block.content.columns.map(column => {
+              const blockIndex = column.blocks.findIndex(b => b.id === droppedBlockId);
+              if (blockIndex !== -1) {
+                droppedBlock = column.blocks[blockIndex];
+                const newBlocks = [...column.blocks];
+                newBlocks.splice(blockIndex, 1);
+                return { ...column, blocks: newBlocks };
+              }
+              return column;
+            });
+            return {
+              ...block,
+              content: {
+                ...block.content,
+                columns: updatedColumns
+              }
+            };
+          } else {
+            return block;
+          }
+        }).filter(block => block.id !== droppedBlockId); // Remove from top level if it was there
+        
+        if (!droppedBlock) {
+          droppedBlock = prev.find(b => b.id === droppedBlockId);
         }
-      }).filter(block => block.id !== droppedBlockId); // Remove from top level if it was there
-      
-      if (!droppedBlock) {
-        droppedBlock = prev.find(b => b.id === droppedBlockId);
-      }
-      
-      if (!droppedBlock) {
-        console.error('Dropped block not found:', droppedBlockId);
-        return updatedBlocks;
-      }
-      
-      // Add block to the target column
-      const finalBlocks = updatedBlocks.map(block => {
-        if (block.id === layoutBlockId && block.type === 'columns') {
-          const updatedColumns = block.content.columns.map((column, index) => {
-            if (index === columnIndex) {
-              return { ...column, blocks: [...column.blocks, droppedBlock!] };
-            }
-            return column;
-          });
-          return {
-            ...block,
-            content: {
-              ...block.content,
-              columns: updatedColumns
-            }
-          };
+        
+        if (!droppedBlock) {
+          console.error('Dropped block not found:', droppedBlockId);
+          return prev;
         }
-        return block;
-      });
-      
-      return finalBlocks;
+        
+        console.log('Found existing block to move:', droppedBlock.type);
+        
+        // Add block to the target column
+        const finalBlocks = updatedBlocks.map(block => {
+          if (block.id === layoutBlockId && block.type === 'columns') {
+            const updatedColumns = block.content.columns.map((column, index) => {
+              if (index === columnIndex) {
+                console.log('Moving existing block to column', index);
+                return { ...column, blocks: [...column.blocks, droppedBlock!] };
+              }
+              return column;
+            });
+            return {
+              ...block,
+              content: {
+                ...block.content,
+                columns: updatedColumns
+              }
+            };
+          }
+          return block;
+        });
+        
+        return finalBlocks;
+      }
     });
-  }, [setBlocks]);
+    
+    console.log('=== Column Drop Event END ===');
+  }, [setBlocks, createBlockFromDragData]);
 
   return {
     handleDragStart,
