@@ -173,20 +173,26 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
 
   // Ensure blocks have all required properties for EmailBlock interface
   const ensureCompleteBlock = (innerBlock: EmailBlock): EmailBlock => {
+    const defaultStyling = {
+      desktop: { width: '100%', height: 'auto' },
+      tablet: { width: '100%', height: 'auto' },
+      mobile: { width: '100%', height: 'auto' }
+    };
+
+    const defaultPosition = { x: 0, y: 0 };
+
+    const defaultDisplayOptions = {
+      showOnDesktop: true,
+      showOnTablet: true,
+      showOnMobile: true
+    };
+
     return {
       ...innerBlock,
-      styling: innerBlock.styling || {
-        desktop: { width: '100%', height: 'auto' },
-        tablet: { width: '100%', height: 'auto' },
-        mobile: { width: '100%', height: 'auto' }
-      },
-      position: innerBlock.position || { x: 0, y: 0 },
-      displayOptions: innerBlock.displayOptions || {
-        showOnDesktop: true,
-        showOnTablet: true,
-        showOnMobile: true
-      }
-    };
+      styling: innerBlock.styling ?? defaultStyling,
+      position: innerBlock.position ?? defaultPosition,
+      displayOptions: innerBlock.displayOptions ?? defaultDisplayOptions
+    } as EmailBlock;
   };
 
   const renderColumnBlock = (innerBlock: EmailBlock, columnId: string) => {
@@ -224,7 +230,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
               editor={null}
               isSelected={isBlockSelected}
               isEditing={isBlockEditing}
-              onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, columnId)}
+              onUpdate={(updatedBlock: EmailBlock) => handleBlockUpdate(updatedBlock, columnId)}
               onEditStart={() => onBlockEditStart?.(innerBlock.id)}
               onEditEnd={onBlockEditEnd}
             />
@@ -232,7 +238,7 @@ export const ColumnsBlockRenderer: React.FC<ColumnsBlockRendererProps> = ({
             <BlockRenderer 
               block={completeBlock}
               isSelected={isBlockSelected}
-              onUpdate={(updatedBlock) => handleBlockUpdate(updatedBlock, columnId)}
+              onUpdate={(updatedBlock: EmailBlock) => handleBlockUpdate(updatedBlock, columnId)}
             />
           )}
         </div>
