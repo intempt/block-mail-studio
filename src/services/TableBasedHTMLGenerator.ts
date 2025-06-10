@@ -1,4 +1,3 @@
-
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 
 export class TableBasedHTMLGenerator {
@@ -9,7 +8,7 @@ export class TableBasedHTMLGenerator {
 <meta content="IE=edge" http-equiv=X-UA-Compatible><!--<![endif]-->
 <meta content="text/html; charset=UTF-8" http-equiv=Content-Type>
 <meta content="width=device-width,initial-scale=1" name=viewport>
-<style>#outlook a {
+<style data-embed>#outlook a {
     padding: 0
 }
 
@@ -48,20 +47,20 @@ p {
     </o:officedocumentsettings>
   </xml>
 </noscript><![endif]--><!--[if lte mso 11]>
-<style>.mj-outlook-group-fix {
+<style data-embed>.mj-outlook-group-fix {
   width: 100% !important
 }</style><![endif]-->
-<style>@media only screen and (min-width: 480px) {
+<style data-embed>@media only screen and (min-width: 480px) {
     .mj-column-per-100 {
         width: 100% !important;
         max-width: 100%
     }
 }</style>
-<style media="screen and (min-width:480px)">.moz-text-html .mj-column-per-100 {
+<style data-embed media="screen and (min-width:480px)">.moz-text-html .mj-column-per-100 {
     width: 100% !important;
     max-width: 100%
 }</style>
-<style>.mjbody a {
+<style data-embed>.mjbody a {
     color: inherit
 }
 
@@ -173,7 +172,7 @@ p {
 <meta content="IE=edge" http-equiv=X-UA-Compatible><!--<![endif]-->
 <meta content="text/html; charset=UTF-8" http-equiv=Content-Type>
 <meta content="width=device-width,initial-scale=1" name=viewport>
-<style>#outlook a {
+<style data-embed>#outlook a {
     padding: 0
 }
 
@@ -212,20 +211,20 @@ p {
     </o:officedocumentsettings>
   </xml>
 </noscript><![endif]--><!--[if lte mso 11]>
-<style>.mj-outlook-group-fix {
+<style data-embed>.mj-outlook-group-fix {
   width: 100% !important
 }</style><![endif]-->
-<style>@media only screen and (min-width: 480px) {
+<style data-embed>@media only screen and (min-width: 480px) {
     .mj-column-per-100 {
         width: 100% !important;
         max-width: 100%
     }
 }</style>
-<style media="screen and (min-width:480px)">.moz-text-html .mj-column-per-100 {
+<style data-embed media="screen and (min-width:480px)">.moz-text-html .mj-column-per-100 {
     width: 100% !important;
     max-width: 100%
 }</style>
-<style>.mjbody a {
+<style data-embed>.mjbody a {
     color: inherit
 }
 
