@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -146,48 +145,37 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
             </div>
           </div>
           
-          {/* Mobile email content */}
-          <div className="p-4">
-            {previewEditor ? (
-              <EditorContent 
-                editor={previewEditor}
-                className="prose prose-sm max-w-none mobile-email-content"
-                style={{
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  maxWidth: 'none'
-                }}
-              />
-            ) : (
-              <div 
-                className="email-content mobile-email-content"
-                dangerouslySetInnerHTML={{ __html: emailHtml }}
-                style={{
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                  fontSize: '14px',
-                  lineHeight: '1.5',
-                  maxWidth: 'none'
-                }}
-              />
-            )}
+          {/* Mobile email content - render table-based HTML directly */}
+          <div className="overflow-auto">
+            <div 
+              className="email-content mobile-email-content"
+              dangerouslySetInnerHTML={{ __html: emailHtml }}
+              style={{
+                fontFamily: 'Arial, sans-serif',
+                fontSize: '14px',
+                lineHeight: '1.5',
+                maxWidth: 'none'
+              }}
+            />
           </div>
         </div>
       </div>
       
-      {/* Mobile-specific styles */}
+      {/* Enhanced mobile-specific styles for table layouts */}
       <style>{`
-        .mobile-email-content img {
-          max-width: 100% !important;
-          height: auto !important;
-        }
         .mobile-email-content table {
           width: 100% !important;
           max-width: 100% !important;
+          border-collapse: collapse !important;
         }
         .mobile-email-content td {
-          display: block !important;
-          width: 100% !important;
           padding: 8px !important;
+          word-break: break-word !important;
+        }
+        .mobile-email-content img {
+          max-width: 100% !important;
+          height: auto !important;
+          display: block !important;
         }
         .mobile-email-content h1,
         .mobile-email-content h2,
@@ -198,6 +186,13 @@ export const PreviewView: React.FC<PreviewViewProps> = ({
         }
         .mobile-email-content p {
           margin: 0.5em 0 !important;
+        }
+        /* Stack columns on mobile */
+        @media (max-width: 480px) {
+          .mobile-email-content table[role="presentation"] td {
+            display: block !important;
+            width: 100% !important;
+          }
         }
       `}</style>
     </div>
