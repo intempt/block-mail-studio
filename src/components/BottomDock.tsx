@@ -37,9 +37,10 @@ export const BottomDock: React.FC<BottomDockProps> = ({
 
   return (
     <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-white rounded-full shadow-xl border border-gray-200 px-4 py-3 flex items-center gap-3 w-[600px] max-w-[90vw]">
+      {/* Main Input Container */}
+      <div className="bg-white rounded-full shadow-lg border border-gray-200 px-4 py-2.5 flex items-center gap-3 w-[620px] max-w-[90vw]">
         {/* Ask/Do Toggle */}
-        <div className="flex bg-gray-100 rounded-full p-1 flex-shrink-0">
+        <div className="flex bg-gray-100 rounded-full p-0.5 flex-shrink-0">
           <button className="px-4 py-1.5 bg-blue-500 text-white rounded-full text-sm font-medium transition-colors">
             Ask
           </button>
@@ -63,19 +64,19 @@ export const BottomDock: React.FC<BottomDockProps> = ({
         <Button
           onClick={() => onSendMessage(currentMessage)}
           disabled={!currentMessage.trim() || isLoading}
-          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-10 h-10 p-0 flex-shrink-0"
+          className="bg-blue-400 hover:bg-blue-500 text-white rounded-full w-9 h-9 p-0 flex-shrink-0 shadow-none border-0"
         >
           <Send className="w-4 h-4" />
         </Button>
       </div>
 
       {/* Suggestion Chips */}
-      <div className="flex flex-wrap justify-center gap-2 mt-3 px-4">
+      <div className="flex flex-wrap justify-center gap-2 mt-3 max-w-[620px]">
         {suggestionChips.map((suggestion, index) => (
           <button
             key={index}
             onClick={() => onSuggestionClick(suggestion)}
-            className="px-3 py-1.5 bg-white hover:bg-gray-50 rounded-full text-xs text-gray-700 transition-colors border border-gray-200 shadow-sm whitespace-nowrap"
+            className="px-4 py-2 bg-white hover:bg-gray-50 rounded-full text-sm text-gray-700 transition-colors border border-gray-200 shadow-sm whitespace-nowrap"
             disabled={isLoading}
           >
             {suggestion}
