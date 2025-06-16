@@ -108,7 +108,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80">
       {/* Horizontal layout for selectors */}
       <div className="flex items-start gap-4 mb-3">
-        {/* Type selector */}
+        {/* Type selector column */}
         <div className="flex-1">
           <Select value={currentType} onValueChange={handleTypeChange}>
             <SelectTrigger className="w-full">
@@ -127,9 +127,32 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Conditional buttons positioned under Type selection with matching width */}
+          <div className="mt-2">
+            {currentType === 'static' ? (
+              <Button
+                onClick={handleAddProducts}
+                size="sm"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add products
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSelectFeed}
+                size="sm"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Database className="w-4 h-4 mr-2" />
+                Select feed
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Schema Keys selector */}
+        {/* Schema Keys selector column */}
         <div className="flex-1">
           {/* Selected Keys Display */}
           {currentSchemaKeys.length > 0 && (
@@ -151,7 +174,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
             </div>
           )}
 
-          {/* Multi-Select Dropdown */}
+          {/* Multi-Select Dropdown with consistent styling */}
           <Select 
             open={isSchemaDropdownOpen} 
             onOpenChange={setIsSchemaDropdownOpen}
@@ -161,7 +184,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
               setIsSchemaDropdownOpen(false);
             }}
           >
-            <SelectTrigger className="w-full h-8 text-xs">
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select schema keys..." />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
@@ -169,7 +192,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
                 <SelectItem 
                   key={option.value} 
                   value={option.value} 
-                  className="cursor-pointer text-xs"
+                  className="cursor-pointer"
                   disabled={currentSchemaKeys.includes(option.value)}
                 >
                   <div className="flex items-center gap-2">
@@ -183,29 +206,6 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
             </SelectContent>
           </Select>
         </div>
-      </div>
-      
-      {/* Conditional buttons positioned under Type selection */}
-      <div className="mt-3">
-        {currentType === 'static' ? (
-          <Button
-            onClick={handleAddProducts}
-            size="sm"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add products
-          </Button>
-        ) : (
-          <Button
-            onClick={handleSelectFeed}
-            size="sm"
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            <Database className="w-4 h-4 mr-2" />
-            Select feed
-          </Button>
-        )}
       </div>
     </div>
   );
