@@ -2,14 +2,12 @@
 import React, { useState } from 'react';
 import { TextBlock } from '@/types/emailBlocks';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Type,
   AlignLeft, 
   AlignCenter, 
   AlignRight, 
@@ -53,13 +51,6 @@ export const TextBlockPropertyEditor: React.FC<TextBlockPropertyEditorProps> = (
   const [activeTab, setActiveTab] = useState('paragraph');
   const [selectedFonts, setSelectedFonts] = useState(['Arial, sans-serif']);
   const [paddingLocked, setPaddingLocked] = useState(true);
-
-  const updateContent = (updates: Partial<TextBlock['content']>) => {
-    onUpdate({
-      ...block,
-      content: { ...block.content, ...updates }
-    });
-  };
 
   const updateStyling = (device: 'desktop' | 'tablet' | 'mobile', updates: any) => {
     onUpdate({
@@ -107,24 +98,6 @@ export const TextBlockPropertyEditor: React.FC<TextBlockPropertyEditorProps> = (
 
   return (
     <div className="space-y-6">
-      {/* Header - Left aligned */}
-      <div className="flex items-center gap-2">
-        <Type className="w-4 h-4" />
-        <h3 className="text-lg font-semibold">Text & Headings</h3>
-      </div>
-
-      {/* Content Editor */}
-      <div>
-        <Label htmlFor="text-content">Content</Label>
-        <Textarea
-          id="text-content"
-          value={block.content.html.replace(/<[^>]*>/g, '')}
-          onChange={(e) => updateContent({ html: `<p>${e.target.value}</p>` })}
-          className="mt-2"
-          rows={4}
-        />
-      </div>
-
       {/* Text Style Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-4 w-full">

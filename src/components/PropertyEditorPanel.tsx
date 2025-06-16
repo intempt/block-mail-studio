@@ -71,6 +71,8 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
 
   const getBlockDisplayName = () => {
     switch (selectedBlock.type) {
+      case 'text':
+        return 'Text & headings';
       case 'button':
         return 'Call-to-action';
       case 'product':
@@ -83,8 +85,8 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
   return (
     <Card className="h-full flex flex-col">
       <div className="p-4 border-b">
-        <h3 className="font-semibold text-lg">
-          {getBlockDisplayName()} Block Properties
+        <h3 className="font-semibold text-base">
+          {getBlockDisplayName()}
         </h3>
       </div>
       <ScrollArea className="flex-1">
