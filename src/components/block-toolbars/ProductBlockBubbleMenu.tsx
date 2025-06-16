@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { ProductBlock } from '@/types/emailBlocks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Database, X } from 'lucide-react';
+import { Plus, Database, X, Type, Bold, Italic, Underline } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface ProductBlockBubbleMenuProps {
   block: ProductBlock;
@@ -42,12 +43,29 @@ const schemaKeyOptions = [
   }
 ];
 
+const fontSizeOptions = [
+  { value: '12px', label: '12px' },
+  { value: '14px', label: '14px' },
+  { value: '16px', label: '16px' },
+  { value: '18px', label: '18px' },
+  { value: '20px', label: '20px' },
+  { value: '24px', label: '24px' },
+  { value: '28px', label: '28px' },
+  { value: '32px', label: '32px' }
+];
+
+const fontFamilyOptions = [
+  { value: 'Arial, sans-serif', label: 'Arial' },
+  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Times New Roman, serif', label: 'Times New Roman' },
+  { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+  { value: 'Verdana, sans-serif', label: 'Verdana' }
+];
+
 export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   block,
   onUpdate
 }) => {
-  const [isSchemaDropdownOpen, setIsSchemaDropdownOpen] = useState(false);
-
   const handleTypeChange = (value: string) => {
     const updatedBlock = {
       ...block,
@@ -59,50 +77,69 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     onUpdate(updatedBlock);
   };
 
-  const handleSchemaKeyToggle = (key: string) => {
-    const currentSchemaKeys = block.content.schemaKeys || [];
-    const updatedSchemaKeys = currentSchemaKeys.includes(key)
-      ? currentSchemaKeys.filter(k => k !== key)
-      : [...currentSchemaKeys, key];
-    
+  const handleSchemaKeyChange = (value: string) => {
     const updatedBlock = {
       ...block,
       content: {
         ...block.content,
-        schemaKeys: updatedSchemaKeys
+        selectedSchemaKey: value,
+        schemaKeyStyles: {
+          ...block.content.schemaKeyStyles,
+          [value]: block.content.schemaKeyStyles?.[value] || {
+            color: '#000000',
+            fontSize: '16px',
+            fontFamily: 'Arial, sans-serif',
+            fontWeight: 'normal',
+            fontStyle: 'normal',
+            textDecoration: 'none'
+          }
+        }
       }
     };
     onUpdate(updatedBlock);
   };
 
-  const removeSchemaKey = (key: string) => {
-    const currentSchemaKeys = block.content.schemaKeys || [];
-    const updatedSchemaKeys = currentSchemaKeys.filter(k => k !== key);
-    
+  const handleStyleChange = (property: string, value: string) => {
+    const selectedKey = block.content.selectedSchemaKey;
+    if (!selectedKey) return;
+
     const updatedBlock = {
       ...block,
       content: {
         ...block.content,
-        schemaKeys: updatedSchemaKeys
+        schemaKeyStyles: {
+          ...block.content.schemaKeyStyles,
+          [selectedKey]: {
+            ...block.content.schemaKeyStyles?.[selectedKey],
+            [property]: value
+          }
+        }
       }
     };
     onUpdate(updatedBlock);
+  };
+
+  const toggleStyleProperty = (property: string, activeValue: string, inactiveValue: string) => {
+    const selectedKey = block.content.selectedSchemaKey;
+    if (!selectedKey) return;
+
+    const currentValue = block.content.schemaKeyStyles?.[selectedKey]?.[property] || inactiveValue;
+    const newValue = currentValue === activeValue ? inactiveValue : activeValue;
+    handleStyleChange(property, newValue);
   };
 
   const handleAddProducts = () => {
-    // TODO: Implement add products functionality
     console.log('Add products clicked');
   };
 
   const handleSelectFeed = () => {
-    // TODO: Implement select feed functionality
     console.log('Select feed clicked');
   };
 
-  // Get current type value, default to 'static' if not set
   const currentType = (block.content as any).type || 'static';
   const currentOption = typeOptions.find(option => option.value === currentType);
-  const currentSchemaKeys = block.content.schemaKeys || [];
+  const selectedSchemaKey = block.content.selectedSchemaKey;
+  const currentStyles = selectedSchemaKey ? block.content.schemaKeyStyles?.[selectedSchemaKey] : null;
 
   return (
     <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80">
@@ -152,40 +189,14 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
           </div>
         </div>
 
-        {/* Schema Keys selector column */}
+        {/* Schema Key selector column */}
         <div className="flex-1">
-          {/* Selected Keys Display */}
-          {currentSchemaKeys.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {currentSchemaKeys.map((key) => {
-                const keyOption = schemaKeyOptions.find(opt => opt.value === key);
-                return (
-                  <div key={key} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                    <span>{keyOption?.text || key}</span>
-                    <button
-                      onClick={() => removeSchemaKey(key)}
-                      className="hover:bg-blue-200 rounded p-0.5"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Multi-Select Dropdown with consistent styling */}
           <Select 
-            open={isSchemaDropdownOpen} 
-            onOpenChange={setIsSchemaDropdownOpen}
-            value=""
-            onValueChange={(value) => {
-              handleSchemaKeyToggle(value);
-              setIsSchemaDropdownOpen(false);
-            }}
+            value={selectedSchemaKey || ""}
+            onValueChange={handleSchemaKeyChange}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select schema keys..." />
+              <SelectValue placeholder="Select schema key..." />
             </SelectTrigger>
             <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
               {schemaKeyOptions.map((option) => (
@@ -193,20 +204,115 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
                   key={option.value} 
                   value={option.value} 
                   className="cursor-pointer"
-                  disabled={currentSchemaKeys.includes(option.value)}
                 >
-                  <div className="flex items-center gap-2">
-                    <span>{option.text}</span>
-                    {currentSchemaKeys.includes(option.value) && (
-                      <span className="text-green-600 text-xs">✓</span>
-                    )}
-                  </div>
+                  <span>{option.text}</span>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
+
+      {/* Typography and Color Controls - Show only when schema key is selected */}
+      {selectedSchemaKey && (
+        <div className="border-t pt-3 mt-3">
+          <div className="flex items-center gap-2 mb-3">
+            <Type className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-700">
+              {schemaKeyOptions.find(opt => opt.value === selectedSchemaKey)?.text} Styling
+            </span>
+          </div>
+
+          {/* Color Picker Row */}
+          <div className="flex items-center gap-3 mb-3">
+            <label className="text-xs text-gray-600 min-w-[60px]">Color:</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={currentStyles?.color || '#000000'}
+                onChange={(e) => handleStyleChange('color', e.target.value)}
+                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+              />
+              <Input
+                type="text"
+                value={currentStyles?.color || '#000000'}
+                onChange={(e) => handleStyleChange('color', e.target.value)}
+                className="w-20 h-8 text-xs"
+                placeholder="#000000"
+              />
+            </div>
+          </div>
+
+          {/* Font Controls Row */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-xs text-gray-600 mb-1 block">Font Size:</label>
+              <Select 
+                value={currentStyles?.fontSize || '16px'} 
+                onValueChange={(value) => handleStyleChange('fontSize', value)}
+              >
+                <SelectTrigger className="w-full h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+                  {fontSizeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-600 mb-1 block">Font Family:</label>
+              <Select 
+                value={currentStyles?.fontFamily || 'Arial, sans-serif'} 
+                onValueChange={(value) => handleStyleChange('fontFamily', value)}
+              >
+                <SelectTrigger className="w-full h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+                  {fontFamilyOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Style Toggles Row */}
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant={currentStyles?.fontWeight === 'bold' ? 'default' : 'outline'}
+              onClick={() => toggleStyleProperty('fontWeight', 'bold', 'normal')}
+              className="h-8 w-8 p-0"
+            >
+              <Bold className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={currentStyles?.fontStyle === 'italic' ? 'default' : 'outline'}
+              onClick={() => toggleStyleProperty('fontStyle', 'italic', 'normal')}
+              className="h-8 w-8 p-0"
+            >
+              <Italic className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
+              variant={currentStyles?.textDecoration === 'underline' ? 'default' : 'outline'}
+              onClick={() => toggleStyleProperty('textDecoration', 'underline', 'none')}
+              className="h-8 w-8 p-0"
+            >
+              <Underline className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
