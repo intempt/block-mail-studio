@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -6,7 +7,7 @@ import { LayoutConfigPanel } from './LayoutConfigPanel';
 import { SnippetManager } from './SnippetManager';
 import { BlockSection } from './palette/BlockSection';
 import { PaletteTabContent } from './palette/PaletteTabContent';
-import { blockItems } from '@/data/blockItems.tsx';
+import { ribbonBlockItems } from '@/data/ribbonBlockItems.tsx';
 
 interface EnhancedEmailBlockPaletteProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
@@ -26,8 +27,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
   snippetRefreshTrigger = 0
 }) => {
   console.log('=== EnhancedEmailBlockPalette Render ===');
-  console.log('EnhancedEmailBlockPalette rendering with', blockItems.length, 'block items');
-  console.log('Block items:', blockItems.map(item => ({ id: item.id, name: item.name })));
+  console.log('EnhancedEmailBlockPalette rendering with', ribbonBlockItems.length, 'block items');
+  console.log('Block items:', ribbonBlockItems.map(item => ({ id: item.id, name: item.name })));
   
   const [sectionsExpanded, setSectionsExpanded] = useState({
     blocks: true
@@ -111,7 +112,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
           <div className="flex-1 overflow-hidden">
             <PaletteTabContent value="blocks" compactMode={compactMode}>
               <BlockSection
-                blockItems={blockItems}
+                blockItems={ribbonBlockItems}
                 compactMode={compactMode}
                 isExpanded={sectionsExpanded.blocks}
                 onToggle={() => toggleSection('blocks')}

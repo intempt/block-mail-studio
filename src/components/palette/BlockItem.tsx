@@ -73,6 +73,9 @@ export const BlockItem: React.FC<BlockItemProps> = ({
     onBlockAdd(block.id);
   };
   
+  // Check if block has description (for backwards compatibility)
+  const hasDescription = 'description' in block && block.description;
+  
   return (
     <Card
       key={block.id}
@@ -89,9 +92,9 @@ export const BlockItem: React.FC<BlockItemProps> = ({
           <div className={`font-medium text-slate-800 ${compactMode ? 'text-xs' : 'text-sm'}`}>
             {block.name}
           </div>
-          {!compactMode && (
+          {!compactMode && hasDescription && (
             <div className="text-xs text-slate-500 mt-1 line-clamp-2">
-              {block.description}
+              {hasDescription}
             </div>
           )}
         </div>
