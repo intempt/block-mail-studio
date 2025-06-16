@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +34,7 @@ interface EmailEditorToolbarProps {
   onCampaignTitleChange?: (title: string) => void;
   previewMode?: 'desktop' | 'mobile';
   onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
+  onEmailMetrics?: () => void;
 }
 
 export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({ 
@@ -45,7 +45,8 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   campaignTitle = 'Untitled Campaign',
   onCampaignTitleChange,
   previewMode = 'desktop',
-  onPreviewModeChange
+  onPreviewModeChange,
+  onEmailMetrics
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -74,7 +75,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
 
   const handleEmailMetrics = () => {
     console.log('Show email metrics...');
-    // TODO: Implement email metrics functionality
+    onEmailMetrics?.();
   };
 
   return (
