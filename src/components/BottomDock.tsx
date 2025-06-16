@@ -36,8 +36,8 @@ export const BottomDock: React.FC<BottomDockProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
-      <div className="max-w-4xl mx-auto p-6">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 w-[800px] max-w-[90vw]">
         {/* Mode Toggle */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex bg-gray-100 rounded-lg p-1">

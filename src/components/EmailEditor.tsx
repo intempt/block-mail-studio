@@ -153,7 +153,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
       </div>
       
       {/* Main Content Area - Flexbox Layout */}
-      <div className="flex-1 flex overflow-hidden pb-48">
+      <div className="flex-1 flex overflow-hidden pb-24">
         {/* Left Sidebar - Blocks Palette */}
         {!leftSidebarCollapsed && (
           <div className="w-80 flex-shrink-0 bg-gray-50 border-r border-gray-200 overflow-hidden">
