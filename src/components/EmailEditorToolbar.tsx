@@ -155,7 +155,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant="ghost"
             size="sm"
             onClick={onPreview}
-            className="h-[38px] u-p-3 u-gap-2"
+            className="h-[38px] u-p-3 u-gap-2 mr-2"
             style={{ fontSize: '14px' }}
           >
             <Eye className="w-4 h-4" />
@@ -166,7 +166,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-[38px] u-p-3"
+            className="h-[38px] u-p-3 mr-2"
             style={{ fontSize: '14px' }}
           >
             Send test
