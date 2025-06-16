@@ -4,6 +4,9 @@
   min-height: 600px;
   /* Add smooth transition for width changes */
   transition: max-width 0.3s ease-in-out, width 0.3s ease-in-out;
+  /* Ensure canvas adapts to container width */
+  max-width: 100%;
+  width: 100%;
 }
 
 .block-canvas .ProseMirror {
@@ -38,6 +41,10 @@
   min-height: 500px;
   /* Add transition for container width changes */
   transition: all 0.3s ease-in-out;
+  /* Ensure email container is responsive */
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
 }
 
 /* Drag and drop indicators */
@@ -69,9 +76,30 @@
 /* Responsive width transitions */
 .email-canvas-wrapper {
   transition: max-width 0.3s ease-in-out;
+  max-width: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Gmail preview transitions */
 .gmail-preview-container {
   transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
+  max-width: 100%;
+}
+
+/* Responsive canvas container */
+.responsive-canvas-container {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.responsive-canvas-inner {
+  width: 100%;
+  max-width: var(--canvas-max-width, 700px);
+  min-width: 320px;
+  transition: max-width 0.3s ease-in-out;
 }

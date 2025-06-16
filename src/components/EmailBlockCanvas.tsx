@@ -7,6 +7,7 @@ import { PreviewView } from './canvas/PreviewView';
 import { useEmailHTMLGenerator } from '@/hooks/useEmailHTMLGenerator';
 import { createBlock } from '@/utils/enhancedBlockFactory';
 import { createDefaultBlockStyling } from '@/utils/blockUtils';
+import './EmailBlockCanvas.css';
 
 interface VariableOption {
   text: string;
@@ -184,7 +185,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
                 } else {
                   const strippedCurrent = stripHTML(current);
                   if (newHTML.includes(strippedCurrent)) {
-                    newHTML = newHTML.replace(strippedCurrent, replacement);
+                    newHTML = newHTML.replace(stippedCurrent, replacement);
                     replacementsMade++;
                   }
                 }
@@ -309,36 +310,50 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   // Render preview mode
   if (viewMode === 'desktop-preview' || viewMode === 'mobile-preview') {
     return (
-      <PreviewView
-        emailHtml={currentEmailHTML}
-        subject={subject}
-        viewMode={viewMode}
-        canvasWidth={effectiveCanvasWidth}
-      />
+      <div 
+        className="responsive-canvas-container"
+        style={{ '--canvas-max-width': `${effectiveCanvasWidth}px` } as React.CSSProperties}
+      >
+        <div className="responsive-canvas-inner">
+          <PreviewView
+            emailHtml={currentEmailHTML}
+            subject={subject}
+            viewMode={viewMode}
+            canvasWidth={effectiveCanvasWidth}
+          />
+        </div>
+      </div>
     );
   }
 
   // Render edit mode
   return (
-    <EditView
-      blocks={blocks}
-      setBlocks={setBlocks}
-      selectedBlockId={selectedBlockId}
-      setSelectedBlockId={setSelectedBlockId}
-      editingBlockId={editingBlockId}
-      setEditingBlockId={setEditingBlockId}
-      onBlockSelect={onBlockSelect}
-      previewWidth={effectiveCanvasWidth}
-      previewMode={previewMode}
-      compactMode={compactMode}
-      subject={subject}
-      onSubjectChange={onSubjectChange}
-      showAIAnalytics={showAIAnalytics}
-      onSnippetRefresh={onSnippetRefresh}
-      currentEmailHTML={currentEmailHTML}
-      getDefaultContent={getDefaultContent}
-      getDefaultStyles={getDefaultStyles}
-    />
+    <div 
+      className="responsive-canvas-container"
+      style={{ '--canvas-max-width': `${effectiveCanvasWidth}px` } as React.CSSProperties}
+    >
+      <div className="responsive-canvas-inner">
+        <EditView
+          blocks={blocks}
+          setBlocks={setBlocks}
+          selectedBlockId={selectedBlockId}
+          setSelectedBlockId={setSelectedBlockId}
+          editingBlockId={editingBlockId}
+          setEditingBlockId={setEditingBlockId}
+          onBlockSelect={onBlockSelect}
+          previewWidth={effectiveCanvasWidth}
+          previewMode={previewMode}
+          compactMode={compactMode}
+          subject={subject}
+          onSubjectChange={onSubjectChange}
+          showAIAnalytics={showAIAnalytics}
+          onSnippetRefresh={onSnippetRefresh}
+          currentEmailHTML={currentEmailHTML}
+          getDefaultContent={getDefaultContent}
+          getDefaultStyles={getDefaultStyles}
+        />
+      </div>
+    </div>
   );
 });
 
