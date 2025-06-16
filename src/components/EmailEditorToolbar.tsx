@@ -68,12 +68,13 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-caption font-medium border-none u-p-0 h-auto focus:ring-0 focus:border-none w-32 min-w-fit bg-transparent"
+                className="text-base font-medium border-none u-p-0 h-auto focus:ring-0 focus:border-none w-32 min-w-fit bg-transparent"
+                style={{ fontSize: '16px' }}
                 autoFocus
               />
             ) : (
               <div className="flex items-center u-gap-1">
-                <span className="text-caption font-medium text-brand-fg">{campaignTitle}</span>
+                <span className="font-medium text-brand-fg" style={{ fontSize: '16px' }}>{campaignTitle}</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -97,7 +98,8 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant={previewMode === 'desktop' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onPreviewModeChange?.('desktop')}
-            className="h-8 w-8 u-p-0"
+            className="h-[38px] w-[38px] u-p-0"
+            style={{ fontSize: '14px' }}
           >
             <Monitor className="w-4 h-4" />
           </Button>
@@ -105,7 +107,8 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant={previewMode === 'mobile' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onPreviewModeChange?.('mobile')}
-            className="h-8 w-8 u-p-0"
+            className="h-[38px] w-[38px] u-p-0"
+            style={{ fontSize: '14px' }}
           >
             <Smartphone className="w-4 h-4" />
           </Button>
@@ -117,14 +120,16 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 u-p-0"
+            className="h-[38px] w-[38px] u-p-0"
+            style={{ fontSize: '14px' }}
           >
             <Undo className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 u-p-0"
+            className="h-[38px] w-[38px] u-p-0"
+            style={{ fontSize: '14px' }}
           >
             <Redo className="w-4 h-4" />
           </Button>
@@ -137,6 +142,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             size="sm"
             onClick={onPreview}
             className="h-[38px] u-p-3"
+            style={{ fontSize: '14px' }}
           >
             Preview
           </Button>
@@ -146,6 +152,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant="outline"
             size="sm"
             className="h-[38px] u-p-3"
+            style={{ fontSize: '14px' }}
           >
             Send test
           </Button>
@@ -156,6 +163,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             size="sm"
             onClick={onSave}
             className="h-[38px] u-p-3"
+            style={{ fontSize: '14px' }}
           >
             Save and exit
           </Button>
