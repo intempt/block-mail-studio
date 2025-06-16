@@ -106,85 +106,89 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const currentSchemaKeys = block.content.schemaKeys || [];
 
   return (
-    <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-64">
-      <div className="flex items-center gap-3 mb-3">
-        <Label htmlFor="product-type" className="text-sm font-medium whitespace-nowrap">
-          Type:
-        </Label>
-        <Select value={currentType} onValueChange={handleTypeChange}>
-          <SelectTrigger id="product-type" className="w-40">
-            <SelectValue>
-              {currentOption?.text || 'Select type'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
-            {typeOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value} className="cursor-pointer">
-                <div className="flex flex-col py-1">
-                  <span className="font-medium text-sm">{option.text}</span>
-                  <span className="text-xs text-gray-500 mt-0.5">{option.description}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80">
+      {/* Horizontal layout for selectors */}
+      <div className="flex items-start gap-4 mb-3">
+        {/* Type selector */}
+        <div className="flex items-center gap-2">
+          <Label htmlFor="product-type" className="text-sm font-medium whitespace-nowrap">
+            Type:
+          </Label>
+          <Select value={currentType} onValueChange={handleTypeChange}>
+            <SelectTrigger id="product-type" className="w-32">
+              <SelectValue>
+                {currentOption?.text || 'Select type'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+              {typeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                  <div className="flex flex-col py-1">
+                    <span className="font-medium text-sm">{option.text}</span>
+                    <span className="text-xs text-gray-500 mt-0.5">{option.description}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Schema Keys Multi-Selector */}
-      <div className="mb-3">
-        <Label className="text-sm font-medium mb-2 block">Schema Keys:</Label>
-        
-        {/* Selected Keys Display */}
-        {currentSchemaKeys.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {currentSchemaKeys.map((key) => {
-              const keyOption = schemaKeyOptions.find(opt => opt.value === key);
-              return (
-                <div key={key} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                  <span>{keyOption?.text || key}</span>
-                  <button
-                    onClick={() => removeSchemaKey(key)}
-                    className="hover:bg-blue-200 rounded p-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {/* Schema Keys selector */}
+        <div className="flex-1">
+          <Label className="text-sm font-medium mb-2 block">Schema Keys:</Label>
+          
+          {/* Selected Keys Display */}
+          {currentSchemaKeys.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {currentSchemaKeys.map((key) => {
+                const keyOption = schemaKeyOptions.find(opt => opt.value === key);
+                return (
+                  <div key={key} className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                    <span>{keyOption?.text || key}</span>
+                    <button
+                      onClick={() => removeSchemaKey(key)}
+                      className="hover:bg-blue-200 rounded p-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-        {/* Multi-Select Dropdown */}
-        <Select 
-          open={isSchemaDropdownOpen} 
-          onOpenChange={setIsSchemaDropdownOpen}
-          value=""
-          onValueChange={(value) => {
-            handleSchemaKeyToggle(value);
-            setIsSchemaDropdownOpen(false);
-          }}
-        >
-          <SelectTrigger className="w-full h-8 text-xs">
-            <SelectValue placeholder="Select schema keys..." />
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
-            {schemaKeyOptions.map((option) => (
-              <SelectItem 
-                key={option.value} 
-                value={option.value} 
-                className="cursor-pointer text-xs"
-                disabled={currentSchemaKeys.includes(option.value)}
-              >
-                <div className="flex items-center gap-2">
-                  <span>{option.text}</span>
-                  {currentSchemaKeys.includes(option.value) && (
-                    <span className="text-green-600 text-xs">✓</span>
-                  )}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          {/* Multi-Select Dropdown */}
+          <Select 
+            open={isSchemaDropdownOpen} 
+            onOpenChange={setIsSchemaDropdownOpen}
+            value=""
+            onValueChange={(value) => {
+              handleSchemaKeyToggle(value);
+              setIsSchemaDropdownOpen(false);
+            }}
+          >
+            <SelectTrigger className="w-full h-8 text-xs">
+              <SelectValue placeholder="Select schema keys..." />
+            </SelectTrigger>
+            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+              {schemaKeyOptions.map((option) => (
+                <SelectItem 
+                  key={option.value} 
+                  value={option.value} 
+                  className="cursor-pointer text-xs"
+                  disabled={currentSchemaKeys.includes(option.value)}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>{option.text}</span>
+                    {currentSchemaKeys.includes(option.value) && (
+                      <span className="text-green-600 text-xs">✓</span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       {/* Conditional toolbar based on type */}
