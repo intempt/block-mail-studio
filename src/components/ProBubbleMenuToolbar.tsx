@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Editor, BubbleMenu } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -88,6 +89,12 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
     setParagraphSelectorOpen(false);
   };
 
+  // Check text alignment - default to left if no specific alignment is set
+  const isLeftAligned = () => {
+    return editor.isActive({ textAlign: 'left' }) || 
+           (!editor.isActive({ textAlign: 'center' }) && !editor.isActive({ textAlign: 'right' }));
+  };
+
   const nodeTypeOptions = [
     { value: 'P', label: 'Paragraph', tag: 'p' },
     { value: 'H1', label: 'Heading 1', tag: 'h1' },
@@ -142,6 +149,10 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
           font-weight: 400;
           line-height: 1.5;
           margin: 0.25rem 0;
+          text-align: left;
+        }
+        .ProseMirror {
+          text-align: left;
         }
       `}</style>
       <BubbleMenu 
@@ -242,7 +253,7 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          className={editor.isActive({ textAlign: 'left' }) ? 'bg-gray-100' : ''}
+          className={isLeftAligned() ? 'bg-gray-100' : ''}
         >
           <AlignLeft className="w-4 h-4" />
         </Button>
