@@ -13,7 +13,8 @@ import {
   Quote,
   Code,
   Copy,
-  ChevronDown
+  ChevronDown,
+  Eraser
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AIDropdownMenu } from './AIDropdownMenu';
@@ -34,6 +35,14 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
 
   const handleContentUpdate = (content: string) => {
     editor.chain().focus().deleteSelection().insertContent(content).run();
+  };
+
+  const handleClearFormatting = () => {
+    editor.chain()
+      .focus()
+      .clearNodes()
+      .unsetAllMarks()
+      .run();
   };
 
   const getCurrentNodeType = () => {
@@ -213,6 +222,17 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
           className={editor.isActive('underline') ? 'bg-gray-100' : ''}
         >
           <Underline className="w-4 h-4" />
+        </Button>
+
+        {/* Clear formatting button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClearFormatting}
+          className="hover:bg-red-50 hover:text-red-600"
+          title="Clear Formatting"
+        >
+          <Eraser className="w-4 h-4" />
         </Button>
 
         <div className="w-px h-6 bg-gray-300 mx-1" />
