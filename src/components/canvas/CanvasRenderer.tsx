@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock, ColumnsBlock } from '@/types/emailBlocks';
 import { ColumnRenderer } from './ColumnRenderer';
@@ -35,7 +36,6 @@ interface CanvasRendererProps {
   onAddVariable?: (blockId: string, variable: VariableOption) => void;
   onBlockHover: (blockId: string) => void;
   onBlockLeave: (blockId: string) => void;
-  recentlyDroppedProductBlocks?: Set<string>;
 }
 
 export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
@@ -61,8 +61,7 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
   onBlockUpdate,
   onAddVariable,
   onBlockHover,
-  onBlockLeave,
-  recentlyDroppedProductBlocks = new Set()
+  onBlockLeave
 }) => {
   // Simplified variable handling
   const handleAddVariable = (blockId: string, variable: any) => {
@@ -206,7 +205,6 @@ export const CanvasRenderer: React.FC<CanvasRendererProps> = ({
           onUpdate={onBlockUpdate}
           onStarBlock={() => onSaveAsSnippet(block.id)}
           onUnstarBlock={onUnstarBlock}
-          recentlyDroppedProductBlocks={recentlyDroppedProductBlocks}
         />
       </div>
     );
