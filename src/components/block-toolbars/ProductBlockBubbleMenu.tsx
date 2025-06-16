@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ProductBlock } from '@/types/emailBlocks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -73,23 +74,41 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!triggerElement || !menuRef.current) return;
+    if (!triggerElement || !menuRef.current) {
+      console.log('ProductBlockBubbleMenu: Missing elements', {
+        triggerElement: !!triggerElement,
+        menuRef: !!menuRef.current
+      });
+      return;
+    }
 
     const updatePosition = () => {
+      if (!triggerElement || !menuRef.current) return;
+
+      // Debug log the trigger element
+      const triggerRect = triggerElement.getBoundingClientRect();
+      console.log('ProductBlockBubbleMenu: Trigger element rect', {
+        triggerRect,
+        elementTag: triggerElement.tagName,
+        elementClass: triggerElement.className
+      });
+
       const newPosition = calculateFloatingPosition(
         triggerElement,
-        menuRef.current!,
+        menuRef.current,
         { 
           preferredPlacement: 'top', 
           offset: 12,
           alignment: 'smart'
         }
       );
+      
+      console.log('ProductBlockBubbleMenu: Calculated position', newPosition);
       setPosition(newPosition);
     };
 
-    // Update position immediately
-    updatePosition();
+    // Use a small timeout to ensure the DOM is fully rendered
+    const timeoutId = setTimeout(updatePosition, 10);
 
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
@@ -98,6 +117,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     window.addEventListener('resize', handleResize, { passive: true });
 
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
@@ -179,7 +199,12 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const currentStyles = selectedSchemaKey ? block.content.schemaKeyStyles?.[selectedSchemaKey] : null;
 
   // Don't render if no trigger element
-  if (!triggerElement) return null;
+  if (!triggerElement) {
+    console.log('ProductBlockBubbleMenu: No trigger element, not rendering');
+    return null;
+  }
+
+  console.log('ProductBlockBubbleMenu: Rendering at position', position);
 
   return (
     <Portal>

@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Package } from 'lucide-react';
 import { ProductBlock } from '@/types/emailBlocks';
@@ -31,6 +30,17 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
   const blockRef = useRef<HTMLDivElement>(null);
   const styling = block.styling.desktop;
   const packageIconDataUri = createPackageIconDataUri();
+
+  // Debug logging
+  React.useEffect(() => {
+    if (isSelected) {
+      console.log('ProductBlockRenderer: Block selected', {
+        blockRef: !!blockRef.current,
+        blockRect: blockRef.current?.getBoundingClientRect(),
+        blockElement: blockRef.current
+      });
+    }
+  }, [isSelected]);
 
   const getImageSrc = (imageSrc: string) => {
     return imageSrc === 'lucide:package' ? packageIconDataUri : imageSrc;
