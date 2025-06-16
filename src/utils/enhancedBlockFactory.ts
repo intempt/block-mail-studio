@@ -1,3 +1,4 @@
+
 import { EmailBlock, Styling, DisplayOptions } from '@/types/emailBlocks';
 import { generateUniqueId } from '@/utils/idGenerator';
 
@@ -218,7 +219,7 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
           products: [
             {
               id: '1',
-              image: 'https://via.placeholder.com/300x300?text=Product+1',
+              image: 'lucide:package',
               title: 'Product Title',
               description: 'Product Description',
               price: 0.00,
@@ -227,7 +228,7 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
             },
             {
               id: '2',
-              image: 'https://via.placeholder.com/300x300?text=Product+2',
+              image: 'lucide:package',
               title: 'Product Title',
               description: 'Product Description',
               price: 0.00,
@@ -236,7 +237,7 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
             },
             {
               id: '3',
-              image: 'https://via.placeholder.com/300x300?text=Product+3',
+              image: 'lucide:package',
               title: 'Product Title',
               description: 'Product Description',
               price: 0.00,

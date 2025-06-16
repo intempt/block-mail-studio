@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Package } from 'lucide-react';
 import { ProductBlock } from '@/types/emailBlocks';
 
 interface ProductBlockRendererProps {
@@ -8,11 +9,33 @@ interface ProductBlockRendererProps {
   onUpdate: (block: ProductBlock) => void;
 }
 
+// Convert Lucide Package icon to data URI
+const createPackageIconDataUri = () => {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m7.5 4.27 9 5.15"/>
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+      <path d="m3.3 7 8.7 5 8.7-5"/>
+      <path d="M12 22V12"/>
+    </svg>
+  `;
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+};
+
 export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({ 
   block, 
   isSelected 
 }) => {
   const styling = block.styling.desktop;
+  const packageIconDataUri = createPackageIconDataUri();
+
+  const getImageSrc = (imageSrc: string) => {
+    return imageSrc === 'lucide:package' ? packageIconDataUri : imageSrc;
+  };
+
+  const getImageAlt = (imageSrc: string, title: string) => {
+    return imageSrc === 'lucide:package' ? 'default' : title;
+  };
 
   return (
     <div
@@ -28,8 +51,8 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
           <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
             <div className="aspect-square">
               <img
-                src={product.image}
-                alt={product.title}
+                src={getImageSrc(product.image)}
+                alt={getImageAlt(product.image, product.title)}
                 className="w-full h-full object-cover"
               />
             </div>
