@@ -43,10 +43,10 @@ export const BottomDock: React.FC<BottomDockProps> = ({
   return (
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-4xl px-4">
       <div className="relative">
-        {/* Floating Oval Collapse Button */}
+        {/* Floating Oval Collapse Button - positioned at top-right */}
         <button
           onClick={handleCollapse}
-          className="absolute -top-4 right-4 z-10 bg-white border border-gray-200 shadow-lg px-4 py-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+          className="absolute -top-6 right-4 z-10 bg-white border border-gray-200 shadow-lg px-4 py-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
           title="Collapse dock"
         >
           <ChevronDown className="w-4 h-4" />
