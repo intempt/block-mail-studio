@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -14,7 +13,7 @@ import { Variable } from '@/extensions/VariableExtension';
 import { FontSize } from '@/extensions/FontSizeExtension';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ProBubbleMenuToolbar } from './ProBubbleMenuToolbar';
+import { TextBlockBubbleMenu } from './block-toolbars/TextBlockBubbleMenu';
 import { EmailContext } from '@/services/tiptapAIService';
 import { 
   ExternalLink,
@@ -236,7 +235,7 @@ export const UniversalTipTapEditor: React.FC<UniversalTipTapEditorProps> = ({
         />
 
         {/* Enhanced TipTap Pro BubbleMenu with AI features */}
-        {editor && <ProBubbleMenuToolbar editor={editor} />}
+        {editor && <TextBlockBubbleMenu editor={editor} />}
       </div>
     </div>
   );

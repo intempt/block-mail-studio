@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -10,7 +9,7 @@ import Underline from '@tiptap/extension-underline';
 import FontFamily from '@tiptap/extension-font-family';
 import Highlight from '@tiptap/extension-highlight';
 import { FontSize } from '@/extensions/FontSizeExtension';
-import { ProBubbleMenuToolbar } from './ProBubbleMenuToolbar';
+import { TextBlockBubbleMenu } from './block-toolbars/TextBlockBubbleMenu';
 import { EmailContext } from '@/services/tiptapAIService';
 
 interface TableCellEditorProps {
@@ -108,7 +107,7 @@ export const TableCellEditor: React.FC<TableCellEditorProps> = ({
       <EditorContent editor={editor} className="w-full" />
       
       {/* TipTap Pro BubbleMenu for table cells */}
-      <ProBubbleMenuToolbar editor={editor} />
+      <TextBlockBubbleMenu editor={editor} />
     </div>
   );
 };
