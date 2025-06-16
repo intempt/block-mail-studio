@@ -24,6 +24,25 @@ const typeOptions = [
   }
 ];
 
+const schemaKeyOptions = [
+  {
+    text: 'Title',
+    value: 'title'
+  },
+  {
+    text: 'Description',
+    value: 'description'
+  },
+  {
+    text: 'Price',
+    value: 'price'
+  },
+  {
+    text: 'Original Price',
+    value: 'originalPrice'
+  }
+];
+
 export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   block,
   onUpdate
@@ -34,6 +53,20 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
       content: {
         ...block.content,
         type: value as 'dynamic' | 'static'
+      }
+    };
+    onUpdate(updatedBlock);
+  };
+
+  const handleSchemaKeyChange = (key: string, value: string) => {
+    const updatedBlock = {
+      ...block,
+      content: {
+        ...block.content,
+        schemaKeys: {
+          ...block.content.schemaKeys,
+          [key]: value
+        }
       }
     };
     onUpdate(updatedBlock);
@@ -52,6 +85,12 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   // Get current type value, default to 'static' if not set
   const currentType = (block.content as any).type || 'static';
   const currentOption = typeOptions.find(option => option.value === currentType);
+  const currentSchemaKeys = block.content.schemaKeys || {
+    title: 'title',
+    description: 'description',
+    price: 'price',
+    originalPrice: 'originalPrice'
+  };
 
   return (
     <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-64">
@@ -76,6 +115,35 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Schema Keys Selector */}
+      <div className="mb-3">
+        <Label className="text-sm font-medium mb-2 block">Schema Keys:</Label>
+        <div className="space-y-2">
+          {schemaKeyOptions.map((keyOption) => (
+            <div key={keyOption.value} className="flex items-center gap-2">
+              <Label className="text-xs text-gray-600 w-20 text-right">
+                {keyOption.text}:
+              </Label>
+              <Select 
+                value={currentSchemaKeys[keyOption.value as keyof typeof currentSchemaKeys]} 
+                onValueChange={(value) => handleSchemaKeyChange(keyOption.value, value)}
+              >
+                <SelectTrigger className="w-32 h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+                  {schemaKeyOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value} className="cursor-pointer text-xs">
+                      {option.text}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
       </div>
       
       {/* Conditional toolbar based on type */}
