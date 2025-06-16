@@ -109,29 +109,6 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
     { value: 'H6', label: 'Heading 6', tag: 'h6' },
   ];
 
-  // Common color palette for text and highlights
-  const colorOptions = [
-    { name: 'Black', value: '#000000' },
-    { name: 'Red', value: '#ef4444' },
-    { name: 'Blue', value: '#3b82f6' },
-    { name: 'Green', value: '#22c55e' },
-    { name: 'Yellow', value: '#eab308' },
-    { name: 'Purple', value: '#a855f7' },
-    { name: 'Pink', value: '#ec4899' },
-    { name: 'Orange', value: '#f97316' },
-  ];
-
-  const highlightOptions = [
-    { name: 'Yellow', value: '#fef3c7' },
-    { name: 'Green', value: '#dcfce7' },
-    { name: 'Blue', value: '#dbeafe' },
-    { name: 'Pink', value: '#fce7f3' },
-    { name: 'Purple', value: '#f3e8ff' },
-    { name: 'Orange', value: '#fed7aa' },
-    { name: 'Red', value: '#fecaca' },
-    { name: 'Gray', value: '#f3f4f6' },
-  ];
-
   return (
     <>
       <style>{`
@@ -279,24 +256,21 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
             align="start"
             side="bottom"
           >
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm font-medium">Text Color</p>
-              <div className="grid grid-cols-4 gap-2">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color.value}
-                    className="w-8 h-8 rounded border border-gray-200 hover:scale-110 transition-transform"
-                    style={{ backgroundColor: color.value }}
-                    onClick={() => {
-                      editor.chain().focus().setColor(color.value).run();
-                      setColorPickerOpen(false);
-                    }}
-                    title={color.name}
-                  />
-                ))}
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                  onChange={(e) => {
+                    editor.chain().focus().setColor(e.target.value).run();
+                  }}
+                  title="Select text color"
+                />
+                <span className="text-sm text-gray-600">Choose color</span>
               </div>
               <button
-                className="text-sm text-gray-600 hover:text-gray-800 mt-2"
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
                 onClick={() => {
                   editor.chain().focus().unsetColor().run();
                   setColorPickerOpen(false);
@@ -325,24 +299,22 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
             align="start"
             side="bottom"
           >
-            <div className="space-y-2">
+            <div className="space-y-3">
               <p className="text-sm font-medium">Highlight Color</p>
-              <div className="grid grid-cols-4 gap-2">
-                {highlightOptions.map((color) => (
-                  <button
-                    key={color.value}
-                    className="w-8 h-8 rounded border border-gray-200 hover:scale-110 transition-transform"
-                    style={{ backgroundColor: color.value }}
-                    onClick={() => {
-                      editor.chain().focus().toggleHighlight({ color: color.value }).run();
-                      setHighlightPickerOpen(false);
-                    }}
-                    title={color.name}
-                  />
-                ))}
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                  defaultValue="#fef3c7"
+                  onChange={(e) => {
+                    editor.chain().focus().toggleHighlight({ color: e.target.value }).run();
+                  }}
+                  title="Select highlight color"
+                />
+                <span className="text-sm text-gray-600">Choose color</span>
               </div>
               <button
-                className="text-sm text-gray-600 hover:text-gray-800 mt-2"
+                className="text-sm text-gray-600 hover:text-gray-800 underline"
                 onClick={() => {
                   editor.chain().focus().unsetHighlight().run();
                   setHighlightPickerOpen(false);
