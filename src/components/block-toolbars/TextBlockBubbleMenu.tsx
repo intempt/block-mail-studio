@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Editor, BubbleMenu } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -168,9 +169,7 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
           interactive: true,
           appendTo: document.body,
           maxWidth: 'none',
-          zIndex: 99999,
-          flip: true,
-          preventOverflow: true
+          zIndex: 99999
         }}
         className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 max-w-none"
       >
@@ -438,3 +437,4 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
     </>
   );
 };
+
