@@ -1,3 +1,4 @@
+
 import React, {
   useState,
   useEffect,
@@ -233,6 +234,45 @@ export default function EmailEditor({
         return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
       case 'image':
         return { src: '', alt: '', alignment: 'center', width: '100%', isDynamic: false };
+      case 'product':
+        return {
+          products: [
+            {
+              id: '1',
+              image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop',
+              title: 'Premium Watch',
+              description: 'Elegant timepiece with modern design',
+              price: 299.99,
+              originalPrice: 399.99,
+              link: '#'
+            },
+            {
+              id: '2',
+              image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop',
+              title: 'Wireless Headphones',
+              description: 'High-quality audio with noise cancellation',
+              price: 199.99,
+              originalPrice: 249.99,
+              link: '#'
+            },
+            {
+              id: '3',
+              image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=300&h=300&fit=crop',
+              title: 'Smart Fitness Tracker',
+              description: 'Track your health and fitness goals',
+              price: 149.99,
+              originalPrice: 199.99,
+              link: '#'
+            }
+          ],
+          layout: 'grid' as 'grid' | 'list',
+          columns: 3,
+          showImages: true,
+          showTitles: true,
+          showDescriptions: true,
+          showPrices: true,
+          showOriginalPrices: true
+        };
       case 'content':
         return {
           jsonData: [],
