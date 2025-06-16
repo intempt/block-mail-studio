@@ -61,12 +61,20 @@ const Index = () => {
                 <p className="text-gray-600">Create and edit your email campaigns</p>
               </div>
               
-              <EmailEditor 
-                content={emailContent}
-                subject={subjectLine}
-                onContentChange={handleContentChange}
-                onSubjectChange={handleSubjectChange}
-              />
+              {/* Temporarily replace EmailEditor with a simple test component */}
+              <div className="border border-gray-300 rounded-lg p-8 bg-gray-50">
+                <h2 className="text-xl font-semibold mb-4">Email Editor Component</h2>
+                <p className="text-gray-600 mb-4">Subject: {subjectLine}</p>
+                <p className="text-gray-600">Content Length: {emailContent.length} characters</p>
+                <div className="mt-4">
+                  <button 
+                    onClick={() => handleContentChange('Test content')}
+                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  >
+                    Test Content Change
+                  </button>
+                </div>
+              </div>
             </div>
           </main>
           
