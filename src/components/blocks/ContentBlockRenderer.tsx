@@ -8,8 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Database, Package } from 'lucide-react';
-import { dummyProductData } from '@/data/dummyProductData';
+import { Plus, Trash2, Database } from 'lucide-react';
 
 interface ContentBlockRendererProps {
   block: ContentBlock;
@@ -35,28 +34,6 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       sample: firstItem[key]
     }));
   }, [block.content.jsonData]);
-
-  const handleLoadProductFeed = () => {
-    const productData = {
-      jsonData: dummyProductData,
-      selectedFields: ['title', 'price', 'description', 'image_link'],
-      fieldMappings: {
-        title: { label: 'Product Name', type: 'text' as const },
-        price: { label: 'Price', type: 'currency' as const },
-        description: { label: 'Description', type: 'text' as const },
-        image_link: { label: 'Image', type: 'image' as const }
-      }
-    };
-
-    const updatedBlock = {
-      ...block,
-      content: {
-        ...block.content,
-        ...productData
-      }
-    };
-    onUpdate(updatedBlock);
-  };
 
   const handleFieldToggle = (fieldKey: string) => {
     const selectedFields = block.content.selectedFields.includes(fieldKey)
@@ -126,13 +103,9 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
     if (!jsonData || jsonData.length === 0) {
       return (
         <div className="p-8 text-center text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
-          <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <div className="text-lg font-medium mb-2">No Product Data</div>
-          <div className="text-sm mb-4">Load the product feed to display your product catalog</div>
-          <Button onClick={handleLoadProductFeed} variant="outline">
-            <Package className="w-4 h-4 mr-2" />
-            Load Product Feed
-          </Button>
+          <Database className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+          <div className="text-lg font-medium mb-2">No Data</div>
+          <div className="text-sm mb-4">Add JSON data to display content</div>
         </div>
       );
     }
@@ -250,7 +223,7 @@ export const ContentBlockRenderer: React.FC<ContentBlockRendererProps> = ({
       {/* Controls */}
       {isSelected && (
         <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-4">
-          <h3 className="font-semibold">Product Feed Settings</h3>
+          <h3 className="font-semibold">Content Block Settings</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

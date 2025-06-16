@@ -233,7 +233,7 @@ export default function EmailEditor({
         return { text: 'Click Here', link: '#', style: 'solid', size: 'medium' };
       case 'image':
         return { src: '', alt: '', alignment: 'center', width: '100%', isDynamic: false };
-      case 'productfeed':
+      case 'content':
         return {
           jsonData: [],
           selectedFields: ['title', 'price', 'description', 'image_link'],

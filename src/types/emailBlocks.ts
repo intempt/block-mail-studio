@@ -227,7 +227,7 @@ export type EmailBlockContent =
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote' | 'content' | 'productfeed';
+  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote' | 'content';
   content: any;
   styling: Styling;
   position: Position;
@@ -237,7 +237,7 @@ export interface EmailBlock {
 }
 
 export interface ContentBlock extends EmailBlock {
-  type: 'content' | 'productfeed';
+  type: 'content';
   content: ContentContent;
 }
 
