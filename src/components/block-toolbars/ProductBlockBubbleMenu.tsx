@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { ProductBlock } from '@/types/emailBlocks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Plus, Database, X } from 'lucide-react';
 
 interface ProductBlockBubbleMenuProps {
@@ -110,13 +109,10 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
       {/* Horizontal layout for selectors */}
       <div className="flex items-start gap-4 mb-3">
         {/* Type selector */}
-        <div className="flex items-center gap-2">
-          <Label htmlFor="product-type" className="text-sm font-medium whitespace-nowrap">
-            Type:
-          </Label>
+        <div className="flex-1">
           <Select value={currentType} onValueChange={handleTypeChange}>
-            <SelectTrigger id="product-type" className="w-32">
-              <SelectValue>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select type">
                 {currentOption?.text || 'Select type'}
               </SelectValue>
             </SelectTrigger>
@@ -135,8 +131,6 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
 
         {/* Schema Keys selector */}
         <div className="flex-1">
-          <Label className="text-sm font-medium mb-2 block">Schema Keys:</Label>
-          
           {/* Selected Keys Display */}
           {currentSchemaKeys.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
@@ -191,8 +185,8 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
         </div>
       </div>
       
-      {/* Conditional toolbar based on type */}
-      <div className="border-t border-gray-200 pt-3">
+      {/* Conditional buttons positioned under Type selection */}
+      <div className="mt-3">
         {currentType === 'static' ? (
           <Button
             onClick={handleAddProducts}
