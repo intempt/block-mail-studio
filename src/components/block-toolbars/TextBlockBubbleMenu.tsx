@@ -170,7 +170,7 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
           maxWidth: 'none',
           zIndex: 99999
         }}
-        className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 max-w-none fixed pointer-events-auto"
+        className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 max-w-none"
       >
         {/* Paragraph/Heading Selector */}
         <Popover open={paragraphSelectorOpen} onOpenChange={setParagraphSelectorOpen}>
