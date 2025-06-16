@@ -4,6 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
   Undo,
   Redo,
   Download,
@@ -12,7 +19,9 @@ import {
   Code,
   Edit3,
   Monitor,
-  Smartphone
+  Smartphone,
+  ChevronDown,
+  Trash2
 } from 'lucide-react';
 
 interface EmailEditorToolbarProps {
@@ -54,6 +63,11 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
     if (e.key === 'Enter' || e.key === 'Escape') {
       setIsEditingTitle(false);
     }
+  };
+
+  const handleDelete = () => {
+    console.log('Delete campaign...');
+    // TODO: Implement delete functionality
   };
 
   return (
@@ -141,9 +155,10 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant="ghost"
             size="sm"
             onClick={onPreview}
-            className="h-[38px] u-p-3"
+            className="h-[38px] u-p-3 u-gap-2"
             style={{ fontSize: '14px' }}
           >
+            <Eye className="w-4 h-4" />
             Preview
           </Button>
 
@@ -157,16 +172,36 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             Send test
           </Button>
 
-          {/* Save and exit */}
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onSave}
-            className="h-[38px] u-p-3"
-            style={{ fontSize: '14px' }}
-          >
-            Save and exit
-          </Button>
+          {/* Save with dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                size="sm"
+                className="h-[38px] u-p-3 u-gap-2"
+                style={{ fontSize: '14px' }}
+              >
+                <Save className="w-4 h-4" />
+                Save
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-200 shadow-lg z-50">
+              <DropdownMenuItem onClick={onSave}>
+                <Save className="w-4 h-4 mr-2" />
+                Save and continue
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onExport}>
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete campaign
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>
