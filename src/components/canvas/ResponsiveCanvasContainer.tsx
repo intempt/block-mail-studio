@@ -17,20 +17,29 @@ export const ResponsiveCanvasContainer: React.FC<ResponsiveCanvasContainerProps>
     const updateWidth = () => {
       if (containerRef.current) {
         const width = containerRef.current.offsetWidth;
+        console.log('ResponsiveCanvasContainer: Container width changed to:', width);
         setContainerWidth(width);
         onWidthChange?.(width);
       }
     };
 
+    // Initial measurement
     updateWidth();
     
-    const resizeObserver = new ResizeObserver(updateWidth);
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+    
     if (containerRef.current) {
       resizeObserver.observe(containerRef.current);
     }
 
+    // Also listen to window resize as a fallback
+    window.addEventListener('resize', updateWidth);
+
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener('resize', updateWidth);
     };
   }, [onWidthChange]);
 
@@ -40,7 +49,16 @@ export const ResponsiveCanvasContainer: React.FC<ResponsiveCanvasContainerProps>
       className="w-full h-full"
       style={{ minWidth: 0 }} // Important for flex shrinking
     >
-      {children}
+      {/* Clone children and pass the width */}
+      {React.Children.map(children, child => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child, { 
+            ...child.props, 
+            containerWidth: containerWidth 
+          } as any);
+        }
+        return child;
+      })}
     </div>
   );
 };

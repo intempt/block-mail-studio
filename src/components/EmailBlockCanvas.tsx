@@ -25,6 +25,7 @@ interface EmailBlockCanvasProps {
   showAIAnalytics?: boolean;
   onSnippetRefresh?: () => void;
   viewMode?: 'edit' | 'desktop-preview' | 'mobile-preview';
+  containerWidth?: number; // New prop for responsive width
 }
 
 export interface EmailBlockCanvasRef {
@@ -47,7 +48,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   onSubjectChange = () => {},
   showAIAnalytics = false,
   onSnippetRefresh,
-  viewMode = 'edit'
+  viewMode = 'edit',
+  containerWidth = 600 // Use container width for responsiveness
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -55,6 +57,11 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
   const { currentEmailHTML } = useEmailHTMLGenerator(blocks, onContentChange);
+
+  // Calculate effective canvas width based on container width
+  const effectiveCanvasWidth = containerWidth > 0 ? Math.min(containerWidth - 64, 700) : previewWidth;
+
+  console.log('EmailBlockCanvas: containerWidth =', containerWidth, 'effectiveCanvasWidth =', effectiveCanvasWidth);
 
   // Helper functions for creating default content and styles
   const getDefaultContent = useCallback((blockType: string) => {
@@ -306,6 +313,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
         emailHtml={currentEmailHTML}
         subject={subject}
         viewMode={viewMode}
+        canvasWidth={effectiveCanvasWidth}
       />
     );
   }
@@ -320,7 +328,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
       editingBlockId={editingBlockId}
       setEditingBlockId={setEditingBlockId}
       onBlockSelect={onBlockSelect}
-      previewWidth={previewWidth}
+      previewWidth={effectiveCanvasWidth}
       previewMode={previewMode}
       compactMode={compactMode}
       subject={subject}
