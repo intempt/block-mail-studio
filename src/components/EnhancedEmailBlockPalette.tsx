@@ -3,10 +3,10 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
-import { LayoutConfigPanel } from '../LayoutConfigPanel';
-import { SnippetManager } from '../SnippetManager';
-import { BlockSection } from './BlockSection';
-import { PaletteTabContent } from './PaletteTabContent';
+import { LayoutConfigPanel } from './LayoutConfigPanel';
+import { SnippetManager } from './SnippetManager';
+import { BlockSection } from './palette/BlockSection';
+import { PaletteTabContent } from './palette/PaletteTabContent';
 import { ribbonBlockItems } from '@/data/ribbonBlockItems.tsx';
 
 interface EnhancedEmailBlockPaletteProps {

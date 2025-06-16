@@ -1,10 +1,11 @@
 
 import React from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { TabsContent } from '@/components/ui/tabs';
 
 interface PaletteTabContentProps {
   value: string;
-  compactMode?: boolean;
+  compactMode: boolean;
   children: React.ReactNode;
 }
 
@@ -15,11 +16,11 @@ export const PaletteTabContent: React.FC<PaletteTabContentProps> = ({
 }) => {
   return (
     <TabsContent value={value} className="h-full mt-0">
-      <div className="h-full overflow-y-auto">
-        <div className={`p-2 space-y-1 ${compactMode ? 'px-1' : 'px-2'}`}>
+      <ScrollArea className="flex-1">
+        <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
           {children}
         </div>
-      </div>
+      </ScrollArea>
     </TabsContent>
   );
 };

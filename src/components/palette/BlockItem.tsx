@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { BlockItemProps } from './types';
+import { BlockItemProps } from '@/types/blockPalette';
 
 export const BlockItem: React.FC<BlockItemProps> = ({
   block,
