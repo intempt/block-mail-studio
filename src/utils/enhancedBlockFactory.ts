@@ -95,7 +95,7 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         ...baseBlock,
         type: 'button',
         content: {
-          text: 'Click Here',
+          text: '<a href="#" style="color: inherit; text-decoration: none;">Click Here</a>',
           link: '#',
           style: 'solid',
           size: 'medium',

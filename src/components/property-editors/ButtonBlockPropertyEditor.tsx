@@ -35,17 +35,19 @@ export const ButtonBlockPropertyEditor: React.FC<ButtonBlockPropertyEditorProps>
   return (
     <div className="space-y-6">
       <div>
-        <Label htmlFor="button-text">Button Text</Label>
+        <Label htmlFor="button-text">Call-to-action Text</Label>
         <Input
           id="button-text"
           value={block.content.text}
           onChange={(e) => updateContent({ text: e.target.value })}
           className="mt-2"
+          placeholder='<a href="#" style="color: inherit;">Click Here</a>'
         />
+        <p className="text-xs text-gray-500 mt-1">You can use HTML tags like &lt;a&gt; for links</p>
       </div>
 
       <div>
-        <Label htmlFor="button-link">Link URL</Label>
+        <Label htmlFor="button-link">Default Link URL</Label>
         <Input
           id="button-link"
           value={block.content.link}
@@ -53,6 +55,7 @@ export const ButtonBlockPropertyEditor: React.FC<ButtonBlockPropertyEditorProps>
           className="mt-2"
           placeholder="https://example.com"
         />
+        <p className="text-xs text-gray-500 mt-1">This will be used if no link is specified in the text</p>
       </div>
 
       <div>

@@ -62,11 +62,16 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
     }
   };
 
+  const getBlockTypeName = (type: string) => {
+    if (type === 'button') return 'Call-to-action';
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <div className="p-4 border-b">
-        <h3 className="font-semibold text-lg capitalize">
-          {selectedBlock.type} Block Properties
+        <h3 className="font-semibold text-lg">
+          {getBlockTypeName(selectedBlock.type)} Block Properties
         </h3>
       </div>
       <ScrollArea className="flex-1">
