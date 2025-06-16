@@ -11,6 +11,7 @@ interface BlocksSidebarProps {
   universalContent: UniversalContent[];
   onUniversalContentAdd: (content: UniversalContent) => void;
   snippetRefreshTrigger?: number;
+  onGlobalStylesChange?: (styles: any) => void;
 }
 
 export const BlocksSidebar: React.FC<BlocksSidebarProps> = ({
@@ -18,7 +19,8 @@ export const BlocksSidebar: React.FC<BlocksSidebarProps> = ({
   onSnippetAdd,
   universalContent,
   onUniversalContentAdd,
-  snippetRefreshTrigger = 0
+  snippetRefreshTrigger = 0,
+  onGlobalStylesChange
 }) => {
   return (
     <div className="h-full bg-gray-50 border-r border-gray-200 flex flex-col pt-4">
@@ -31,6 +33,7 @@ export const BlocksSidebar: React.FC<BlocksSidebarProps> = ({
           onUniversalContentAdd={onUniversalContentAdd}
           compactMode={false}
           snippetRefreshTrigger={snippetRefreshTrigger}
+          onGlobalStylesChange={onGlobalStylesChange}
         />
       </div>
     </div>

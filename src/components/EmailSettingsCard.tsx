@@ -4,48 +4,146 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Settings,
-  ChevronDown,
-  Edit
+  Mail,
+  ChevronDown
 } from 'lucide-react';
 
 interface EmailSettingsCardProps {
   isOpen: boolean;
   onToggle: () => void;
   onStylesChange: (styles: any) => void;
+  inline?: boolean;
 }
 
 export const EmailSettingsCard: React.FC<EmailSettingsCardProps> = ({
   isOpen,
   onToggle,
-  onStylesChange
+  onStylesChange,
+  inline = false
 }) => {
-  const [emailSettings, setEmailSettings] = useState({
+  const [emailStyles, setEmailStyles] = useState({
     templateBackground: '#8C9A80',
     contentBackground: '#263D29',
     width: '600',
     marginTop: '30',
-    marginBottom: '30',
-    preheader: 'View this email in your browser'
+    marginBottom: '30'
   });
 
-  const handleSettingChange = (property: string, value: any) => {
-    const newSettings = { ...emailSettings, [property]: value };
-    setEmailSettings(newSettings);
+  const handleStyleChange = (property: string, value: any) => {
+    const newStyles = { ...emailStyles, [property]: value };
+    setEmailStyles(newStyles);
     
     onStylesChange({
       email: {
-        templateBackground: newSettings.templateBackground,
-        contentBackground: newSettings.contentBackground,
-        width: `${newSettings.width}px`,
-        marginTop: `${newSettings.marginTop}px`,
-        marginBottom: `${newSettings.marginBottom}px`,
-        preheader: newSettings.preheader
+        templateBackground: newStyles.templateBackground,
+        contentBackground: newStyles.contentBackground,
+        width: newStyles.width + 'px',
+        marginTop: newStyles.marginTop + 'px',
+        marginBottom: newStyles.marginBottom + 'px'
       }
     });
   };
+
+  const content = (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {/* Template Background */}
+        <div>
+          <Label className="text-xs">Template background</Label>
+          <div className="flex gap-2 mt-1">
+            <input
+              type="color"
+              value={emailStyles.templateBackground}
+              onChange={(e) => handleStyleChange('templateBackground', e.target.value)}
+              className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+            />
+            <Input
+              value={emailStyles.templateBackground}
+              onChange={(e) => handleStyleChange('templateBackground', e.target.value)}
+              className="flex-1 h-8 text-xs font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Content Background */}
+        <div>
+          <Label className="text-xs">Content background</Label>
+          <div className="flex gap-2 mt-1">
+            <input
+              type="color"
+              value={emailStyles.contentBackground}
+              onChange={(e) => handleStyleChange('contentBackground', e.target.value)}
+              className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+            />
+            <Input
+              value={emailStyles.contentBackground}
+              onChange={(e) => handleStyleChange('contentBackground', e.target.value)}
+              className="flex-1 h-8 text-xs font-mono"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {/* Width */}
+        <div>
+          <Label className="text-xs">Width</Label>
+          <div className="flex mt-1">
+            <Input
+              value={emailStyles.width}
+              onChange={(e) => handleStyleChange('width', e.target.value)}
+              className="h-8 text-xs"
+            />
+            <span className="ml-1 text-xs text-gray-500 flex items-center">px</span>
+          </div>
+        </div>
+
+        {/* Margin Top */}
+        <div>
+          <Label className="text-xs">Margin top</Label>
+          <div className="flex mt-1">
+            <Input
+              value={emailStyles.marginTop}
+              onChange={(e) => handleStyleChange('marginTop', e.target.value)}
+              className="h-8 text-xs"
+            />
+            <span className="ml-1 text-xs text-gray-500 flex items-center">px</span>
+          </div>
+        </div>
+
+        {/* Margin Bottom */}
+        <div>
+          <Label className="text-xs">Margin bottom</Label>
+          <div className="flex mt-1">
+            <Input
+              value={emailStyles.marginBottom}
+              onChange={(e) => handleStyleChange('marginBottom', e.target.value)}
+              className="h-8 text-xs"
+            />
+            <span className="ml-1 text-xs text-gray-500 flex items-center">px</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <Label className="text-xs">Preheader</Label>
+        <Input
+          placeholder="View this email in your browser"
+          className="h-8 text-xs mt-1"
+        />
+      </div>
+    </div>
+  );
+
+  if (inline) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg p-3">
+        {content}
+      </div>
+    );
+  }
 
   if (!isOpen) return null;
 
@@ -54,7 +152,7 @@ export const EmailSettingsCard: React.FC<EmailSettingsCardProps> = ({
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Settings className="w-4 h-4" />
+            <Mail className="w-4 h-4" />
             Email Settings
           </h3>
           <Button
@@ -66,106 +164,7 @@ export const EmailSettingsCard: React.FC<EmailSettingsCardProps> = ({
             <ChevronDown className="w-4 h-4" />
           </Button>
         </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Template Background */}
-            <div>
-              <Label className="text-xs font-medium mb-2 block">Template background</Label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={emailSettings.templateBackground}
-                  onChange={(e) => handleSettingChange('templateBackground', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                />
-                <Input
-                  value={emailSettings.templateBackground}
-                  onChange={(e) => handleSettingChange('templateBackground', e.target.value)}
-                  className="flex-1 h-8 text-xs font-mono"
-                />
-              </div>
-            </div>
-
-            {/* Content Background */}
-            <div>
-              <Label className="text-xs font-medium mb-2 block">Content background</Label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={emailSettings.contentBackground}
-                  onChange={(e) => handleSettingChange('contentBackground', e.target.value)}
-                  className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-                />
-                <Input
-                  value={emailSettings.contentBackground}
-                  onChange={(e) => handleSettingChange('contentBackground', e.target.value)}
-                  className="flex-1 h-8 text-xs font-mono"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3">
-            {/* Width */}
-            <div>
-              <Label className="text-xs">Width</Label>
-              <div className="flex items-center gap-1 mt-1">
-                <Input
-                  type="number"
-                  value={emailSettings.width}
-                  onChange={(e) => handleSettingChange('width', e.target.value)}
-                  className="h-8 text-xs"
-                />
-                <span className="text-xs text-gray-500">px</span>
-              </div>
-            </div>
-
-            {/* Margin Top */}
-            <div>
-              <Label className="text-xs">Margin top</Label>
-              <div className="flex items-center gap-1 mt-1">
-                <Input
-                  type="number"
-                  value={emailSettings.marginTop}
-                  onChange={(e) => handleSettingChange('marginTop', e.target.value)}
-                  className="h-8 text-xs"
-                />
-                <span className="text-xs text-gray-500">px</span>
-              </div>
-            </div>
-
-            {/* Margin Bottom */}
-            <div>
-              <Label className="text-xs">Margin bottom</Label>
-              <div className="flex items-center gap-1 mt-1">
-                <Input
-                  type="number"
-                  value={emailSettings.marginBottom}
-                  onChange={(e) => handleSettingChange('marginBottom', e.target.value)}
-                  className="h-8 text-xs"
-                />
-                <span className="text-xs text-gray-500">px</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Preheader */}
-          <div>
-            <Label className="text-xs font-medium mb-2 block">Preheader</Label>
-            <div className="flex gap-2">
-              <Textarea
-                value={emailSettings.preheader}
-                onChange={(e) => handleSettingChange('preheader', e.target.value)}
-                className="flex-1 h-8 text-xs resize-none"
-                rows={1}
-              />
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Edit className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        {content}
       </div>
     </Card>
   );
