@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { DirectSnippetService } from '@/services/directSnippetService';
@@ -60,15 +59,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   const { currentEmailHTML } = useEmailHTMLGenerator(blocks, onContentChange);
 
-  // Calculate responsive width - simpler approach
-  const getResponsiveWidth = () => {
-    if (containerWidth > 0) {
-      return Math.min(containerWidth - 64, 700); // 64px for padding
-    }
-    return previewWidth;
-  };
-
-  const effectiveWidth = getResponsiveWidth();
+  // Set inner layout to 1920px wide
+  const effectiveWidth = 1920;
 
   console.log('EmailBlockCanvas: containerWidth =', containerWidth, 'effectiveWidth =', effectiveWidth);
 
