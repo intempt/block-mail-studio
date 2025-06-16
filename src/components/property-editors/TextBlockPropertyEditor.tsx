@@ -232,7 +232,7 @@ export const TextBlockPropertyEditor: React.FC<TextBlockPropertyEditorProps> = (
               <div className="flex items-center gap-1 mt-1">
                 <Input
                   type="number"
-                  value={parseInt(styling.letterSpacing || '0')}
+                  value={parseInt((styling as any).letterSpacing || '0')}
                   onChange={(e) => updateStyling('desktop', { letterSpacing: `${e.target.value}px` })}
                   className="h-8 text-xs"
                 />
