@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
@@ -35,6 +34,13 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   
   const isMobile = useIsMobile();
+
+  // Auto-collapse left sidebar on mobile when property panel opens
+  React.useEffect(() => {
+    if (isMobile && selectedBlock) {
+      setLeftSidebarCollapsed(true);
+    }
+  }, [isMobile, selectedBlock]);
 
   const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
     console.log('EmailEditor: Adding block of type:', blockType);
@@ -103,17 +109,10 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
 
   console.log('EmailEditor: About to render main component');
 
-  // On mobile, auto-collapse sidebars when a block is selected
-  React.useEffect(() => {
-    if (isMobile && selectedBlock) {
-      setLeftSidebarCollapsed(true);
-    }
-  }, [isMobile, selectedBlock]);
-
   return (
-    <div className="h-screen w-full flex flex-col bg-white">
-      {/* Top Toolbar - Full width, fixed at top */}
-      <div className="flex-shrink-0 border-b border-gray-200">
+    <div className="h-screen w-full flex flex-col bg-white overflow-hidden">
+      {/* Top Toolbar - Fixed at top */}
+      <div className="flex-shrink-0 border-b border-gray-200 z-30">
         <EmailEditorToolbar 
           onExport={handleExport}
           onSave={handleSave}
@@ -126,14 +125,19 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
         />
       </div>
       
-      {/* Main Content Area - Responsive layout */}
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        {/* Left Sidebar - Responsive and collapsible */}
-        {!leftSidebarCollapsed && (
-          <div className={`
-            flex-shrink-0 border-r border-gray-200 bg-gray-50
-            ${isMobile ? 'absolute top-0 left-0 z-20 h-full w-72' : 'w-64 lg:w-72 xl:w-80'}
-          `}>
+      {/* Main Content Area - Responsive three-column layout */}
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* Left Sidebar - Blocks Palette */}
+        <div className={`
+          ${isMobile 
+            ? `fixed top-16 left-0 h-[calc(100vh-4rem)] z-20 bg-white shadow-lg transition-transform duration-300 ${
+                leftSidebarCollapsed ? '-translate-x-full' : 'translate-x-0'
+              }` 
+            : 'relative'
+          } ${isMobile ? 'w-80' : leftSidebarCollapsed ? 'w-0' : 'w-64 lg:w-72'}
+          flex-shrink-0 border-r border-gray-200 bg-gray-50 overflow-hidden
+        `}>
+          {(!isMobile || !leftSidebarCollapsed) && (
             <BlocksSidebar
               onBlockAdd={handleBlockAdd}
               onSnippetAdd={handleSnippetAdd}
@@ -141,14 +145,14 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
               onUniversalContentAdd={handleUniversalContentAdd}
               snippetRefreshTrigger={snippetRefreshTrigger}
             />
-          </div>
-        )}
+          )}
+        </div>
         
-        {/* Toggle button for left sidebar on mobile */}
+        {/* Toggle button for left sidebar */}
         {isMobile && (
           <button
             onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
-            className="fixed top-16 left-2 z-30 bg-white border border-gray-300 rounded-md p-2 shadow-sm"
+            className="fixed top-20 left-2 z-30 bg-white border border-gray-300 rounded-md p-2 shadow-lg hover:bg-gray-50 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -156,8 +160,12 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           </button>
         )}
         
-        {/* Canvas Area - Takes remaining space, fully responsive */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
+        {/* Center Canvas Area - Takes remaining space */}
+        <div className={`
+          flex-1 flex flex-col min-w-0 bg-white overflow-hidden
+          ${isMobile && !leftSidebarCollapsed ? 'opacity-50 pointer-events-none' : ''}
+          ${isMobile && selectedBlock ? 'opacity-50 pointer-events-none' : ''}
+        `}>
           <div className="flex-1 overflow-auto">
             <EmailBlockCanvas
               onContentChange={onContentChange}
@@ -170,8 +178,8 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
             />
           </div>
           
-          {/* Bottom Metrics Panel - Hide on small screens when sidebar is open */}
-          {!(isMobile && selectedBlock) && (
+          {/* Bottom Metrics Panel - Hide on mobile when sidebars are open */}
+          {!(isMobile && (selectedBlock || !leftSidebarCollapsed)) && (
             <div className="flex-shrink-0 border-t border-gray-200">
               <EmailMetricsPanel 
                 blocks={blocks}
@@ -181,23 +189,26 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           )}
         </div>
 
-        {/* Right Sidebar - Properties Panel - Responsive */}
+        {/* Right Sidebar - Properties Panel */}
         {selectedBlock && (
           <div className={`
-            flex-shrink-0 border-l border-gray-200 bg-gray-50
             ${isMobile 
-              ? 'absolute top-0 right-0 z-20 h-full w-full max-w-sm' 
-              : 'w-80 xl:w-96'
+              ? 'fixed top-16 right-0 h-[calc(100vh-4rem)] z-20 bg-white shadow-lg w-full max-w-sm' 
+              : 'relative w-80 xl:w-96'
             }
+            flex-shrink-0 border-l border-gray-200 bg-gray-50 overflow-hidden
           `}>
             <div className="h-full flex flex-col">
-              {/* Close button for mobile */}
+              {/* Header with close button for mobile */}
               {isMobile && (
-                <div className="flex justify-between items-center p-3 border-b border-gray-200">
-                  <h3 className="font-semibold">Block Properties</h3>
+                <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-white">
+                  <h3 className="font-semibold text-gray-900">Block Properties</h3>
                   <button
-                    onClick={() => setSelectedBlock(null)}
-                    className="p-1 hover:bg-gray-200 rounded"
+                    onClick={() => {
+                      setSelectedBlock(null);
+                      setSelectedBlockId(null);
+                    }}
+                    className="p-1 hover:bg-gray-100 rounded-md transition-colors"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -222,6 +233,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
             className="fixed inset-0 bg-black bg-opacity-25 z-10"
             onClick={() => {
               setSelectedBlock(null);
+              setSelectedBlockId(null);
               setLeftSidebarCollapsed(true);
             }}
           />
