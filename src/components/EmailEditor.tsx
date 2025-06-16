@@ -131,11 +131,6 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     return ComprehensiveMetricsService.calculateMetrics(content, subject);
   }, [content, subject]);
 
-  const handleGlobalStylesChange = useCallback((styles: any) => {
-    console.log('EmailEditor: Global styles changed:', styles);
-    // TODO: Apply global styles to email template
-  }, []);
-
   const handleDockSuggestionClick = useCallback((suggestion: string) => {
     setDockMessage(suggestion);
     handleDockSendMessage(suggestion);
@@ -186,7 +181,6 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
               universalContent={universalContent}
               onUniversalContentAdd={handleUniversalContentAdd}
               snippetRefreshTrigger={snippetRefreshTrigger}
-              onGlobalStylesChange={handleGlobalStylesChange}
             />
           </div>
         )}

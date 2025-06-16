@@ -6,221 +6,170 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Type,
   ChevronDown,
+  X,
   Italic,
   Underline,
   AlignLeft,
   AlignCenter,
-  AlignRight
+  AlignRight,
+  Lock
 } from 'lucide-react';
 
 interface TextHeadingsCardProps {
   isOpen: boolean;
   onToggle: () => void;
   onStylesChange: (styles: any) => void;
-  inline?: boolean;
 }
+
+const fontOptions = [
+  'Arial, sans-serif',
+  'Inter, sans-serif',
+  'Roboto, sans-serif',
+  'Open Sans, sans-serif',
+  'Lato, sans-serif',
+  'Montserrat, sans-serif',
+  'Poppins, sans-serif',
+  'Georgia, serif',
+  'Times New Roman, serif',
+];
+
+const fontWeights = [
+  { value: '300', label: '300 - Light' },
+  { value: '400', label: '400 - Normal' },
+  { value: '500', label: '500 - Medium' },
+  { value: '600', label: '600 - Semi Bold' },
+  { value: '700', label: '700 - Bold' },
+  { value: '800', label: '800 - Extra Bold' }
+];
 
 export const TextHeadingsCard: React.FC<TextHeadingsCardProps> = ({
   isOpen,
   onToggle,
-  onStylesChange,
-  inline = false
+  onStylesChange
 }) => {
-  const [selectedHeading, setSelectedHeading] = useState('Paragraph');
+  const [activeTab, setActiveTab] = useState('paragraph');
   const [textStyles, setTextStyles] = useState({
-    font: 'Arial',
-    size: '16',
-    color: '#000000',
-    lineHeight: '130',
-    style: '400 - Normal',
-    letterSpacing: '0',
-    topBottomPadding: '8',
-    leftRightPadding: '16',
-    alignment: 'center'
+    paragraph: {
+      fontFamily: ['Arial, sans-serif'],
+      fontSize: '16',
+      color: '#000000',
+      lineHeight: '130',
+      fontWeight: '400',
+      letterSpacing: '0',
+      italic: false,
+      underline: false,
+      alignment: 'left',
+      paddingTopBottom: '8',
+      paddingLeftRight: '16',
+      paddingLocked: true
+    },
+    h1: {
+      fontFamily: ['Arial, sans-serif'],
+      fontSize: '32',
+      color: '#000000',
+      lineHeight: '120',
+      fontWeight: '700',
+      letterSpacing: '0',
+      italic: false,
+      underline: false,
+      alignment: 'left',
+      paddingTopBottom: '12',
+      paddingLeftRight: '16',
+      paddingLocked: true
+    },
+    h2: {
+      fontFamily: ['Arial, sans-serif'],
+      fontSize: '24',
+      color: '#000000',
+      lineHeight: '125',
+      fontWeight: '600',
+      letterSpacing: '0',
+      italic: false,
+      underline: false,
+      alignment: 'left',
+      paddingTopBottom: '10',
+      paddingLeftRight: '16',
+      paddingLocked: true
+    },
+    h3: {
+      fontFamily: ['Arial, sans-serif'],
+      fontSize: '20',
+      color: '#000000',
+      lineHeight: '130',
+      fontWeight: '600',
+      letterSpacing: '0',
+      italic: false,
+      underline: false,
+      alignment: 'left',
+      paddingTopBottom: '8',
+      paddingLeftRight: '16',
+      paddingLocked: true
+    }
   });
 
-  const handleTextStyleChange = (property: string, value: any) => {
-    const newStyles = { ...textStyles, [property]: value };
+  const handleStyleChange = (textType: string, property: string, value: any) => {
+    const newStyles = {
+      ...textStyles,
+      [textType]: {
+        ...textStyles[textType as keyof typeof textStyles],
+        [property]: value
+      }
+    };
     setTextStyles(newStyles);
     
+    const currentStyle = newStyles[textType as keyof typeof newStyles];
     onStylesChange({
       text: {
-        fontFamily: newStyles.font,
-        fontSize: newStyles.size + 'px',
-        color: newStyles.color,
-        lineHeight: newStyles.lineHeight + '%',
-        fontWeight: newStyles.style.includes('400') ? 'normal' : 'bold',
-        letterSpacing: newStyles.letterSpacing + 'px',
-        paddingTop: newStyles.topBottomPadding + 'px',
-        paddingBottom: newStyles.topBottomPadding + 'px',
-        paddingLeft: newStyles.leftRightPadding + 'px',
-        paddingRight: newStyles.leftRightPadding + 'px',
-        textAlign: newStyles.alignment
+        [textType]: {
+          fontFamily: currentStyle.fontFamily.join(', '),
+          fontSize: `${currentStyle.fontSize}px`,
+          color: currentStyle.color,
+          lineHeight: `${currentStyle.lineHeight}%`,
+          fontWeight: currentStyle.fontWeight,
+          letterSpacing: `${currentStyle.letterSpacing}px`,
+          fontStyle: currentStyle.italic ? 'italic' : 'normal',
+          textDecoration: currentStyle.underline ? 'underline' : 'none',
+          textAlign: currentStyle.alignment,
+          padding: `${currentStyle.paddingTopBottom}px ${currentStyle.paddingLeftRight}px`
+        }
       }
     });
   };
 
-  const content = (
-    <div className="space-y-4">
-      {/* Heading Type Selector */}
-      <div className="flex gap-1">
-        {['Paragraph', 'H1', 'H2', 'H3'].map((heading) => (
-          <Button
-            key={heading}
-            variant={selectedHeading === heading ? 'default' : 'outline'}
-            size="sm"
-            className="flex-1 h-8 text-xs"
-            onClick={() => setSelectedHeading(heading)}
-          >
-            {heading}
-          </Button>
-        ))}
-      </div>
+  const addFont = (textType: string, font: string) => {
+    const currentStyle = textStyles[textType as keyof typeof textStyles];
+    if (!currentStyle.fontFamily.includes(font)) {
+      handleStyleChange(textType, 'fontFamily', [...currentStyle.fontFamily, font]);
+    }
+  };
 
-      <div>
-        <Label className="text-xs">Font</Label>
-        <div className="flex gap-2 mt-1">
-          <Badge variant="outline" className="text-xs">
-            {textStyles.font} ✕
-          </Badge>
-        </div>
-        <Button variant="outline" className="w-full h-8 text-xs mt-2 justify-start">
-          Add font...
-        </Button>
-      </div>
+  const removeFont = (textType: string, font: string) => {
+    const currentStyle = textStyles[textType as keyof typeof textStyles];
+    handleStyleChange(textType, 'fontFamily', currentStyle.fontFamily.filter(f => f !== font));
+  };
 
-      <div className="grid grid-cols-4 gap-3">
-        <div>
-          <Label className="text-xs">Size</Label>
-          <Input
-            value={textStyles.size}
-            onChange={(e) => handleTextStyleChange('size', e.target.value)}
-            className="h-8 text-xs mt-1"
-          />
-        </div>
+  const togglePaddingLock = (textType: string) => {
+    const currentStyle = textStyles[textType as keyof typeof textStyles];
+    const newLocked = !currentStyle.paddingLocked;
+    handleStyleChange(textType, 'paddingLocked', newLocked);
+  };
 
-        <div>
-          <Label className="text-xs">Color</Label>
-          <div className="flex gap-1 mt-1">
-            <input
-              type="color"
-              value={textStyles.color}
-              onChange={(e) => handleTextStyleChange('color', e.target.value)}
-              className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-            />
-          </div>
-        </div>
+  const handlePaddingChange = (textType: string, type: 'topBottom' | 'leftRight', value: string) => {
+    const currentStyle = textStyles[textType as keyof typeof textStyles];
+    if (currentStyle.paddingLocked) {
+      handleStyleChange(textType, 'paddingTopBottom', value);
+      handleStyleChange(textType, 'paddingLeftRight', value);
+    } else {
+      const property = type === 'topBottom' ? 'paddingTopBottom' : 'paddingLeftRight';
+      handleStyleChange(textType, property, value);
+    }
+  };
 
-        <div>
-          <Label className="text-xs">Line Height</Label>
-          <div className="flex mt-1">
-            <Input
-              value={textStyles.lineHeight}
-              onChange={(e) => handleTextStyleChange('lineHeight', e.target.value)}
-              className="h-8 text-xs"
-            />
-            <span className="ml-1 text-xs text-gray-500 flex items-center">%</span>
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs">Style</Label>
-          <Select value={textStyles.style} onValueChange={(value) => handleTextStyleChange('style', value)}>
-            <SelectTrigger className="h-8 mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="400 - Normal">400 - Normal</SelectItem>
-              <SelectItem value="700 - Bold">700 - Bold</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <Label className="text-xs">Letter Spacing</Label>
-          <div className="flex mt-1">
-            <Input
-              value={textStyles.letterSpacing}
-              onChange={(e) => handleTextStyleChange('letterSpacing', e.target.value)}
-              className="h-8 text-xs"
-            />
-            <span className="ml-1 text-xs text-gray-500 flex items-center">px</span>
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs">Format</Label>
-          <div className="flex gap-1 mt-1">
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-              <Italic className="w-3 h-3" />
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-              <Underline className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs">Alignment</Label>
-          <div className="flex gap-1 mt-1">
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-              <AlignLeft className="w-3 h-3" />
-            </Button>
-            <Button 
-              variant={textStyles.alignment === 'center' ? 'default' : 'outline'} 
-              size="sm" 
-              className="h-8 w-8 p-0"
-              onClick={() => handleTextStyleChange('alignment', 'center')}
-            >
-              <AlignCenter className="w-3 h-3" />
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-              <AlignRight className="w-3 h-3" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-xs">Top/Bottom Padding</Label>
-          <div className="flex mt-1">
-            <Input
-              value={textStyles.topBottomPadding}
-              onChange={(e) => handleTextStyleChange('topBottomPadding', e.target.value)}
-              className="h-8 text-xs"
-            />
-            <span className="ml-1 text-xs text-gray-500 flex items-center">px</span>
-          </div>
-        </div>
-
-        <div>
-          <Label className="text-xs">Left/Right Padding</Label>
-          <div className="flex mt-1">
-            <Input
-              value={textStyles.leftRightPadding}
-              onChange={(e) => handleTextStyleChange('leftRightPadding', e.target.value)}
-              className="h-8 text-xs"
-            />
-            <span className="ml-1 text-xs text-gray-500 flex items-center">px</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (inline) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-lg p-3">
-        {content}
-      </div>
-    );
-  }
+  const getCurrentStyle = () => textStyles[activeTab as keyof typeof textStyles];
 
   if (!isOpen) return null;
 
@@ -241,7 +190,216 @@ export const TextHeadingsCard: React.FC<TextHeadingsCardProps> = ({
             <ChevronDown className="w-4 h-4" />
           </Button>
         </div>
-        {content}
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="paragraph" className="text-xs">Paragraph</TabsTrigger>
+            <TabsTrigger value="h1" className="text-xs">H1</TabsTrigger>
+            <TabsTrigger value="h2" className="text-xs">H2</TabsTrigger>
+            <TabsTrigger value="h3" className="text-xs">H3</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={activeTab} className="space-y-4">
+            {/* Font Selection */}
+            <div>
+              <Label className="text-xs font-medium mb-2 block">Font</Label>
+              <div className="flex flex-wrap gap-1 mb-2">
+                {getCurrentStyle().fontFamily.map((font) => (
+                  <Badge key={font} variant="secondary" className="text-xs flex items-center gap-1">
+                    {font.split(',')[0]}
+                    <X 
+                      className="w-3 h-3 cursor-pointer hover:text-red-500" 
+                      onClick={() => removeFont(activeTab, font)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+              <Select onValueChange={(value) => addFont(activeTab, value)}>
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Add font..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {fontOptions.map((font) => (
+                    <SelectItem key={font} value={font} style={{ fontFamily: font }}>
+                      {font.split(',')[0]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              {/* Size */}
+              <div>
+                <Label className="text-xs">Size</Label>
+                <Input
+                  type="number"
+                  value={getCurrentStyle().fontSize}
+                  onChange={(e) => handleStyleChange(activeTab, 'fontSize', e.target.value)}
+                  className="h-8 text-xs mt-1"
+                />
+              </div>
+
+              {/* Color */}
+              <div>
+                <Label className="text-xs">Color</Label>
+                <div className="flex gap-2 mt-1">
+                  <input
+                    type="color"
+                    value={getCurrentStyle().color}
+                    onChange={(e) => handleStyleChange(activeTab, 'color', e.target.value)}
+                    className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={getCurrentStyle().color}
+                    onChange={(e) => handleStyleChange(activeTab, 'color', e.target.value)}
+                    className="flex-1 h-8 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Line Height */}
+              <div>
+                <Label className="text-xs">Line Height</Label>
+                <div className="flex items-center gap-1 mt-1">
+                  <Input
+                    type="number"
+                    value={getCurrentStyle().lineHeight}
+                    onChange={(e) => handleStyleChange(activeTab, 'lineHeight', e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                  <span className="text-xs text-gray-500">%</span>
+                </div>
+              </div>
+
+              {/* Style */}
+              <div>
+                <Label className="text-xs">Style</Label>
+                <Select 
+                  value={getCurrentStyle().fontWeight} 
+                  onValueChange={(value) => handleStyleChange(activeTab, 'fontWeight', value)}
+                >
+                  <SelectTrigger className="h-8 mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontWeights.map((weight) => (
+                      <SelectItem key={weight.value} value={weight.value}>
+                        {weight.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {/* Letter Spacing */}
+              <div>
+                <Label className="text-xs">Letter Spacing</Label>
+                <div className="flex items-center gap-1 mt-1">
+                  <Input
+                    type="number"
+                    value={getCurrentStyle().letterSpacing}
+                    onChange={(e) => handleStyleChange(activeTab, 'letterSpacing', e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                  <span className="text-xs text-gray-500">px</span>
+                </div>
+              </div>
+
+              {/* Text Formatting */}
+              <div>
+                <Label className="text-xs">Format</Label>
+                <div className="flex gap-1 mt-1">
+                  <Button
+                    variant={getCurrentStyle().italic ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleStyleChange(activeTab, 'italic', !getCurrentStyle().italic)}
+                  >
+                    <Italic className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant={getCurrentStyle().underline ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleStyleChange(activeTab, 'underline', !getCurrentStyle().underline)}
+                  >
+                    <Underline className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Alignment */}
+              <div>
+                <Label className="text-xs">Alignment</Label>
+                <div className="flex gap-1 mt-1">
+                  <Button
+                    variant={getCurrentStyle().alignment === 'left' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleStyleChange(activeTab, 'alignment', 'left')}
+                  >
+                    <AlignLeft className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant={getCurrentStyle().alignment === 'center' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleStyleChange(activeTab, 'alignment', 'center')}
+                  >
+                    <AlignCenter className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant={getCurrentStyle().alignment === 'right' ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleStyleChange(activeTab, 'alignment', 'right')}
+                  >
+                    <AlignRight className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Padding Controls */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Top/Bottom Padding</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input
+                    type="number"
+                    value={getCurrentStyle().paddingTopBottom}
+                    onChange={(e) => handlePaddingChange(activeTab, 'topBottom', e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                  <span className="text-xs text-gray-500">px</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => togglePaddingLock(activeTab)}
+                  >
+                    <Lock className={`w-3 h-3 ${getCurrentStyle().paddingLocked ? 'text-blue-600' : 'text-gray-400'}`} />
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Left/Right Padding</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input
+                    type="number"
+                    value={getCurrentStyle().paddingLeftRight}
+                    onChange={(e) => handlePaddingChange(activeTab, 'leftRight', e.target.value)}
+                    className="h-8 text-xs"
+                  />
+                  <span className="text-xs text-gray-500">px</span>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Card>
   );
