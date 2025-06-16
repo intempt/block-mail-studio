@@ -322,6 +322,17 @@ export interface ProductContent {
   showOriginalPrices: boolean;
   type?: 'dynamic' | 'static';
   schemaKeys?: string[];
+  selectedSchemaKey?: string;
+  schemaKeyStyles?: {
+    [key: string]: {
+      color?: string;
+      fontSize?: string;
+      fontFamily?: string;
+      fontWeight?: string;
+      fontStyle?: string;
+      textDecoration?: string;
+    };
+  };
 }
 
 export interface ProductBlock extends EmailBlock {

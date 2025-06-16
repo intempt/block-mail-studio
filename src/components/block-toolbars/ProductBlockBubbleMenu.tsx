@@ -142,149 +142,127 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const currentStyles = selectedSchemaKey ? block.content.schemaKeyStyles?.[selectedSchemaKey] : null;
 
   return (
-    <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-80">
-      {/* Horizontal layout for selectors */}
-      <div className="flex items-start gap-4 mb-3">
-        {/* Type selector column */}
-        <div className="flex-1">
-          <Select value={currentType} onValueChange={handleTypeChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select type">
-                {currentOption?.text || 'Select type'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
-              {typeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="cursor-pointer">
-                  <div className="flex flex-col py-1">
-                    <span className="font-medium text-sm">{option.text}</span>
-                    <span className="text-xs text-gray-500 mt-0.5">{option.description}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Conditional buttons positioned under Type selection with matching width */}
-          <div className="mt-2">
-            {currentType === 'static' ? (
-              <Button
-                onClick={handleAddProducts}
-                size="sm"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add products
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSelectFeed}
-                size="sm"
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Database className="w-4 h-4 mr-2" />
-                Select feed
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Schema Key selector column */}
-        <div className="flex-1">
-          <Select 
-            value={selectedSchemaKey || ""}
-            onValueChange={handleSchemaKeyChange}
+    <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 flex items-center gap-3 min-w-fit">
+      {/* Type selector */}
+      <div className="flex flex-col gap-2">
+        <Select value={currentType} onValueChange={handleTypeChange}>
+          <SelectTrigger className="w-32 h-8">
+            <SelectValue placeholder="Select type">
+              {currentOption?.text || 'Select type'}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+            {typeOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                <div className="flex flex-col py-1">
+                  <span className="font-medium text-sm">{option.text}</span>
+                  <span className="text-xs text-gray-500 mt-0.5">{option.description}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {/* Conditional button under type selector */}
+        {currentType === 'static' ? (
+          <Button
+            onClick={handleAddProducts}
+            size="sm"
+            className="w-32 h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs"
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select schema key..." />
-            </SelectTrigger>
-            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
-              {schemaKeyOptions.map((option) => (
-                <SelectItem 
-                  key={option.value} 
-                  value={option.value} 
-                  className="cursor-pointer"
-                >
-                  <span>{option.text}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <Plus className="w-3 h-3 mr-1" />
+            Add products
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSelectFeed}
+            size="sm"
+            className="w-32 h-8 bg-green-600 hover:bg-green-700 text-white text-xs"
+          >
+            <Database className="w-3 h-3 mr-1" />
+            Select feed
+          </Button>
+        )}
       </div>
 
-      {/* Typography and Color Controls - Show only when schema key is selected */}
+      <div className="w-px h-12 bg-gray-300" />
+
+      {/* Schema Key selector */}
+      <Select 
+        value={selectedSchemaKey || ""}
+        onValueChange={handleSchemaKeyChange}
+      >
+        <SelectTrigger className="w-32 h-8">
+          <SelectValue placeholder="Schema key..." />
+        </SelectTrigger>
+        <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+          {schemaKeyOptions.map((option) => (
+            <SelectItem 
+              key={option.value} 
+              value={option.value} 
+              className="cursor-pointer"
+            >
+              <span>{option.text}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Typography Controls - Show only when schema key is selected */}
       {selectedSchemaKey && (
-        <div className="border-t pt-3 mt-3">
-          <div className="flex items-center gap-2 mb-3">
-            <Type className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">
-              {schemaKeyOptions.find(opt => opt.value === selectedSchemaKey)?.text} Styling
-            </span>
+        <>
+          <div className="w-px h-12 bg-gray-300" />
+
+          {/* Color Picker */}
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={currentStyles?.color || '#000000'}
+              onChange={(e) => handleStyleChange('color', e.target.value)}
+              className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+              title="Text Color"
+            />
           </div>
 
-          {/* Color Picker Row */}
-          <div className="flex items-center gap-3 mb-3">
-            <label className="text-xs text-gray-600 min-w-[60px]">Color:</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={currentStyles?.color || '#000000'}
-                onChange={(e) => handleStyleChange('color', e.target.value)}
-                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
-              />
-              <Input
-                type="text"
-                value={currentStyles?.color || '#000000'}
-                onChange={(e) => handleStyleChange('color', e.target.value)}
-                className="w-20 h-8 text-xs"
-                placeholder="#000000"
-              />
-            </div>
-          </div>
+          <div className="w-px h-12 bg-gray-300" />
 
-          {/* Font Controls Row */}
-          <div className="grid grid-cols-2 gap-3 mb-3">
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">Font Size:</label>
-              <Select 
-                value={currentStyles?.fontSize || '16px'} 
-                onValueChange={(value) => handleStyleChange('fontSize', value)}
-              >
-                <SelectTrigger className="w-full h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
-                  {fontSizeOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Font Size */}
+          <Select 
+            value={currentStyles?.fontSize || '16px'} 
+            onValueChange={(value) => handleStyleChange('fontSize', value)}
+          >
+            <SelectTrigger className="w-20 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+              {fontSizeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <div>
-              <label className="text-xs text-gray-600 mb-1 block">Font Family:</label>
-              <Select 
-                value={currentStyles?.fontFamily || 'Arial, sans-serif'} 
-                onValueChange={(value) => handleStyleChange('fontFamily', value)}
-              >
-                <SelectTrigger className="w-full h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
-                  {fontFamilyOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          {/* Font Family */}
+          <Select 
+            value={currentStyles?.fontFamily || 'Arial, sans-serif'} 
+            onValueChange={(value) => handleStyleChange('fontFamily', value)}
+          >
+            <SelectTrigger className="w-24 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+              {fontFamilyOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          {/* Style Toggles Row */}
+          <div className="w-px h-12 bg-gray-300" />
+
+          {/* Style Toggle Buttons */}
           <div className="flex items-center gap-1">
             <Button
               size="sm"
@@ -311,7 +289,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
               <Underline className="w-4 h-4" />
             </Button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
