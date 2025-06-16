@@ -222,7 +222,8 @@ export type EmailBlockContent =
   | CodeContent
   | MenuContent
   | SplitContent
-  | ContentContent;
+  | ContentContent
+  | ProductContent;
 
 export interface EmailBlock {
   id: string;
@@ -329,6 +330,32 @@ export interface MenuBlock extends EmailBlock {
 export interface SplitBlock extends EmailBlock {
   type: 'split';
   content: SplitContent;
+}
+
+export interface Product {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  price: number;
+  originalPrice: number;
+  link: string;
+}
+
+export interface ProductContent {
+  products: Product[];
+  layout: 'grid' | 'list';
+  columns: number;
+  showImages: boolean;
+  showTitles: boolean;
+  showDescriptions: boolean;
+  showPrices: boolean;
+  showOriginalPrices: boolean;
+}
+
+export interface ProductBlock extends EmailBlock {
+  type: 'product';
+  content: ProductContent;
 }
 
 export interface UniversalContent {
