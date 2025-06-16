@@ -222,17 +222,48 @@ export type EmailBlockContent =
   | CodeContent
   | MenuContent
   | SplitContent
+  | ContentContent
   | ProductContent;
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
+  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote' | 'content';
   content: any;
   styling: Styling;
   position: Position;
   displayOptions: DisplayOptions;
   isStarred?: boolean;
   selected?: boolean;
+}
+
+export interface ContentBlock extends EmailBlock {
+  type: 'content';
+  content: ContentContent;
+}
+
+export interface ContentBlockItem {
+  [key: string]: any;
+}
+
+export interface ContentContent {
+  jsonData: ContentBlockItem[];
+  rows: number;
+  columns: number;
+  layout: 'table' | 'grid' | 'list';
+  selectedFields: string[];
+  fieldMappings: Record<string, {
+    label: string;
+    type: 'text' | 'image' | 'link' | 'currency' | 'date';
+    columnIndex?: number;
+  }>;
+  showHeaders: boolean;
+  headerStyle: 'bold' | 'normal' | 'uppercase';
+  cellPadding: string;
+  borderStyle: 'none' | 'solid' | 'dashed' | 'dotted';
+  borderColor: string;
+  alternateRowColors: boolean;
+  alternateColor: string;
+  itemsToShow?: number;
 }
 
 // Specific typed block interfaces
