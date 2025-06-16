@@ -3,6 +3,7 @@ import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
 import { BlocksSidebar } from '@/components/BlocksSidebar';
 import { EmailMetricsPanel } from '@/components/EmailMetricsPanel';
+import { MetricsPanel } from '@/components/MetricsPanel';
 import { FloatingTestButton } from '@/components/FloatingTestButton';
 import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
 import { ResponsiveCanvasContainer } from '@/components/canvas/ResponsiveCanvasContainer';
@@ -10,6 +11,7 @@ import { BottomDock } from '@/components/BottomDock';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ComprehensiveMetricsService } from '@/services/comprehensiveMetricsService';
 
 interface EmailEditorProps {
   content: string;
@@ -35,6 +37,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const [canvasWidth, setCanvasWidth] = useState(600);
   const [dockMessage, setDockMessage] = useState('');
   const [isDockLoading, setIsDockLoading] = useState(false);
+  const [showEmailMetrics, setShowEmailMetrics] = useState(false);
   
   const isMobile = useIsMobile();
 
@@ -114,6 +117,20 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     setCanvasWidth(width);
   }, []);
 
+  const handleEmailMetrics = useCallback(() => {
+    console.log('Opening email metrics panel...');
+    setShowEmailMetrics(true);
+    // Close property panel if open
+    setSelectedBlock(null);
+    setSelectedBlockId(null);
+  }, []);
+
+  // Generate comprehensive metrics
+  const comprehensiveMetrics = React.useMemo(() => {
+    if (!content.trim()) return null;
+    return ComprehensiveMetricsService.analyzeEmail(content, subject);
+  }, [content, subject]);
+
   const handleDockSuggestionClick = useCallback((suggestion: string) => {
     setDockMessage(suggestion);
     handleDockSendMessage(suggestion);
@@ -149,6 +166,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           onCampaignTitleChange={setCampaignTitle}
           previewMode={previewMode}
           onPreviewModeChange={setPreviewMode}
+          onEmailMetrics={handleEmailMetrics}
         />
       </div>
       
@@ -194,16 +212,39 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           </div>
         </div>
 
-        {/* Right Sidebar - Properties Panel */}
-        {selectedBlock && (
+        {/* Right Sidebar - Properties Panel or Email Metrics */}
+        {(selectedBlock || showEmailMetrics) && (
           <div className="w-96 flex-shrink-0 bg-gray-50 border-l border-gray-200 overflow-hidden">
             <div className="h-full flex flex-col">
-              <div className="flex-1 overflow-auto">
-                <PropertyEditorPanel
-                  selectedBlock={selectedBlock}
-                  onBlockUpdate={handleBlockUpdate}
-                />
-              </div>
+              {showEmailMetrics ? (
+                <div className="flex-1 overflow-auto">
+                  <div className="p-3 border-b border-gray-200 bg-white">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">Email Metrics</h3>
+                      <button
+                        onClick={() => setShowEmailMetrics(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <MetricsPanel 
+                    comprehensiveMetrics={comprehensiveMetrics}
+                    emailHTML={content}
+                    subjectLine={subject}
+                    canvasWidth={canvasWidth}
+                    previewMode={previewMode}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 overflow-auto">
+                  <PropertyEditorPanel
+                    selectedBlock={selectedBlock}
+                    onBlockUpdate={handleBlockUpdate}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
