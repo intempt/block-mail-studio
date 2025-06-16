@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -315,7 +314,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     <TooltipContent>
                       <p>Open Settings</p>
                     </TooltipContent>
-                  </Tooltip>
+                  </TooltipProvider>
                 </TooltipProvider>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
