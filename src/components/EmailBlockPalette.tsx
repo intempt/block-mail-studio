@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -124,6 +123,14 @@ export const EmailBlockPalette: React.FC<EmailBlockPaletteProps> = ({ onBlockAdd
       category: 'content',
       description: 'Code snippets with syntax highlighting',
       preview: 'console.log()'
+    },
+    {
+      type: 'product',
+      name: 'Product',
+      icon: <MousePointer className="w-6 h-6" />,
+      category: 'content',
+      description: 'Product showcase cards with pricing',
+      preview: 'Product showcase'
     }
   ];
 

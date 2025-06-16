@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -7,7 +6,7 @@ import { LayoutConfigPanel } from './LayoutConfigPanel';
 import { SnippetManager } from './SnippetManager';
 import { BlockSection } from './palette/BlockSection';
 import { PaletteTabContent } from './palette/PaletteTabContent';
-import { blockItems } from '@/data/blockItems';
+import { blockItems } from '@/data/blockItems.tsx';
 
 interface EnhancedEmailBlockPaletteProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
