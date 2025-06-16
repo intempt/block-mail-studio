@@ -59,10 +59,9 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   return (
     <div className="w-full bg-brand-bg border-b border-brand px-6 py-3 flex-shrink-0">
       <div className="flex items-center justify-between w-full">
-        {/* Left side - Template title */}
+        {/* Left side - Campaign title */}
         <div className="flex items-center u-gap-4">
           <div className="flex items-center u-gap-2">
-            <span className="text-caption text-brand-fg opacity-70">Template:</span>
             {isEditingTitle ? (
               <Input
                 value={campaignTitle}
@@ -137,7 +136,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant="ghost"
             size="sm"
             onClick={onPreview}
-            className="h-8 u-p-3"
+            className="h-[38px] u-p-3"
           >
             Preview
           </Button>
@@ -146,17 +145,17 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 u-p-3"
+            className="h-[38px] u-p-3"
           >
             Send test
           </Button>
 
-          {/* Save and exit - Now using design tokens */}
+          {/* Save and exit */}
           <Button
             variant="default"
             size="sm"
             onClick={onSave}
-            className="h-8 u-p-3"
+            className="h-[38px] u-p-3"
           >
             Save and exit
           </Button>

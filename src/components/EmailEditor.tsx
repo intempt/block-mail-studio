@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
@@ -76,34 +75,34 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-white">
-      {/* Top Toolbar - Make sure it's visible */}
-      <div className="w-full flex-shrink-0">
-        <EmailEditorToolbar 
-          onExport={handleExport}
-          onSave={handleSave}
-          onPreview={handlePreview}
-          onViewCode={handleViewCode}
-          campaignTitle={campaignTitle}
-          onCampaignTitleChange={setCampaignTitle}
-          previewMode={previewMode}
-          onPreviewModeChange={setPreviewMode}
-        />
-      </div>
+    <div className="h-screen w-full flex flex-col bg-white">
+      {/* Top Toolbar - Full width, fixed at top */}
+      <EmailEditorToolbar 
+        onExport={handleExport}
+        onSave={handleSave}
+        onPreview={handlePreview}
+        onViewCode={handleViewCode}
+        campaignTitle={campaignTitle}
+        onCampaignTitleChange={setCampaignTitle}
+        previewMode={previewMode}
+        onPreviewModeChange={setPreviewMode}
+      />
       
-      {/* Main Content Area - responsive layout */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left Sidebar - fixed width, sticks to left */}
-        <BlocksSidebar
-          onBlockAdd={handleBlockAdd}
-          onSnippetAdd={handleSnippetAdd}
-          universalContent={universalContent}
-          onUniversalContentAdd={handleUniversalContentAdd}
-          snippetRefreshTrigger={snippetRefreshTrigger}
-        />
+      {/* Main Content Area - Responsive layout */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Sticks to left side, responsive width */}
+        <div className="w-80 lg:w-80 md:w-72 sm:w-64 flex-shrink-0">
+          <BlocksSidebar
+            onBlockAdd={handleBlockAdd}
+            onSnippetAdd={handleSnippetAdd}
+            universalContent={universalContent}
+            onUniversalContentAdd={handleUniversalContentAdd}
+            snippetRefreshTrigger={snippetRefreshTrigger}
+          />
+        </div>
         
-        {/* Canvas Area - takes remaining space */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Canvas Area - Takes remaining space, fully responsive */}
+        <div className="flex-1 flex flex-col min-w-0">
           <div className="flex-1 overflow-auto">
             <EmailBlockCanvas
               onContentChange={onContentChange}
