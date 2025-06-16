@@ -265,36 +265,6 @@ export const createBlock = (type: string, layoutRatio?: string): EmailBlock => {
     case 'columns':
       return createColumnsBlock(layoutRatio || '50-50');
 
-    case 'content':
-      return {
-        ...baseBlock,
-        type: 'content',
-        content: {
-          jsonData: [
-            { product: 'Laptop', price: 999, category: 'Electronics', stock: 15 },
-            { product: 'Mouse', price: 25, category: 'Electronics', stock: 50 },
-            { product: 'Keyboard', price: 75, category: 'Electronics', stock: 30 }
-          ],
-          rows: 3,
-          columns: 3,
-          layout: 'table',
-          selectedFields: ['product', 'price', 'category'],
-          fieldMappings: {
-            product: { label: 'Product Name', type: 'text' },
-            price: { label: 'Price', type: 'currency' },
-            category: { label: 'Category', type: 'text' },
-            stock: { label: 'In Stock', type: 'text' }
-          },
-          showHeaders: true,
-          headerStyle: 'bold',
-          cellPadding: '8px',
-          borderStyle: 'solid',
-          borderColor: '#e0e0e0',
-          alternateRowColors: true,
-          alternateColor: '#f9f9f9'
-        },
-      };
-
     default:
       throw new Error(`Unknown block type: ${type}`);
   }

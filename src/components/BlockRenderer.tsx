@@ -16,7 +16,6 @@ import { MJMLVideoBlockRenderer } from './blocks/MJMLVideoBlockRenderer';
 import { MJMLHtmlBlockRenderer } from './blocks/MJMLHtmlBlockRenderer';
 import { MJMLTableBlockRenderer } from './blocks/MJMLTableBlockRenderer';
 import { MJMLSocialBlockRenderer } from './blocks/MJMLSocialBlockRenderer';
-import { ContentBlockRenderer } from './blocks/ContentBlockRenderer';
 import { ColumnsBlockRenderer } from './blocks/ColumnsBlockRenderer';
 import { ProductBlockRenderer } from './blocks/ProductBlockRenderer';
 
@@ -103,8 +102,6 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
             onBlockLeave={onBlockLeave}
           />
         );
-      case 'content':
-        return <ContentBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       default:
         return <div className="p-4 bg-red-100 text-red-700">Unknown block type: {(block as any).type}</div>;
     }
