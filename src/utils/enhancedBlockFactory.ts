@@ -210,36 +210,6 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         },
       };
 
-    case 'content':
-      return {
-        ...baseBlock,
-        type: 'content',
-        content: {
-          jsonData: [
-            { name: 'John Doe', email: 'john@example.com', age: 30, role: 'Developer' },
-            { name: 'Jane Smith', email: 'jane@example.com', age: 28, role: 'Designer' },
-            { name: 'Bob Johnson', email: 'bob@example.com', age: 35, role: 'Manager' }
-          ],
-          rows: 3,
-          columns: 3,
-          layout: 'table',
-          selectedFields: ['name', 'email', 'role'],
-          fieldMappings: {
-            name: { label: 'Full Name', type: 'text' },
-            email: { label: 'Email Address', type: 'text' },
-            age: { label: 'Age', type: 'text' },
-            role: { label: 'Job Role', type: 'text' }
-          },
-          showHeaders: true,
-          headerStyle: 'bold',
-          cellPadding: '8px',
-          borderStyle: 'solid',
-          borderColor: '#e0e0e0',
-          alternateRowColors: true,
-          alternateColor: '#f9f9f9'
-        },
-      };
-
     case 'product':
       return {
         ...baseBlock,
