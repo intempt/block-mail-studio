@@ -2,6 +2,7 @@
 import React from 'react';
 import { Package } from 'lucide-react';
 import { ProductBlock } from '@/types/emailBlocks';
+import { ProductBlockBubbleMenu } from '../block-toolbars/ProductBlockBubbleMenu';
 
 interface ProductBlockRendererProps {
   block: ProductBlock;
@@ -24,7 +25,8 @@ const createPackageIconDataUri = () => {
 
 export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({ 
   block, 
-  isSelected 
+  isSelected,
+  onUpdate
 }) => {
   const styling = block.styling.desktop;
   const packageIconDataUri = createPackageIconDataUri();
@@ -38,42 +40,51 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
   };
 
   return (
-    <div
-      className={`product-block-renderer ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
-      style={{
-        backgroundColor: styling.backgroundColor,
-        padding: styling.padding,
-        margin: styling.margin,
-      }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {block.content.products.map((product) => (
-          <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-            <div className="aspect-square">
-              <img
-                src={getImageSrc(product.image)}
-                alt={getImageAlt(product.image, product.title)}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-4">
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                {product.title}
-              </h3>
-              <p className="text-gray-600 text-sm mb-3">
-                {product.description}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-gray-900">
-                  ${product.price.toFixed(2)}
-                </span>
-                <span className="text-sm text-gray-500 line-through">
-                  ${product.originalPrice.toFixed(2)}
-                </span>
+    <div className="relative">
+      {/* Bubble Menu */}
+      {isSelected && (
+        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 z-50">
+          <ProductBlockBubbleMenu block={block} onUpdate={onUpdate} />
+        </div>
+      )}
+
+      <div
+        className={`product-block-renderer ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+        style={{
+          backgroundColor: styling.backgroundColor,
+          padding: styling.padding,
+          margin: styling.margin,
+        }}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {block.content.products.map((product) => (
+            <div key={product.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <div className="aspect-square">
+                <img
+                  src={getImageSrc(product.image)}
+                  alt={getImageAlt(product.image, product.title)}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                  {product.title}
+                </h3>
+                <p className="text-gray-600 text-sm mb-3">
+                  {product.description}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-gray-900">
+                    ${product.price.toFixed(2)}
+                  </span>
+                  <span className="text-sm text-gray-500 line-through">
+                    ${product.originalPrice.toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

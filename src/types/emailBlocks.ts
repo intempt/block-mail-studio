@@ -1,4 +1,3 @@
-
 export interface Position {
   x: number;
   y: number;
@@ -321,6 +320,7 @@ export interface ProductContent {
   showDescriptions: boolean;
   showPrices: boolean;
   showOriginalPrices: boolean;
+  type?: 'dynamic' | 'static';
 }
 
 export interface ProductBlock extends EmailBlock {
