@@ -21,7 +21,7 @@ export const BlocksSidebar: React.FC<BlocksSidebarProps> = ({
   snippetRefreshTrigger = 0
 }) => {
   return (
-    <div className="h-full bg-gray-50 border-r border-gray-200 flex flex-col pt-6">
+    <div className="h-full bg-gray-50 border-r border-gray-200 flex flex-col pt-4">
       {/* Content - Fully responsive */}
       <div className="flex-1 overflow-hidden">
         <EnhancedEmailBlockPalette
