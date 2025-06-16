@@ -20,13 +20,13 @@ import {
   Highlighter
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { AIDropdownMenu } from './AIDropdownMenu';
+import { AIDropdownMenu } from '../AIDropdownMenu';
 
-interface ProBubbleMenuToolbarProps {
+interface TextBlockBubbleMenuProps {
   editor: Editor;
 }
 
-export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ editor }) => {
+export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor }) => {
   const [paragraphSelectorOpen, setParagraphSelectorOpen] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [highlightPickerOpen, setHighlightPickerOpen] = useState(false);
