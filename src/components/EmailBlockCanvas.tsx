@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { DirectSnippetService } from '@/services/directSnippetService';
@@ -185,7 +186,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
                 } else {
                   const strippedCurrent = stripHTML(current);
                   if (newHTML.includes(strippedCurrent)) {
-                    newHTML = newHTML.replace(stippedCurrent, replacement);
+                    newHTML = newHTML.replace(strippedCurrent, replacement);
                     replacementsMade++;
                   }
                 }
