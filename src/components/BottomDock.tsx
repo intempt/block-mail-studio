@@ -11,12 +11,12 @@ interface BottomDockProps {
   isLoading?: boolean;
 }
 
-const emailSuggestions = [
-  "Who are my best subscribers?",
+const suggestionChips = [
+  "Who are my best customers?",
   "What's the best way to segment users?", 
-  "How do I track open rates?",
-  "Which emails are at risk of spam?",
-  "What's my click-through rate?"
+  "How do I track conversion rates?",
+  "Which accounts are at risk of churning?",
+  "What's my customer lifetime value?"
 ];
 
 export const BottomDock: React.FC<BottomDockProps> = ({
@@ -36,56 +36,51 @@ export const BottomDock: React.FC<BottomDockProps> = ({
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 w-[800px] max-w-[90vw]">
-        {/* Mode Toggle */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex bg-gray-100 rounded-lg p-1">
-            <button className="px-6 py-2 bg-blue-500 text-white rounded-md text-sm font-medium transition-colors">
-              Ask
-            </button>
-            <button className="px-6 py-2 text-gray-600 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">
-              Do
-            </button>
-          </div>
+    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="bg-white rounded-full shadow-xl border border-gray-200 px-4 py-3 flex items-center gap-3 w-[600px] max-w-[90vw]">
+        {/* Ask/Do Toggle */}
+        <div className="flex bg-gray-100 rounded-full p-1 flex-shrink-0">
+          <button className="px-4 py-1.5 bg-blue-500 text-white rounded-full text-sm font-medium transition-colors">
+            Ask
+          </button>
+          <button className="px-4 py-1.5 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors">
+            Do
+          </button>
         </div>
 
-        {/* Input Area */}
-        <div className="flex items-end gap-3 mb-6">
-          <div className="flex-1">
-            <input
-              type="text"
-              value={currentMessage}
-              onChange={(e) => onMessageChange(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="What's my conversion rate this month?"
-              className="w-full px-4 py-4 border border-gray-300 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isLoading}
-            />
-          </div>
-          <Button
-            onClick={() => onSendMessage(currentMessage)}
-            disabled={!currentMessage.trim() || isLoading}
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-6 py-4 h-auto"
+        {/* Input Field */}
+        <input
+          type="text"
+          value={currentMessage}
+          onChange={(e) => onMessageChange(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder="What's my conversion rate this month?"
+          className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none text-sm"
+          disabled={isLoading}
+        />
+
+        {/* Send Button */}
+        <Button
+          onClick={() => onSendMessage(currentMessage)}
+          disabled={!currentMessage.trim() || isLoading}
+          className="bg-blue-500 hover:bg-blue-600 text-white rounded-full w-10 h-10 p-0 flex-shrink-0"
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Suggestion Chips */}
+      <div className="flex flex-wrap justify-center gap-2 mt-3 px-4">
+        {suggestionChips.map((suggestion, index) => (
+          <button
+            key={index}
+            onClick={() => onSuggestionClick(suggestion)}
+            className="px-3 py-1.5 bg-white hover:bg-gray-50 rounded-full text-xs text-gray-700 transition-colors border border-gray-200 shadow-sm whitespace-nowrap"
+            disabled={isLoading}
           >
-            <Send className="w-5 h-5 mr-2" />
-            Send
-          </Button>
-        </div>
-
-        {/* Suggestion Chips */}
-        <div className="flex flex-wrap justify-center gap-3">
-          {emailSuggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              onClick={() => onSuggestionClick(suggestion)}
-              className="px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full text-sm text-gray-700 transition-colors border border-gray-200 whitespace-nowrap"
-              disabled={isLoading}
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
+            {suggestion}
+          </button>
+        ))}
       </div>
     </div>
   );
