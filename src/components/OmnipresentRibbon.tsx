@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -180,33 +179,33 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
   const isEditMode = viewMode === 'edit';
 
   return (
-    <TooltipProvider>
-      <div className="bg-white border-b shadow-sm z-50">
-        <div className="px-4 py-2 flex items-center justify-between space-x-4">
-          {/* Back Button */}
-          {onBack && (
-            <Button variant="ghost" size="sm" onClick={onBack} className="h-8">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
+    <div className="bg-white border-b shadow-sm z-50">
+      <div className="px-4 py-2 flex items-center justify-between space-x-4">
+        {/* Back Button */}
+        {onBack && (
+          <Button variant="ghost" size="sm" onClick={onBack} className="h-8">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+        )}
+
+        {/* Title and Subject Line */}
+        <div className="flex-1 min-w-0 flex items-center space-x-4">
+          <h1 className="text-lg font-semibold truncate">Email Editor</h1>
+          {isEditMode && (
+            <Input
+              type="text"
+              placeholder="Subject Line"
+              value={subjectLine}
+              onChange={(e) => onSubjectLineChange(e.target.value)}
+              className="flex-1 min-w-0 h-8 text-sm"
+            />
           )}
+        </div>
 
-          {/* Title and Subject Line */}
-          <div className="flex-1 min-w-0 flex items-center space-x-4">
-            <h1 className="text-lg font-semibold truncate">Email Editor</h1>
-            {isEditMode && (
-              <Input
-                type="text"
-                placeholder="Subject Line"
-                value={subjectLine}
-                onChange={(e) => onSubjectLineChange(e.target.value)}
-                className="flex-1 min-w-0 h-8 text-sm"
-              />
-            )}
-          </div>
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center space-x-2">
+        {/* View Mode Toggle */}
+        <div className="flex items-center space-x-2">
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => handleViewModeChange('edit')} className={viewModeButtonClasses('edit')}>
@@ -218,7 +217,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 <p>Edit Mode</p>
               </TooltipContent>
             </Tooltip>
+          </TooltipProvider>
 
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => handleViewModeChange('desktop-preview')} className={viewModeButtonClasses('desktop-preview')}>
@@ -230,7 +231,9 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 <p>Desktop Preview</p>
               </TooltipContent>
             </Tooltip>
+          </TooltipProvider>
 
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="outline" size="sm" onClick={() => handleViewModeChange('mobile-preview')} className={viewModeButtonClasses('mobile-preview')}>
@@ -242,12 +245,14 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 <p>Mobile Preview</p>
               </TooltipContent>
             </Tooltip>
-          </div>
+          </TooltipProvider>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center space-x-2">
-            {/* AI Analytics Toggle */}
-            {isEditMode && (
+        {/* Actions */}
+        <div className="flex items-center space-x-2">
+          {/* AI Analytics Toggle */}
+          {isEditMode && (
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="sm" onClick={onToggleAIAnalytics} className="h-8">
@@ -259,10 +264,12 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   <p>Toggle AI Analytics</p>
                 </TooltipContent>
               </Tooltip>
-            )}
+            </TooltipProvider>
+          )}
 
-            {/* Template Library */}
-            {isEditMode && (
+          {/* Template Library */}
+          {isEditMode && (
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="sm" onClick={onTemplateLibraryOpen} className="h-8">
@@ -274,9 +281,11 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   <p>Open Template Library</p>
                 </TooltipContent>
               </Tooltip>
-            )}
+            </TooltipProvider>
+          )}
 
-            {/* Preview */}
+          {/* Preview */}
+          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={onPreview} className="h-8">
@@ -288,11 +297,13 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                 <p>Preview Email</p>
               </TooltipContent>
             </Tooltip>
+          </TooltipProvider>
 
-            {/* Settings Dropdown */}
-            {isEditMode && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+          {/* Settings Dropdown */}
+          {isEditMode && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-8">
@@ -303,27 +314,29 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                     <TooltipContent>
                       <p>Open Settings</p>
                     </TooltipContent>
-                  </Tooltip>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                    <Monitor className="w-4 h-4 mr-2" />
-                    Canvas Width
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleImport}>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Import
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExport}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                  </TooltipProvider>
+                </TooltipProvider>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                  <Monitor className="w-4 h-4 mr-2" />
+                  Canvas Width
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleImport}>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExport}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-            {/* Save Template */}
-            {isEditMode && (
+          {/* Save Template */}
+          {isEditMode && (
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="sm" onClick={onSaveTemplate} className="h-8">
@@ -335,13 +348,15 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   <p>Save as Template</p>
                 </TooltipContent>
               </Tooltip>
-            )}
+            </TooltipProvider>
+          )}
 
-            {/* Publish */}
-            {isEditMode && (
+          {/* Publish */}
+          {isEditMode && (
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="default" size="sm" onClick={onPublish} className="h-8">
+                  <Button variant="primary" size="sm" onClick={onPublish} className="h-8">
                     <Send className="w-4 h-4 mr-2" />
                     Publish
                   </Button>
@@ -350,74 +365,74 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
                   <p>Publish Email</p>
                 </TooltipContent>
               </Tooltip>
-            )}
-          </div>
+            </TooltipProvider>
+          )}
         </div>
-
-        {/* Settings Modal */}
-        <Dialog open={showSettings} onOpenChange={setShowSettings}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Canvas Settings</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="width" className="text-right">
-                  Width
-                </Label>
-                <Input type="number" id="width" value={newWidth} onChange={(e) => handleWidthChange(Number(e.target.value))} className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right">
-                  Device
-                </Label>
-                <div className="col-span-3 flex space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => handleDeviceChange('desktop')} className={deviceButtonClasses('desktop')}>
-                    <Monitor className="w-4 h-4 mr-2" />
-                    Desktop
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDeviceChange('tablet')} className={deviceButtonClasses('tablet')}>
-                    <Tablet className="w-4 h-4 mr-2" />
-                    Tablet
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDeviceChange('mobile')} className={deviceButtonClasses('mobile')}>
-                    <Smartphone className="w-4 h-4 mr-2" />
-                    Mobile
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDeviceChange('custom')} className={deviceButtonClasses('custom')}>
-                    <MousePointer className="w-4 h-4 mr-2" />
-                    Custom
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <Button onClick={handleApplyWidth}>Apply</Button>
-          </DialogContent>
-        </Dialog>
-
-        {/* Import Modal */}
-        <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Import Template</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <Label htmlFor="importFile">Select JSON File</Label>
-              <Input
-                type="file"
-                id="importFile"
-                accept=".json"
-                onChange={handleFileSelect}
-                ref={fileInputRef}
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button variant="secondary" onClick={() => setIsImportModalOpen(false)}>Cancel</Button>
-              <Button onClick={handleConfirmImport}>Import</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
-    </TooltipProvider>
+
+      {/* Settings Modal */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Canvas Settings</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="width" className="text-right">
+                Width
+              </Label>
+              <Input type="number" id="width" value={newWidth} onChange={(e) => handleWidthChange(Number(e.target.value))} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">
+                Device
+              </Label>
+              <div className="col-span-3 flex space-x-2">
+                <Button variant="outline" size="sm" onClick={() => handleDeviceChange('desktop')} className={deviceButtonClasses('desktop')}>
+                  <Monitor className="w-4 h-4 mr-2" />
+                  Desktop
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeviceChange('tablet')} className={deviceButtonClasses('tablet')}>
+                  <Tablet className="w-4 h-4 mr-2" />
+                  Tablet
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeviceChange('mobile')} className={deviceButtonClasses('mobile')}>
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  Mobile
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleDeviceChange('custom')} className={deviceButtonClasses('custom')}>
+                  <MousePointer className="w-4 h-4 mr-2" />
+                  Custom
+                </Button>
+              </div>
+            </div>
+          </div>
+          <Button onClick={handleApplyWidth}>Apply</Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Modal */}
+      <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Import Template</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Label htmlFor="importFile">Select JSON File</Label>
+            <Input
+              type="file"
+              id="importFile"
+              accept=".json"
+              onChange={handleFileSelect}
+              ref={fileInputRef}
+            />
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="secondary" onClick={() => setIsImportModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleConfirmImport}>Import</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
