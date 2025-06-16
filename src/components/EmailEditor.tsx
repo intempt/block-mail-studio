@@ -128,7 +128,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   // Generate comprehensive metrics
   const comprehensiveMetrics = React.useMemo(() => {
     if (!content.trim()) return null;
-    return ComprehensiveMetricsService.analyzeEmail(content, subject);
+    return ComprehensiveMetricsService.calculateMetrics(content, subject);
   }, [content, subject]);
 
   const handleDockSuggestionClick = useCallback((suggestion: string) => {
