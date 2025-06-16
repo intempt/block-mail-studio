@@ -21,7 +21,8 @@ import {
   Monitor,
   Smartphone,
   ChevronDown,
-  Trash2
+  Trash2,
+  Send
 } from 'lucide-react';
 
 interface EmailEditorToolbarProps {
@@ -166,9 +167,10 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-[38px] u-p-3 mr-2"
+            className="h-[38px] u-p-3 u-gap-2 mr-2"
             style={{ fontSize: '14px' }}
           >
+            <Send className="w-4 h-4" />
             Send test
           </Button>
 
