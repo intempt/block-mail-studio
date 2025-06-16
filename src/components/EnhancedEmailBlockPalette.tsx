@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -125,28 +124,24 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
               <div className="h-full overflow-y-auto">
                 <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
                   <div className="space-y-2">
-                    {/* Email Settings Section */}
                     <EmailSettingsCard
                       isOpen={stylesExpanded.emailSettings}
                       onToggle={() => toggleStylesSection('emailSettings')}
                       onStylesChange={handleStylesChange}
                     />
 
-                    {/* Text & Headings Section */}
                     <TextHeadingsCard
                       isOpen={stylesExpanded.textHeadings}
                       onToggle={() => toggleStylesSection('textHeadings')}
                       onStylesChange={handleStylesChange}
                     />
 
-                    {/* Buttons Section */}
                     <ButtonsCard
                       isOpen={stylesExpanded.buttons}
                       onToggle={() => toggleStylesSection('buttons')}
                       onStylesChange={handleStylesChange}
                     />
 
-                    {/* Links Section */}
                     <LinksCard
                       isOpen={stylesExpanded.links}
                       onToggle={() => toggleStylesSection('links')}
