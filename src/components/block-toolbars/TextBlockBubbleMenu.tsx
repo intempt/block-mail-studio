@@ -167,9 +167,15 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
           theme: 'light-border',
           interactive: true,
           appendTo: 'parent',
-          maxWidth: 'none'
+          maxWidth: 'none',
+          zIndex: 99999
         }}
-        className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 z-50 max-w-none"
+        className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 max-w-none"
+        style={{ 
+          zIndex: 99999,
+          position: 'fixed',
+          pointerEvents: 'auto'
+        }}
       >
         {/* Paragraph/Heading Selector */}
         <Popover open={paragraphSelectorOpen} onOpenChange={setParagraphSelectorOpen}>
@@ -184,9 +190,10 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-40 p-1 z-[60] bg-white" 
+            className="w-40 p-1 bg-white" 
             align="start"
             side="bottom"
+            style={{ zIndex: 100000 }}
           >
             <div className="space-y-1">
               {nodeTypeOptions.map((option) => (
@@ -252,9 +259,10 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-48 p-3 z-[60] bg-white" 
+            className="w-48 p-3 bg-white" 
             align="start"
             side="bottom"
+            style={{ zIndex: 100000 }}
           >
             <div className="space-y-3">
               <p className="text-sm font-medium">Text Color</p>
@@ -295,9 +303,10 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-48 p-3 z-[60] bg-white" 
+            className="w-48 p-3 bg-white" 
             align="start"
             side="bottom"
+            style={{ zIndex: 100000 }}
           >
             <div className="space-y-3">
               <p className="text-sm font-medium">Highlight Color</p>

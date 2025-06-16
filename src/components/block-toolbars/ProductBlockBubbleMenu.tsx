@@ -142,7 +142,14 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const currentStyles = selectedSchemaKey ? block.content.schemaKeyStyles?.[selectedSchemaKey] : null;
 
   return (
-    <div className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-3 flex items-center gap-3 min-w-fit">
+    <div 
+      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-3 flex items-center gap-3 min-w-fit"
+      style={{ 
+        zIndex: 99999,
+        position: 'fixed',
+        pointerEvents: 'auto'
+      }}
+    >
       {/* Type selector */}
       <div className="flex flex-col gap-2">
         <Select value={currentType} onValueChange={handleTypeChange}>
@@ -151,7 +158,10 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
               {currentOption?.text || 'Select type'}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+          <SelectContent 
+            className="bg-white border border-gray-200 rounded-md shadow-lg"
+            style={{ zIndex: 100000 }}
+          >
             {typeOptions.map((option) => (
               <SelectItem key={option.value} value={option.value} className="cursor-pointer">
                 <div className="flex flex-col py-1">
@@ -195,7 +205,10 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
         <SelectTrigger className="w-32 h-8">
           <SelectValue placeholder="Schema key..." />
         </SelectTrigger>
-        <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+        <SelectContent 
+          className="bg-white border border-gray-200 rounded-md shadow-lg"
+          style={{ zIndex: 100000 }}
+        >
           {schemaKeyOptions.map((option) => (
             <SelectItem 
               key={option.value} 
@@ -234,7 +247,10 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
             <SelectTrigger className="w-20 h-8">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+            <SelectContent 
+              className="bg-white border border-gray-200 rounded-md shadow-lg"
+              style={{ zIndex: 100000 }}
+            >
               {fontSizeOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -251,7 +267,10 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
             <SelectTrigger className="w-24 h-8">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-white border border-gray-200 rounded-md shadow-lg z-[60]">
+            <SelectContent 
+              className="bg-white border border-gray-200 rounded-md shadow-lg"
+              style={{ zIndex: 100000 }}
+            >
               {fontFamilyOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
