@@ -321,12 +321,7 @@ export interface ProductContent {
   showPrices: boolean;
   showOriginalPrices: boolean;
   type?: 'dynamic' | 'static';
-  schemaKeys?: {
-    title: string;
-    description: string;
-    price: string;
-    originalPrice: string;
-  };
+  schemaKeys?: string[];
 }
 
 export interface ProductBlock extends EmailBlock {
