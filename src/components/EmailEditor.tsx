@@ -27,6 +27,8 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [universalContent, setUniversalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
+  const [campaignTitle, setCampaignTitle] = useState('Untitled Campaign');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
 
   const handleBlockAdd = useCallback((blockType: string, layoutConfig?: any) => {
     console.log('EmailEditor: Adding block of type:', blockType);
@@ -51,12 +53,43 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     setSnippetRefreshTrigger(prev => prev + 1);
   }, []);
 
+  const handleExport = useCallback(() => {
+    console.log('Exporting email...');
+    // TODO: Implement export functionality
+  }, []);
+
+  const handleSave = useCallback(() => {
+    console.log('Saving email...');
+    // TODO: Implement save functionality
+  }, []);
+
+  const handlePreview = useCallback(() => {
+    console.log('Opening preview...');
+    // TODO: Implement preview functionality
+  }, []);
+
+  const handleViewCode = useCallback(() => {
+    console.log('Viewing code...');
+    // TODO: Implement code view functionality
+  }, []);
+
   console.log('EmailEditor: About to render main component');
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
-      {/* Top Toolbar */}
-      <EmailEditorToolbar />
+      {/* Top Toolbar - Make sure it's visible */}
+      <div className="w-full flex-shrink-0">
+        <EmailEditorToolbar 
+          onExport={handleExport}
+          onSave={handleSave}
+          onPreview={handlePreview}
+          onViewCode={handleViewCode}
+          campaignTitle={campaignTitle}
+          onCampaignTitleChange={setCampaignTitle}
+          previewMode={previewMode}
+          onPreviewModeChange={setPreviewMode}
+        />
+      </div>
       
       {/* Main Content Area - responsive layout */}
       <div className="flex-1 flex overflow-hidden min-h-0">

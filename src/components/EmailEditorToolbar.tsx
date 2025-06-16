@@ -31,7 +31,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   onSave,
   onPreview,
   onViewCode,
-  campaignTitle = 'new',
+  campaignTitle = 'Untitled Campaign',
   onCampaignTitleChange,
   previewMode = 'desktop',
   onPreviewModeChange
@@ -57,8 +57,8 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   };
 
   return (
-    <div className="bg-white border-b border-slate-200 px-6 py-3">
-      <div className="flex items-center justify-between">
+    <div className="w-full bg-white border-b border-slate-200 px-6 py-3 flex-shrink-0">
+      <div className="flex items-center justify-between w-full">
         {/* Left side - Template title */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -69,7 +69,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-sm font-medium border-none p-0 h-auto focus:ring-0 focus:border-none w-20"
+                className="text-sm font-medium border-none p-0 h-auto focus:ring-0 focus:border-none w-32 min-w-fit"
                 autoFocus
               />
             ) : (
