@@ -15,7 +15,9 @@ import {
   Code,
   Copy,
   ChevronDown,
-  Eraser
+  Eraser,
+  Palette,
+  Highlighter
 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AIDropdownMenu } from './AIDropdownMenu';
@@ -26,6 +28,8 @@ interface ProBubbleMenuToolbarProps {
 
 export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ editor }) => {
   const [paragraphSelectorOpen, setParagraphSelectorOpen] = useState(false);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [highlightPickerOpen, setHighlightPickerOpen] = useState(false);
 
   if (!editor) return null;
 
@@ -103,6 +107,29 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
     { value: 'H4', label: 'Heading 4', tag: 'h4' },
     { value: 'H5', label: 'Heading 5', tag: 'h5' },
     { value: 'H6', label: 'Heading 6', tag: 'h6' },
+  ];
+
+  // Common color palette for text and highlights
+  const colorOptions = [
+    { name: 'Black', value: '#000000' },
+    { name: 'Red', value: '#ef4444' },
+    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Green', value: '#22c55e' },
+    { name: 'Yellow', value: '#eab308' },
+    { name: 'Purple', value: '#a855f7' },
+    { name: 'Pink', value: '#ec4899' },
+    { name: 'Orange', value: '#f97316' },
+  ];
+
+  const highlightOptions = [
+    { name: 'Yellow', value: '#fef3c7' },
+    { name: 'Green', value: '#dcfce7' },
+    { name: 'Blue', value: '#dbeafe' },
+    { name: 'Pink', value: '#fce7f3' },
+    { name: 'Purple', value: '#f3e8ff' },
+    { name: 'Orange', value: '#fed7aa' },
+    { name: 'Red', value: '#fecaca' },
+    { name: 'Gray', value: '#f3f4f6' },
   ];
 
   return (
@@ -234,6 +261,98 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
         >
           <Underline className="w-4 h-4" />
         </Button>
+
+        {/* Text Color Picker */}
+        <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:bg-gray-100"
+              title="Text Color"
+            >
+              <Palette className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-48 p-3 z-[60] bg-white" 
+            align="start"
+            side="bottom"
+          >
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Text Color</p>
+              <div className="grid grid-cols-4 gap-2">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    className="w-8 h-8 rounded border border-gray-200 hover:scale-110 transition-transform"
+                    style={{ backgroundColor: color.value }}
+                    onClick={() => {
+                      editor.chain().focus().setColor(color.value).run();
+                      setColorPickerOpen(false);
+                    }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+              <button
+                className="text-sm text-gray-600 hover:text-gray-800 mt-2"
+                onClick={() => {
+                  editor.chain().focus().unsetColor().run();
+                  setColorPickerOpen(false);
+                }}
+              >
+                Remove Color
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Highlight Color Picker */}
+        <Popover open={highlightPickerOpen} onOpenChange={setHighlightPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={editor.isActive('highlight') ? 'bg-gray-100' : 'hover:bg-gray-100'}
+              title="Highlight"
+            >
+              <Highlighter className="w-4 h-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-48 p-3 z-[60] bg-white" 
+            align="start"
+            side="bottom"
+          >
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Highlight Color</p>
+              <div className="grid grid-cols-4 gap-2">
+                {highlightOptions.map((color) => (
+                  <button
+                    key={color.value}
+                    className="w-8 h-8 rounded border border-gray-200 hover:scale-110 transition-transform"
+                    style={{ backgroundColor: color.value }}
+                    onClick={() => {
+                      editor.chain().focus().toggleHighlight({ color: color.value }).run();
+                      setHighlightPickerOpen(false);
+                    }}
+                    title={color.name}
+                  />
+                ))}
+              </div>
+              <button
+                className="text-sm text-gray-600 hover:text-gray-800 mt-2"
+                onClick={() => {
+                  editor.chain().focus().unsetHighlight().run();
+                  setHighlightPickerOpen(false);
+                }}
+              >
+                Remove Highlight
+              </button>
+            </div>
+          </PopoverContent>
+        </Popover>
 
         {/* Clear formatting button */}
         <Button
