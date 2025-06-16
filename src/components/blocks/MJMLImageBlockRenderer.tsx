@@ -1,9 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ImageBlock } from '@/types/emailBlocks';
-import { Button } from '@/components/ui/button';
-import { ImageSelectionDialog } from '../dialogs/ImageSelectionDialog';
-import { Image, Upload } from 'lucide-react';
+import { Image } from 'lucide-react';
 
 interface MJMLImageBlockRendererProps {
   block: ImageBlock;
@@ -16,29 +14,7 @@ export const MJMLImageBlockRenderer: React.FC<MJMLImageBlockRendererProps> = ({
   isSelected, 
   onUpdate 
 }) => {
-  const [showImageDialog, setShowImageDialog] = useState(false);
   const styling = block.styling.desktop;
-
-  const handleImageSelect = (imageData: {
-    src: string;
-    alt: string;
-    width?: string;
-    link?: string;
-  }) => {
-    onUpdate({
-      ...block,
-      content: {
-        ...block.content,
-        ...imageData
-      }
-    });
-  };
-
-  const handleImageClick = () => {
-    if (!block.content.src || block.content.src.includes('placeholder')) {
-      setShowImageDialog(true);
-    }
-  };
 
   const imageElement = (
     <img
@@ -49,10 +25,8 @@ export const MJMLImageBlockRenderer: React.FC<MJMLImageBlockRendererProps> = ({
         height: 'auto',
         borderRadius: styling.borderRadius,
         border: styling.border,
-        cursor: !block.content.src || block.content.src.includes('placeholder') ? 'pointer' : 'default'
       }}
       className="max-w-full transition-opacity hover:opacity-80"
-      onClick={handleImageClick}
     />
   );
 
@@ -68,17 +42,10 @@ export const MJMLImageBlockRenderer: React.FC<MJMLImageBlockRendererProps> = ({
     >
       {/* Empty state with upload prompt */}
       {(!block.content.src || block.content.src.includes('placeholder')) && (
-        <div 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
-          onClick={() => setShowImageDialog(true)}
-        >
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <Image className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-700 mb-2">Add Image</h3>
-          <p className="text-gray-500 mb-4">Upload an image or provide a URL</p>
-          <Button>
-            <Upload className="w-4 h-4 mr-2" />
-            Choose Image
-          </Button>
+          <p className="text-gray-500 mb-4">Use the properties panel to configure this image</p>
         </div>
       )}
 
@@ -92,20 +59,6 @@ export const MJMLImageBlockRenderer: React.FC<MJMLImageBlockRendererProps> = ({
           ) : (
             imageElement
           )}
-          
-          {/* Edit overlay on hover */}
-          {isSelected && (
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setShowImageDialog(true)}
-                className="bg-white shadow-lg"
-              >
-                Edit Image
-              </Button>
-            </div>
-          )}
         </>
       )}
 
@@ -117,13 +70,6 @@ export const MJMLImageBlockRenderer: React.FC<MJMLImageBlockRendererProps> = ({
           </span>
         </div>
       )}
-
-      <ImageSelectionDialog
-        isOpen={showImageDialog}
-        onClose={() => setShowImageDialog(false)}
-        onImageSelect={handleImageSelect}
-        currentImage={block.content}
-      />
     </div>
   );
 };

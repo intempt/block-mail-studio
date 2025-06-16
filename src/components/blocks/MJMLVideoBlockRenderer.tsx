@@ -1,9 +1,7 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { VideoBlock } from '@/types/emailBlocks';
-import { Button } from '@/components/ui/button';
-import { VideoSelectionDialog } from '../dialogs/VideoSelectionDialog';
-import { Video, Play, Upload } from 'lucide-react';
+import { Video, Play } from 'lucide-react';
 
 interface MJMLVideoBlockRendererProps {
   block: VideoBlock;
@@ -16,8 +14,6 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
   isSelected, 
   onUpdate 
 }) => {
-  const [showVideoDialog, setShowVideoDialog] = useState(false);
-  
   // Defensive programming: ensure content and styling exist with defaults
   const content = block.content || {
     videoUrl: '',
@@ -32,28 +28,6 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
     padding: '16px',
     margin: '0',
     borderRadius: '0'
-  };
-
-  const handleVideoSelect = (videoData: {
-    videoUrl: string;
-    thumbnail: string;
-    platform: "youtube" | "vimeo" | "tiktok" | "custom";
-    showPlayButton: boolean;
-    autoThumbnail: boolean;
-  }) => {
-    onUpdate({
-      ...block,
-      content: {
-        ...content,
-        ...videoData
-      }
-    });
-  };
-
-  const handleThumbnailClick = () => {
-    if (!content.thumbnail || content.thumbnail.includes('placeholder')) {
-      setShowVideoDialog(true);
-    }
   };
 
   // Safe access to content properties with fallbacks
@@ -74,18 +48,11 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
     >
       {/* Empty state with upload prompt */}
       {(!thumbnail || thumbnail.includes('placeholder')) && (
-        <div 
-          className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
-          onClick={() => setShowVideoDialog(true)}
-        >
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-700 mb-2">Add Video</h3>
-          <p className="text-gray-500 mb-2">Videos will be converted to clickable thumbnails</p>
+          <p className="text-gray-500 mb-2">Use the properties panel to configure this video</p>
           <p className="text-xs text-gray-400 mb-4">Email-safe approach for maximum compatibility</p>
-          <Button>
-            <Upload className="w-4 h-4 mr-2" />
-            Add Video
-          </Button>
         </div>
       )}
 
@@ -129,20 +96,6 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
               </span>
             </div>
           )}
-
-          {/* Edit overlay on hover */}
-          {isSelected && (
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => setShowVideoDialog(true)}
-                className="bg-white shadow-lg"
-              >
-                Edit Video
-              </Button>
-            </div>
-          )}
         </div>
       )}
 
@@ -154,13 +107,6 @@ export const MJMLVideoBlockRenderer: React.FC<MJMLVideoBlockRendererProps> = ({
           </span>
         </div>
       )}
-
-      <VideoSelectionDialog
-        isOpen={showVideoDialog}
-        onClose={() => setShowVideoDialog(false)}
-        onVideoSelect={handleVideoSelect}
-        currentVideo={content}
-      />
     </div>
   );
 };
