@@ -27,7 +27,7 @@ interface EmailBlockCanvasProps {
   showAIAnalytics?: boolean;
   onSnippetRefresh?: () => void;
   viewMode?: 'edit' | 'desktop-preview' | 'mobile-preview';
-  containerWidth?: number; // New prop for responsive width
+  containerWidth?: number;
 }
 
 export interface EmailBlockCanvasRef {
@@ -51,7 +51,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   showAIAnalytics = false,
   onSnippetRefresh,
   viewMode = 'edit',
-  containerWidth = 600 // Use container width for responsiveness
+  containerWidth = 600
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -60,10 +60,17 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   const { currentEmailHTML } = useEmailHTMLGenerator(blocks, onContentChange);
 
-  // Calculate effective canvas width based on container width
-  const effectiveCanvasWidth = containerWidth > 0 ? Math.min(containerWidth - 64, 700) : previewWidth;
+  // Calculate responsive width - simpler approach
+  const getResponsiveWidth = () => {
+    if (containerWidth > 0) {
+      return Math.min(containerWidth - 64, 700); // 64px for padding
+    }
+    return previewWidth;
+  };
 
-  console.log('EmailBlockCanvas: containerWidth =', containerWidth, 'effectiveCanvasWidth =', effectiveCanvasWidth);
+  const effectiveWidth = getResponsiveWidth();
+
+  console.log('EmailBlockCanvas: containerWidth =', containerWidth, 'effectiveWidth =', effectiveWidth);
 
   // Helper functions for creating default content and styles
   const getDefaultContent = useCallback((blockType: string) => {
@@ -311,16 +318,13 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   // Render preview mode
   if (viewMode === 'desktop-preview' || viewMode === 'mobile-preview') {
     return (
-      <div 
-        className="responsive-canvas-container"
-        style={{ '--canvas-max-width': `${effectiveCanvasWidth}px` } as React.CSSProperties}
-      >
-        <div className="responsive-canvas-inner">
+      <div className="w-full h-full flex justify-center">
+        <div style={{ width: effectiveWidth, maxWidth: '100%' }}>
           <PreviewView
             emailHtml={currentEmailHTML}
             subject={subject}
             viewMode={viewMode}
-            canvasWidth={effectiveCanvasWidth}
+            canvasWidth={effectiveWidth}
           />
         </div>
       </div>
@@ -329,11 +333,8 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
 
   // Render edit mode
   return (
-    <div 
-      className="responsive-canvas-container"
-      style={{ '--canvas-max-width': `${effectiveCanvasWidth}px` } as React.CSSProperties}
-    >
-      <div className="responsive-canvas-inner">
+    <div className="w-full h-full flex justify-center">
+      <div style={{ width: effectiveWidth, maxWidth: '100%' }}>
         <EditView
           blocks={blocks}
           setBlocks={setBlocks}
@@ -342,7 +343,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
           editingBlockId={editingBlockId}
           setEditingBlockId={setEditingBlockId}
           onBlockSelect={onBlockSelect}
-          previewWidth={effectiveCanvasWidth}
+          previewWidth={effectiveWidth}
           previewMode={previewMode}
           compactMode={compactMode}
           subject={subject}
