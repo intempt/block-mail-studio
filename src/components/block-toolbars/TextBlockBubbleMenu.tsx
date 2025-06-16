@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor, BubbleMenu } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -166,9 +165,12 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
           placement: 'top',
           theme: 'light-border',
           interactive: true,
-          appendTo: 'parent',
+          appendTo: document.body,
           maxWidth: 'none',
-          zIndex: 99999
+          zIndex: 99999,
+          boundary: 'viewport',
+          flip: true,
+          preventOverflow: true
         }}
         className="bg-white border border-gray-200 rounded-lg shadow-xl p-2 flex items-center gap-1 max-w-none"
       >
@@ -189,6 +191,7 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
             align="start"
             side="bottom"
             style={{ zIndex: 100000 }}
+            container={document.body}
           >
             <div className="space-y-1">
               {nodeTypeOptions.map((option) => (
@@ -258,6 +261,7 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
             align="start"
             side="bottom"
             style={{ zIndex: 100000 }}
+            container={document.body}
           >
             <div className="space-y-3">
               <p className="text-sm font-medium">Text Color</p>
@@ -302,6 +306,7 @@ export const TextBlockBubbleMenu: React.FC<TextBlockBubbleMenuProps> = ({ editor
             align="start"
             side="bottom"
             style={{ zIndex: 100000 }}
+            container={document.body}
           >
             <div className="space-y-3">
               <p className="text-sm font-medium">Highlight Color</p>
