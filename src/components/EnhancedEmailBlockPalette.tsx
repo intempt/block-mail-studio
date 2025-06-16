@@ -74,7 +74,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     }
   };
 
-  const renderSnippetsTab = () => {
+  const renderSnippetsSection = () => {
     try {
       return (
         <SnippetManager
@@ -84,7 +84,7 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
         />
       );
     } catch (error) {
-      console.error('Error rendering snippets tab:', error);
+      console.error('Error rendering snippets section:', error);
       return (
         <div className="p-4 text-center">
           <p className="text-slate-500 text-sm">Snippets not available</p>
@@ -104,9 +104,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
             <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
               Layouts
             </TabsTrigger>
-            <TabsTrigger value="snippets" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-              Snippets
-            </TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-hidden">
@@ -119,6 +116,11 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                 onBlockAdd={onBlockAdd}
                 onDragStart={handleDragStart}
               />
+              
+              {/* Snippets section integrated into blocks */}
+              <div className="mt-6">
+                {renderSnippetsSection()}
+              </div>
             </PaletteTabContent>
 
             <PaletteTabContent value="layouts" compactMode={compactMode}>
@@ -127,10 +129,6 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                 compactMode={compactMode}
               />
             </PaletteTabContent>
-
-            <TabsContent value="snippets" className="h-full mt-0">
-              {renderSnippetsTab()}
-            </TabsContent>
           </div>
         </Tabs>
       </div>
