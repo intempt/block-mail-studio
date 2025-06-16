@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { Package } from 'lucide-react';
 import { ProductBlock } from '@/types/emailBlocks';
 import { ProductBlockBubbleMenu } from '../block-toolbars/ProductBlockBubbleMenu';
@@ -28,6 +28,7 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
   isSelected,
   onUpdate
 }) => {
+  const blockRef = useRef<HTMLDivElement>(null);
   const styling = block.styling.desktop;
   const packageIconDataUri = createPackageIconDataUri();
 
@@ -43,12 +44,15 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
     <div className="relative">
       {/* Bubble Menu */}
       {isSelected && (
-        <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 z-50">
-          <ProductBlockBubbleMenu block={block} onUpdate={onUpdate} />
-        </div>
+        <ProductBlockBubbleMenu 
+          block={block} 
+          onUpdate={onUpdate} 
+          triggerElement={blockRef.current}
+        />
       )}
 
       <div
+        ref={blockRef}
         className={`product-block-renderer ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
         style={{
           backgroundColor: styling.backgroundColor,
