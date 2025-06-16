@@ -57,29 +57,29 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   };
 
   return (
-    <div className="w-full bg-white border-b border-slate-200 px-6 py-3 flex-shrink-0">
+    <div className="w-full bg-brand-bg border-b border-brand px-6 py-3 flex-shrink-0">
       <div className="flex items-center justify-between w-full">
         {/* Left side - Template title */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600">Template:</span>
+        <div className="flex items-center u-gap-4">
+          <div className="flex items-center u-gap-2">
+            <span className="text-caption text-brand-fg opacity-70">Template:</span>
             {isEditingTitle ? (
               <Input
                 value={campaignTitle}
                 onChange={handleTitleChange}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-sm font-medium border-none p-0 h-auto focus:ring-0 focus:border-none w-32 min-w-fit"
+                className="text-caption font-medium border-none u-p-0 h-auto focus:ring-0 focus:border-none w-32 min-w-fit bg-transparent"
                 autoFocus
               />
             ) : (
-              <div className="flex items-center gap-1">
-                <span className="text-sm font-medium text-slate-900">{campaignTitle}</span>
+              <div className="flex items-center u-gap-1">
+                <span className="text-caption font-medium text-brand-fg">{campaignTitle}</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleTitleClick}
-                  className="text-slate-400 hover:text-slate-600 h-5 w-5 p-0"
+                  className="text-brand-fg opacity-40 hover:opacity-60 h-5 w-5 u-p-0"
                 >
                   <Edit3 className="w-3 h-3" />
                 </Button>
@@ -87,18 +87,18 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             )}
           </div>
           
-          <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+          <span className="text-caption text-brand-primary bg-brand-secondary u-p-2 rounded">
             Changes saved
           </span>
         </div>
 
         {/* Center - Device preview buttons */}
-        <div className="flex items-center gap-1 border border-slate-200 rounded-md p-1">
+        <div className="flex items-center u-gap-1 border border-brand rounded u-p-1">
           <Button
             variant={previewMode === 'desktop' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onPreviewModeChange?.('desktop')}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 u-p-0"
           >
             <Monitor className="w-4 h-4" />
           </Button>
@@ -106,26 +106,26 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant={previewMode === 'mobile' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onPreviewModeChange?.('mobile')}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 u-p-0"
           >
             <Smartphone className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Right side - Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center u-gap-1">
           {/* Undo/Redo */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 u-p-0"
           >
             <Undo className="w-4 h-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 u-p-0"
           >
             <Redo className="w-4 h-4" />
           </Button>
@@ -137,7 +137,7 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
             variant="ghost"
             size="sm"
             onClick={onPreview}
-            className="h-8 px-3"
+            className="h-8 u-p-3"
           >
             Preview
           </Button>
@@ -146,17 +146,17 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-3"
+            className="h-8 u-p-3"
           >
             Send test
           </Button>
 
-          {/* Save and exit */}
+          {/* Save and exit - Now using design tokens */}
           <Button
             variant="default"
             size="sm"
             onClick={onSave}
-            className="h-8 px-3 bg-teal-600 hover:bg-teal-700"
+            className="h-8 u-p-3"
           >
             Save and exit
           </Button>
