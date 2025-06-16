@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
+
+import React, { useState, useCallback } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
 import { BlocksSidebar } from '@/components/BlocksSidebar';
 import { EmailMetricsPanel } from '@/components/EmailMetricsPanel';
 import { FloatingTestButton } from '@/components/FloatingTestButton';
 import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
+import { ResponsiveCanvasContainer } from '@/components/canvas/ResponsiveCanvasContainer';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -22,8 +24,6 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   onContentChange,
   onSubjectChange
 }) => {
-  console.log('EmailEditor: Component starting to render');
-  
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
@@ -32,6 +32,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const [campaignTitle, setCampaignTitle] = useState('Untitled Campaign');
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [canvasWidth, setCanvasWidth] = useState(600);
   
   const isMobile = useIsMobile();
 
@@ -107,11 +108,13 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     // TODO: Implement code view functionality
   }, []);
 
-  console.log('EmailEditor: About to render main component');
+  const handleCanvasWidthChange = useCallback((width: number) => {
+    setCanvasWidth(width);
+  }, []);
 
   return (
     <div className="h-screen w-full flex flex-col bg-white">
-      {/* Top Toolbar - Fixed at top */}
+      {/* Top Toolbar */}
       <div className="flex-shrink-0 border-b border-gray-200 z-30">
         <EmailEditorToolbar 
           onExport={handleExport}
@@ -125,83 +128,72 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
         />
       </div>
       
-      {/* Main Content Area - Completely flexible grid layout */}
-      <div className="flex-1 overflow-hidden relative">
-        <div className="h-full grid" style={{
-          gridTemplateColumns: leftSidebarCollapsed 
-            ? selectedBlock 
-              ? '0fr 1fr 380px' 
-              : '0fr 1fr'
-            : selectedBlock
-              ? '280px 1fr 380px'
-              : '280px 1fr',
-          transition: 'grid-template-columns 0.3s ease'
-        }}>
-          {/* Left Sidebar - Blocks Palette */}
-          <div className={`bg-gray-50 border-r border-gray-200 overflow-hidden transition-all duration-300 ${
-            leftSidebarCollapsed ? 'w-0' : 'w-full'
-          }`}>
-            {!leftSidebarCollapsed && (
-              <BlocksSidebar
-                onBlockAdd={handleBlockAdd}
-                onSnippetAdd={handleSnippetAdd}
-                universalContent={universalContent}
-                onUniversalContentAdd={handleUniversalContentAdd}
-                snippetRefreshTrigger={snippetRefreshTrigger}
+      {/* Main Content Area - Flexbox Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Blocks Palette */}
+        {!leftSidebarCollapsed && (
+          <div className="w-80 flex-shrink-0 bg-gray-50 border-r border-gray-200 overflow-hidden">
+            <BlocksSidebar
+              onBlockAdd={handleBlockAdd}
+              onSnippetAdd={handleSnippetAdd}
+              universalContent={universalContent}
+              onUniversalContentAdd={handleUniversalContentAdd}
+              snippetRefreshTrigger={snippetRefreshTrigger}
+            />
+          </div>
+        )}
+        
+        {/* Center Canvas Area - Flexible */}
+        <div className="flex-1 flex flex-col bg-gray-100 min-w-0 overflow-hidden">
+          <div className="flex-1 p-4 overflow-hidden">
+            <ResponsiveCanvasContainer onWidthChange={handleCanvasWidthChange}>
+              <EmailBlockCanvas
+                onContentChange={onContentChange}
+                onBlockSelect={handleBlockSelect}
+                onBlocksChange={handleBlocksChange}
+                subject={subject}
+                onSubjectChange={onSubjectChange}
+                onSnippetRefresh={handleSnippetRefresh}
+                viewMode="edit"
+                previewWidth={Math.max(320, canvasWidth - 32)} // Account for padding
+                previewMode={previewMode}
               />
-            )}
+            </ResponsiveCanvasContainer>
           </div>
           
-          {/* Center Canvas Area - Fully responsive */}
-          <div className="bg-gray-100 overflow-hidden flex flex-col min-w-0">
-            <div className="flex-1 overflow-auto p-4">
-              <div className="w-full h-full">
-                <EmailBlockCanvas
-                  onContentChange={onContentChange}
-                  onBlockSelect={handleBlockSelect}
-                  onBlocksChange={handleBlocksChange}
-                  subject={subject}
-                  onSubjectChange={onSubjectChange}
-                  onSnippetRefresh={handleSnippetRefresh}
-                  viewMode="edit"
+          {/* Bottom Metrics Panel */}
+          <div className="flex-shrink-0 border-t border-gray-200">
+            <EmailMetricsPanel 
+              blocks={blocks}
+              emailContent={content}
+            />
+          </div>
+        </div>
+
+        {/* Right Sidebar - Properties Panel */}
+        {selectedBlock && (
+          <div className="w-96 flex-shrink-0 bg-gray-50 border-l border-gray-200 overflow-hidden">
+            <div className="h-full flex flex-col">
+              <div className="flex-1 overflow-auto">
+                <PropertyEditorPanel
+                  selectedBlock={selectedBlock}
+                  onBlockUpdate={handleBlockUpdate}
                 />
               </div>
             </div>
-            
-            {/* Bottom Metrics Panel */}
-            <div className="flex-shrink-0 border-t border-gray-200">
-              <EmailMetricsPanel 
-                blocks={blocks}
-                emailContent={content}
-              />
-            </div>
           </div>
-
-          {/* Right Sidebar - Properties Panel */}
-          {selectedBlock && (
-            <div className="bg-gray-50 border-l border-gray-200 overflow-hidden">
-              <div className="h-full flex flex-col">
-                <div className="flex-1 overflow-auto">
-                  <PropertyEditorPanel
-                    selectedBlock={selectedBlock}
-                    onBlockUpdate={handleBlockUpdate}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Toggle button for left sidebar */}
-        <button
-          onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
-          className="absolute top-4 left-2 z-30 bg-white border border-gray-300 rounded-md p-2 shadow-lg hover:bg-gray-50 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        )}
       </div>
+      
+      {/* Toggle button for left sidebar */}
+      <button
+        onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+        className="absolute top-20 left-2 z-30 bg-white border border-gray-300 rounded-md p-2 shadow-lg hover:bg-gray-50 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
       
       {/* Floating Test Button */}
       <FloatingTestButton />
