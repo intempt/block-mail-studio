@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ProductBlock } from '@/types/emailBlocks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Plus, Database, X, Type, Bold, Italic, Underline } from 'lucide-react';
+import { Plus, Database, X, Type, Bold, Italic, Underline, ChevronUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Portal } from '@/components/ui/Portal';
 import { calculateFloatingPosition } from '@/utils/floatingPositioning';
@@ -70,21 +71,29 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   triggerElement
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [isVisible, setIsVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!triggerElement || !menuRef.current) return;
 
+    // Small delay to ensure the menu has rendered with content
     const updatePosition = () => {
       const newPosition = calculateFloatingPosition(
         triggerElement,
         menuRef.current!,
-        { preferredPlacement: 'top', offset: 8 }
+        { 
+          preferredPlacement: 'top', 
+          offset: 12,
+          alignment: 'smart'
+        }
       );
       setPosition(newPosition);
+      setIsVisible(true);
     };
 
-    updatePosition();
+    // Use requestAnimationFrame to ensure DOM is ready
+    const rafId = requestAnimationFrame(updatePosition);
 
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
@@ -93,6 +102,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     window.addEventListener('resize', handleResize, { passive: true });
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
@@ -179,15 +189,24 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     <Portal>
       <div 
         ref={menuRef}
-        className="bg-white border border-gray-200 rounded-lg shadow-xl p-3 flex items-center gap-3 min-w-fit"
+        className={`bg-white border border-gray-200 rounded-lg shadow-xl flex items-center gap-3 min-w-fit transition-opacity duration-200 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
         style={{ 
           position: 'fixed',
           top: `${position.top}px`,
           left: `${position.left}px`,
           zIndex: 99999,
-          pointerEvents: 'auto'
+          pointerEvents: 'auto',
+          padding: '12px'
         }}
       >
+        {/* Visual connection indicator */}
+        <div 
+          className="absolute -bottom-2 left-8 w-4 h-4 bg-white border-b border-r border-gray-200 transform rotate-45"
+          style={{ zIndex: -1 }}
+        />
+
         {/* Type selector */}
         <div className="flex flex-col gap-2">
           <Select value={currentType} onValueChange={handleTypeChange}>

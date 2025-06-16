@@ -13,6 +13,7 @@ export interface PositionOptions {
   preferredPlacement?: 'top' | 'bottom' | 'left' | 'right';
   offset?: number;
   boundaryPadding?: number;
+  alignment?: 'start' | 'center' | 'end' | 'smart';
 }
 
 export const getViewportBounds = (): ViewportBounds => ({
@@ -28,7 +29,8 @@ export const calculateFloatingPosition = (
   const {
     preferredPlacement = 'top',
     offset = 8,
-    boundaryPadding = 16
+    boundaryPadding = 16,
+    alignment = 'smart'
   } = options;
 
   const triggerRect = triggerElement.getBoundingClientRect();
@@ -42,18 +44,18 @@ export const calculateFloatingPosition = (
   switch (preferredPlacement) {
     case 'top':
       top = triggerRect.top - floatingRect.height - offset;
-      left = triggerRect.left + (triggerRect.width - floatingRect.width) / 2;
+      left = calculateHorizontalAlignment(triggerRect, floatingRect, alignment, viewport, boundaryPadding);
       break;
     case 'bottom':
       top = triggerRect.bottom + offset;
-      left = triggerRect.left + (triggerRect.width - floatingRect.width) / 2;
+      left = calculateHorizontalAlignment(triggerRect, floatingRect, alignment, viewport, boundaryPadding);
       break;
     case 'left':
-      top = triggerRect.top + (triggerRect.height - floatingRect.height) / 2;
+      top = calculateVerticalAlignment(triggerRect, floatingRect, alignment);
       left = triggerRect.left - floatingRect.width - offset;
       break;
     case 'right':
-      top = triggerRect.top + (triggerRect.height - floatingRect.height) / 2;
+      top = calculateVerticalAlignment(triggerRect, floatingRect, alignment);
       left = triggerRect.right + offset;
       break;
   }
@@ -72,6 +74,70 @@ export const calculateFloatingPosition = (
   }
 
   return { top, left };
+};
+
+const calculateHorizontalAlignment = (
+  triggerRect: DOMRect,
+  floatingRect: DOMRect,
+  alignment: string,
+  viewport: ViewportBounds,
+  boundaryPadding: number
+): number => {
+  const triggerCenter = triggerRect.left + triggerRect.width / 2;
+  const floatingHalfWidth = floatingRect.width / 2;
+  
+  switch (alignment) {
+    case 'start':
+      return triggerRect.left;
+    case 'end':
+      return triggerRect.right - floatingRect.width;
+    case 'center':
+      return triggerCenter - floatingHalfWidth;
+    case 'smart':
+    default:
+      // Smart alignment logic
+      const isFloatingWiderThanTrigger = floatingRect.width > triggerRect.width;
+      
+      if (isFloatingWiderThanTrigger) {
+        // For wide menus, try left-align first, then center if there's space
+        const leftAlignPosition = triggerRect.left;
+        const centerAlignPosition = triggerCenter - floatingHalfWidth;
+        
+        // Check if left-align fits within viewport
+        if (leftAlignPosition + floatingRect.width <= viewport.width - boundaryPadding) {
+          return leftAlignPosition;
+        }
+        
+        // Check if center-align fits within viewport
+        if (centerAlignPosition >= boundaryPadding && 
+            centerAlignPosition + floatingRect.width <= viewport.width - boundaryPadding) {
+          return centerAlignPosition;
+        }
+        
+        // Fallback to right-align
+        return triggerRect.right - floatingRect.width;
+      } else {
+        // For narrow menus, prefer center alignment
+        return triggerCenter - floatingHalfWidth;
+      }
+  }
+};
+
+const calculateVerticalAlignment = (
+  triggerRect: DOMRect,
+  floatingRect: DOMRect,
+  alignment: string
+): number => {
+  switch (alignment) {
+    case 'start':
+      return triggerRect.top;
+    case 'end':
+      return triggerRect.bottom - floatingRect.height;
+    case 'center':
+    case 'smart':
+    default:
+      return triggerRect.top + (triggerRect.height - floatingRect.height) / 2;
+  }
 };
 
 export const createPortalRoot = (id: string): HTMLElement => {
