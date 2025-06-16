@@ -12,11 +12,11 @@ interface BottomDockProps {
 }
 
 const suggestionChips = [
-  "Who are my best customers?",
-  "What's the best way to segment users?", 
-  "How do I track conversion rates?",
-  "Which accounts are at risk of churning?",
-  "What's my customer lifetime value?"
+  "Create a welcome email for new users",
+  "Build a promotional campaign email",
+  "Design a newsletter template",
+  "Make an abandoned cart reminder",
+  "Create a product announcement email"
 ];
 
 export const BottomDock: React.FC<BottomDockProps> = ({
@@ -43,10 +43,10 @@ export const BottomDock: React.FC<BottomDockProps> = ({
   return (
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-4xl px-4">
       <div className="relative">
-        {/* Floating Oval Collapse Button - positioned at top-right */}
+        {/* Floating Oval Collapse Button - positioned outside top-right */}
         <button
           onClick={handleCollapse}
-          className="absolute -top-6 right-4 z-10 bg-white border border-gray-200 shadow-lg px-4 py-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+          className="absolute -top-8 -right-2 z-10 bg-white border border-gray-200 shadow-lg px-4 py-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
           title="Collapse dock"
         >
           <ChevronDown className="w-4 h-4" />
@@ -72,7 +72,7 @@ export const BottomDock: React.FC<BottomDockProps> = ({
               value={currentMessage}
               onChange={(e) => onMessageChange(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="What's my conversion rate this month?"
+              placeholder="Create a welcome email for new subscribers..."
               className="flex-1 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none text-base"
               disabled={isLoading}
             />
