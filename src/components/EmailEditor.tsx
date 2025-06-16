@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
@@ -7,6 +6,7 @@ import { EmailMetricsPanel } from '@/components/EmailMetricsPanel';
 import { FloatingTestButton } from '@/components/FloatingTestButton';
 import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
 import { ResponsiveCanvasContainer } from '@/components/canvas/ResponsiveCanvasContainer';
+import { BottomDock } from '@/components/BottomDock';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -33,6 +33,8 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [canvasWidth, setCanvasWidth] = useState(600);
+  const [dockMessage, setDockMessage] = useState('');
+  const [isDockLoading, setIsDockLoading] = useState(false);
   
   const isMobile = useIsMobile();
 
@@ -112,6 +114,28 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
     setCanvasWidth(width);
   }, []);
 
+  const handleDockSuggestionClick = useCallback((suggestion: string) => {
+    setDockMessage(suggestion);
+    handleDockSendMessage(suggestion);
+  }, []);
+
+  const handleDockSendMessage = useCallback((message: string) => {
+    if (!message.trim()) return;
+    
+    setIsDockLoading(true);
+    setDockMessage('');
+    
+    // Simulate AI response for email context
+    setTimeout(() => {
+      console.log('Processing email-related message:', message);
+      setIsDockLoading(false);
+    }, 1500);
+  }, []);
+
+  const handleDockMessageChange = useCallback((message: string) => {
+    setDockMessage(message);
+  }, []);
+
   return (
     <div className="h-screen w-full flex flex-col bg-white">
       {/* Top Toolbar */}
@@ -184,6 +208,15 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           </div>
         )}
       </div>
+      
+      {/* Bottom Dock */}
+      <BottomDock
+        onSuggestionClick={handleDockSuggestionClick}
+        onSendMessage={handleDockSendMessage}
+        currentMessage={dockMessage}
+        onMessageChange={handleDockMessageChange}
+        isLoading={isDockLoading}
+      />
       
       {/* Toggle button for left sidebar */}
       <button
