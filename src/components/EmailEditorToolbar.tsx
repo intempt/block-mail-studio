@@ -22,7 +22,8 @@ import {
   Smartphone,
   ChevronDown,
   Trash2,
-  Send
+  Send,
+  BarChart3
 } from 'lucide-react';
 
 interface EmailEditorToolbarProps {
@@ -69,6 +70,11 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   const handleDelete = () => {
     console.log('Delete campaign...');
     // TODO: Implement delete functionality
+  };
+
+  const handleEmailMetrics = () => {
+    console.log('Show email metrics...');
+    // TODO: Implement email metrics functionality
   };
 
   return (
@@ -161,6 +167,18 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           >
             <Eye className="w-4 h-4" />
             Preview
+          </Button>
+
+          {/* Email Metrics */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEmailMetrics}
+            className="h-[38px] u-p-3 u-gap-2 mr-2"
+            style={{ fontSize: '14px' }}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Email metrics
           </Button>
 
           {/* Send test */}
