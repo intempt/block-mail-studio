@@ -222,12 +222,11 @@ export type EmailBlockContent =
   | CodeContent
   | MenuContent
   | SplitContent
-  | ProductContent
-  | ContentContent;
+  | ProductContent;
 
 export interface EmailBlock {
   id: string;
-  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'content' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
+  type: 'text' | 'button' | 'image' | 'spacer' | 'divider' | 'html' | 'video' | 'social' | 'table' | 'columns' | 'code' | 'menu' | 'split' | 'product' | 'header-link-bar' | 'drop-shadow' | 'review-quote';
   content: any;
   styling: Styling;
   position: Position;
@@ -326,32 +325,6 @@ export interface ProductContent {
 export interface ProductBlock extends EmailBlock {
   type: 'product';
   content: ProductContent;
-}
-
-export interface ContentContent {
-  jsonData: any[];
-  rows: number;
-  columns: number;
-  layout: 'table' | 'list' | 'grid';
-  selectedFields: string[];
-  fieldMappings: {
-    [key: string]: {
-      label: string;
-      type: 'text' | 'currency' | 'number' | 'date' | 'boolean';
-    };
-  };
-  showHeaders: boolean;
-  headerStyle: 'normal' | 'bold';
-  cellPadding?: string;
-  borderStyle: 'solid' | 'dashed' | 'dotted' | 'none';
-  borderColor: string;
-  alternateRowColors: boolean;
-  alternateColor?: string;
-}
-
-export interface ContentBlock extends EmailBlock {
-  type: 'content';
-  content: ContentContent;
 }
 
 export interface UniversalContent {

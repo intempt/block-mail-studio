@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,7 @@ import {
   Type,
   Home
 } from 'lucide-react';
-import { EnhancedEmailBlockPalette } from './BlockManager/EnhancedEmailBlockPalette';
+import { EnhancedEmailBlockPalette } from './EnhancedEmailBlockPalette';
 import { GlobalStylesPanel } from './GlobalStylesPanel';
 import { EmailTemplateLibrary } from './EmailTemplateLibrary';
 import { TemplateStylePanel } from './TemplateStylePanel';
