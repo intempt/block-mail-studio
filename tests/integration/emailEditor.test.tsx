@@ -1,7 +1,6 @@
-
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { EnhancedEmailBlockPalette } from '@/components/EnhancedEmailBlockPalette';
+import { EnhancedEmailBlockPalette } from '@/components/BlockManager';
 
 describe('Email Editor Integration', () => {
   const mockOnBlockAdd = vi.fn();

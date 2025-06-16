@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Blocks, ChevronDown, ChevronRight } from 'lucide-react';
 import { BlockItem } from './BlockItem';
-import { BlockSectionProps } from '@/types/blockPalette';
+import { BlockSectionProps } from './types';
 
 export const BlockSection: React.FC<BlockSectionProps> = ({
   blockItems,
