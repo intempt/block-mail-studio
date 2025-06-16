@@ -53,6 +53,13 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
         return <HtmlBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'table':
         return <TableBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
+      case 'product':
+        return (
+          <div className="p-4 text-center text-gray-500">
+            <div className="text-lg font-medium mb-2">Product Block</div>
+            <div className="text-sm">No configuration needed - displays default product cards</div>
+          </div>
+        );
       default:
         return (
           <div className="p-4 text-center text-gray-500">
@@ -62,11 +69,22 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
     }
   };
 
+  const getBlockDisplayName = () => {
+    switch (selectedBlock.type) {
+      case 'button':
+        return 'Call-to-action';
+      case 'product':
+        return 'Product';
+      default:
+        return selectedBlock.type.charAt(0).toUpperCase() + selectedBlock.type.slice(1);
+    }
+  };
+
   return (
     <Card className="h-full flex flex-col">
       <div className="p-4 border-b">
-        <h3 className="font-semibold text-lg capitalize">
-          {selectedBlock.type} Block Properties
+        <h3 className="font-semibold text-lg">
+          {getBlockDisplayName()} Block Properties
         </h3>
       </div>
       <ScrollArea className="flex-1">

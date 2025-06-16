@@ -240,6 +240,50 @@ export const createBlock = (type: string, sectionId?: string): EmailBlock => {
         },
       };
 
+    case 'product':
+      return {
+        ...baseBlock,
+        type: 'product',
+        content: {
+          products: [
+            {
+              id: '1',
+              image: 'https://via.placeholder.com/300x300?text=Product+1',
+              title: 'Product Title',
+              description: 'Product Description',
+              price: 0.00,
+              originalPrice: 0.00,
+              link: '#'
+            },
+            {
+              id: '2',
+              image: 'https://via.placeholder.com/300x300?text=Product+2',
+              title: 'Product Title',
+              description: 'Product Description',
+              price: 0.00,
+              originalPrice: 0.00,
+              link: '#'
+            },
+            {
+              id: '3',
+              image: 'https://via.placeholder.com/300x300?text=Product+3',
+              title: 'Product Title',
+              description: 'Product Description',
+              price: 0.00,
+              originalPrice: 0.00,
+              link: '#'
+            }
+          ],
+          layout: 'grid',
+          columns: 3,
+          showImages: true,
+          showTitles: true,
+          showDescriptions: true,
+          showPrices: true,
+          showOriginalPrices: true
+        },
+      };
+
     case 'columns':
       return createColumnsBlock('50-50');
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import { MJMLTableBlockRenderer } from './blocks/MJMLTableBlockRenderer';
 import { MJMLSocialBlockRenderer } from './blocks/MJMLSocialBlockRenderer';
 import { ContentBlockRenderer } from './blocks/ContentBlockRenderer';
 import { ColumnsBlockRenderer } from './blocks/ColumnsBlockRenderer';
+import { ProductBlockRenderer } from './blocks/ProductBlockRenderer';
 
 interface BlockRendererProps {
   block: EmailBlock;
@@ -80,6 +82,8 @@ export const BlockRenderer: React.FC<BlockRendererProps> = ({
         return <MJMLHtmlBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'table':
         return <MJMLTableBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
+      case 'product':
+        return <ProductBlockRenderer block={block as any} isSelected={isSelected} onUpdate={onUpdate} />;
       case 'columns':
         return (
           <ColumnsBlockRenderer
