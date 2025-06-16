@@ -5,6 +5,7 @@ import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
 import { BlocksSidebar } from '@/components/BlocksSidebar';
 import { EmailMetricsPanel } from '@/components/EmailMetricsPanel';
 import { FloatingTestButton } from '@/components/FloatingTestButton';
+import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 
@@ -24,6 +25,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   console.log('EmailEditor: Component starting to render');
   
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<EmailBlock | null>(null);
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [universalContent, setUniversalContent] = useState<UniversalContent[]>([]);
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
@@ -47,6 +49,28 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
 
   const handleBlocksChange = useCallback((newBlocks: EmailBlock[]) => {
     setBlocks(newBlocks);
+    // Update selected block if it still exists
+    if (selectedBlockId) {
+      const updatedSelectedBlock = newBlocks.find(block => block.id === selectedBlockId);
+      setSelectedBlock(updatedSelectedBlock || null);
+    }
+  }, [selectedBlockId]);
+
+  const handleBlockSelect = useCallback((blockId: string | null) => {
+    setSelectedBlockId(blockId);
+    if (blockId) {
+      const block = blocks.find(b => b.id === blockId);
+      setSelectedBlock(block || null);
+    } else {
+      setSelectedBlock(null);
+    }
+  }, [blocks]);
+
+  const handleBlockUpdate = useCallback((updatedBlock: EmailBlock) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === updatedBlock.id ? updatedBlock : block
+    ));
+    setSelectedBlock(updatedBlock);
   }, []);
 
   const handleSnippetRefresh = useCallback(() => {
@@ -107,7 +131,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           <div className="flex-1 overflow-auto">
             <EmailBlockCanvas
               onContentChange={onContentChange}
-              onBlockSelect={setSelectedBlockId}
+              onBlockSelect={handleBlockSelect}
               onBlocksChange={handleBlocksChange}
               subject={subject}
               onSubjectChange={onSubjectChange}
@@ -122,6 +146,16 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
             emailContent={content}
           />
         </div>
+
+        {/* Right Sidebar - Properties Panel */}
+        {selectedBlock && (
+          <div className="w-80 flex-shrink-0 border-l border-gray-200 bg-gray-50">
+            <PropertyEditorPanel
+              selectedBlock={selectedBlock}
+              onBlockUpdate={handleBlockUpdate}
+            />
+          </div>
+        )}
       </div>
       
       {/* Floating Test Button */}
