@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo, useCallback } from 'react';
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -356,7 +357,7 @@ export const OmnipresentRibbon: React.FC<OmnipresentRibbonProps> = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="default" size="sm" onClick={onPublish} className="h-8">
+                  <Button variant="primary" size="sm" onClick={onPublish} className="h-8">
                     <Send className="w-4 h-4 mr-2" />
                     Publish
                   </Button>
