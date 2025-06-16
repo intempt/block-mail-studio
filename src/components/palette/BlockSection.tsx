@@ -35,7 +35,7 @@ export const BlockSection: React.FC<BlockSectionProps> = ({
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className={`grid ${compactMode ? 'grid-cols-2 gap-1' : 'grid-cols-2 gap-1'} mb-4`}>
+        <div className="grid grid-cols-3 gap-2 mb-4" style={{ gridTemplateColumns: 'repeat(3, 87px)' }}>
           {blockItems.map(block => {
             console.log('Rendering block:', block.id, block.name);
             return (

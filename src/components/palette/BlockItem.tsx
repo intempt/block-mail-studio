@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
+import { GripVertical } from 'lucide-react';
 import { BlockItemProps } from '@/types/blockPalette';
 
 export const BlockItem: React.FC<BlockItemProps> = ({
@@ -9,8 +10,6 @@ export const BlockItem: React.FC<BlockItemProps> = ({
   onBlockAdd,
   onDragStart
 }) => {
-  const gridClasses = compactMode ? "p-2" : "p-3";
-  
   const handleDragStart = (e: React.DragEvent) => {
     console.log('=== BlockItem Drag Start ===');
     console.log('BlockItem: Starting drag for block:', block.id, block.name);
@@ -73,30 +72,30 @@ export const BlockItem: React.FC<BlockItemProps> = ({
     onBlockAdd(block.id);
   };
   
-  // Check if block has description (for backwards compatibility)
-  const hasDescription = 'description' in block && block.description;
-  
   return (
     <Card
       key={block.id}
-      className={`cursor-grab hover:shadow-md transition-all duration-200 group ${gridClasses} active:cursor-grabbing border-2 border-transparent hover:border-blue-200`}
+      className="cursor-grab hover:shadow-md transition-all duration-200 group border-2 border-transparent hover:border-blue-200 active:cursor-grabbing relative"
+      style={{ width: '87px', height: '87px' }}
       draggable
       onDragStart={handleDragStart}
       onClick={handleClick}
     >
-      <div className="text-center space-y-2">
+      {/* Drag indicator dots */}
+      <div className="absolute top-1 left-1 opacity-40 group-hover:opacity-60 transition-opacity">
+        <GripVertical className="w-3 h-3 text-gray-400" />
+      </div>
+      
+      <div className="h-full flex flex-col items-center justify-center p-2 text-center space-y-1">
         <div className="flex justify-center text-slate-600 group-hover:text-blue-600 transition-colors">
-          {block.icon}
-        </div>
-        <div>
-          <div className={`font-medium text-slate-800 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-            {block.name}
+          <div style={{ height: '28px', display: 'flex', alignItems: 'center' }}>
+            {React.cloneElement(block.icon as React.ReactElement, { 
+              style: { height: '28px', width: 'auto' } 
+            })}
           </div>
-          {!compactMode && hasDescription && (
-            <div className="text-xs text-slate-500 mt-1 line-clamp-2">
-              {hasDescription}
-            </div>
-          )}
+        </div>
+        <div className="text-xs font-medium text-slate-800 leading-tight">
+          {block.name}
         </div>
       </div>
     </Card>
