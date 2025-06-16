@@ -30,7 +30,7 @@ export const blockItems: BlockItem[] = [
     category: 'content'
   },
   {
-    id: 'productfeed',
+    id: 'product',
     name: 'Product Feed',
     icon: React.createElement(Package, { className: "w-6 h-6" }),
     description: 'Display products with images, prices, and descriptions',
