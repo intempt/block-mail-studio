@@ -51,7 +51,7 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
     if (nodeType === 'P') {
       editor.chain().focus().setParagraph().run();
     } else {
-      const level = parseInt(nodeType.replace('H', ''));
+      const level = parseInt(nodeType.replace('H', '')) as 1 | 2 | 3 | 4 | 5 | 6;
       editor.chain().focus().toggleHeading({ level }).run();
     }
     setParagraphSelectorOpen(false);
