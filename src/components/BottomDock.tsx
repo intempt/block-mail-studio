@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Send, ChevronDown } from 'lucide-react';
 
 interface BottomDockProps {
   onSuggestionClick: (suggestion: string) => void;
@@ -35,12 +35,26 @@ export const BottomDock: React.FC<BottomDockProps> = ({
     }
   };
 
+  const handleCollapse = () => {
+    // TODO: Implement collapse functionality
+    console.log('Collapse dock');
+  };
+
   return (
     <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-4xl px-4">
       {/* Single Container for Everything */}
-      <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-4">
+      <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-4 relative">
+        {/* Collapse Button */}
+        <button
+          onClick={handleCollapse}
+          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+          title="Collapse dock"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
         {/* Top Row - Input Bar */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-4 pr-12">
           {/* Ask/Do Toggle */}
           <div className="flex bg-gray-100 rounded-full p-1 flex-shrink-0">
             <button className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-medium transition-colors">
