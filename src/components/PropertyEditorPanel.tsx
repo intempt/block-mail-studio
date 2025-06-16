@@ -3,7 +3,6 @@ import React from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { TextBlockPropertyEditor } from './property-editors/TextBlockPropertyEditor';
 import { ImageBlockPropertyEditor } from './property-editors/ImageBlockPropertyEditor';
 import { ButtonBlockPropertyEditor } from './property-editors/ButtonBlockPropertyEditor';
 import { SpacerBlockPropertyEditor } from './property-editors/SpacerBlockPropertyEditor';
@@ -36,7 +35,12 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
   const renderPropertyEditor = () => {
     switch (selectedBlock.type) {
       case 'text':
-        return <TextBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
+        return (
+          <div className="p-4 text-center text-gray-500">
+            <div className="text-lg font-medium mb-2">Text Block</div>
+            <div className="text-sm">Text block properties removed as requested</div>
+          </div>
+        );
       case 'image':
         return <ImageBlockPropertyEditor block={selectedBlock as any} onUpdate={onBlockUpdate} />;
       case 'button':
@@ -83,8 +87,8 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
   return (
     <Card className="h-full flex flex-col">
       <div className="p-4 border-b">
-        <h3 className="font-semibold text-lg">
-          {getBlockDisplayName()} Block Properties
+        <h3 className="font-semibold text-base">
+          Text & headings
         </h3>
       </div>
       <ScrollArea className="flex-1">
