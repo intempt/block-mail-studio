@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ProductBlock } from '@/types/emailBlocks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -71,44 +70,134 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   triggerElement
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [isVisible, setIsVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 5;
 
-  useEffect(() => {
+  const validatePosition = (pos: { top: number; left: number }) => {
+    const isValid = pos.top >= 0 && pos.left >= 0 && 
+                   pos.top < window.innerHeight && 
+                   pos.left < window.innerWidth;
+    
+    console.log('ProductBlockBubbleMenu: Position validation', {
+      position: pos,
+      isValid,
+      viewport: { width: window.innerWidth, height: window.innerHeight }
+    });
+    
+    return isValid;
+  };
+
+  const getFallbackPosition = (triggerElement: HTMLElement) => {
+    const triggerRect = triggerElement.getBoundingClientRect();
+    const fallbackPosition = {
+      top: Math.max(triggerRect.top - 60, 10), // 60px above trigger, min 10px from top
+      left: Math.max(triggerRect.left, 10) // Align with trigger, min 10px from left
+    };
+    
+    console.log('ProductBlockBubbleMenu: Using fallback position', {
+      triggerRect,
+      fallbackPosition
+    });
+    
+    return fallbackPosition;
+  };
+
+  const updatePosition = () => {
     if (!triggerElement || !menuRef.current) {
-      console.log('ProductBlockBubbleMenu: Missing elements', {
+      console.log('ProductBlockBubbleMenu: Missing elements for position update', {
         triggerElement: !!triggerElement,
         menuRef: !!menuRef.current
       });
       return;
     }
 
-    const updatePosition = () => {
-      if (!triggerElement || !menuRef.current) return;
+    const triggerRect = triggerElement.getBoundingClientRect();
+    const menuRect = menuRef.current.getBoundingClientRect();
+    
+    console.log('ProductBlockBubbleMenu: Element dimensions', {
+      triggerRect,
+      menuRect,
+      menuDimensions: {
+        width: menuRect.width,
+        height: menuRect.height
+      }
+    });
 
-      // Debug log the trigger element
-      const triggerRect = triggerElement.getBoundingClientRect();
-      console.log('ProductBlockBubbleMenu: Trigger element rect', {
-        triggerRect,
-        elementTag: triggerElement.tagName,
-        elementClass: triggerElement.className
+    // Check if floating element has valid dimensions
+    if (menuRect.width === 0 || menuRect.height === 0) {
+      console.log('ProductBlockBubbleMenu: Menu has zero dimensions, retrying...', {
+        attempt: retryCountRef.current + 1,
+        maxRetries
       });
-
-      const newPosition = calculateFloatingPosition(
-        triggerElement,
-        menuRef.current,
-        { 
-          preferredPlacement: 'top', 
-          offset: 12,
-          alignment: 'smart'
-        }
-      );
       
-      console.log('ProductBlockBubbleMenu: Calculated position', newPosition);
-      setPosition(newPosition);
-    };
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        setTimeout(updatePosition, 50 * retryCountRef.current); // Exponential backoff
+        return;
+      } else {
+        console.log('ProductBlockBubbleMenu: Max retries reached, using fallback position');
+        const fallbackPos = getFallbackPosition(triggerElement);
+        setPosition(fallbackPos);
+        setIsVisible(true);
+        return;
+      }
+    }
 
-    // Use a small timeout to ensure the DOM is fully rendered
-    const timeoutId = setTimeout(updatePosition, 10);
+    // Reset retry count on successful dimension detection
+    retryCountRef.current = 0;
+
+    const newPosition = calculateFloatingPosition(
+      triggerElement,
+      menuRef.current,
+      { 
+        preferredPlacement: 'top', 
+        offset: 12,
+        alignment: 'smart'
+      }
+    );
+    
+    console.log('ProductBlockBubbleMenu: Calculated position', {
+      newPosition,
+      triggerRect,
+      menuRect
+    });
+
+    // Validate position and use fallback if needed
+    if (validatePosition(newPosition)) {
+      setPosition(newPosition);
+      setIsVisible(true);
+    } else {
+      console.log('ProductBlockBubbleMenu: Invalid position, using fallback');
+      const fallbackPos = getFallbackPosition(triggerElement);
+      setPosition(fallbackPos);
+      setIsVisible(true);
+    }
+  };
+
+  // Use useLayoutEffect for synchronous DOM measurements
+  useLayoutEffect(() => {
+    if (!triggerElement) {
+      console.log('ProductBlockBubbleMenu: No trigger element');
+      setIsVisible(false);
+      return;
+    }
+
+    setIsVisible(false);
+    retryCountRef.current = 0;
+
+    // Small timeout to ensure the menu DOM is fully rendered
+    const timeoutId = setTimeout(updatePosition, 50);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [triggerElement]);
+
+  // Handle scroll and resize events
+  useEffect(() => {
+    if (!isVisible) return;
 
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
@@ -117,11 +206,10 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     window.addEventListener('resize', handleResize, { passive: true });
 
     return () => {
-      clearTimeout(timeoutId);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, [triggerElement]);
+  }, [isVisible, triggerElement]);
 
   const handleTypeChange = (value: string) => {
     const updatedBlock = {
@@ -198,9 +286,12 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const selectedSchemaKey = block.content.selectedSchemaKey;
   const currentStyles = selectedSchemaKey ? block.content.schemaKeyStyles?.[selectedSchemaKey] : null;
 
-  // Don't render if no trigger element
-  if (!triggerElement) {
-    console.log('ProductBlockBubbleMenu: No trigger element, not rendering');
+  // Don't render if no trigger element or not visible
+  if (!triggerElement || !isVisible) {
+    console.log('ProductBlockBubbleMenu: Not rendering', {
+      triggerElement: !!triggerElement,
+      isVisible
+    });
     return null;
   }
 
