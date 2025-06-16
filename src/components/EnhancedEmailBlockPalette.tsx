@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
@@ -125,40 +126,32 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
                 <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
                   <div className="space-y-2">
                     {/* Email Settings Section */}
-                    <div className="relative">
-                      <EmailSettingsCard
-                        isOpen={stylesExpanded.emailSettings}
-                        onToggle={() => toggleStylesSection('emailSettings')}
-                        onStylesChange={handleStylesChange}
-                      />
-                    </div>
+                    <EmailSettingsCard
+                      isOpen={stylesExpanded.emailSettings}
+                      onToggle={() => toggleStylesSection('emailSettings')}
+                      onStylesChange={handleStylesChange}
+                    />
 
                     {/* Text & Headings Section */}
-                    <div className="relative">
-                      <TextHeadingsCard
-                        isOpen={stylesExpanded.textHeadings}
-                        onToggle={() => toggleStylesSection('textHeadings')}
-                        onStylesChange={handleStylesChange}
-                      />
-                    </div>
+                    <TextHeadingsCard
+                      isOpen={stylesExpanded.textHeadings}
+                      onToggle={() => toggleStylesSection('textHeadings')}
+                      onStylesChange={handleStylesChange}
+                    />
 
                     {/* Buttons Section */}
-                    <div className="relative">
-                      <ButtonsCard
-                        isOpen={stylesExpanded.buttons}
-                        onToggle={() => toggleStylesSection('buttons')}
-                        onStylesChange={handleStylesChange}
-                      />
-                    </div>
+                    <ButtonsCard
+                      isOpen={stylesExpanded.buttons}
+                      onToggle={() => toggleStylesSection('buttons')}
+                      onStylesChange={handleStylesChange}
+                    />
 
                     {/* Links Section */}
-                    <div className="relative">
-                      <LinksCard
-                        isOpen={stylesExpanded.links}
-                        onToggle={() => toggleStylesSection('links')}
-                        onStylesChange={handleStylesChange}
-                      />
-                    </div>
+                    <LinksCard
+                      isOpen={stylesExpanded.links}
+                      onToggle={() => toggleStylesSection('links')}
+                      onStylesChange={handleStylesChange}
+                    />
                   </div>
                 </div>
               </div>
