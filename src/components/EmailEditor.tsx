@@ -54,13 +54,13 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   console.log('EmailEditor: About to render main component');
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="min-h-screen w-full flex flex-col bg-white">
       {/* Top Toolbar */}
       <EmailEditorToolbar />
       
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
+      {/* Main Content Area - responsive layout */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left Sidebar - fixed width, sticks to left */}
         <BlocksSidebar
           onBlockAdd={handleBlockAdd}
           onSnippetAdd={handleSnippetAdd}
@@ -69,8 +69,8 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           snippetRefreshTrigger={snippetRefreshTrigger}
         />
         
-        {/* Canvas Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Canvas Area - takes remaining space */}
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <div className="flex-1 overflow-auto">
             <EmailBlockCanvas
               onContentChange={onContentChange}

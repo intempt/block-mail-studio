@@ -21,13 +21,7 @@ export const BlocksSidebar: React.FC<BlocksSidebarProps> = ({
   snippetRefreshTrigger = 0
 }) => {
   return (
-    <div className="w-80 h-full bg-gray-50 border-r border-gray-200 flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-white">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">BLOCKS</h2>
-        <p className="text-sm text-gray-600">Drag to add content to your email</p>
-      </div>
-
+    <div className="w-80 min-w-80 h-full bg-gray-50 border-r border-gray-200 flex flex-col flex-shrink-0">
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         <EnhancedEmailBlockPalette
