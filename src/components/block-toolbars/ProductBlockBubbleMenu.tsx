@@ -11,7 +11,6 @@ interface ProductBlockBubbleMenuProps {
   block: ProductBlock;
   onUpdate: (block: ProductBlock) => void;
   triggerElement?: HTMLElement | null;
-  delayPositioning?: boolean;
 }
 
 const typeOptions = [
@@ -68,18 +67,33 @@ const fontFamilyOptions = [
 export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   block,
   onUpdate,
-  triggerElement,
-  delayPositioning = false
+  triggerElement
 }) => {
   const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [opacity, setOpacity] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 5;
+
+  const validatePosition = (pos: { top: number; left: number }) => {
+    const isValid = pos.top >= 0 && pos.left >= 0 && 
+                   pos.top < window.innerHeight && 
+                   pos.left < window.innerWidth;
+    
+    console.log('ProductBlockBubbleMenu: Position validation', {
+      position: pos,
+      isValid,
+      viewport: { width: window.innerWidth, height: window.innerHeight }
+    });
+    
+    return isValid;
+  };
 
   const getFallbackPosition = (triggerElement: HTMLElement) => {
     const triggerRect = triggerElement.getBoundingClientRect();
     const fallbackPosition = {
-      top: Math.max(triggerRect.top - 60, 10),
-      left: Math.max(triggerRect.left, 10)
+      top: Math.max(triggerRect.top - 60, 10), // 60px above trigger, min 10px from top
+      left: Math.max(triggerRect.left, 10) // Align with trigger, min 10px from left
     };
     
     console.log('ProductBlockBubbleMenu: Using fallback position', {
@@ -105,17 +119,34 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
     console.log('ProductBlockBubbleMenu: Element dimensions', {
       triggerRect,
       menuRect,
-      delayPositioning
+      menuDimensions: {
+        width: menuRect.width,
+        height: menuRect.height
+      }
     });
 
-    // If menu has no dimensions yet, use fallback
+    // Check if floating element has valid dimensions
     if (menuRect.width === 0 || menuRect.height === 0) {
-      console.log('ProductBlockBubbleMenu: Menu has zero dimensions, using fallback');
-      const fallbackPos = getFallbackPosition(triggerElement);
-      setPosition(fallbackPos);
-      setOpacity(1);
-      return;
+      console.log('ProductBlockBubbleMenu: Menu has zero dimensions, retrying...', {
+        attempt: retryCountRef.current + 1,
+        maxRetries
+      });
+      
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        setTimeout(updatePosition, 50 * retryCountRef.current); // Exponential backoff
+        return;
+      } else {
+        console.log('ProductBlockBubbleMenu: Max retries reached, using fallback position');
+        const fallbackPos = getFallbackPosition(triggerElement);
+        setPosition(fallbackPos);
+        setIsVisible(true);
+        return;
+      }
     }
+
+    // Reset retry count on successful dimension detection
+    retryCountRef.current = 0;
 
     const newPosition = calculateFloatingPosition(
       triggerElement,
@@ -133,37 +164,40 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
       menuRect
     });
 
-    setPosition(newPosition);
-    setOpacity(1);
+    // Validate position and use fallback if needed
+    if (validatePosition(newPosition)) {
+      setPosition(newPosition);
+      setIsVisible(true);
+    } else {
+      console.log('ProductBlockBubbleMenu: Invalid position, using fallback');
+      const fallbackPos = getFallbackPosition(triggerElement);
+      setPosition(fallbackPos);
+      setIsVisible(true);
+    }
   };
 
-  // Position calculation with optional delay
+  // Use useLayoutEffect for synchronous DOM measurements
   useLayoutEffect(() => {
     if (!triggerElement) {
       console.log('ProductBlockBubbleMenu: No trigger element');
-      setOpacity(0);
+      setIsVisible(false);
       return;
     }
 
-    setOpacity(0);
+    setIsVisible(false);
+    retryCountRef.current = 0;
 
-    const positionWithDelay = () => {
-      if (delayPositioning) {
-        console.log('ProductBlockBubbleMenu: Using 160ms delay for positioning');
-        setTimeout(updatePosition, 160);
-      } else {
-        console.log('ProductBlockBubbleMenu: Immediate positioning');
-        // Small delay to ensure DOM is ready even for immediate positioning
-        setTimeout(updatePosition, 50);
-      }
+    // Small timeout to ensure the menu DOM is fully rendered
+    const timeoutId = setTimeout(updatePosition, 50);
+
+    return () => {
+      clearTimeout(timeoutId);
     };
-
-    positionWithDelay();
-  }, [triggerElement, delayPositioning]);
+  }, [triggerElement]);
 
   // Handle scroll and resize events
   useEffect(() => {
-    if (opacity === 0) return;
+    if (!isVisible) return;
 
     const handleScroll = () => updatePosition();
     const handleResize = () => updatePosition();
@@ -175,7 +209,7 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
     };
-  }, [opacity, triggerElement]);
+  }, [isVisible, triggerElement]);
 
   const handleTypeChange = (value: string) => {
     const updatedBlock = {
@@ -252,26 +286,29 @@ export const ProductBlockBubbleMenu: React.FC<ProductBlockBubbleMenuProps> = ({
   const selectedSchemaKey = block.content.selectedSchemaKey;
   const currentStyles = selectedSchemaKey ? block.content.schemaKeyStyles?.[selectedSchemaKey] : null;
 
-  // Don't render if no trigger element
-  if (!triggerElement) {
+  // Don't render if no trigger element or not visible
+  if (!triggerElement || !isVisible) {
+    console.log('ProductBlockBubbleMenu: Not rendering', {
+      triggerElement: !!triggerElement,
+      isVisible
+    });
     return null;
   }
 
-  console.log('ProductBlockBubbleMenu: Rendering at position', position, 'with opacity', opacity);
+  console.log('ProductBlockBubbleMenu: Rendering at position', position);
 
   return (
     <Portal>
       <div 
         ref={menuRef}
-        className="bg-white border border-gray-200 rounded-lg shadow-xl flex items-center gap-3 min-w-fit transition-opacity duration-200"
+        className="bg-white border border-gray-200 rounded-lg shadow-xl flex items-center gap-3 min-w-fit"
         style={{ 
           position: 'fixed',
           top: `${position.top}px`,
           left: `${position.left}px`,
           zIndex: 99999,
           pointerEvents: 'auto',
-          padding: '12px',
-          opacity: opacity
+          padding: '12px'
         }}
       >
         {/* Visual connection indicator */}

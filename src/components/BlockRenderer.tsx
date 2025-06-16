@@ -39,7 +39,6 @@ interface BlockRendererProps {
   onSaveAsSnippet?: (blockId: string) => void;
   onBlockHover?: (blockId: string) => void;
   onBlockLeave?: (blockId: string) => void;
-  recentlyDroppedProductBlocks?: Set<string>;
 }
 
 export const BlockRenderer: React.FC<BlockRendererProps> = ({ 

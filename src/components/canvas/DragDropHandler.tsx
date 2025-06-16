@@ -120,7 +120,7 @@ export const useDragDropHandler = ({
           effectAllowed: e.dataTransfer.effectAllowed,
           dropEffect: e.dataTransfer.dropEffect
         });
-        return { success: false };
+        return;
       }
 
       let dragData;
@@ -154,7 +154,7 @@ export const useDragDropHandler = ({
           return reorderedBlocks;
         });
         console.log('=== Canvas Drop Event END (Reorder) ===');
-        return { success: true, isReorder: true };
+        return;
       }
 
       const blockType = dragData.blockType;
@@ -162,7 +162,7 @@ export const useDragDropHandler = ({
       if (!blockType) {
         console.error('No blockType found in drag data:', dragData);
         console.log('=== Canvas Drop Event END (Error) ===');
-        return { success: false };
+        return;
       }
 
       console.log('Creating new block of type:', blockType);
@@ -172,7 +172,7 @@ export const useDragDropHandler = ({
       if (!newBlock) {
         console.error('Failed to create block from drag data');
         console.log('=== Canvas Drop Event END (Error) ===');
-        return { success: false };
+        return;
       }
 
       console.log('Adding new block to canvas:', newBlock);
@@ -194,18 +194,9 @@ export const useDragDropHandler = ({
 
       console.log('Block successfully added to canvas');
       console.log('=== Canvas Drop Event END (Success) ===');
-      
-      // Return information about the dropped block
-      return { 
-        success: true, 
-        blockId: newBlock.id, 
-        blockType: newBlock.type,
-        isNewBlock: true 
-      };
     } catch (error) {
       console.error('Error handling canvas drop:', error);
       console.log('=== Canvas Drop Event END (Error) ===');
-      return { success: false };
     }
   }, [setBlocks, setIsDraggingOver, setDragOverIndex, createBlockFromDragData, dragOverIndex]);
 

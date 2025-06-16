@@ -57,9 +57,6 @@ export const EditView: React.FC<EditViewProps> = ({
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [currentDragType, setCurrentDragType] = useState<'block' | 'layout' | 'reorder' | null>(null);
   
-  // Track recently dropped product blocks for delayed positioning
-  const [recentlyDroppedProductBlocks, setRecentlyDroppedProductBlocks] = useState<Set<string>>(new Set());
-  
   // Enhanced hover state tracking with debouncing
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
   const [isHoveringAnyBlock, setIsHoveringAnyBlock] = useState(false);
@@ -507,35 +504,6 @@ export const EditView: React.FC<EditViewProps> = ({
     setCurrentDragType
   });
 
-  // Enhanced canvas drop handler with product block delay logic
-  const handleEnhancedCanvasDrop = useCallback(async (e: React.DragEvent) => {
-    const result = await dragDropHandler.handleCanvasDrop(e);
-    
-    // If a product block was successfully dropped, handle delayed selection
-    if (result?.success && result.isNewBlock && result.blockType === 'product' && result.blockId) {
-      console.log('Product block dropped, setting up delayed selection:', result.blockId);
-      
-      // Add to recently dropped set
-      setRecentlyDroppedProductBlocks(prev => new Set(prev).add(result.blockId));
-      
-      // Set up delayed selection after 160ms
-      setTimeout(() => {
-        console.log('Delayed selection for product block:', result.blockId);
-        setSelectedBlockId(result.blockId);
-        onBlockSelect(result.blockId);
-        
-        // Remove from recently dropped set after another short delay
-        setTimeout(() => {
-          setRecentlyDroppedProductBlocks(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(result.blockId);
-            return newSet;
-          });
-        }, 100);
-      }, 160);
-    }
-  }, [dragDropHandler.handleCanvasDrop, setSelectedBlockId, onBlockSelect]);
-
   const canvasWidth = useMemo(() => {
     if (compactMode) return previewMode === 'mobile' ? 320 : 480;
     return previewMode === 'mobile' ? 375 : previewWidth;
@@ -601,7 +569,7 @@ export const EditView: React.FC<EditViewProps> = ({
         style={canvasStyle}
         className="email-canvas"
         data-testid="email-canvas"
-        onDrop={handleEnhancedCanvasDrop}
+        onDrop={dragDropHandler.handleCanvasDrop}
         onDragOver={dragDropHandler.handleCanvasDragOver}
         onDragEnter={dragDropHandler.handleCanvasDragEnter}
         onDragLeave={dragDropHandler.handleCanvasDragLeave}
@@ -641,7 +609,6 @@ export const EditView: React.FC<EditViewProps> = ({
             onAddVariable={handleAddVariable}
             onBlockHover={handleBlockHover}
             onBlockLeave={handleBlockLeave}
-            recentlyDroppedProductBlocks={recentlyDroppedProductBlocks}
           />
 
           {/* Standalone Block Controls - Updated visibility logic */}

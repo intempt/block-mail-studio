@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Package } from 'lucide-react';
 import { ProductBlock } from '@/types/emailBlocks';
@@ -8,7 +7,6 @@ interface ProductBlockRendererProps {
   block: ProductBlock;
   isSelected: boolean;
   onUpdate: (block: ProductBlock) => void;
-  recentlyDroppedProductBlocks?: Set<string>;
 }
 
 // Convert Lucide Package icon to data URI
@@ -27,15 +25,11 @@ const createPackageIconDataUri = () => {
 export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({ 
   block, 
   isSelected,
-  onUpdate,
-  recentlyDroppedProductBlocks = new Set()
+  onUpdate
 }) => {
   const blockRef = useRef<HTMLDivElement>(null);
   const styling = block.styling.desktop;
   const packageIconDataUri = createPackageIconDataUri();
-
-  // Check if this block was recently dropped (needs delayed positioning)
-  const isRecentlyDropped = recentlyDroppedProductBlocks.has(block.id);
 
   // Debug logging
   React.useEffect(() => {
@@ -43,11 +37,10 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
       console.log('ProductBlockRenderer: Block selected', {
         blockRef: !!blockRef.current,
         blockRect: blockRef.current?.getBoundingClientRect(),
-        blockElement: blockRef.current,
-        isRecentlyDropped
+        blockElement: blockRef.current
       });
     }
-  }, [isSelected, isRecentlyDropped]);
+  }, [isSelected]);
 
   const getImageSrc = (imageSrc: string) => {
     return imageSrc === 'lucide:package' ? packageIconDataUri : imageSrc;
@@ -59,13 +52,12 @@ export const ProductBlockRenderer: React.FC<ProductBlockRendererProps> = ({
 
   return (
     <div className="relative">
-      {/* Bubble Menu with delay information */}
+      {/* Bubble Menu */}
       {isSelected && (
         <ProductBlockBubbleMenu 
           block={block} 
           onUpdate={onUpdate} 
           triggerElement={blockRef.current}
-          delayPositioning={isRecentlyDropped}
         />
       )}
 
