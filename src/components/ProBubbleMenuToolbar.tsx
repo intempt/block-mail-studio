@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Editor, BubbleMenu } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
@@ -48,12 +47,35 @@ export const ProBubbleMenuToolbar: React.FC<ProBubbleMenuToolbarProps> = ({ edit
   };
 
   const handleNodeTypeChange = (nodeType: string) => {
-    if (nodeType === 'P') {
-      editor.chain().focus().setParagraph().run();
+    const { from, to } = editor.state.selection;
+    const selectedContent = editor.state.doc.textBetween(from, to);
+    
+    if (selectedContent) {
+      // Replace selected text with wrapped content
+      let wrappedContent = '';
+      
+      if (nodeType === 'P') {
+        wrappedContent = `<p>${selectedContent}</p>`;
+      } else {
+        const level = nodeType.replace('H', '');
+        wrappedContent = `<h${level}>${selectedContent}</h${level}>`;
+      }
+      
+      editor.chain()
+        .focus()
+        .deleteSelection()
+        .insertContent(wrappedContent)
+        .run();
     } else {
-      const level = parseInt(nodeType.replace('H', '')) as 1 | 2 | 3 | 4 | 5 | 6;
-      editor.chain().focus().toggleHeading({ level }).run();
+      // Fallback to original behavior if no text is selected
+      if (nodeType === 'P') {
+        editor.chain().focus().setParagraph().run();
+      } else {
+        const level = parseInt(nodeType.replace('H', '')) as 1 | 2 | 3 | 4 | 5 | 6;
+        editor.chain().focus().toggleHeading({ level }).run();
+      }
     }
+    
     setParagraphSelectorOpen(false);
   };
 
