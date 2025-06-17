@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
@@ -275,15 +274,13 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
                       </button>
                     </div>
                   </div>
-                  <div className="p-4">
-                    <CanvasStatus
-                      emailHTML={content}
-                      subjectLine={subject}
-                      showAIAnalytics={true}
-                      onSnippetRefresh={handleSnippetRefresh}
-                      viewMode="edit"
-                    />
-                  </div>
+                  <CanvasStatus
+                    emailHTML={content}
+                    subjectLine={subject}
+                    showAIAnalytics={true}
+                    onSnippetRefresh={handleSnippetRefresh}
+                    viewMode="edit"
+                  />
                 </div>
               ) : (
                 <div className="flex-1 overflow-auto">
