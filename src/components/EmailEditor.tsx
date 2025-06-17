@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
@@ -6,7 +7,7 @@ import { EmailMetricsPanel } from '@/components/EmailMetricsPanel';
 import { MetricsPanel } from '@/components/MetricsPanel';
 import { FloatingTestButton } from '@/components/FloatingTestButton';
 import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
-import { ResponsiveCanvasContainer } from '@/components/canvas/ResponsiveCanvasContainer';
+import { ResponsiveCanvasContainer } from '@/components/ResponsiveCanvasContainer';
 import { BottomDock } from '@/components/BottomDock';
 import { CanvasStatus } from '@/components/canvas/CanvasStatus';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
@@ -215,17 +216,6 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
               />
             </ResponsiveCanvasContainer>
           </div>
-          
-          {/* AI Analysis Overlay */}
-          {showAIAnalysis && (
-            <CanvasStatus
-              emailHTML={content}
-              subjectLine={subject}
-              showAIAnalytics={true}
-              onSnippetRefresh={handleSnippetRefresh}
-              viewMode="edit"
-            />
-          )}
           
           {/* Bottom Metrics Panel */}
           <div className="flex-shrink-0 border-t border-gray-200">
