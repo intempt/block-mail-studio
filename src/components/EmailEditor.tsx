@@ -7,7 +7,7 @@ import { EmailMetricsPanel } from '@/components/EmailMetricsPanel';
 import { MetricsPanel } from '@/components/MetricsPanel';
 import { FloatingTestButton } from '@/components/FloatingTestButton';
 import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
-import { ResponsiveCanvasContainer } from '@/components/ResponsiveCanvasContainer';
+import { ResponsiveCanvasContainer } from '@/components/canvas/ResponsiveCanvasContainer';
 import { BottomDock } from '@/components/BottomDock';
 import { CanvasStatus } from '@/components/canvas/CanvasStatus';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
