@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -97,18 +96,18 @@ export const CanvasStatus: React.FC<CanvasStatusProps> = React.memo(({
     // Phase 3: Convert Content Optimizations
     Object.entries(analysis.optimizations).forEach(([type, content], index) => {
       if (content) {
-        const categoryMap: Record<string, string> = {
-          engagement: 'content',
+        const categoryMap: Record<string, 'subject' | 'deliverability' | 'cta' | 'mobile' | 'compliance' | 'accessibility' | 'structure' | 'personalization' | 'tone' | 'compatibility'> = {
+          engagement: 'tone',
           conversion: 'cta',
           clarity: 'structure',
-          brevity: 'content'
+          brevity: 'tone'
         };
         
         suggestions.push({
           id: `optimization-${type}-${index}`,
           title: `Optimize Content for ${type.charAt(0).toUpperCase() + type.slice(1)}`,
           reason: `AI-optimized content to improve ${type} and overall performance`,
-          category: categoryMap[type] || 'content',
+          category: categoryMap[type] || 'tone',
           type: 'content',
           current: 'Current email content',
           suggested: content,
