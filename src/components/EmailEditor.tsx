@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import { EmailEditorToolbar } from '@/components/EmailEditorToolbar';
 import { EmailBlockCanvas } from '@/components/EmailBlockCanvas';
@@ -8,6 +9,7 @@ import { FloatingTestButton } from '@/components/FloatingTestButton';
 import { PropertyEditorPanel } from '@/components/PropertyEditorPanel';
 import { ResponsiveCanvasContainer } from '@/components/canvas/ResponsiveCanvasContainer';
 import { BottomDock } from '@/components/BottomDock';
+import { CanvasStatus } from '@/components/canvas/CanvasStatus';
 import { EmailBlock, UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -38,6 +40,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const [dockMessage, setDockMessage] = useState('');
   const [isDockLoading, setIsDockLoading] = useState(false);
   const [showEmailMetrics, setShowEmailMetrics] = useState(false);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   
   const isMobile = useIsMobile();
 
@@ -120,6 +123,16 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
   const handleEmailMetrics = useCallback(() => {
     console.log('Opening email metrics panel...');
     setShowEmailMetrics(true);
+    setShowAIAnalysis(false);
+    // Close property panel if open
+    setSelectedBlock(null);
+    setSelectedBlockId(null);
+  }, []);
+
+  const handleAIAnalysis = useCallback(() => {
+    console.log('Opening AI analysis panel...');
+    setShowAIAnalysis(true);
+    setShowEmailMetrics(false);
     // Close property panel if open
     setSelectedBlock(null);
     setSelectedBlockId(null);
@@ -167,6 +180,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           previewMode={previewMode}
           onPreviewModeChange={setPreviewMode}
           onEmailMetrics={handleEmailMetrics}
+          onAIAnalysis={handleAIAnalysis}
         />
       </div>
       
@@ -186,7 +200,7 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
         )}
         
         {/* Center Canvas Area - Flexible */}
-        <div className="flex-1 flex flex-col bg-gray-100 min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col bg-gray-100 min-w-0 overflow-hidden relative">
           <div className="flex-1 p-4 overflow-hidden">
             <ResponsiveCanvasContainer onWidthChange={handleCanvasWidthChange}>
               <EmailBlockCanvas
@@ -203,6 +217,17 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
             </ResponsiveCanvasContainer>
           </div>
           
+          {/* AI Analysis Overlay */}
+          {showAIAnalysis && (
+            <CanvasStatus
+              emailHTML={content}
+              subjectLine={subject}
+              showAIAnalytics={true}
+              onSnippetRefresh={handleSnippetRefresh}
+              viewMode="edit"
+            />
+          )}
+          
           {/* Bottom Metrics Panel */}
           <div className="flex-shrink-0 border-t border-gray-200">
             <EmailMetricsPanel 
@@ -212,8 +237,8 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
           </div>
         </div>
 
-        {/* Right Sidebar - Properties Panel or Email Metrics */}
-        {(selectedBlock || showEmailMetrics) && (
+        {/* Right Sidebar - Properties Panel, Email Metrics, or AI Analysis */}
+        {(selectedBlock || showEmailMetrics || showAIAnalysis) && (
           <div className="w-96 flex-shrink-0 bg-gray-50 border-l border-gray-200 overflow-hidden">
             <div className="h-full flex flex-col">
               {showEmailMetrics ? (
@@ -236,6 +261,29 @@ export const EmailEditor: React.FC<EmailEditorProps> = ({
                     canvasWidth={canvasWidth}
                     previewMode={previewMode}
                   />
+                </div>
+              ) : showAIAnalysis ? (
+                <div className="flex-1 overflow-auto">
+                  <div className="p-3 border-b border-gray-200 bg-white">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900">AI Analysis</h3>
+                      <button
+                        onClick={() => setShowAIAnalysis(false)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <CanvasStatus
+                      emailHTML={content}
+                      subjectLine={subject}
+                      showAIAnalytics={true}
+                      onSnippetRefresh={handleSnippetRefresh}
+                      viewMode="edit"
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="flex-1 overflow-auto">

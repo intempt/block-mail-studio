@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,8 @@ import {
   ChevronDown,
   Trash2,
   Send,
-  BarChart3
+  BarChart3,
+  Brain
 } from 'lucide-react';
 
 interface EmailEditorToolbarProps {
@@ -35,6 +37,7 @@ interface EmailEditorToolbarProps {
   previewMode?: 'desktop' | 'mobile';
   onPreviewModeChange?: (mode: 'desktop' | 'mobile') => void;
   onEmailMetrics?: () => void;
+  onAIAnalysis?: () => void;
 }
 
 export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({ 
@@ -46,7 +49,8 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   onCampaignTitleChange,
   previewMode = 'desktop',
   onPreviewModeChange,
-  onEmailMetrics
+  onEmailMetrics,
+  onAIAnalysis
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -76,6 +80,11 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
   const handleEmailMetrics = () => {
     console.log('Show email metrics...');
     onEmailMetrics?.();
+  };
+
+  const handleAIAnalysis = () => {
+    console.log('Show AI analysis...');
+    onAIAnalysis?.();
   };
 
   return (
@@ -168,6 +177,18 @@ export const EmailEditorToolbar: React.FC<EmailEditorToolbarProps> = ({
           >
             <Eye className="w-4 h-4" />
             Preview
+          </Button>
+
+          {/* AI Analysis */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAIAnalysis}
+            className="h-[38px] u-p-3 u-gap-2 mr-2"
+            style={{ fontSize: '14px' }}
+          >
+            <Brain className="w-4 h-4" />
+            AI Analysis
           </Button>
 
           {/* Email Metrics */}
