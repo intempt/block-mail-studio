@@ -12,18 +12,6 @@ import { VideoBlockPropertyEditor } from './property-editors/VideoBlockPropertyE
 import { SocialBlockPropertyEditor } from './property-editors/SocialBlockPropertyEditor';
 import { HtmlBlockPropertyEditor } from './property-editors/HtmlBlockPropertyEditor';
 import { TableBlockPropertyEditor } from './property-editors/TableBlockPropertyEditor';
-import { 
-  Type, 
-  Image, 
-  MousePointer, 
-  Space, 
-  Minus, 
-  Video, 
-  Share2, 
-  Code, 
-  Table,
-  Package 
-} from 'lucide-react';
 
 interface PropertyEditorPanelProps {
   selectedBlock: EmailBlock | null;
@@ -83,8 +71,6 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
 
   const getBlockDisplayName = () => {
     switch (selectedBlock.type) {
-      case 'text':
-        return 'Text & headings';
       case 'button':
         return 'Call-to-action';
       case 'product':
@@ -94,42 +80,12 @@ export const PropertyEditorPanel: React.FC<PropertyEditorPanelProps> = ({
     }
   };
 
-  const getBlockIcon = () => {
-    switch (selectedBlock.type) {
-      case 'text':
-        return <Type className="w-4 h-4" />;
-      case 'image':
-        return <Image className="w-4 h-4" />;
-      case 'button':
-        return <MousePointer className="w-4 h-4" />;
-      case 'spacer':
-        return <Space className="w-4 h-4" />;
-      case 'divider':
-        return <Minus className="w-4 h-4" />;
-      case 'video':
-        return <Video className="w-4 h-4" />;
-      case 'social':
-        return <Share2 className="w-4 h-4" />;
-      case 'html':
-        return <Code className="w-4 h-4" />;
-      case 'table':
-        return <Table className="w-4 h-4" />;
-      case 'product':
-        return <Package className="w-4 h-4" />;
-      default:
-        return <Type className="w-4 h-4" />;
-    }
-  };
-
   return (
     <Card className="h-full flex flex-col">
       <div className="p-4 border-b">
-        <div className="flex items-center gap-2">
-          {getBlockIcon()}
-          <h3 className="font-semibold text-base">
-            {getBlockDisplayName()}
-          </h3>
-        </div>
+        <h3 className="font-semibold text-lg">
+          {getBlockDisplayName()} Block Properties
+        </h3>
       </div>
       <ScrollArea className="flex-1">
         <div className="p-4">

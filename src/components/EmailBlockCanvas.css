@@ -2,7 +2,8 @@
 /* Email Block Canvas Styles */
 .block-canvas {
   min-height: 600px;
-  width: 100%;
+  /* Add smooth transition for width changes */
+  transition: max-width 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
 .block-canvas .ProseMirror {
@@ -35,8 +36,8 @@
 .email-container {
   background: white;
   min-height: 500px;
-  width: 100%;
-  margin: 0 auto;
+  /* Add transition for container width changes */
+  transition: all 0.3s ease-in-out;
 }
 
 /* Drag and drop indicators */
@@ -63,4 +64,14 @@
 .email-block-node:hover[data-block-type="text"] .block-wrapper::before,
 .email-block-node.selected[data-block-type="text"] .block-wrapper::before {
   opacity: 1;
+}
+
+/* Responsive width transitions */
+.email-canvas-wrapper {
+  transition: max-width 0.3s ease-in-out;
+}
+
+/* Gmail preview transitions */
+.gmail-preview-container {
+  transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
 }

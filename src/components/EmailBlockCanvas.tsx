@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { EmailBlock } from '@/types/emailBlocks';
 import { DirectSnippetService } from '@/services/directSnippetService';
@@ -8,7 +7,6 @@ import { PreviewView } from './canvas/PreviewView';
 import { useEmailHTMLGenerator } from '@/hooks/useEmailHTMLGenerator';
 import { createBlock } from '@/utils/enhancedBlockFactory';
 import { createDefaultBlockStyling } from '@/utils/blockUtils';
-import './EmailBlockCanvas.css';
 
 interface VariableOption {
   text: string;
@@ -27,7 +25,6 @@ interface EmailBlockCanvasProps {
   showAIAnalytics?: boolean;
   onSnippetRefresh?: () => void;
   viewMode?: 'edit' | 'desktop-preview' | 'mobile-preview';
-  containerWidth?: number;
 }
 
 export interface EmailBlockCanvasRef {
@@ -50,8 +47,7 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   onSubjectChange = () => {},
   showAIAnalytics = false,
   onSnippetRefresh,
-  viewMode = 'edit',
-  containerWidth = 600
+  viewMode = 'edit'
 }, ref) => {
   const [blocks, setBlocks] = useState<EmailBlock[]>([]);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -59,18 +55,6 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   const [snippetRefreshTrigger, setSnippetRefreshTrigger] = useState(0);
 
   const { currentEmailHTML } = useEmailHTMLGenerator(blocks, onContentChange);
-
-  // Calculate responsive width - simpler approach
-  const getResponsiveWidth = () => {
-    if (containerWidth > 0) {
-      return Math.min(containerWidth - 64, 700); // 64px for padding
-    }
-    return previewWidth;
-  };
-
-  const effectiveWidth = getResponsiveWidth();
-
-  console.log('EmailBlockCanvas: containerWidth =', containerWidth, 'effectiveWidth =', effectiveWidth);
 
   // Helper functions for creating default content and styles
   const getDefaultContent = useCallback((blockType: string) => {
@@ -318,44 +302,35 @@ export const EmailBlockCanvas = forwardRef<EmailBlockCanvasRef, EmailBlockCanvas
   // Render preview mode
   if (viewMode === 'desktop-preview' || viewMode === 'mobile-preview') {
     return (
-      <div className="w-full h-full flex justify-center">
-        <div style={{ width: effectiveWidth, maxWidth: '100%' }}>
-          <PreviewView
-            emailHtml={currentEmailHTML}
-            subject={subject}
-            viewMode={viewMode}
-            canvasWidth={effectiveWidth}
-          />
-        </div>
-      </div>
+      <PreviewView
+        emailHtml={currentEmailHTML}
+        subject={subject}
+        viewMode={viewMode}
+      />
     );
   }
 
   // Render edit mode
   return (
-    <div className="w-full h-full flex justify-center">
-      <div style={{ width: effectiveWidth, maxWidth: '100%' }}>
-        <EditView
-          blocks={blocks}
-          setBlocks={setBlocks}
-          selectedBlockId={selectedBlockId}
-          setSelectedBlockId={setSelectedBlockId}
-          editingBlockId={editingBlockId}
-          setEditingBlockId={setEditingBlockId}
-          onBlockSelect={onBlockSelect}
-          previewWidth={effectiveWidth}
-          previewMode={previewMode}
-          compactMode={compactMode}
-          subject={subject}
-          onSubjectChange={onSubjectChange}
-          showAIAnalytics={showAIAnalytics}
-          onSnippetRefresh={onSnippetRefresh}
-          currentEmailHTML={currentEmailHTML}
-          getDefaultContent={getDefaultContent}
-          getDefaultStyles={getDefaultStyles}
-        />
-      </div>
-    </div>
+    <EditView
+      blocks={blocks}
+      setBlocks={setBlocks}
+      selectedBlockId={selectedBlockId}
+      setSelectedBlockId={setSelectedBlockId}
+      editingBlockId={editingBlockId}
+      setEditingBlockId={setEditingBlockId}
+      onBlockSelect={onBlockSelect}
+      previewWidth={previewWidth}
+      previewMode={previewMode}
+      compactMode={compactMode}
+      subject={subject}
+      onSubjectChange={onSubjectChange}
+      showAIAnalytics={showAIAnalytics}
+      onSnippetRefresh={onSnippetRefresh}
+      currentEmailHTML={currentEmailHTML}
+      getDefaultContent={getDefaultContent}
+      getDefaultStyles={getDefaultStyles}
+    />
   );
 });
 

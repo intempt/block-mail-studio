@@ -1,15 +1,13 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UniversalContent } from '@/types/emailBlocks';
 import { EmailSnippet } from '@/types/snippets';
 import { LayoutConfigPanel } from './LayoutConfigPanel';
+import { SnippetManager } from './SnippetManager';
 import { BlockSection } from './palette/BlockSection';
 import { PaletteTabContent } from './palette/PaletteTabContent';
 import { ribbonBlockItems } from '@/data/ribbonBlockItems.tsx';
-import { EmailSettingsCard } from './EmailSettingsCard';
-import { TextHeadingsCard } from './TextHeadingsCard';
-import { ButtonsCard } from './ButtonsCard';
-import { LinksCard } from './LinksCard';
 
 interface EnhancedEmailBlockPaletteProps {
   onBlockAdd: (blockType: string, layoutConfig?: any) => void;
@@ -36,19 +34,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     blocks: true
   });
 
-  const [stylesExpanded, setStylesExpanded] = useState({
-    emailSettings: false,
-    textHeadings: false,
-    buttons: false,
-    links: false
-  });
-
   const toggleSection = (section: keyof typeof sectionsExpanded) => {
     setSectionsExpanded(prev => ({ ...prev, [section]: !prev[section] }));
-  };
-
-  const toggleStylesSection = (section: keyof typeof stylesExpanded) => {
-    setStylesExpanded(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
   const handleDragStart = (e: React.DragEvent, blockType: string) => {
@@ -80,9 +67,30 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
     onBlockAdd('columns', layout);
   };
 
-  const handleStylesChange = (styles: any) => {
-    console.log('Styles changed:', styles);
-    // Handle global styles changes here
+  const handleSnippetSelect = (snippet: EmailSnippet) => {
+    console.log('Snippet selected:', snippet);
+    if (onSnippetAdd) {
+      onSnippetAdd(snippet);
+    }
+  };
+
+  const renderSnippetsTab = () => {
+    try {
+      return (
+        <SnippetManager
+          onSnippetSelect={handleSnippetSelect}
+          compactMode={compactMode}
+          refreshTrigger={snippetRefreshTrigger}
+        />
+      );
+    } catch (error) {
+      console.error('Error rendering snippets tab:', error);
+      return (
+        <div className="p-4 text-center">
+          <p className="text-slate-500 text-sm">Snippets not available</p>
+        </div>
+      );
+    }
   };
 
   try {
@@ -96,8 +104,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
             <TabsTrigger value="layouts" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
               Layouts
             </TabsTrigger>
-            <TabsTrigger value="styles" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
-              Styles
+            <TabsTrigger value="snippets" className={`flex-1 ${compactMode ? 'text-xs' : 'text-sm'}`}>
+              Snippets
             </TabsTrigger>
           </TabsList>
 
@@ -120,36 +128,8 @@ export const EnhancedEmailBlockPalette: React.FC<EnhancedEmailBlockPaletteProps>
               />
             </PaletteTabContent>
 
-            <TabsContent value="styles" className="h-full mt-0">
-              <div className="h-full overflow-y-auto">
-                <div className={compactMode ? 'px-2 pb-4' : 'px-4 pb-6'}>
-                  <div className="space-y-2">
-                    <EmailSettingsCard
-                      isOpen={stylesExpanded.emailSettings}
-                      onToggle={() => toggleStylesSection('emailSettings')}
-                      onStylesChange={handleStylesChange}
-                    />
-
-                    <TextHeadingsCard
-                      isOpen={stylesExpanded.textHeadings}
-                      onToggle={() => toggleStylesSection('textHeadings')}
-                      onStylesChange={handleStylesChange}
-                    />
-
-                    <ButtonsCard
-                      isOpen={stylesExpanded.buttons}
-                      onToggle={() => toggleStylesSection('buttons')}
-                      onStylesChange={handleStylesChange}
-                    />
-
-                    <LinksCard
-                      isOpen={stylesExpanded.links}
-                      onToggle={() => toggleStylesSection('links')}
-                      onStylesChange={handleStylesChange}
-                    />
-                  </div>
-                </div>
-              </div>
+            <TabsContent value="snippets" className="h-full mt-0">
+              {renderSnippetsTab()}
             </TabsContent>
           </div>
         </Tabs>
